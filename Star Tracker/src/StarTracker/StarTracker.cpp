@@ -3,8 +3,8 @@
 namespace st
 {
 	/**
-	 * Returns a vector of every angle from a combination of nodes.
-	 * This calls findAngle to find the angle and uses the first element in the array as the pilot.
+	 * @brief Returns a vector of every angle from a combination of nodes.
+	 *		  This calls findAngle to find the angle and uses the first element in the array as the pilot.
 	 * @param num The number of elements in the array.
 	 * @param set The array of nodes, the first node must be the pilot star.
 	 * @return All the angle combinations from the array.
@@ -20,8 +20,12 @@ namespace st
 		return angles;
 	}
 
+
+
+
+
 	/**
-	 * Finds the angle between the 2 closest nodes to the pilot.
+	 * @brief		Finds the angle between the 2 closest nodes to the pilot.
 	 * @param pilot The brightest star.
 	 * @param node1 A non pilot star.
 	 * @param node2 An other non pilot star.
