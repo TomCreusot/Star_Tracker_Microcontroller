@@ -3,7 +3,7 @@ DIR = src/
 DIR_IM = $(DIR)ImageProcessing/
 DIR_BMP = $(DIR)EasyBMP/
 DIR_OBJ = obj_files/
-FLAGS = -Wall -g
+FLAGS = -Wall -g -O3
 
 FILES = $(DIR_OBJ)Main.o $(DIR_OBJ)ImageProcessing.o $(DIR_OBJ)Blob.o $(DIR_OBJ)EasyBMP.o
 

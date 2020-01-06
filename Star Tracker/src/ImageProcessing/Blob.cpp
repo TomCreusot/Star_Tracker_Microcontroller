@@ -2,6 +2,22 @@
 
 namespace ip
 {
+
+
+	/**
+	 * @brief Stops compiler complaining when creating a vector/array.
+	 */
+
+	 Blob::Blob()
+	 {
+		 Blob::minX = 0;
+		 Blob::maxX = 0;
+		 Blob::maxY = 0;
+		 Blob::minY = 0;
+		 size = 0;
+	 }
+
+
 	/**
 	 * @brief Creates a blob at the position provided.
 	 */
@@ -12,6 +28,7 @@ namespace ip
 		Blob::minY = y;
 		Blob::maxX = x;
 		Blob::maxY = y;
+		size = 1;
 	}
 
 
@@ -44,7 +61,22 @@ namespace ip
 		Blob::minY = min(y, Blob::minY);
 		Blob::maxX = max(x, Blob::maxX);
 		Blob::maxY = max(y, Blob::maxY);
+
+		size = (maxX - minX) * (maxY - minY);
 	}
+
+
+#ifdef DEBUG_IMAGE_PROCESSING
+	void Blob::print ( )
+	{
+		cout << "Blob" << endl <<
+		 		"minX: " << minX << ",\t maxX: " << maxX << ",\t width: " << maxX - minX << endl <<
+				"minY: " << minY << ",\t maxY: " << maxY << ",\t height " << maxY - minY << endl <<
+				"size: " << size << endl;
+	}
+
+#endif
+
 
 
 }

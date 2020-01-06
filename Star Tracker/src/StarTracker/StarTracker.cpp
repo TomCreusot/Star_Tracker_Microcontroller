@@ -30,7 +30,7 @@ namespace st
 	 * @param node1 A non pilot star.
 	 * @param node2 An other non pilot star.
 	 * @param node3 An other other non pilot star.
-	 * @return The angle at the node farthest from the pilot node.
+	 * @return 		The angle at the node farthest from the pilot node.
 	 */
 
 	float st::findAngle(const KeyPoint& pilot, const KeyPoint& node1, const KeyPoint& node2, const KeyPoint& node3)
