@@ -39,11 +39,12 @@ namespace ip
 
 
 	/**
+	 * @brief Finds the threshold of the image using otsu's thresholding.
 	 *
-	 * WIP
+	 * @param width The width of the image.
+	 * @param height The height of the image.
+	 * @param colorSpace	The # of bands in the histogram (generateHistogram).
 	 *
-	 *
-	 */
 
 
 
@@ -58,12 +59,12 @@ namespace ip
 		{
 			for ( int i = 0; i < colorSpace; i++)
 			{
-				prevThresh += colorSpace *
+				prevThresh += colorSpace * ;
 			}
 		}
 		return curThresh;
 	}
-
+*/
 
 
 
@@ -197,6 +198,11 @@ namespace ip
 
 
 	#ifdef DEBUG_IMAGE_PROCESSING
+	/**
+	 * Converts a list of
+	 *
+	 */
+
 	Blob* listToArray ( std::list<Blob>* points )
 	{
 		Blob* list = new Blob[points->size()];
@@ -207,6 +213,39 @@ namespace ip
 			it++;
 		}
 		return list;
+	}
+
+
+	/**
+	 * @brief		Combines 2 arrays into 2 images side by side.
+	 * @param img1 		The left image.
+	 * @param img2		The right image.
+	 * @param width		The width of the image.
+	 * @param height 	The height of the images.
+	 * @param filename	The location to be saved at.
+	 */
+
+	void combineImages ( byte** img1, byte** img2, const int width, const int height, const char* fileName )
+	{
+		BMP* bmp = new BMP();
+		bmp -> SetSize(width * 2, height);
+		bmp -> SetBitDepth(8);
+		for ( int y = 0; y < height; y++ )
+		{
+			for ( int x = 0; x < width; x++ )
+			{
+				(*bmp)(x, y) -> Red =		img1[y][x];
+				(*bmp)(x, y) -> Green =		img1[y][x];
+				(*bmp)(x, y) -> Blue =		img1[y][x];
+
+				(*bmp)(x + width, y) -> Red 	= img2[y][x];
+				(*bmp)(x + width, y) -> Green	= img2[y][x];
+				(*bmp)(x + width, y) -> Blue	= img2[y][x];
+			}
+		}
+
+		bmp -> WriteToFile(fileName);
+		delete bmp;
 	}
 	#endif
 }

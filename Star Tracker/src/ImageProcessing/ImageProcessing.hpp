@@ -8,6 +8,9 @@
 
 
 #define DEBUG_IMAGE_PROCESSING
+#ifdef DEBUG_IMAGE_PROCESSING
+	#include "../EasyBMP/EasyBMP.h"
+#endif
 
 
 using namespace std;
@@ -54,6 +57,7 @@ namespace ip
 	//Refere to ImageProcessing.cpp
 	#ifdef DEBUG_IMAGE_PROCESSING
 	Blob* listToArray ( std::list<Blob>* points );
+	void combineImages ( byte** img1, byte** img2, const int width, const int height, const char* fileName );
 	#endif
 }
 

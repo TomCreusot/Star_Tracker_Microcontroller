@@ -2,6 +2,7 @@
 #include <ctime>
 #include "ImageProcessing/ImageProcessing.hpp"
 #include "EasyBMP/EasyBMP.h"
+
 using namespace std;
 using namespace ip;
 
@@ -25,18 +26,16 @@ int main()
 
 	time_t currTime = time(NULL);
 
-	//byte threshold = percentThreshold(im, img.TellWidth(), img.TellHeight(), 200, 0.9f);
-	byte threshold = otsuThreshold(im, img.TellWidth(), img.TellHeight(), 255, 200, 2);
+	byte threshold = percentThreshold(im, img.TellWidth(), img.TellHeight(), 200, 0.999f);
+	//byte threshold = otsuThreshold(im, img.TellWidth(), img.TellHeight(), 255, 200, 2);
 
 	std::list<Blob>* blobs = ip::findBlobs(im, img.TellWidth(), img.TellHeight(), threshold, 1);
 
 
 
-
-
-	int numBlobs = blobs->size();//8;
-	ip::Blob* points = ip::getMainPoints(*blobs, 10);
-	//ip::Blob* points = ip::listToArray(blobs);
+	int numBlobs = 8;
+	//ip::Blob* points = ip::getMainPoints(*blobs, numBlobs);
+	ip::Blob* points = ip::listToArray(blobs); numBlobs = blobs->size();
 
 	cout << (time(NULL) - currTime) << endl;
 
@@ -47,15 +46,35 @@ int main()
 	delete blobs;
 
 
+
+
+
+
+	byte** im2 = new byte*[img.TellHeight()];
+
 	for ( int y = 0; y < img.TellHeight(); y++ )
 	{
-		im[y] = new byte[img.TellWidth()];
-		for (int x = 0; x < img.TellWidth(); x++ )
+		im2[y] = new byte[img.TellWidth()];
+		for ( int x = 0; x < img.TellWidth(); x++ )
+		{
+			im2[y][x] = 0;
+			for ( int i = 0; i < numBlobs; i++ )
+			{
+				if ( points[i].withinThreshold(x, y, 0) ) im2[y][x] = im[y][x];
+			}
+		}
+	}
+	ip::combineImages(im, im2, img.TellWidth(), img.TellHeight(), "test_output.bmp");
+
+/*
+	for ( int y = 0; y < img.TellHeight(); y++ )
+	{
+		for ( int x = 0; x < img.TellWidth(); x++ )
 		{
 			bool found = false;
 			for ( int i = 0; i < numBlobs; i++ )
 			{
-				 found |= points[i].withinThreshold(x, y, 0);
+				found |= points[i].withinThreshold(x, y, 0);
 			}
 			if ( !found )
 			{
@@ -66,6 +85,9 @@ int main()
 		}
 	}
 
+	img.WriteToFile("test_output.bmp");*/
+
+
 	for ( int y = 0; y < img.TellHeight(); y++ )
 	{
 		delete[] im[y];
@@ -74,7 +96,7 @@ int main()
 	delete[] points;
 
 
-	img.WriteToFile("test_output.bmp");
+
 
 	return 0;
 }
