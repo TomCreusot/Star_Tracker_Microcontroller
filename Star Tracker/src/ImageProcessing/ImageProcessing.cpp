@@ -20,13 +20,19 @@ namespace ip
 	byte percentThreshold ( byte** img, const int width, const int height, int colorSpace, float validAmount )
 	{
 		uint* colors = generateHistogram(img, width, height, colorSpace);
+/*
+		for (int i = 0; i < colorSpace; i++)
+		{
+			cout << ((int)colors[i]) << endl;
+		} cout << endl;
+*/
 
 		// "validAmount"% of all pixels.
 		uint max = (unsigned long)((float) width * (float) height * validAmount);
 		uint count = 0;
 		int space = 0;
 		// Finds the color space which is higher than the "validAmount"%
-		while (count < max && space < colorSpace)
+		while ( count < max && space < colorSpace )
 		{
 			count += colors[space];
 			space++;
@@ -36,6 +42,8 @@ namespace ip
 	}
 
 
+
+	// byte valleyThreshold (byte** img, const int width, const int height, int color)
 
 
 	/**
@@ -69,10 +77,10 @@ namespace ip
 
 
 	/**
-	 * @brief Generates an array of ints representing the count of each intencity band.
+	 * @brief Generates an array of ints representing the count of each intensity band.
 	 * Each band is the size of "255/numColorSpaces".
 	 * Entering 2 as "numColorSpaces" will result in 0 - 127.
-	 * Entering 255 as "numColorSpaces" will result in each intencity fitting into a band.
+	 * Entering 255 as "numColorSpaces" will result in each intensity fitting into a band.
 	 *
 	 * @param img	The image to generate a histogram for.
 	 * @param width	The width of the image.
@@ -112,6 +120,7 @@ namespace ip
 
 	/**
 	 * @brief Finds all the blobs in an image with the specified parameters.
+	 *
 	 * @param img 		The image as an array.
 	 * @param width 	The width of the image.
 	 * @param height 	The height of the image.
@@ -120,7 +129,7 @@ namespace ip
 	 * @return 			The blobs THIS MUST BE DISPOSED OF!!!.
 	 */
 
-	std::list<Blob>* findBlobs ( byte** img, const int width, const int height, const int bright, const int dist )
+	std::list<Blob>* findBlobs ( byte** img, const int width, const int height, const int bright )
 	{
 		std::list<Blob>* points = new std::list<Blob>();
 
@@ -131,26 +140,13 @@ namespace ip
 				// Is the pixel valid?
 				if ( img[y][x] > bright )
 				{
-					bool found = false;
-					// Is it within the bounds of another blob?
-					for ( std::list<Blob>::iterator it = points->begin();
-													it != points->end() && !found; ++it )
-					{
-						if ( it -> withinThreshold(x, y, dist) )
-						{
-							it -> add(x, y);
-							found = true;
-						}
-					}
-					// Should it be made a new blob?
-					if ( !found || points->empty() )
-					{
-						Blob* blob = new Blob(x, y);
-						points->push_back(*blob);
-					}
+					Blob* blob = new Blob(x, y);
+					blob->spreadBlob ( img, width, height, bright );
+					points -> push_back(*blob);
 				}
 			}
 		}
+		//mergeOverlappingBlobs(points, dist);
 		return points;
 	}
 
@@ -177,19 +173,19 @@ namespace ip
 	{
 		Blob* set = new Blob[num];
 
-		int prevSize = -1;
+		uint prevSize = -1;
 		for (int i = 0; i < num; i++)
 		{
 			set[i] = *points.begin();
 
 			for (std::list<Blob>::const_iterator it = points.begin(); it != points.end(); it++)
 			{
-				if ((it->size < prevSize || prevSize < 0) && it->size > set[i].size)
+				if ((it->intensity < prevSize || prevSize < 0) && it->intensity > set[i].intensity)
 				{
 					set[i] = *it;
 				}
 			}
-			prevSize = set[i].size;
+			prevSize = set[i].intensity;
 		}
 		return set;
 	}
@@ -197,10 +193,14 @@ namespace ip
 
 
 
+
+
 	#ifdef DEBUG_IMAGE_PROCESSING
 	/**
-	 * Converts a list of
-	 *
+	 * @brief Converts a list of points into an array.
+	 * This would be an alturnative to using getMainPoints.
+	 * @param point The values to be converted.
+	 * @return		The array format.
 	 */
 
 	Blob* listToArray ( std::list<Blob>* points )
@@ -217,15 +217,15 @@ namespace ip
 
 
 	/**
-	 * @brief		Combines 2 arrays into 2 images side by side.
+	 * @brief			Combines 2 arrays into 2 images side by side.
 	 * @param img1 		The left image.
 	 * @param img2		The right image.
 	 * @param width		The width of the image.
 	 * @param height 	The height of the images.
-	 * @param filename	The location to be saved at.
+	 * @return 			The image.
 	 */
 
-	void combineImages ( byte** img1, byte** img2, const int width, const int height, const char* fileName )
+	BMP* combineImages ( byte** img1, byte** img2, const int width, const int height )
 	{
 		BMP* bmp = new BMP();
 		bmp -> SetSize(width * 2, height);
@@ -234,18 +234,16 @@ namespace ip
 		{
 			for ( int x = 0; x < width; x++ )
 			{
-				(*bmp)(x, y) -> Red =		img1[y][x];
-				(*bmp)(x, y) -> Green =		img1[y][x];
-				(*bmp)(x, y) -> Blue =		img1[y][x];
+				(*bmp)(x, y) -> Red			= img1[y][x];
+				(*bmp)(x, y) -> Green 		= img1[y][x];
+				(*bmp)(x, y) -> Blue 		= img1[y][x];
 
 				(*bmp)(x + width, y) -> Red 	= img2[y][x];
 				(*bmp)(x + width, y) -> Green	= img2[y][x];
 				(*bmp)(x + width, y) -> Blue	= img2[y][x];
 			}
 		}
-
-		bmp -> WriteToFile(fileName);
-		delete bmp;
+		return bmp;
 	}
 	#endif
 }

@@ -6,10 +6,10 @@
 using namespace std;
 using namespace ip;
 
-int main()
+int main ( )
 {
 	BMP img;
-	img.ReadFromFile("test.bmp");
+	img.ReadFromFile("test1.bmp");
 
 	byte** im = new byte*[img.TellHeight()];
 
@@ -23,19 +23,19 @@ int main()
 		}
 	}
 
-
 	time_t currTime = time(NULL);
 
-	byte threshold = percentThreshold(im, img.TellWidth(), img.TellHeight(), 200, 0.999f);
+	//byte threshold = 3;
+	byte threshold = percentThreshold(im, img.TellWidth(), img.TellHeight(), 255, 0.997f);
 	//byte threshold = otsuThreshold(im, img.TellWidth(), img.TellHeight(), 255, 200, 2);
 
-	std::list<Blob>* blobs = ip::findBlobs(im, img.TellWidth(), img.TellHeight(), threshold, 1);
+	std::list<Blob>* blobs = ip::findBlobs(im, img.TellWidth(), img.TellHeight(), threshold);
 
 
 
-	int numBlobs = 8;
+	int numBlobs = 4;
 	//ip::Blob* points = ip::getMainPoints(*blobs, numBlobs);
-	ip::Blob* points = ip::listToArray(blobs); numBlobs = blobs->size();
+	 ip::Blob* points = ip::listToArray(blobs); numBlobs = blobs->size();
 
 	cout << (time(NULL) - currTime) << endl;
 
@@ -60,12 +60,24 @@ int main()
 			im2[y][x] = 0;
 			for ( int i = 0; i < numBlobs; i++ )
 			{
-				if ( points[i].withinThreshold(x, y, 0) ) im2[y][x] = im[y][x];
+				if ( points[i].withinThreshold(x, y, 0) ) im2[y][x] = 255;
 			}
 		}
 	}
-	ip::combineImages(im, im2, img.TellWidth(), img.TellHeight(), "test_output.bmp");
+	BMP* bmp = ip::combineImages(im, im2, img.TellWidth(), img.TellHeight());
 
+	for ( int i = 0; i < numBlobs; i++ )
+	{
+		(*bmp)(img.TellWidth() + points[i].centroid.x, points[i].centroid.y) -> Red = 255;
+		(*bmp)(img.TellWidth() + points[i].centroid.x, points[i].centroid.y) -> Blue = 200;
+		(*bmp)(img.TellWidth() + points[i].centroid.x, points[i].centroid.y) -> Green = 0;
+		(*bmp)(points[i].centroid.x, points[i].centroid.y) -> Red = 200;
+		(*bmp)(points[i].centroid.x, points[i].centroid.y) -> Blue = 0;
+		(*bmp)(points[i].centroid.x, points[i].centroid.y) -> Green = 0;
+	}
+
+	bmp -> WriteToFile("test_output.bmp");
+	delete bmp;
 /*
 	for ( int y = 0; y < img.TellHeight(); y++ )
 	{
@@ -94,9 +106,6 @@ int main()
 	}
 	delete[] im;
 	delete[] points;
-
-
-
 
 	return 0;
 }
