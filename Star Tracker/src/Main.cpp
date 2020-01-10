@@ -26,7 +26,7 @@ int main ( )
 	time_t currTime = time(NULL);
 
 	//byte threshold = 3;
-	byte threshold = percentThreshold(im, img.TellWidth(), img.TellHeight(), 255, 0.997f);
+	byte threshold = percentThreshold(im, img.TellWidth(), img.TellHeight(), 255, 0.98f);
 	//byte threshold = otsuThreshold(im, img.TellWidth(), img.TellHeight(), 255, 200, 2);
 
 	std::list<Blob>* blobs = ip::findBlobs(im, img.TellWidth(), img.TellHeight(), threshold);
@@ -64,7 +64,7 @@ int main ( )
 			}
 		}
 	}
-	BMP* bmp = ip::combineImages(im, im2, img.TellWidth(), img.TellHeight());
+	BMP* bmp = ip::combineImages(img, im2, img.TellWidth(), img.TellHeight());
 
 	for ( int i = 0; i < numBlobs; i++ )
 	{

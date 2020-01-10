@@ -1,3 +1,24 @@
+/*
+ *	File: 		Blob.cpp
+ *	Author:		Tom Creusot
+ *  Purpose:
+ *				Stores the functions in charge of the wildfire blob detection.
+ *
+ *	Ideal calls:
+ *				Initialize with the alternate constructor and call spreadBlob().
+ *
+ *	Reference:
+ *				Uses simmilar logic to:
+ *				http://what-when-how.com/introduction-to-video-and-image-processing/blob-analysis-introduction-to-video-and-image-processing-part-1/
+ *
+ *	Note:
+ *				Calling spreadBlob will damage the image, if you want to reuse it,
+ *				make a copy first.
+ *
+ * File For: 	ImageProcessing.hpp.
+ */
+
+
 #include "ImageProcessing.hpp"
 
 namespace ip
@@ -5,6 +26,7 @@ namespace ip
 
 	/**
 	 * @brief Stops compiler complaining when creating a vector/array.
+	 * Creates a blob with every value being 0.
 	 */
 
 	 Blob::Blob ( )
@@ -93,7 +115,7 @@ namespace ip
 	 * @param brightness	The brightness cut off.
 	 */
 
-	void Blob::spreadBlob ( byte** img, const int width, const int height, const int brightness )
+	void Blob::spreadBlob ( byte** img, int width, int height, int brightness )
 	{
 		intensity = 0;
 		pixels = 0;
@@ -115,27 +137,30 @@ namespace ip
 			{
 				q.push(Point<int>(cur.x + 1, cur.y));
 				maxX = max(maxX, cur.x + 1);
+				img[cur.y][cur.x + 1] = 0;
 			}
 			if ( pixelExist(img, width, height, brightness, cur.x - 1, cur.y) ) // Left
 			{
 				q.push(Point<int>(cur.x - 1, cur.y));
 				minX = min(minX, cur.x - 1);
+				img[cur.y][cur.x - 1] = 0;
 			}
 			if ( pixelExist(img, width, height, brightness, cur.x, cur.y + 1) ) // Down
 			{
 				q.push(Point<int>(cur.x, cur.y + 1));
 				maxY = max(maxY, cur.y + 1);
+				img[cur.y + 1][cur.x] = 0;
 			}
 			if ( pixelExist(img, width, height, brightness, cur.x, cur.y - 1) ) // Up
 			{
 				q.push(Point<int>(cur.x, cur.y - 1));
 				minY = min(minY, cur.y - 1);
+				img[cur.y - 1][cur.x] = 0;
 			}
 			intensity += img[cur.y][cur.x];
 			pixels++;
 			x += cur.x;
 			y += cur.y;
-			img[cur.y][cur.x] = 0;
 		}
 		centroid.x = round(x / (float) pixels);
 		centroid.y = round(y / (float) pixels);
@@ -155,7 +180,7 @@ namespace ip
 	 * @return				If valid pixel.
 	 */
 
-	bool Blob::pixelExist ( byte** img, const int width, const int height, const int brightness, const int x, const int y )
+	bool Blob::pixelExist ( byte** img, int width, int height, int brightness, int x, int y )
 	{
 		return
 			0 < x && 0 < y &&
@@ -177,9 +202,10 @@ namespace ip
 	void Blob::print ( )
 	{
 		cout << "Blob" << endl <<
-		 		"minX: " << minX << ",\t maxX: " << maxX << ",\t width: " << maxX - minX << endl <<
-				"minY: " << minY << ",\t maxY: " << maxY << ",\t height " << maxY - minY << endl <<
-				"intensity: " << intensity << endl;
+		 		"minX: " << minX << ",\t maxX: " << maxX << ",\t width: " << width() << endl <<
+				"minY: " << minY << ",\t maxY: " << maxY << ",\t height " << height() << endl <<
+				"intensity: " << intensity << ",\t pixels: " << pixels << endl <<
+				"centroid x: " << centroid.x << ", \tcentroid y: " << centroid.y << "\t\trough x: " + roughX() << "\trough y: " << roughY();
 	}
 
 #endif

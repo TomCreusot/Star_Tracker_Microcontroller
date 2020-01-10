@@ -1,3 +1,23 @@
+
+/*
+ *	File: 		ImageProcessing.hpp
+ *	Author:		Tom Creusot
+ *  Purpose:
+ *				To provide a simple light weight form of blob detection.
+ *				It is designed to run fast on a microcontroller to detect stars.
+ *
+ *	Reference:
+ *				Uses simmilar logic to:
+ *				http://what-when-how.com/introduction-to-video-and-image-processing/blob-analysis-introduction-to-video-and-image-processing-part-1/
+ *
+ * Header For: 	Blob.cpp, ImageProcessing.cpp.
+ */
+
+
+#ifndef IMAGE_PROCESSING_HPP
+#define IMAGE_PROCESSING_HPP
+
+
 #include <cmath>
 #include <list>
 #include <iostream>
@@ -5,10 +25,7 @@
 #include <cmath>
 #include <queue>
 
-#ifndef IMAGE_PROCESSING_HPP
-#define IMAGE_PROCESSING_HPP
-
-
+//These are only needed in debugging.
 #define DEBUG_IMAGE_PROCESSING
 #ifdef DEBUG_IMAGE_PROCESSING
 	#include "../EasyBMP/EasyBMP.h"
@@ -18,13 +35,13 @@
 
 using namespace std;
 
-// Convienence
-typedef unsigned char byte;
-typedef unsigned int uint;
-
 
 namespace ip
 {
+	// Convienence
+	typedef unsigned char byte;
+	typedef unsigned int uint;
+
 
 	/**
 	 * This struct is designed to store the x and y position in any datatype.
@@ -72,8 +89,8 @@ namespace ip
 		bool withinThreshold 	( int x, int y, int distT );
 		void add 				( int x, int y );
 
-		void spreadBlob 		( byte** img, const int width, const int height, const int brightness );
-		bool pixelExist 		( byte** img, const int width, const int height, const int brightness, const int x, const int y );
+		void spreadBlob 		( byte** img, int width, int height, int brightness );
+		bool pixelExist 		( byte** img, int width, int height, int brightness, int x, int y );
 
 		int width				( );
 		int height				( );
@@ -90,22 +107,24 @@ namespace ip
 
 
 
+	//Refere to ImageProcessing.cpp
+	byte percentThreshold 	( byte** img, int width, int height, int colorSpace, float validAmount );
+	byte otsuThreshold 		( byte** img, int width, int height, int colorSpace, int startLocation, int finalTravelTolerance );
+	void adaptiveThreshold	( byte** img, int width, int height, int sampleSize, float aggression );
+	uint* generateHistogram ( byte** img, int width, int height, const int numColorSpaces );
 
 	//Refere to ImageProcessing.cpp
-	std::list<Blob>* findBlobs ( byte** img, const int width, const int height, const int bright );
-
-	//Refere to ImageProcessing.cpp
-	byte percentThreshold ( byte** img, const int width, const int height, int colorSpace, float validAmount );
-	byte otsuThreshold ( byte** img, const int width, const int height, int colorSpace, int startLocation, int finalTravelTolerance );
-	uint* generateHistogram ( byte** img, const int width, const int height, const int numColorSpaces );
+	std::list<Blob>* findBlobs ( byte** img, int width, int height, int bright );
 
 	//Refere to ImageProcessing.cpp
 	Blob* getMainPoints ( std::list<Blob> points, int num );
 
-	//Refere to ImageProcessing.cpp
 	#ifdef DEBUG_IMAGE_PROCESSING
-	Blob* listToArray ( std::list<Blob>* points );
-	BMP* combineImages ( byte** img1, byte** img2, const int width, const int height );
+	//Refere to ImageProcessing.cpp
+	Blob* listToArray 	( std::list<Blob>* points );
+	BMP* combineImages 	( byte** img1, byte** img2, int width, int height );
+	BMP* combineImages 	( BMP& img1, byte** img2, int width, int height );
+	byte** bmpToArray 	( BMP& img );
 	#endif
 }
 

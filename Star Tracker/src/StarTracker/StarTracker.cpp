@@ -1,16 +1,30 @@
+/*
+ *	File: 		StarTracker.cpp
+ *	Author:		Tom Creusot
+ *  Purpose:
+ *				Uses the Pyramid method to calculate an angle which will be unique.
+ *
+ *	Reference:
+ *
+ * Ideal Calls: findAngles().
+ *
+ *
+ * Header For: 	StarTracker.cpp, ImageProcessing.hpp.
+ */
+
 #include "StarTracker.h"
 
 namespace st
 {
 	/**
-	 * @brief Returns a vector of every angle from a combination of nodes.
-	 *		  This calls findAngle to find the angle and uses the first element in the array as the pilot.
-	 * @param num The number of elements in the array.
-	 * @param set The array of nodes, the first node must be the pilot star.
-	 * @return All the angle combinations from the array.
+	 * @brief 		Returns a vector of every angle from a combination of nodes.
+	 *		  		This calls findAngle to find the angle and uses the first element in the array as the pilot.
+	 * @param num	The number of elements in the array.
+	 * @param set	The array of nodes, the first node must be the pilot star.
+	 * @return 		All the angle combinations from the array.
 	 */
 
-	vector<float>& st::findAngles(const int num, const KeyPoint* set)
+	std::vector<float>& st::findAngles(const int num, Blob* set)
 	{
 		vector<float> angles;
 		for (int ii = 1; ii < num; ii++)
@@ -33,18 +47,18 @@ namespace st
 	 * @return 		The angle at the node farthest from the pilot node.
 	 */
 
-	float st::findAngle(const KeyPoint& pilot, const KeyPoint& node1, const KeyPoint& node2, const KeyPoint& node3)
+	float st::findAngle(const Blob& pilot, const Blob& node1, const Blob& node2, const Blob& node3)
 	{
 		//cosine rule: A = acos((b^2 + c^2 - a^2) / 2bc)
 		//a is farthest node from pilot.
-		float hyp = hypotf(node1.pt.x - pilot.pt.x, node1.pt.y - pilot.pt.y);
-		float adj = hypotf(node2.pt.x - pilot.pt.x, node2.pt.y - pilot.pt.y);
-		float opp = hypotf(node3.pt.x - pilot.pt.x, node3.pt.y - pilot.pt.y);
+		float hyp = hypotf(node1.centroid.x - pilot.centroid.x, node1.centroid.y - pilot.centroid.y);
+		float adj = hypotf(node2.centroid.x - pilot.centroid.x, node2.centroid.y - pilot.centroid.y);
+		float opp = hypotf(node3.centroid.x - pilot.centroid.x, node3.centroid.y - pilot.centroid.y);
 
 		//Assume node1 is a, node2 is b, node3 is c.
-		float a = hypotf(node2.pt.x - node3.pt.x, node2.pt.y - node3.pt.y);
-		float b = hypotf(node1.pt.x - node2.pt.x, node1.pt.y - node2.pt.y);
-		float c = hypotf(node1.pt.x - node3.pt.x, node1.pt.y - node3.pt.y);
+		float a = hypotf(node2.centroid.x - node3.centroid.x, node2.centroid.y - node3.centroid.y);
+		float b = hypotf(node1.centroid.x - node2.centroid.x, node1.centroid.y - node2.centroid.y);
+		float c = hypotf(node1.centroid.x - node3.centroid.x, node1.centroid.y - node3.centroid.y);
 
 		//If our assumption is wrong, swap.
 		if (adj > hyp && adj > opp)
