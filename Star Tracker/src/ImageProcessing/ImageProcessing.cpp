@@ -178,9 +178,6 @@ namespace ip
 
 
 
-
-
-
 	/**
 	 * @brief Finds all the blobs in an image with the specified parameters.
 	 *
@@ -251,8 +248,6 @@ namespace ip
 		}
 		return set;
 	}
-
-
 
 
 
