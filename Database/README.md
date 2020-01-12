@@ -1,4 +1,4 @@
-#Database
+# Database
 This part of the project is designed to convert the database into a format easily read by the main project microcontroller.
 The way this is done is:
 	1. Having a source database of apparent magnitude, right ascension and declination of star charts.
@@ -8,7 +8,7 @@ The way this is done is:
 
 
 
-##Getting Started
+## Getting Started
 Using the [Makefile](Makefile) with no flags will compile:
 * DPreprocessor.jar
 * DToTree.jar
@@ -16,7 +16,7 @@ Using the [Makefile](Makefile) with no flags will compile:
 
 
 
-###Prerequisites
+### Prerequisites
 This requires java 8, if you are using unix you should be able to use:
 '''
 sudo apt install openjdk-8-jdk-headless
@@ -30,9 +30,9 @@ It also requires a database of stars, perhaps [Astronexus](http://www.astronexus
 
 
 
-##Detailed Description
+## Detailed Description
 
-###DPreprocessor.exe
+### DPreprocessor.exe
 This program is designed to read a database in the format of:
 csv, with 3 columns in order of:
 Apparent magnitude, Right Ascension, Declination.
@@ -51,24 +51,24 @@ The pilot stars will not be reused, however the others can be.
 
 Depending on how large the database is, this may take a long time.
 
-###DToTree.exe
+### DToTree.exe
 This program converts the database specified into a balanced tree format from the first column.
 It only accepts 3 doubles.
 This should not take nearly as long as DPreprocessor.exe
 
-###DToBinary.exe
+### DToBinary.exe
 This converts the database into a binary format.
 
-##Running the tests
+## Running the tests
 
 
-##Built with
+## Built with
 * java openjdk 8 headless
 
 
-##Contributing
+## Contributing
 
-##Authors
+## Authors
 * **Tom Creusot** - *stuff*
 
-##Other readings
+## Other readings
