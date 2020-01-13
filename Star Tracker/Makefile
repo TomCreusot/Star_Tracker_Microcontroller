@@ -51,3 +51,24 @@ $(DIR_OBJ)EasyBMP.o: $(DIR_BMP)EasyBMP.cpp $(DIR_BMP)EasyBMP*.h
 
 clean:
 	-rm -f $(FILES)
+
+
+
+install:
+	-mkdir dependancies/
+	-mkdir dependancies/EasyBMP/
+	-mkdir $(DIR)/EasyBMP/
+	git clone https://github.com/aburgh/EasyBMP --depth 1 --branch=master dependancies/EasyBMP
+
+	cp dependancies/EasyBMP/EasyBMP_BMP.h $(DIR_BMP)
+	cp dependancies/EasyBMP/EasyBMP_DataStructures.h $(DIR_BMP)
+	cp dependancies/EasyBMP/EasyBMP_VariousBMPutilities.h $(DIR_BMP)
+	cp dependancies/EasyBMP/EasyBMP.h $(DIR_BMP)
+	cp dependancies/EasyBMP/EasyBMP.cpp $(DIR_BMP)
+	cp dependancies/EasyBMP/readme.markdown $(DIR_BMP)
+	cp dependancies/EasyBMP/EasyBMP_UserManual.pdf $(DIR_BMP)
+
+uninstall:
+	-rm -r -f dependancies/
+	-rm -r -f src/EasyBMP/
+	-rm -f $(FILES)

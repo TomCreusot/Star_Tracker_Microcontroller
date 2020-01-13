@@ -8,11 +8,13 @@ The way this is done is:
 
 
 
+
 ## Getting Started
 Using the [Makefile](Makefile) with no flags will compile:
 * DPreprocessor.jar
 * DToTree.jar
 * DToBinary.jar
+
 
 
 
@@ -27,6 +29,11 @@ sudo apt install junit
 '''
 
 It also requires a database of stars, perhaps [Astronexus](http://www.astronexus.com/hyg)
+This database can be installed with the command:
+'''
+make install
+'''
+
 
 
 
@@ -59,12 +66,18 @@ This should not take nearly as long as DPreprocessor.exe
 ### DToBinary.exe
 This converts the database into a binary format.
 
+
+
+
 ## Running the tests
+
+
+
 
 
 ## Built with
 * java openjdk 8 headless
-
+* JUnit
 
 ## Contributing
 

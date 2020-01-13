@@ -20,3 +20,12 @@ DPreprocessor.jar: $(DIR_SRC)DPreprocessor.java $(DIR_SRC)Star.java $(DIR_SRC)CS
 
 clean:
 	rm -f $(DIR_SRC)*.class *.jar
+
+
+install:
+	-mkdir csv/
+	wget -P csv/ http://www.astronexus.com/files/downloads/hygdata_v3.csv.gz .
+	gzip -d csv/hygdata_v3.csv.gz
+
+uninstall:
+	-rm -r -f hygdata_v3.csv
