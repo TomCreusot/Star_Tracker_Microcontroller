@@ -32,6 +32,8 @@ public class Tree
 {
 	// The top most node
 	public TreeNode root;
+	// It is nice to track.
+	public int count;
 
 
 	/**
@@ -98,14 +100,14 @@ public class Tree
 				}
 				else
 				{
-					System.out.println("Error: Identical values!!!, keeping both\n\t" + val.toString() + "\n\t" + curNode.value.toString());
 					node.left = curNode.left;
-					curNode.left = node.left;
+					curNode.left = node;
 					found = true;
 				}
 			}
 		}
 		else root = node;
+		count++;
 	}
 
 
@@ -159,33 +161,55 @@ public class Tree
 	}
 
 
+
+
 	/**
-	* Checks the balance of the tree recursively.
-	* Returns ~0 - 100 depending on the balance.
+	* Finds a percentage of how balanced the tree is.
 	*
-	* @param 	currentNode The current recursive node.
-	* @return 	The balance of the tree.
+	* @return a number from 0 to 100 representing the balance.
 	*/
 
-	public int balanceRec ( TreeNode currentNode )
+	public int balance ( )
 	{
-		int balance = 0;
-		if ( currentNode != null )
+		return balanceRec(root);
+	}
+
+
+	/**
+	 * Recursively finds a percentage of how balanced the tree is.
+	 *
+	 * @return a number from 0 to 100 representing the balance.
+	 */
+
+	 public int balanceRec ( TreeNode node )
+	 {
+		 if ( node != null )
 		{
-			if ( currentNode.left == null && currentNode.right == null )
+			if ( node.left == null && node.right == null )
 			{
-				balance = 100;
+				return 100;
 			}
 			else
 			{
-				balance += balanceRec(currentNode.left);
-				balance += balanceRec(currentNode.right);
-				balance /= 2;
+				return (balanceRec(node.left) + balanceRec(node.right)) / 2;
 			}
 		}
-		return balance;
+		return 0;
 	}
 
+	/**
+	 * Finds the maximum height of the node.
+	 */
+
+	public int height ( TreeNode node )
+    {
+        /* base case tree is empty */
+        if (node == null) return 0;
+
+        /* If tree is not empty then height = 1 + max of left
+         height and right heights */
+        return 1 + Math.max(height(node.left), height(node.right));
+    }
 
 
 
@@ -246,6 +270,7 @@ public class Tree
 		}
 	}
 
+
 	/**
 	 * Recursivly performs a traversal (Left, Root, Right).
 	 *
@@ -257,11 +282,52 @@ public class Tree
 	{
 		if ( curNode != null )
 		{
-			preOrderTraversalRec(traversal, curNode.left);
+			inOrderTraversalRec(traversal, curNode.left);
 			traversal.add(curNode.value);
-			preOrderTraversalRec(traversal, curNode.right);
+			inOrderTraversalRec(traversal, curNode.right);
 		}
 	}
+
+
+
+
+
+	/*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*\
+	|																  	|
+	-	---------------------- Display Stuff --------------------		-
+	|																	|
+	\*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*/
+
+
+	/**
+	 * Displays the tree.
+	 */
+
+	public void displayTree ( )
+	{
+		displayTreeRec(root, 10);
+	}
+
+	/**
+	 * Displays a list of the keys in order of left to right.
+	 * @param cNode The current node to display childeren of.
+	 * @param indend The indent from the side.
+	 */
+
+	private void displayTreeRec ( TreeNode cNode, int indent )
+	{
+		if ( cNode != null )
+		{
+			for ( int i = 0; i < indent; i++ )
+			{
+				System.out.print("\t");
+			}
+			System.out.println(cNode.value.attribute);
+			displayTreeRec(cNode.left, indent - 1);
+			displayTreeRec(cNode.right, indent + 1);
+		}
+	}
+
 
 
 

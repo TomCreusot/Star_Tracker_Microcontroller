@@ -10,7 +10,7 @@
 
 public class Star
 {
-	// abs Magnitude/angle, Right Asscention, Declination
+	// apperant Magnitude/angle, Right Asscention, Declination
 	public double attribute, ra, dec;
 
 
@@ -24,6 +24,8 @@ public class Star
 		ra = 0;
 		dec = 0;
 	}
+
+
 
 
 	/**
@@ -41,6 +43,26 @@ public class Star
 	}
 
 
+
+
+
+	/**
+	* Alternate Constructor.
+	* This constructor is only to aid the testing of difference classes.
+	* @param a  What all the values should be
+	*/
+
+	public Star ( double a )
+	{
+		attribute = a;
+		ra = a;
+		dec = a;
+	}
+
+
+
+
+
 	/**
 	 * Constructs the class by solving the attribute.
 	 * This is simmilar to ../src/StarTracker/StarTracker.cpp: findAngle().
@@ -55,14 +77,17 @@ public class Star
 	{
 		//cosine rule: A = acos((b^2 + c^2 - a^2) / 2bc)
 		//a is farthest node from pilot.
-		double hyp = Math.hypot(s1.ra - pilot.ra, s1.dec - pilot.dec);
-		double adj = Math.hypot(s2.ra - pilot.ra, s2.dec - pilot.dec);
-		double opp = Math.hypot(s3.ra - pilot.ra, s3.dec - pilot.dec);
 
-		//Assume node1 is a, node2 is b, node3 is c.
-		double a = Math.hypot(s2.ra - s3.ra, s2.dec - s3.dec);
-		double b = Math.hypot(s1.ra - s2.ra, s1.dec - s2.dec);
-		double c = Math.hypot(s1.ra - s3.ra, s1.dec - s3.dec);
+		double hyp = s1.distanceFromPilot(pilot);
+		double adj = s2.distanceFromPilot(pilot);
+		double opp = s3.distanceFromPilot(pilot);
+
+		// a is node2 to node3
+		double a = s2.distanceFromPilot(s3);
+		// b is node1 to node3
+		double b = s1.distanceFromPilot(s3);
+		// c is node1 to node2
+		double c = s1.distanceFromPilot(s2);
 
 		//If our assumption is wrong, swap.
 		if (adj > hyp && adj > opp)
@@ -82,6 +107,9 @@ public class Star
 		dec = pilot.dec;
 		attribute = Math.acos((b * b + c * c - a * a) / (2d * b * c));
 	}
+
+
+
 
 
 

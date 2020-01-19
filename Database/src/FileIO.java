@@ -80,7 +80,39 @@ public class FileIO
 			writer.println(header);
 			while ( it.hasNext() )
 			{
-				writer.println(it.next().toCSVString());
+				Star star = it.next();
+				writer.println(star.toCSVString());
+			}
+			writer.close();
+			strm.close();
+		}
+		catch ( IOException e )
+		{
+			System.out.println(e.toString());
+			throw new IllegalArgumentException("ERROR: could not write to file!");
+		}
+	}
+
+
+
+	/**
+	* Writes the data to a file.
+	*
+	* @param data		The data to be stored in the database.
+	* @param fileName	The name of the file.
+	*/
+
+	public static void writeToFile ( LinkedList<String> data, String fileName )
+	{
+		try
+		{
+			FileOutputStream strm = new FileOutputStream(fileName);
+			PrintWriter writer = new PrintWriter(strm);
+
+			ListIterator<String> it = data.listIterator(0);
+			while ( it.hasNext() )
+			{
+				writer.println(it.next());
 			}
 			strm.close();
 		}

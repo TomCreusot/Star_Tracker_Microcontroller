@@ -35,40 +35,28 @@ public class DPreprocessor
 
 	public static void main ( String[] args )
 	{
-		if (args.length > 2)
+		if (args.length > 3)
 		{
 			long time = System.currentTimeMillis();
 			double cutOffMag = Double.parseDouble(args[0]);
-
-			int pilotSubs = Integer.parseInt(args[1]);
+			int pilotSets = Integer.parseInt(args[1]);
+			double radiusPilot = Double.parseDouble(args[2]);
 
 			System.out.println(
 				"Reading file for: "+
 				"\n\tCut of magnitude: " + cutOffMag +
-				"\n\tStars surounding pilot: " + pilotSubs +
-				"\n\tFile: " + args[2] );
+				"\n\tStars surounding pilot: " + pilotSets +
+				"\n\tRadius (degrees) from pilot: " + radiusPilot +
+				"\n\tFile: " + args[3] );
 
-			LinkedList<Star> stars = FileIO.readFile(args[2], cutOffMag);
+			LinkedList<Star> stars = sortedList(FileIO.readFile(args[3], cutOffMag));
 
 			System.out.println("\n" + stars.size() + " valid stars.");
-			LoadingBar load = new LoadingBar(stars.size(), 200, '#');
 
-			double roof = cutOffMag + 1f;
-			LinkedList<Star> output = new LinkedList<Star>();
+			LinkedList<Star> output = getAngles(stars, pilotSets /*+1*/, radiusPilot);
 
-			while ( stars.size() > pilotSubs )
-			{
-				Star p = findBrightest(stars, roof);
-				roof = p.attribute;
-
-				Star[] s = findClosest(p, stars, pilotSubs);
-				combinations(p, s, output);
-
-				stars.remove(p);
-				load.load(1);
-			}
 			System.out.println("\nNumber of angles: " + output.size() + ", time taken: " + (System.currentTimeMillis() - time) + " ms\n");
-			FileIO.writeToFile("angle,ra,dec", output, "output-" + cutOffMag + "-" + pilotSubs + ".csv");
+			FileIO.writeToFile("angle,ra,dec", output, "output-" + cutOffMag + "-" + pilotSets + "-" + radiusPilot + ".csv");
 		}
 		else
 		{
@@ -76,89 +64,107 @@ public class DPreprocessor
 			"Please input the command line arguments (in order):" +
 			"\n\t - The apperant magnitude cut off." +
 			"\n\t - The number of stars to associate with one pilot star." +
+			"\n\t - The distance a star can be from a pilot in degrees." +
 			"\n\t - The file name.");
 		}
 
 	}
 
 
+	/**
+	 * Returns the angles
+	 *
+	 * @param stars 		The magnitude, ra, dec of all the stars to check.
+	 * @param pilotSets		The number of stars surrounding the pilot to use.
+	 * @param radiusPilot	The angle distance between the pilot and the chosen stars.
+	 *
+	 */
 
+	public static LinkedList<Star> getAngles ( LinkedList<Star> stars, int pilotSets, double radiusPilot )
+	{
+		LoadingBar load = new LoadingBar(stars.size(), 200, '#');
+		LinkedList<Star> output = new LinkedList<Star>();
 
+		LinkedList<String> debug = new LinkedList<String>();
 
+		while ( stars.size() > 0 )
+		{
+			Star pilot = stars.getFirst();
 
+			Star[] s = findClosestBrightest(pilot, stars, pilotSets, radiusPilot);
+			if ( s != null )
+			{
+				combinations(pilot, s, output);
 
+				String d = pilot.attribute + "," + pilot.ra + "," + pilot.dec + ", , , , ";
+				for ( int i = 0; i < s.length; i++ )
+				{
+					d += s[i].attribute + "," + s[i].ra + "," + s[i].dec + ", , , ,";
+				}
+				debug.add(d);
+			}
+			else debug.add("");
 
-
-
-
+			stars.removeFirst();
+			load.load(1);
+		}
+		FileIO.writeToFile(debug, "debug.csv");
+		return output;
+	}
 
 
 	/**
-	 * Finds the brightest star which is less than "roof".
+	 * Returns a sorted linked list of stars attributes.
 	 *
-	 * @param stars	The list of stars.
-	 * @param roof	The maximum value (Exclusively that the star can have).
-	 * @return		The star which is the brightest within the parameters.
+	 * @param stars The unsorted array.
+	 * @return The sorted version of stars.
 	 */
 
-	public static Star findBrightest ( LinkedList<Star> stars, double roof )
+	public static LinkedList<Star> sortedList ( LinkedList<Star> stars )
 	{
-		ListIterator<Star> it = stars.listIterator(0);
-		Star brightest = it.next();
-
-		while ( it.hasNext() )
-		{
-			Star cur = it.next();
-			if ( cur.attribute > brightest.attribute && cur.attribute < roof )
-			{
-				brightest = cur;
-			}
-		}
-		return brightest;
+		Tree tree = new Tree(stars);
+		return tree.inOrderTraversal();
 	}
 
 
 
 
-
-
 	/**
-	 * Finds the closest stars to the specified declination and ascention.
-	 * These are in order of smallest to largest distance.
+	 * Finds the brightest stars within the specified bounds from the pilot star.
 	 *
 	 * @param pilot	The pilot star.
 	 * @param stars The stars to observe.
 	 * @param num	The number of stars to add.
-	 * @return		An array of the closest stars.
+	 * @param radus The maximum distance the stars can be from the pilot.
+	 * @return		An array of the closest stars OR null if not all values found.
 	 */
 
-	public static Star[] findClosest ( Star pilot, LinkedList<Star> stars, int num )
+	public static Star[] findClosestBrightest ( Star pilot, LinkedList<Star> stars, int num, double radius )
 	{
 		Star[] close = new Star[num];
-		double lastDist = 0;
-		double curDist = 0;
+		ListIterator<Star> it = stars.listIterator();
+		boolean found = true;
+		Star cur = null;
 
-		for ( int i = 0; i < num; i++ )
+		it.next(); // This is the pilot.
+		for ( int i = 0; i < num && found; i++ )
 		{
-			ListIterator<Star> it = stars.listIterator(0);
-			curDist = Double.MAX_VALUE;
+			found = false;
 
-			while ( it.hasNext() )
+			// Goes from the brightest star trying to find one which fulfils the bounds.
+			while ( it.hasNext() && !found )
 			{
-				Star cur = it.next();
-				double dist = cur.distanceFromPilot(pilot);
-
-				if ( dist > lastDist && dist < curDist  )
-				{
-					curDist = dist;
-					close[i] = cur;
-				}
+				cur = it.next();
+				found |= ( cur.distanceFromPilot(pilot) < radius );
 			}
-
-			lastDist = curDist;
+			if ( found ) close[i] = cur;
 		}
+
+		if (!found) close = null;
+
 		return close;
 	}
+
 
 
 
@@ -173,7 +179,7 @@ public class DPreprocessor
 
 	public static void combinations ( Star pilot, Star[] otherStars, LinkedList<Star> compStars )
 	{
-		for (int ii = 1; ii < otherStars.length; ii++)
+		for (int ii = 0; ii < otherStars.length; ii++)
 			for (int jj = ii + 1; jj < otherStars.length; jj++)
 				for (int kk = jj + 1; kk < otherStars.length; kk++)
 					compStars.add(new Star(pilot, otherStars[ii], otherStars[jj], otherStars[kk]));

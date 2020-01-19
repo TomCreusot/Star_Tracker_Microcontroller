@@ -6,24 +6,30 @@
  *
  *	Reference:
  *
- * Header For: 	StarTracker.cpp, ImageProcessing.hpp.
+ * Header For: 	StarTracker.cpp.
  */
 
 
 #ifndef STAR_TRACKER_H
 #define STAR_TRACKER_H
 
-#include <../ImageProcessing/ImageProcessing.hpp>
+#include "../ImageProcessing/ImageProcessing.hpp" // decimal, blob
+#include "../ImageProcessing/Point.cpp"
+#include "../Database/Database.hpp" // To retreive the position from angle
 #include <math.h>
 
 using namespace ip;
+using namespace db;
 using namespace std;
+
 
 namespace st
 {
 	// Refer to StarTracker.cpp
-	std::vector<float>& findAngles(const int num, const Blobs* set);
-	float findAngle(const KeyPoint& pilot, const KeyPoint& node1, const KeyPoint& node2, const KeyPoint& node3);
+	std::list<decimal> pilotAngles ( int num, ip::Blob* set, int numPilots );
+	std::list<decimal>* findAngles ( int startPos, int num, ip::Blob* set );
+	decimal findAngle ( ip::Point<decimal>& pilot, ip::Point<decimal>& node1,
+						ip::Point<decimal>& node2, ip::Point<decimal>& node3 );
 }
 
 #endif
