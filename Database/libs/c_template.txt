@@ -1,0 +1,27 @@
+/**
+ *	File: 		$(file)
+ *	Author:		Tom Creusot
+ *  Purpose:	A 2d array containing the database {angle, ra, dec}.
+ */
+
+#ifndef $(header_guard)
+#define $(header_guard)
+
+namespace db
+{
+namespace array
+{
+
+const int size = $(num_elements);
+
+const decimal $(array_name) [$(num_elements)][3] =
+{
+	$(loop_array_elements)
+};
+
+}
+}
+
+
+
+#endif
