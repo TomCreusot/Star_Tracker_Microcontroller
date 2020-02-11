@@ -7,18 +7,26 @@
  * Header For: 	angle_stat.cc.
  */
 
+#pragma once
 
+#include "libs/util/util.h"
+#include "libs/util/array_list.h"
+#include "libs/util/point.h"
 
-typedef struct AngleStat
+using namespace util;
+
+namespace database
 {
+class AngleStat
+{
+public:
 	decimal angle;
-	decimal angle_px;
-	Point<decimal> pilot_px;
 	Point<decimal> pilot;
+	AngleStat* pixel;
 	decimal odds;
 
 	/** @brief Default Constructor */
-	AngleStats ( );
+	AngleStat ( );
 
 	/**
 	 * @brief Alternate Constructor
@@ -26,12 +34,45 @@ typedef struct AngleStat
 	 * @param pilot_	The value of the pilot.
 	 */
 
-	AngleStats ( decimal angle_, Point<decimal>& pilot_ )
+	AngleStat ( decimal angle_, Point<decimal>& pilot_ );
+
 
 	/**
-	 * @brief			Generates probability from the stars angle and angle_px.
-	 * @param maxValue	The maximam possibility it can have.
+	 * @brief Alternate Constructor
+	 * @param px	The pixel AngleStat to copy and set.
+	 * @details sets pixel and sets all the values as a copy constructor.
 	 */
 
-	void personalProbability ( decimal maxValue );
-} AngleStats;
+	AngleStat ( AngleStat& px );
+
+
+
+	// AngleStat ( AngleStat)
+
+
+
+	/**
+	 * @brief	Generates probability from the stars angle and pixel angle.
+	 * @details	The closer the angles, the lower the %.
+	 */
+
+	void personalProbability ( );
+
+
+
+
+	/**
+	 *	@brief	Derives the probability of each node being the most accurate by testing how clustered they are (higher if clustered).
+	 *	@param database [in/out]	The valid elements of the database to compare and modify odds.
+	 *	@param wSeparation [in]		The weighting for the separation (0 - 1).
+	 *	@param fov					The feild of view which will not deduct probability.
+	 *	@details	If stars are within the FOV, they will not loose odds, if they are outside they start loosing at a weighting of "wSeparation".
+	 */
+
+	static void clusterProbability ( ArrayList<AngleStat>& database,
+											decimal wSeparation, decimal fov );
+
+
+
+};
+}

@@ -1,0 +1,22 @@
+/**
+ *	File: 		$(file)
+ *	Author:		Tom Creusot
+ *  Purpose:	A 2d array containing the database {angle, ra, dec}.
+ */
+
+#pragma once
+
+namespace db
+{
+namespace array
+{
+
+const int size = $(num_elements);
+
+const float $(array_name) [$(num_elements)][3] =
+{
+$(array_elements)
+};
+
+}
+}

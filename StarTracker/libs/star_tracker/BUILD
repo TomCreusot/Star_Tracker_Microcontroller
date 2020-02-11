@@ -5,26 +5,25 @@ cc_library(
 	srcs = ["star_tracker.cc"],
 	hdrs = ["star_tracker.h"],
 	deps = [
-	":combo",
-	"//libs/util:point",
-	"//libs/util:util",
-	"//libs/image_processing:blob"
-	]
+			":combo",
+			"//libs/util:point",
+			"//libs/util:util",
+			"//libs/image_processing:blob",
+			"//libs/database:angle_stat"
+			]
 )
 
 cc_library(
 	name = "combo",
-	srcs = ["combo.c"],
+	srcs = ["combo.cc"],
 	hdrs = ["star_tracker.h"],
 	deps = [
 			"//libs/util:point",
 			"//libs/util:util",
-			"//libs/image_processing:blob"
+			"//libs/image_processing:blob",
+			"//libs/database:angle_stat"
 			]
 )
-
-
-
 
 
 
@@ -34,7 +33,7 @@ cc_library(
 cc_test(
 	name = "star_tracker_test",
 	srcs = ["star_tracker_test.cc"],
-	deps = [":star_tracker", ":combo", ":blob_mock", "@gtest//:gtest_main"]
+	deps = [":star_tracker", ":combo", "//libs/image_processing:blob_mock", "@gtest//:gtest_main"]
 )
 
 

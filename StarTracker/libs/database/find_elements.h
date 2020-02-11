@@ -6,14 +6,14 @@
 
 #pragma once
 
-#include "database_array.hpp"
-#include "libs/utils/util.hpp"
-#include "libs/star_tracker/star_tracker.hpp"
+#include "database_array.h"
+#include "angle_stat.h"
+#include "libs/util/array_list.h"
+#include "libs/util/util.h"
 
 using namespace util;
-using namespace star_tracker;
 
-namespace db
+namespace database
 {
 
 /**
@@ -23,7 +23,8 @@ namespace db
  * @param tolerance	[out]	All the valid angles found.
  */
 
-void find_elements ( AngleStat angle, decimal tolerance, ArrayList<AngleStat>& found );
+void find_elements ( AngleStat& angle,
+							decimal tolerance, ArrayList<AngleStat>& found );
 
 
 }

@@ -2,18 +2,13 @@
 This part of the project is designed to convert the database into a format easily read by the main project microcontroller.
 The way this is done is:
 	1. Having a source database of apparent magnitude, right ascension and declination of star charts.
-	2. DPreprocessor 	reads the database and converting the magnitude to the pyramid style angles.
-	3. DToTree 			reads the pre-processed data and converts it into a binary tree format.
-	4. DToBinary		reads the tree format and converts it into a binary format.
+	2. Calling CSVToCArray with the correct command line arguments.
 
 
 
 
 ## Getting Started
-Using the [Makefile](Makefile) with no flags will compile:
-* DPreprocessor.jar
-* DToTree.jar
-* DToBinary.jar
+Use bazel build //libs:csvToCArray
 
 
 

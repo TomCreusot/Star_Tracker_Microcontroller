@@ -1,15 +1,15 @@
 #include "gtest/gtest.h"
 
 #include "star_tracker.h"
-#include "blob_mock.h"
+#include "libs/image_processing/blob_mock.h"
 
 //Random for find angle.
 #include <cstdlib>
 #include <time.h>
 
 using namespace std;
-using namespace st;
-using namespace ip;
+using namespace star_tracker;
+using namespace image_processing;
 using namespace util;
 
 
@@ -28,7 +28,7 @@ TEST	( DeriveBrightest, Valid )
 	l1.push_back(BlobMock(1, 2, 3));
 	l1.push_back(BlobMock(2, 3, 4));
 
-	st::deriveBrightest(l1, l2, 3);
+	star_tracker::deriveBrightest(l1, l2, 3);
 	EXPECT_EQ(l2[0].x, 1);
 	EXPECT_EQ(l2[0].y, 2);
 
@@ -52,7 +52,7 @@ TEST	( DeriveBrightest, SameSize )
 	l1.push_back(BlobMock(2, 3, 3));
 	l1.push_back(BlobMock(3, 4, 4));
 
-	st::deriveBrightest(l1, l2, 5);
+	star_tracker::deriveBrightest(l1, l2, 5);
 	EXPECT_EQ(l2[0].x, 5);
 	EXPECT_EQ(l2[0].y, 5);
 
@@ -82,7 +82,7 @@ TEST	( DeriveBrightest, RequiredLarger )
 	l1.push_back(BlobMock(2, 3, 4));
 	l1.push_back(BlobMock(3, 4, 5));
 
-	st::deriveBrightest(l1, l2, 10);
+	star_tracker::deriveBrightest(l1, l2, 10);
 
 	EXPECT_EQ(l2.size(), 5);
 }
@@ -99,7 +99,7 @@ TEST ( FindAngles, SingleAngle )
 {
 	ArrayList<Point<decimal>> point;
 	ArrayList<Combo> combos;
-	ArrayList<AngleStats> angles;
+	ArrayList<AngleStat> angles;
 
 	combos.push_back(Combo(0, 1, 2, 3));
 
@@ -129,8 +129,8 @@ TEST ( FindAngles, SingleAngle )
 
 TEST ( Combinations, OnePilot )
 {
-	ArrayList<st::Combo> combos;
-	st::combinationsPilots(1, 6, combos);
+	ArrayList<star_tracker::Combo> combos;
+	star_tracker::combinationsPilots(1, 6, combos);
 
 	EXPECT_TRUE(combos.pop_back().equal(0, 3, 4, 5));
 	EXPECT_TRUE(combos.pop_back().equal(0, 2, 4, 5));
@@ -147,8 +147,8 @@ TEST ( Combinations, OnePilot )
 
 TEST ( Combinations, MultiplePilots )
 {
-	ArrayList<st::Combo> combos;
-	st::combinationsPilots(2, 6, combos);
+	ArrayList<star_tracker::Combo> combos;
+	star_tracker::combinationsPilots(2, 6, combos);
 
 	EXPECT_TRUE(combos.pop_back().equal(1, 3, 4, 5));
 	EXPECT_TRUE(combos.pop_back().equal(1, 2, 4, 5));
@@ -170,8 +170,8 @@ TEST ( Combinations, MultiplePilots )
 
 TEST ( Combinations, MorePilotsElements )
 {
-	ArrayList<st::Combo> combos;
-	st::combinationsPilots(10, 6, combos);
+	ArrayList<star_tracker::Combo> combos;
+	star_tracker::combinationsPilots(10, 6, combos);
 	EXPECT_TRUE(combos.pop_back().equal(2, 3, 4, 5));
 	EXPECT_TRUE(combos.pop_back().equal(1, 3, 4, 5));
 	EXPECT_TRUE(combos.pop_back().equal(1, 2, 4, 5));
@@ -190,8 +190,8 @@ TEST ( Combinations, MorePilotsElements )
 
 TEST ( Combinations, Valid )
 {
-	ArrayList<st::Combo> combos;
-	st::combinations(1, 7, combos);
+	ArrayList<star_tracker::Combo> combos;
+	star_tracker::combinations(1, 7, combos);
 
 	EXPECT_TRUE(combos.pop_back().equal(1, 4, 5, 6));
 
@@ -213,12 +213,12 @@ TEST ( Combinations, Valid )
 
 TEST ( Combinations, InValid )
 {
-	ArrayList<st::Combo> combos;
-	st::combinations(1, 3, combos);
+	ArrayList<star_tracker::Combo> combos;
+	star_tracker::combinations(1, 3, combos);
 
 	EXPECT_EQ(combos.size(), 0);
 
-	st::combinations(3, 0, combos);
+	star_tracker::combinations(3, 0, combos);
 
 	EXPECT_EQ(combos.size(), 0);
 }
@@ -248,7 +248,7 @@ TEST ( FindAngle, Valid )
 	Combo combo; // suppress lcov for Combo
 	combo.pilot = 0; combo.s1 = 1; combo.s2 = 2; combo.s3 = 3;
 
-	decimal angle = st::findAngle(a, combo);
+	decimal angle = star_tracker::findAngle(a, combo);
 	EXPECT_DOUBLE_EQ(angle, 1.8545904360032242d);
 }
 
@@ -268,7 +268,7 @@ TEST ( FindAngle, HypotIsAdjac )
 
 	Combo combo(0, 1, 2, 3);
 
-	decimal angle = st::findAngle(a, combo);
+	decimal angle = star_tracker::findAngle(a, combo);
 	EXPECT_DOUBLE_EQ(angle, 1.8545904360032242d);
 }
 
@@ -288,7 +288,7 @@ TEST ( FindAngle, HypotIsOppos )
 
 	Combo combo(0, 1, 2, 3);
 
-	decimal angle = st::findAngle(a, combo);
+	decimal angle = star_tracker::findAngle(a, combo);
 	EXPECT_DOUBLE_EQ(angle, 1.8545904360032242d);
 }
 
@@ -308,7 +308,7 @@ TEST ( FindAngle, EqualSideLengths )
 
 	Combo combo(0, 1, 2, 3);
 
-	decimal angle = (decimal) st::findAngle(a, combo);
+	decimal angle = (decimal) star_tracker::findAngle(a, combo);
 	EXPECT_FLOAT_EQ(angle, 0.3947911197);
 }
 
@@ -327,7 +327,7 @@ TEST ( FindAngle, PointsAwayFromPilot )
 
 	Combo combo(0, 1, 2, 3);
 
-	decimal angle = (decimal) st::findAngle(a, combo);
+	decimal angle = (decimal) star_tracker::findAngle(a, combo);
 	EXPECT_FLOAT_EQ(angle, 0.2449786631);
 }
 
@@ -349,7 +349,7 @@ TEST ( FindAngle, RealExample )
 
 
 
-	decimal angle = (decimal) st::findAngle(a, combo);
+	decimal angle = (decimal) star_tracker::findAngle(a, combo);
 	EXPECT_FLOAT_EQ(angle, 0.099750593); //, 0.099753); (Close enough?)
 }
 
@@ -373,7 +373,7 @@ TEST ( FindAngle, NanAllEqual )
 
 	Combo combo(0, 1, 2, 3);
 
-	decimal angle = (decimal) st::findAngle(a, combo);
+	decimal angle = (decimal) star_tracker::findAngle(a, combo);
 	EXPECT_FLOAT_EQ(angle, 1000);
 }
 
@@ -398,7 +398,7 @@ TEST ( FindAngle, RandomTestNAN )
 
 		Combo combo(0, 1, 2, 3);
 
-		decimal angle = (decimal) st::findAngle(a, combo);
+		decimal angle = (decimal) star_tracker::findAngle(a, combo);
 
 		bool valid = !isnan(angle) && !isinf(angle);
 

@@ -1,6 +1,6 @@
 #include "star_tracker.h"
 
-namespace st
+namespace star_tracker
 {
 Combo::Combo ( )
 {

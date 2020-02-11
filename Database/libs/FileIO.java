@@ -12,85 +12,30 @@ import java.util.*;
 
 public class FileIO
 {
+
 	/**
-	 * Reads in a csv file.
-	 *
-	 * This requires a csv file format in the order of:
-	 * magnitude, right ascension and declination.
-	 * The first line will not be read.
-	 * Any magnitude/attribute above "cutOff" will not be included.
-	 *
-	 * @param fileName 	The name of the file.
-	 * @param cutOff	If the magnitude exceeds this, it will not be included.
-	 * @return			The stars which are valid.
+	 * Reads a file as a list of strings.
+	 * @param file 	The file to read.
+	 * @return 		The lines.
 	 */
 
-	public static LinkedList<Star> readFile ( String fileName, double cutOff )
+	public static LinkedList<String> readFile ( String file )
 	{
-		LinkedList<Star> list = new LinkedList<Star>();
+		LinkedList<String> lines = new LinkedList<String>();
 		try
 		{
-			FileInputStream strm = new FileInputStream(fileName);
+			FileInputStream strm = new FileInputStream(file);
 			InputStreamReader rdr = new InputStreamReader(strm);
 			BufferedReader buf = new BufferedReader(rdr);
-			buf.readLine();	//Header
 
-			String[] stars;
-			String star = buf.readLine();
-			while ( star != null )
+			String line = buf.readLine();
+			while ( line != null )
 			{
-				stars = star.split(",");
-				double mag = Double.parseDouble(stars[0]);
-				if ( mag < cutOff )
-				{
-					Star s = new Star(mag, Double.parseDouble(stars[1]), Double.parseDouble(stars[2]));
-					list.add(s);
-				}
-				star = buf.readLine();
+				lines.add(line);
+				line = buf.readLine();
 			}
-			strm.close();
-		}
-		catch ( IOException e )
-		{
-			throw new IllegalArgumentException("ERROR: Could not read file!");
-		}
-		return list;
-	}
-
-
-
-
-
-	/**
-	* Writes the data to a csv database (with a header row).
-	*
-	* @param header 	The text to display at the top.
-	* @param data		The data to be stored in the database.
-	* @param fileName	The name of the file.
-	*/
-
-	public static void writeToFile ( String header, LinkedList<Star> data, String fileName )
-	{
-		try
-		{
-			FileOutputStream strm = new FileOutputStream(fileName);
-			PrintWriter writer = new PrintWriter(strm);
-
-			ListIterator<Star> it = data.listIterator(0);
-			writer.println(header);
-			while ( it.hasNext() )
-			{
-				Star star = it.next();
-				writer.println(star.toCSVString());
-			}
-			writer.close();
-			strm.close();
-		}
-		catch ( IOException e )
-		{
-			System.out.println(e.toString());
-			throw new IllegalArgumentException("ERROR: could not write to file!");
-		}
+		} catch ( IOException e) { e.printStackTrace(); }
+		return lines;
 	}
 
 
@@ -102,23 +47,24 @@ public class FileIO
 	* @param fileName	The name of the file.
 	*/
 
-	public static void writeToFile ( LinkedList<String> data, String fileName )
+	public static void writeFile ( String fileName, LinkedList<String> data )
 	{
 		try
 		{
 			FileOutputStream strm = new FileOutputStream(fileName);
 			PrintWriter writer = new PrintWriter(strm);
 
-			ListIterator<String> it = data.listIterator(0);
+			ListIterator<String> it = data.listIterator();
 			while ( it.hasNext() )
 			{
 				writer.println(it.next());
 			}
+			writer.close();
 			strm.close();
 		}
 		catch ( IOException e )
 		{
-			System.out.println(e.toString());
+			e.printStackTrace();
 			throw new IllegalArgumentException("ERROR: could not write to file!");
 		}
 	}

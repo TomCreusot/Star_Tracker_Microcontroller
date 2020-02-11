@@ -1,34 +1,19 @@
 cc_binary(
-	name = "IP_Test",
-	srcs = ["IP_Test.cpp"],
+	name = "demo",
+	srcs = ["demo.cc"],
 	deps =
 		[
-			"//libs/Utils:Utils",
-			"//libs/Utils:Point",
-			# "//libs/Utils:Image",
+			"//libs/util:util",
+			"//libs/util:point",
+			"//libs/util:array_list",
 
-			":SimpleBMP",
-			"//libs/ImageAcquisition:GetImage",
+			"//libs/get_image:get_image",
 
-			"//libs/ImageProcessing:ImageProcessing",
-			"//libs/ImageProcessing:Blob",
+			"//libs/image_processing:image",
+			"//libs/image_processing:blob",
 
-			"//libs/StarTracker:StarTracker"
+			"//libs/star_tracker:star_tracker",
+			"//libs/database:angle_stat",
+			"//libs/database:find_elements"
 		]
-)
-
-
-
-
-config_settings(
-	name = "embedded",
-	values = {"compilation_mode" : "embedded"}
-)
-
-
-
-
-config_settings(
-	name = "nix",
-	values = {"system" : "unix"}
 )

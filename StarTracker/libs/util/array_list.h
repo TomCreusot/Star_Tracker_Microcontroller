@@ -9,7 +9,7 @@
  */
 
 #pragma once
-#define ARRAY_LIST_SIZE 100
+#define ARRAY_LIST_SIZE 1000
 
 namespace util
 {

@@ -46,4 +46,4 @@ bazel test //libs/star_tracker:combo_test --test_output=all
 ## Contributing
 
 ## Authors
-* Tom Creusot - *Stuff*
+* Tom Creusot - *Initial Creation*

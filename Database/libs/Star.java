@@ -141,33 +141,6 @@ public class Star
 
 
 
-
-
-	/**
-	* Returns an array of bytes representing this.
-	* @param numAtt 	The number of bytes for the attribute.
-	* @param numRa	The number of bytes for the right ascension.
-	* @param numDec	The number of bytes for the declination.
-	*/
-/*
-	public byte[] toBinary ( int numAtt, int numRa, int numDec )
-	{
-		byte [] array = new byte[numAtt + numRa + numDec];
-		for ( int i = 0; i < numAtt; i++ )
-		{
-
-		}
-		for ( int i = 0; i < numRa; i++ )
-		{
-
-		}
-		for ( int i =0; i < numDec; i++ )
-		array[]
-	}
-*/
-
-
-
 	/**
 	 * Provides an easy to read version of the class.
 	 * @return The string.

@@ -1,5 +1,5 @@
 #include "gtest/gtest.h"
-#include "star_tracker.hpp"
+#include "angle_stat.h"
 
 
 TEST ( DefaultConstructor, Valid )
@@ -8,44 +8,95 @@ TEST ( DefaultConstructor, Valid )
 	EXPECT_FLOAT_EQ(stat.angle, 0);
 	EXPECT_FLOAT_EQ(stat.pilot.x, 0);
 	EXPECT_FLOAT_EQ(stat.pilot.y, 0);
-	EXPECT_FLOAT_EQ(stat.anglePx, 0)
-	EXPECT_FLOAT_EQ(stat.pilotPx.x, 0);
-	EXPECT_FLOAT_EQ(stat.pilotPx.y, 0);
-	EXPECT_FLOAT_EQ(odds, 0);
+	EXPECT_FLOAT_EQ(stat.odds, 0);
+	// EXPECT_EQ(stat.pixel, NULL);
 }
-EXPECT_EQ(odds, 0);
 
 
 
 TEST ( AlternateConstructor, Valid )
 {
-	AngleStat stat(123, Point<decimal>(456, 789));
-	EXPECT_FLOAT_EQ(stat.angle, 0);
-	EXPECT_FLOAT_EQ(stat.pilot.x, 0);
-	EXPECT_FLOAT_EQ(stat.pilot.y, 0);
-	EXPECT_FLOAT_EQ(stat.anglePx, 123)
-	EXPECT_FLOAT_EQ(stat.pilotPx.x, 456);
-	EXPECT_FLOAT_EQ(stat.pilotPx.y, 789);
+	Point<decimal> temp = Point<decimal>(456, 789);
+	AngleStat stat(123, temp);
+	EXPECT_FLOAT_EQ(stat.angle, 123);
+	EXPECT_FLOAT_EQ(stat.pilot.x, 456);
+	EXPECT_FLOAT_EQ(stat.pilot.y, 789);
+	EXPECT_FLOAT_EQ(stat.odds, 0);
+}
+
+TEST ( CopyConstructor, Valid )
+{
+	Point<decimal> temp = Point<decimal>(456, 789);
+	AngleStat stat(123, temp);
+	stat.odds = 321;
+	EXPECT_FLOAT_EQ(stat.pilot.x, 456);
+	EXPECT_FLOAT_EQ(stat.pilot.y, 789);
+	EXPECT_FLOAT_EQ(stat.angle, 123);
+	EXPECT_FLOAT_EQ(stat.odds, 321);
+
+	AngleStat stat2(stat);
+	EXPECT_FLOAT_EQ(stat2.angle, 123);
+	EXPECT_FLOAT_EQ(stat2.pilot.x, 456);
+	EXPECT_FLOAT_EQ(stat2.pilot.y, 789);
+	EXPECT_FLOAT_EQ(stat2.odds, 321);
+	EXPECT_FLOAT_EQ(stat2.pixel->angle, 123);
+	EXPECT_FLOAT_EQ(stat2.pixel->pilot.x, 456);
+	EXPECT_FLOAT_EQ(stat2.pixel->pilot.y, 789);
+	EXPECT_FLOAT_EQ(stat2.pixel->odds, 321);
 }
 
 
 
 TEST ( PersonalProbability, Equal )
 {
-	AngleStat stat;
-	stat.anglePx = 0.1;
+	AngleStat statPx;
+	AngleStat stat(statPx);
+	stat.pixel->angle = 0.1;
 	stat.angle = 0.1;
-	stat.personalProbability(0.5);
-	EXPECT_FLOAT_EQ(stat.odds, 0.5);
+	stat.personalProbability();
+	EXPECT_FLOAT_EQ(stat.odds, 1);
 }
 
 
-
-TEST ( PersonalProbability, LowMax )
+TEST ( PersonalProbability, NULL )
 {
 	AngleStat stat;
-	stat.anglePx = 0.01;
 	stat.angle = 0.1;
-	stat.personalProbability(0.5);
-	EXPECT_FLOAT_EQ(stat.odds, 0.514323944878271);
+	stat.personalProbability();
+	EXPECT_FLOAT_EQ(stat.odds, 0);
+}
+
+
+TEST ( PersonalProbability, NotEqual )
+{
+	AngleStat statPx;
+	AngleStat stat(statPx);
+	stat.pixel->angle = 0;
+	stat.angle = 0.1;
+	stat.personalProbability();
+	EXPECT_FLOAT_EQ(stat.odds, 1/1.1);
+}
+
+
+TEST ( PersonalProbability, VeryNotEqual )
+{
+	AngleStat statPx;
+	AngleStat stat(statPx);
+	stat.pixel->angle = -1000000000;
+	stat.angle = 10000000000;
+	stat.personalProbability();
+	EXPECT_NEAR(stat.odds, 0, 0.00001);
+}
+
+
+TEST ( ClusterProbability, OneElement )
+{
+	Point<decimal> aa(0, 0);
+	AngleStat a(0, aa);
+	a.odds = 0.023;
+
+	ArrayList<AngleStat> list;
+
+	AngleStat::clusterProbability(list, 10, 10);
+	EXPECT_FLOAT_EQ(a.odds, 0.023);
 }

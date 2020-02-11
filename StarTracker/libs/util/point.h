@@ -80,10 +80,10 @@ public:
 	void set (	T degrees_x, T minutes_x, T seconds_x,
 				T degrees_y, T minutes_y, T seconds_y	)
 	{
-		T sign = 1 - (degreesX < 0) * 2;
-		x = degreesX + (minutesX / 60 + secondsX / 3600) * sign;
-		sign = 1 - (degreesY < 0) * 2;
-		y = degreesY + (minutesY / 60 + secondsY / 3600) * sign;
+		T sign = 1 - (degrees_x < 0) * 2;
+		x = degrees_x + (minutes_x / 60 + seconds_x / 3600) * sign;
+		sign = 1 - (degrees_y < 0) * 2;
+		y = degrees_y + (minutes_y / 60 + seconds_y / 3600) * sign;
 	}
 
 

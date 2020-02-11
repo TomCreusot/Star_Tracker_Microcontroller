@@ -13,11 +13,12 @@
 #include "libs/util/util.h"
 #include "libs/util/point.h"
 #include "libs/image_processing/blob.h"
+#include "libs/database/angle_stat.h"
 
-using namespace std;
 using namespace image_processing;
+using namespace database;
 
-namespace st
+namespace star_tracker
 {
 
 
@@ -79,19 +80,6 @@ void deriveBrightest ( ArrayList<Blob>& list,
 
 
 /**
- *	@brief	Derives the probability of each node being the most accurate by testing how clustered they are (higher if clustered).
- *	@param database [in/out]	The valid elements of the database to compare and modify odds.
- *	@param wSeparation [in]		The weighting for the separation (0 - 1).
- *	@param fov					The feild of view which will not deduct probability.
- *	@details	If stars are within the FOV, they will not loose odds, if they are outside they start loosing at a weighting of "wSeparation".
- */
-
-void clusterProbability ( ArrayList<AngleStat>& database, decimal wSeparation );
-
-
-
-
-/**
  * @brief				Finds all the combinations of angles from the supplied stars.
  * @param points [in]	The points to calculate with.
  * @param combos [in]	The combos to use with points.
@@ -103,15 +91,15 @@ void findAngles ( ArrayList<Point<decimal>>& points, ArrayList<Combo>& combos,
 
 
 
+
 /**
- * @brief					Gets every index conbination of multiple pilot stars in case of outlier.
- * @param numPilots	[in]	The number of pilots to sample.
- * @param end		[in]	The exclusive index to stop at.
- * @param combos	[out]	The combinations to append to.
- */
+* @brief					Gets every index conbination of multiple pilot stars in case of outlier.
+* @param numPilots	[in]	The number of pilots to sample.
+* @param end		[in]	The exclusive index to stop at.
+* @param combos	[out]	The combinations to append to.
+*/
 
 void combinationsPilots ( uint numPilots, uint end, ArrayList<Combo>& combos );
-
 
 
 

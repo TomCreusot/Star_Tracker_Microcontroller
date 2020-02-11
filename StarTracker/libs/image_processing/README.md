@@ -1,43 +1,48 @@
 # libs/image_processing
-This package provides machine vision blob detection.
+This package is to manage blob image detection.
+It holds a class for storing images in byte monochrome and a class for storing details about significant pixels in the image.
+Through running, you can input an image and output all *blobs* in the image.
+
 
 ## How To Use
 In the *BUILD* file, input:
 ```
 deps = [
-	"//libs/ImageProcessing:image_processing"
-	"//libs/image_processing:Blob",
+	"//libs/image_processing:image"
+	"//libs/image_processing:blob",
 	]
 ```
 At the top of the desired file, input:
 ```
-#include "../image_processing/image_processing"
-#include "../image_processing/Blob"
+#include "libs/image_processing/image.h"
+#include "libs/image_processing/blob.h"
 ```
 
 ### Build
 Input the following into your command line:
 ```
-bazel build //libs/image_processing:ImageProcessing
-bazel build //libs/ImageProcessing:Blob
+bazel build //libs/image_processing:image
+bazel build //libs/image_processing:blob
 ```
 
 ### Test
 Input the following into your command line:
 ```
-bazel test //libs/Utils:PointTest --test_output=errors
-bazel test //libs/ImageTest --test_output=errors
+bazel test //libs/image_processing:blob_test --test_output=all
+bazel test //libs/image_processing:image_test --test_output=all
 ```
 
 ## Files
-* ImageProcessing.hpp
-* ImageProcessing.cpp
-* Blob.hpp
-* Blob.cpp
-*
-* ImageProcessingTest.cc
-* BlobTest.cc
-*
+* image_processing.h
+* image_processing.cc
+* blob.h
+* blob.cc
+* image.h
+* image.cc
+<br /><br />
+* image_test.cc
+* blob_test.cc
+<br /><br />
 * BUILD
 * README.md
 
@@ -49,4 +54,4 @@ bazel test //libs/ImageTest --test_output=errors
 ## Contributing
 
 ## Authors
-* Tom Creusot - *Stuff*
+* Tom Creusot - *Initial Creation*

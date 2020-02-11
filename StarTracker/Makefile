@@ -1,76 +1,79 @@
-fNorm="\e[0m"
 fBold="\e[1mBold"
 fRed="\033[0;31m"
 fBRed="\e[41m"
 fBDGrey="\e[100m"
 
-testToRun=//libs/star_tracker:star_tracker
 
 all:
-	bazel test $(testToRun) --test_output=all
-	bazel coverage $(testToRun)
-	@echo $(fBDGrey)
-	@lcov --summary bazel-out/_coverage/_coverage_report.dat
-	@echo $(fNorm)
-
+	@ - rm -f -r demo
+	bazel build //libs:demo
+	mv bazel-bin/libs/demo .
+	./demo test1.bmp 0.9 6 20 10
 
 test:
-ifndef LCOV
-	echo Util
-	bazel test //libs/Utils:PointTest --test_output=errors
-
-	echo ImageProcessing
-	bazel test //libs/ImageProcessing:BlobTest --test_output=errors
-	bazel test //libs/ImageProcessing/nix:ImageTest --test_output=errors
-	bazel test //libs/ImageProcessing/stm:ImageTest --test_output=errors
-	bazel test //libs/ImageProcessing:ImageBaseTest --test_output=errors
-
-	echo StarTracker
-	bazel test //libs/StarTracker:StarTrackerTest --test_output=errors
-	bazel test //libs/StarTracker:ComboTest --test_output=errors
-
-
-else
-	@ echo Util
-	bazel coverage //libs/Utils:PointTest
-	@echo $(fBDGrey)
-	lcov --summary bazel-out/_coverage/_coverage_report.dat
+	@echo $(fBold) $(fBRed)
+	@ echo util
 	@echo $(fNorm)
 
-	bazel coverage //libs/Utils:ImageTest
+	bazel coverage //libs/util/... --combined_report=lcov
+	bazel test //libs/util/... --test_output=all
 	@echo $(fBDGrey)
-	 @lcov --summary bazel-out/_coverage/_coverage_report.dat
+	lcov --l bazel-out/_coverage/_coverage_report.dat
 	@echo $(fNorm)
 
 
 
-	@ echo "\n\n\n"ImageProcessing
-	bazel coverage //libs/ImageProcessing:ImageBaseTest
-	@echo $(fBDGrey)
-	@lcov --summary bazel-out/_coverage/_coverage_report.dat
-	@echo $(fNorm)
-	bazel coverage //libs/ImageProcessing/nix:ImageTest
-	@echo $(fBDGrey)
-	@lcov --summary bazel-out/_coverage/_coverage_report.dat
-	@echo $(fNorm)
-	bazel coverage //libs/ImageProcessing/stm:ImageTest
-	@echo $(fBDGrey)
-	@lcov --summary bazel-out/_coverage/_coverage_report.dat
+	@echo $(fBold) $(fBRed)
+	@ echo star_tracker
 	@echo $(fNorm)
 
-	bazel coverage //libs/ImageProcessing:BlobTest
+	bazel coverage //libs/star_tracker/... --combined_report=lcov
+	bazel test //libs/star_tracker/... --test_output=all
 	@echo $(fBDGrey)
-	@lcov --summary bazel-out/_coverage/_coverage_report.dat
+	lcov --l bazel-out/_coverage/_coverage_report.dat
 	@echo $(fNorm)
 
-	 @ echo "\n\n\n" StarTracker
-	bazel coverage //libs/StarTracker:StarTrackerTest
-	@echo $(fBDGrey)
-	@lcov --summary bazel-out/_coverage/_coverage_report.dat
+
+	@echo $(fBold) $(fBRed)
+	@ echo image_processing
 	@echo $(fNorm)
 
-	bazel coverage //libs/StarTracker:ComboTest
+	bazel coverage //libs/image_processing/... --combined_report=lcov
+	bazel test //libs/image_processing/... --test_output=all
 	@echo $(fBDGrey)
-	@lcov --summary bazel-out/_coverage/_coverage_report.dat
+	lcov --l bazel-out/_coverage/_coverage_report.dat
 	@echo $(fNorm)
-endif
+
+
+	@echo $(fBold) $(fBRed)
+	@ echo get_image
+	@echo $(fNorm)
+
+	bazel coverage //libs/get_image/... --combined_report=lcov
+	bazel test //libs/get_image/... --test_output=all
+	@echo $(fBDGrey)
+	lcov --l bazel-out/_coverage/_coverage_report.dat
+	@echo $(fNorm)
+
+
+
+	@echo $(fBold) $(fBRed)
+	@ echo database
+	@echo $(fNorm)
+
+	bazel coverage //libs/database/... --combined_report=lcov
+	bazel test //libs/database/... --test_output=all
+	@echo $(fBDGrey)
+	lcov --l bazel-out/_coverage/_coverage_report.dat
+	@echo $(fNorm)
+
+
+	@echo $(fBold) $(fBRed)
+	@ echo coms
+	@echo $(fNorm)
+
+	bazel coverage //libs/coms/... --combined_report=lcov
+	bazel test //libs/coms/... --test_output=all
+	@echo $(fBDGrey)
+	lcov --l bazel-out/_coverage/_coverage_report.dat
+	@echo $(fNorm)

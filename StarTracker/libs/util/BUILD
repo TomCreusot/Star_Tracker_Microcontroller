@@ -7,8 +7,8 @@ cc_library(
 
 
 cc_library(
-	name = "utils",
-	srcs = ["utils.h"],
+	name = "util",
+	srcs = ["util.h"],
 )
 
 
@@ -29,5 +29,5 @@ cc_test(
 cc_test(
 	name = "point_test",
 	srcs = ["point_test.cc"],
-	deps = [":point", ":utils", "@gtest//:gtest_main"]
+	deps = [":point", ":util", "@gtest//:gtest_main"]
 )

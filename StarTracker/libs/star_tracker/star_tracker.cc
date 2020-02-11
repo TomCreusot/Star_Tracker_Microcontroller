@@ -1,48 +1,30 @@
 #include "star_tracker.h"
 
-namespace st
+
+namespace star_tracker
 {
 void deriveBrightest ( ArrayList<Blob>& list,
 								ArrayList<Point<decimal>>& reduced, uint num )
 {
-	uint highest = -1;
-	uint currentI = 0;
-	Blob current = list[0];
-
-	for ( uint ii = 0; ii < num && ii < list.size(); ii++ )
+	for ( uint ii = 0; ii < list.size(); ii++ )
 	{
-		currentI = 0;
-		for ( uint jj = 0; jj < list.size(); jj++ )
+		uint jj = ii;
+		Blob temp = list[jj];
+		while(jj > 0 && list[jj-1].getIntensity() < temp.getIntensity())
 		{
-			uint intensity = list[jj].getIntensity();
-			if( intensity >= currentI && intensity < highest )
-			{
-				current = list[jj];
-				currentI = current.getIntensity();
-			}
+			list[jj] = list[jj - 1];
+			jj--;
 		}
-		reduced.push_back(
-				Point<decimal>(current.getCentroidX(), current.getCentroidY()));
-		highest = currentI;
+		list[jj] = temp;
+	}
+
+
+	for ( uint i = 0; i < list.size() && i < num; i++ )
+	{
+		Point<decimal> point(list[i].getCentroidX(), list[i].getCentroidY());
+		reduced.push_back(point);
 	}
 }
-
-
-
-void clusterProbability ( ArrayList<AngleStat>& database,
-											decimal w_separation, decimal fov )
-{
-	for ( uint ii = 0; ii < database.size(); ii++ )
-		for ( uint jj = 0; jj < database.size(); jj++ )
-		{
-			const decimal dist = dAngles[ii].pilot.distance(database[jj]);
-			if ( dist > fov )
-			{
-				database[ii].odds += w_separation / dist;
-			}
-		}
-}
-
 
 
 
@@ -51,7 +33,8 @@ void findAngles ( ArrayList<Point<decimal>>& points, ArrayList<Combo>& combos,
 {
 	for ( uint i = 0; i < combos.size(); i++ )
 	{
-		angles.push_back(AngleStats(findAngle(points, combos[i]), points[combos[i].pilot]));
+		AngleStat angle(findAngle(points, combos[i]), points[combos[i].pilot]);
+		angles.push_back(angle);
 	}
 }
 
@@ -64,10 +47,6 @@ void combinationsPilots ( uint numPilots, uint end, ArrayList<Combo>& combos )
 		combinations(i, end, combos);
 	}
 }
-
-
-
-
 
 void combinations ( uint start, uint end, ArrayList<Combo>& combos )
 {
