@@ -28,7 +28,7 @@ using namespace std;
 
 int main ( int argc, char** argv )
 {
-	if ( argc == 6 )
+	if ( argc == 7 )
 	{
 		// Reading command line.
 		char* file = argv[1];
@@ -36,12 +36,12 @@ int main ( int argc, char** argv )
 		float threshold_area = atof(argv[3]);
 		int threshold_blobs = atoi(argv[4]);
 		uint numStars = atoi(argv[5]);
+		float fov = atof(argv[6]);
 
 		// Reads in image.
 		image_processing::Image img;
 		get_image::GetImage get(file);		// Reads in image to bitmap.
 		get.getImage(img);					// Copies bitmap to img.
-
 
 		// Delete Background
 		img.adaptiveThreshold(threshold_area, threshold_agression);
@@ -81,14 +81,26 @@ int main ( int argc, char** argv )
 		for ( uint i = 0; i < angles.size(); i++ )
 		{
 			// angles[i].personalProbability();
-			find_elements(angles[i], 0.01, database_angles);
+			find_elements(angles[i], 0.1, database_angles);
 		}
-		AngleStat::clusterProbability(database_angles, 0.01, 60);
+		// Reduces the database_angles odds depending on how clustered they are.
+		AngleStat::clusterProbability(database_angles, 0.001, fov);
 
-		for ( uint i = 0; i < angles.size(); i++ )
+
+		// Prints in order of odds.
+		uint curr = 0;
+
+		for ( uint i = 0; i < database_angles.size(); i++)
 		{
-			cout << angles[i].pilot.x << "\t" << angles[i].pilot.y << "\t\t" << angles[i].odds << endl;
+			if ( database_angles[i].odds > database_angles[curr].odds ) curr = i;
+		}
 
+		cout << database_angles[curr].pilot.x << "\t" << database_angles[curr].pilot.y << "\t\t" << database_angles[curr].odds << endl;
+
+
+		for ( uint i = 0; i < database_angles.size(); i++ )
+		{
+			cout << database_angles[i].pilot.x << "\t" << database_angles[i].pilot.y << "\t\t" << database_angles[i].odds << endl;
 		}
 	}
 	else
@@ -99,6 +111,7 @@ int main ( int argc, char** argv )
 			 << "\n\tThe sample area of the threshold"
 			 << "\n\tThe min brightness of a blob"
 			 << "\n\tThe max number of stars to display"
+			 << "\n\tThe field of view of the camera"
 			 << endl;
 	}
 

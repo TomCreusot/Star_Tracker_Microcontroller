@@ -1,5 +1,13 @@
 ***WIP (NOT FINNISHED)***
 
+## TODO
+* Get Working.
+* Test Harness for Database and StarTracker/database.
+* Embedded Implementation for StarTracker/get_image.
+* Find the apparent offset of actual pixel and distortion due to lens.
+* Account for hot pixels.
+* Find centre of camera from pixel off centre.
+
 # Star Tracker
 This software is to find the looking direction of a camera given a collection of stars.
 It is designed to run on high powered microcontrollers for low earth orbit cube satellites.

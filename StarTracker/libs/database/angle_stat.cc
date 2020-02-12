@@ -14,7 +14,7 @@ AngleStat::AngleStat ( )
 	angle	= 0;
 	pilot	= util::Point<decimal>(0, 0);
 	pixel	= NULL;
-	odds	= 0;
+	odds	= 1;
 }
 
 
@@ -23,7 +23,7 @@ AngleStat::AngleStat ( decimal angle_, Point<decimal>& pilot_ )
 	angle	= angle_;
 	pilot	= pilot_;
 	pixel	= NULL;
-	odds	= 0;
+	odds	= 1;
 }
 
 
@@ -32,7 +32,7 @@ AngleStat::AngleStat ( AngleStat& px )
 	angle = px.angle;
 	pilot = px.pilot;
 	odds = px.odds;
-	pilot = px.pilot;
+	pixel = px.pixel;
 }
 
 
@@ -57,9 +57,7 @@ void AngleStat::clusterProbability ( ArrayList<AngleStat>& database,
 							database[ii].pilot.distance(database[jj].pilot);
 			if ( dist > fov )
 			{
-				// cout << database[ii].odds << "\t" << database[ii].angle << "\t\t" << database[jj].angle << "\t" << dist << endl;
-				database[ii].odds /= dist * w_separation;
-				// sleep_for(milliseconds(100));
+				database[ii].odds -= w_separation;
 			}
 		}
 }
