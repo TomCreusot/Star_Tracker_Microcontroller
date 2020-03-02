@@ -16,7 +16,9 @@ The method used is the Pyramid method which:
 * Takes 4 stars.
 * The brightest star is known as the reference/pilot star.
 * The angle between the other 2 stars and the furthest from the pilot star is found.
-* This is then compared to a database which will store an angle and the position of the pilot star.
+* This is then compared to a database which will store an angle and the position of the pilot star and the furthest.
+* The software looks for a cluster of stars and generates a probability from this.
+* The highest probability is likely the actual position.
 
 ## How To Use
 

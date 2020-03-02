@@ -18,21 +18,24 @@ AngleStat::AngleStat ( )
 }
 
 
-AngleStat::AngleStat ( decimal angle_, Point<decimal>& pilot_ )
+AngleStat::AngleStat ( decimal angle_,
+	 						Point<decimal>& pilot_, Point<decimal>& opposite_ )
 {
-	angle	= angle_;
-	pilot	= pilot_;
-	pixel	= NULL;
-	odds	= 1;
+	angle		= angle_;
+	pilot		= pilot_;
+	opposite	 = opposite_;
+	pixel		= NULL;
+	odds		= 1;
 }
 
 
 AngleStat::AngleStat ( AngleStat& px )
 {
-	angle = px.angle;
-	pilot = px.pilot;
-	odds = px.odds;
-	pixel = px.pixel;
+	angle 		= px.angle;
+	pilot 		= px.pilot;
+	opposite	= px.opposite;
+	odds 		= px.odds;
+	pixel		= px.pixel;
 }
 
 

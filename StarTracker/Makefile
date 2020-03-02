@@ -8,7 +8,8 @@ all:
 	@ - rm -f -r demo
 	bazel build //libs:demo
 	mv bazel-bin/libs/demo .
-	./demo Archernar_1h37m_57deg14m_45fov.bmp 0.9 6 20 7 10
+	./demo Aldebaran_4h36m_16deg32m_10fov.bmp 0.9 6 20 7 10
+	#./demo Archernar_1h37m_57deg14m_45fov.bmp 0.9 6 20 7 10
 
 test:
 	@echo $(fBold) $(fBRed)

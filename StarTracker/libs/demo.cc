@@ -66,41 +66,42 @@ int main ( int argc, char** argv )
 		get.writeImage((char*)"out.bmp");
 
 
-		// Creates a set of every combination of angles to calculate.
-		util::ArrayList<star_tracker::Combo> combos;
-		star_tracker::combinationsPilots(3, reduced.size(), combos);
-
-		cout << "Number of combinations: " << combos.size() << endl;
-
 		// Calculates the angles.
 		util::ArrayList<database::AngleStat> angles;
-		findAngles ( reduced, combos, angles );
+		findAnglesAllPilots ( reduced, angles );
 
 		util::ArrayList<database::AngleStat> database_angles;
 
+		cout << "Found Angles: " << endl;
 		for ( uint i = 0; i < angles.size(); i++ )
 		{
 			// angles[i].personalProbability();
+			cout << angles[i].angle << endl;
 			find_elements(angles[i], 0.1, database_angles);
 		}
 		// Reduces the database_angles odds depending on how clustered they are.
 		AngleStat::clusterProbability(database_angles, 0.001, fov);
 
 
-		// Prints in order of odds.
-		uint curr = 0;
 
-		for ( uint i = 0; i < database_angles.size(); i++)
+
+
+		// Sorts for ease of use.
+		for ( uint ii = 0; ii < database_angles.size(); ii++ )
 		{
-			if ( database_angles[i].odds > database_angles[curr].odds ) curr = i;
+			uint jj = ii;
+		 	AngleStat temp = database_angles[jj];
+			while(jj > 0 && database_angles[jj-1].odds < temp.odds)
+			{
+				database_angles[jj] = database_angles[jj - 1];
+				jj--;
+			}
+			database_angles[jj] = temp;
 		}
-
-		cout << database_angles[curr].pilot.x << "\t" << database_angles[curr].pilot.y << "\t\t" << database_angles[curr].odds << endl;
-
 
 		for ( uint i = 0; i < database_angles.size(); i++ )
 		{
-			cout << database_angles[i].pilot.x << "\t" << database_angles[i].pilot.y << "\t\t" << database_angles[i].odds << endl;
+			cout << "Pilot: " << database_angles[i].pilot.x << "\t" << database_angles[i].pilot.y << "\t\tOpposite: " << database_angles[i].opposite.x << "\t" << database_angles[i].opposite.y << "\t\t" << database_angles[i].odds << "\t\tangle: " << database_angles[i].angle << endl;
 		}
 	}
 	else

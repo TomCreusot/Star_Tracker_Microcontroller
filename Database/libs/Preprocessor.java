@@ -1,4 +1,4 @@
-/*
+/**
  *	Converts a database of mag,ra,dec to angle,ra,dec.
  *
  *	Reference:
@@ -62,9 +62,9 @@ public class Preprocessor
 			System.out.println("Processing: ");
 			LinkedList<Star> processed = preprocess(lines, maxMag);
 			System.out.println("Sorting: ");
-			sort(processed);
+			sortStar(processed);
 			System.out.println("Calculating: ");
-			LinkedList<Star> values = getAngles(processed, pilotSets, fov);
+			LinkedList<StarSet> values = getAngles(processed, pilotSets, fov);
 			System.out.println("Wrapping: ");
 			lines = postProcess(values);
 
@@ -122,7 +122,7 @@ public class Preprocessor
 	 * @param list	The list to sort.
 	 */
 
-	public static void sort ( LinkedList<Star> list )
+	public static void sortStar ( LinkedList<Star> list )
 	{
 		Collections.sort(list, new Comparator<Star>()
 		{
@@ -139,16 +139,39 @@ public class Preprocessor
 
 
 	/**
+	 * Calls java comparator sort to sort the list for star sets (polymorphism does not work with generics?).
+	 * @param list	The list to sort.
+	 */
+
+	public static void sortSet ( LinkedList<StarSet> list )
+	{
+		Collections.sort(list, new Comparator<StarSet>()
+		{
+			@Override
+			public int compare ( StarSet o1, StarSet o2 )
+			{
+				// System.out.println(o1.attribute + "  " + o2.attribute);
+				double val = (o1.attribute - o2.attribute);
+				//if (Math.abs(val) < 0.000001) System.out.println(val);
+				return (val < 0 ? 1 : -1);
+			}
+		});
+	}
+
+
+
+
+	/**
 	 *	Converts the list of stars back into a text array and sorts.
 	 *	@param stars 	The stars to convert.
 	 *	@return			The csv description of the stars.
 	 */
 
-	public static LinkedList<String> postProcess ( LinkedList<Star> stars )
+	public static LinkedList<String> postProcess ( LinkedList<StarSet> stars )
 	{
 		LinkedList<String> strings = new LinkedList<String>();
-		sort(stars);
-		Iterator<Star> it = stars.listIterator();
+		sortSet( stars );
+		Iterator<StarSet> it = stars.listIterator();
 		while ( it.hasNext() )
 		{
 			strings.add(it.next().toCSVString());
@@ -158,33 +181,40 @@ public class Preprocessor
 
 
 
+
 	/**
-	 * Returns the angles
+	 * Returns the angles.
 	 *
 	 * @param stars 		The magnitude, ra, dec of all the stars to check.
 	 * @param pilotSets		The number of stars surrounding the pilot to use.
 	 * @param radiusPilot	The angle distance between the pilot and the chosen stars.
-	 *
+	 * @return Every possible star set.
 	 */
 
-	public static LinkedList<Star> getAngles ( LinkedList<Star> stars,
+	public static LinkedList<StarSet> getAngles ( LinkedList<Star> stars,
 											int pilotSets, double radiusPilot )
 	{
-		LinkedList<Star> output = new LinkedList<Star>();
-
+		LinkedList<StarSet> output = new LinkedList<StarSet>();
+		// Max number of stars
 		System.out.println(stars.size() + " to go.");
 
 		while ( stars.size() > 0 )
 		{
+			// Always the brightest.
 			Star pilot = stars.getFirst();
 
-			Star[] s = findClosestBrightest(pilot, stars, pilotSets, radiusPilot);
+			// Gets all required stars to calculate angle for.
+			Star[] s=findClosestBrightest(pilot, stars, pilotSets, radiusPilot);
+
+			// If there were enough stars in the range, find all angles.
 			if ( s != null )
 			{
 				combinations(pilot, s, output);
 			}
+			// Remove from queue making search parameters smaller.
 			stars.removeFirst();
 
+			// Every 100 stars show progress.
 			if( stars.size() % 100 == 0) System.out.println(stars.size() + " to go.");
 		}
 		return output;
@@ -241,91 +271,18 @@ public class Preprocessor
 	 * @param compStars		The list to be appended to.
 	 */
 
-	public static void combinations ( Star pilot, Star[] otherStars, LinkedList<Star> compStars )
+	public static void combinations ( Star pilot, Star[] otherStars, LinkedList<StarSet> compStars )
 	{
 		for (int ii = 0; ii < otherStars.length; ii++)
 			for (int jj = ii + 1; jj < otherStars.length; jj++)
 				for (int kk = jj + 1; kk < otherStars.length; kk++)
 				{
-					Star star = new Star(pilot, otherStars[ii], otherStars[jj], otherStars[kk]);
+					StarSet star = new StarSet(pilot, otherStars[ii], otherStars[jj], otherStars[kk]);
 
-					if ( !(Double.isInfinite(star.attribute) && Double.isNaN(star.attribute)) )
+					if ( !(Double.isInfinite(star.attribute) || Double.isNaN(star.attribute)) )
 					{
-
 						compStars.add(star);
 					}
 				}
 	}
-}
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-/**
- * This class is to give a graphical representation of how long is left.
- */
-
-class LoadingBar
-{
-	// The current position in loading and the maximum (end).
-	private double current, max;
-
-	// How many dots.
-	private int numIndicators;
-	// How many dots are already on the screen.
-	private int alreadyPrinted;
-
-	// The symbol to use.
-	private char symbol;
-
-	/**
-	 * Alturnate Constructor.
-	 *
-	 * @param 	max_ 	The maximum value.
-	 * @param	numIndicators_
-	 */
-
-	public LoadingBar ( double max_, int numIndicators_, char symbol_ )
-	{
-		current = 0;
-		max = max_;
-		numIndicators = numIndicators_;
-		symbol = symbol_;
-
-		for ( int i = 0; i < numIndicators; i++ )
-		{
-			System.out.print(symbol);
-		}
-		System.out.println();
-	}
-
-
-	/**
-	 * If the progression is enough, it will print a character.
-	 *
-	 * @param c	The iterator.
-	 */
-
-	public void load ( int c )
-	{
-		current += c;
-		if ( current > alreadyPrinted * max / numIndicators )
-		{
-			System.out.print(symbol);
-			alreadyPrinted++;
-		}
-	}
-
 }

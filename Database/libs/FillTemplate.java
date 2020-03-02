@@ -1,4 +1,4 @@
-/*
+/**
  *	Reads a file (template) and replaces specified keys with specified values.
  *
  *	Use:

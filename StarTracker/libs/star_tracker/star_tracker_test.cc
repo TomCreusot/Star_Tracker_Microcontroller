@@ -91,24 +91,21 @@ TEST	( DeriveBrightest, RequiredLarger )
 
 /*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*\
 |													|
-|			------	FindAngles	------				|
+|		------	FindAnglesAllPilots	------			|
 |													|
 \*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*/
 
-TEST ( FindAngles, SingleAngle )
+TEST ( FindAnglesAllPilots, SingleAngle )
 {
 	ArrayList<Point<decimal>> point;
-	ArrayList<Combo> combos;
 	ArrayList<AngleStat> angles;
-
-	combos.push_back(Combo(0, 1, 2, 3));
 
 	point.push_back(Point<decimal>(1, 2)); // pilot
 	point.push_back(Point<decimal>(1, 3));
 	point.push_back(Point<decimal>(2, 2));
 	point.push_back(Point<decimal>(2, 3));
 
-	findAngles(point, combos, angles);
+	findAnglesAllPilots(point, angles);
 
 	EXPECT_EQ(angles.size(), 1);
 	EXPECT_FLOAT_EQ(angles[0].angle, 1.5707963267949); //90 deg
@@ -117,66 +114,30 @@ TEST ( FindAngles, SingleAngle )
 }
 
 
-
-
-
-/*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*\
-|													|
-|			------ Combinations	------				|
-|													|
-\*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*/
-
-
-TEST ( Combinations, OnePilot )
+TEST ( FindAnglesAllPilots, TwoPilots )
 {
-	ArrayList<star_tracker::Combo> combos;
-	star_tracker::combinationsPilots(1, 6, combos);
+	ArrayList<Point<decimal>> point;
+	ArrayList<AngleStat> angles;
 
-	EXPECT_TRUE(combos.pop_back().equal(0, 3, 4, 5));
-	EXPECT_TRUE(combos.pop_back().equal(0, 2, 4, 5));
-	EXPECT_TRUE(combos.pop_back().equal(0, 2, 3, 5));
-	EXPECT_TRUE(combos.pop_back().equal(0, 2, 3, 4));
-	EXPECT_TRUE(combos.pop_back().equal(0, 1, 4, 5));
-	EXPECT_TRUE(combos.pop_back().equal(0, 1, 3, 5));
-	EXPECT_TRUE(combos.pop_back().equal(0, 1, 3, 4));
-	EXPECT_TRUE(combos.pop_back().equal(0, 1, 2, 5));
-	EXPECT_TRUE(combos.pop_back().equal(0, 1, 2, 4));
-	EXPECT_TRUE(combos.pop_back().equal(0, 1, 2, 3));
-}
+	point.push_back(Point<decimal>(1, 2)); // pilot
+	point.push_back(Point<decimal>(5, 5));
+	point.push_back(Point<decimal>(2, 2));
+	point.push_back(Point<decimal>(0, 0));
+	point.push_back(Point<decimal>(1, 1));
 
+	findAnglesAllPilots(point, angles);
 
-TEST ( Combinations, MultiplePilots )
-{
-	ArrayList<star_tracker::Combo> combos;
-	star_tracker::combinationsPilots(2, 6, combos);
+	EXPECT_EQ(angles.size(), 5);
+	EXPECT_FLOAT_EQ(angles[0].pilot.x, 1);
+	EXPECT_FLOAT_EQ(angles[0].pilot.y, 2);
+	EXPECT_FLOAT_EQ(angles[0].opposite.x, 5);
+	EXPECT_FLOAT_EQ(angles[0].opposite.y, 5);
 
-	EXPECT_TRUE(combos.pop_back().equal(1, 3, 4, 5));
-	EXPECT_TRUE(combos.pop_back().equal(1, 2, 4, 5));
-	EXPECT_TRUE(combos.pop_back().equal(1, 2, 3, 5));
-	EXPECT_TRUE(combos.pop_back().equal(1, 2, 3, 4));
-	EXPECT_TRUE(combos.pop_back().equal(0, 3, 4, 5));
-	EXPECT_TRUE(combos.pop_back().equal(0, 2, 4, 5));
-	EXPECT_TRUE(combos.pop_back().equal(0, 2, 3, 5));
-	EXPECT_TRUE(combos.pop_back().equal(0, 2, 3, 4));
-	EXPECT_TRUE(combos.pop_back().equal(0, 1, 4, 5));
-	EXPECT_TRUE(combos.pop_back().equal(0, 1, 3, 5));
-	EXPECT_TRUE(combos.pop_back().equal(0, 1, 3, 4));
-	EXPECT_TRUE(combos.pop_back().equal(0, 1, 2, 5));
-	EXPECT_TRUE(combos.pop_back().equal(0, 1, 2, 4));
-	EXPECT_TRUE(combos.pop_back().equal(0, 1, 2, 3));
-}
-
-
-
-TEST ( Combinations, MorePilotsElements )
-{
-	ArrayList<star_tracker::Combo> combos;
-	star_tracker::combinationsPilots(10, 6, combos);
-	EXPECT_TRUE(combos.pop_back().equal(2, 3, 4, 5));
-	EXPECT_TRUE(combos.pop_back().equal(1, 3, 4, 5));
-	EXPECT_TRUE(combos.pop_back().equal(1, 2, 4, 5));
-	EXPECT_TRUE(combos.pop_back().equal(1, 2, 3, 5));
-	EXPECT_TRUE(combos.pop_back().equal(1, 2, 3, 4));
+	// Next Pilot
+	EXPECT_FLOAT_EQ(angles[4].pilot.x, 5);
+	EXPECT_FLOAT_EQ(angles[4].pilot.y, 5);
+	EXPECT_FLOAT_EQ(angles[4].opposite.x, 0);
+	EXPECT_FLOAT_EQ(angles[4].opposite.y, 0);
 }
 
 
@@ -184,44 +145,170 @@ TEST ( Combinations, MorePilotsElements )
 
 /*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*\
 |													|
-|			------ Combinations	------				|
+|			------ DeriveFuthest ------				|
 |													|
 \*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*/
 
-TEST ( Combinations, Valid )
+TEST ( DeriveFuthest, AlreadySorted )
 {
-	ArrayList<star_tracker::Combo> combos;
-	star_tracker::combinations(1, 7, combos);
+	Point<decimal> pilot;
+	Point<decimal> s1(10, 10);
+	Point<decimal> s2(9, 9);
+	Point<decimal> s3(8, 8);
 
-	EXPECT_TRUE(combos.pop_back().equal(1, 4, 5, 6));
-
-	EXPECT_TRUE(combos.pop_back().equal(1, 3, 5, 6));
-	EXPECT_TRUE(combos.pop_back().equal(1, 3, 4, 6));
-	EXPECT_TRUE(combos.pop_back().equal(1, 3, 4, 5));
-
-	EXPECT_TRUE(combos.pop_back().equal(1, 2, 5, 6));
-	EXPECT_TRUE(combos.pop_back().equal(1, 2, 4, 6));
-	EXPECT_TRUE(combos.pop_back().equal(1, 2, 4, 5));
-	EXPECT_TRUE(combos.pop_back().equal(1, 2, 3, 6));
-	EXPECT_TRUE(combos.pop_back().equal(1, 2, 3, 5));
-	EXPECT_TRUE(combos.pop_back().equal(1, 2, 3, 4));
+	deriveFuthest(&pilot, &s1, &s2, &s3);
+	EXPECT_TRUE(s1.equal(10, 10));
+	EXPECT_TRUE(s2.equal(9, 9));
+	EXPECT_TRUE(s3.equal(8, 8));
+}
 
 
+TEST ( DeriveFuthest, SwappedParamOneAndTwo )
+{
+	Point<decimal> pilot;
+	Point<decimal> s1(9, 10);
+	Point<decimal> s2(10, 10);
+	Point<decimal> s3(8, 8);
+
+
+	deriveFuthest(&pilot, &s1, &s2, &s3);
+
+	EXPECT_TRUE(s1.equal(10, 10));
+	EXPECT_TRUE(s2.equal(9, 10));
+	EXPECT_TRUE(s3.equal(8, 8));
+}
+
+
+TEST ( DeriveFuthest, SwappedParamOneAndThree )
+{
+	Point<decimal> pilot;
+	Point<decimal> s1(9, 10);
+	Point<decimal> s2(10, 10);
+	Point<decimal> s3(800, 8);
+
+	deriveFuthest(&pilot, &s1, &s2, &s3);
+	EXPECT_TRUE(s1.equal(800, 8));
+	EXPECT_TRUE(s2.equal(10, 10));
+	EXPECT_TRUE(s3.equal(9, 10));
 }
 
 
 
-TEST ( Combinations, InValid )
+
+
+/*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*\
+|													|
+|		------ FindAngleSinglePilot	------			|
+|													|
+\*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*/
+
+/**
+ * @brief To mock findAngle.
+ * @return a.x * 1000 + b.x * 100 + c.x * 10 + d.x
+ */
+
+decimal func(	Point<decimal>& a, Point<decimal>& b,
+				Point<decimal>& c, Point<decimal>& d	)
 {
-	ArrayList<star_tracker::Combo> combos;
-	star_tracker::combinations(1, 3, combos);
-
-	EXPECT_EQ(combos.size(), 0);
-
-	star_tracker::combinations(3, 0, combos);
-
-	EXPECT_EQ(combos.size(), 0);
+	return a.x * 1000 + b.x * 100 + c.x * 10 + d.x;
 }
+
+
+TEST ( FindAngleSinglePilot, OneCombo )
+{
+	Point<decimal> p;
+	Point<decimal> s1(3);
+	Point<decimal> s2(2);
+	Point<decimal> s3(1);
+
+	ArrayList<Point<decimal>> points;
+	points.push_back( p );
+	points.push_back( s1 );
+	points.push_back( s2 );
+	points.push_back( s3 );
+
+	ArrayList<AngleStat> angles;
+
+	findAnglesSinglePilot(0, 4, points, func, angles);
+
+	EXPECT_FLOAT_EQ(angles[0].angle, 321);
+}
+
+
+
+TEST ( FindAngleSinglePilot, MultiCombo )
+{
+	Point<decimal> p;
+	Point<decimal> s1(5);
+	Point<decimal> s2(4);
+	Point<decimal> s3(3);
+	Point<decimal> s4(2);
+	Point<decimal> s5(1);
+
+	ArrayList<Point<decimal>> points;
+	points.push_back( p );
+	points.push_back( s1 );
+	points.push_back( s2 );
+	points.push_back( s3 );
+	points.push_back( s4 );
+	points.push_back( s5 );
+
+	ArrayList<AngleStat> angles;
+
+	findAnglesSinglePilot(0, 6, points, func, angles);
+
+	EXPECT_FLOAT_EQ(angles[0].angle, 543);
+	EXPECT_FLOAT_EQ(angles[1].angle, 542);
+	EXPECT_FLOAT_EQ(angles[2].angle, 541);
+	EXPECT_FLOAT_EQ(angles[3].angle, 532);
+	EXPECT_FLOAT_EQ(angles[4].angle, 531);
+	EXPECT_FLOAT_EQ(angles[5].angle, 521);
+	EXPECT_FLOAT_EQ(angles[6].angle, 432);
+	EXPECT_FLOAT_EQ(angles[7].angle, 431);
+	EXPECT_FLOAT_EQ(angles[8].angle, 421);
+	EXPECT_FLOAT_EQ(angles[9].angle, 321);
+}
+
+
+
+
+
+TEST ( FindAngleSinglePilot, MultiComboUnsorted )
+{
+
+	Point<decimal> p;
+	Point<decimal> s1(1);
+	Point<decimal> s2(2);
+	Point<decimal> s3(3);
+	Point<decimal> s4(4);
+	Point<decimal> s5(5);
+
+
+	ArrayList<Point<decimal>> points;
+	points.push_back( p );
+	points.push_back( s1 );
+	points.push_back( s2 );
+	points.push_back( s3 );
+	points.push_back( s4 );
+	points.push_back( s5 );
+
+	ArrayList<AngleStat> angles;
+
+	findAnglesSinglePilot(0, 6, points, func, angles);
+
+	EXPECT_FLOAT_EQ(angles[0].angle, 321);	// 1 2 3
+	EXPECT_FLOAT_EQ(angles[1].angle, 421);	// 1 2 4
+	EXPECT_FLOAT_EQ(angles[2].angle, 521);	// 1 2 5
+	EXPECT_FLOAT_EQ(angles[3].angle, 431);	// 1 3 4
+	EXPECT_FLOAT_EQ(angles[4].angle, 531);	// 1 3 5
+	EXPECT_FLOAT_EQ(angles[5].angle, 541);	// 1 4 5
+	EXPECT_FLOAT_EQ(angles[6].angle, 432);	// 2 3 4
+	EXPECT_FLOAT_EQ(angles[7].angle, 532);	// 2 3 5
+	EXPECT_FLOAT_EQ(angles[8].angle, 542);	// 2 4 5
+	EXPECT_FLOAT_EQ(angles[9].angle, 543);	// 3 4 5
+}
+
+
 
 
 
@@ -244,54 +331,9 @@ TEST ( FindAngle, Valid )
 	a.push_back(adjac);
 	a.push_back(oppos);
 
-
-	Combo combo; // suppress lcov for Combo
-	combo.pilot = 0; combo.s1 = 1; combo.s2 = 2; combo.s3 = 3;
-
-	decimal angle = star_tracker::findAngle(a, combo);
-	EXPECT_DOUBLE_EQ(angle, 1.8545904360032242d);
+	decimal angle = star_tracker::findAngle(pilot, hypot, adjac, oppos);
+	EXPECT_FLOAT_EQ(angle, 1.8545904360032242d);
 }
-
-
-
-TEST ( FindAngle, HypotIsAdjac )
-{
-	Point<decimal> pilot(0, 0);
-	Point<decimal> adjac(0, 10);
-	Point<decimal> hypot(-4, 7);
-	Point<decimal> oppos(8, 4);
-	ArrayList<Point<decimal>> a;
-	a.push_back(pilot);
-	a.push_back(hypot);
-	a.push_back(adjac);
-	a.push_back(oppos);
-
-	Combo combo(0, 1, 2, 3);
-
-	decimal angle = star_tracker::findAngle(a, combo);
-	EXPECT_DOUBLE_EQ(angle, 1.8545904360032242d);
-}
-
-
-
-TEST ( FindAngle, HypotIsOppos )
-{
-	Point<decimal> pilot(0, 0);
-	Point<decimal> oppos(0, 10);
-	Point<decimal> adjac(-4, 7);
-	Point<decimal> hypot(8, 4);
-	ArrayList<Point<decimal>> a;
-	a.push_back(pilot);
-	a.push_back(hypot);
-	a.push_back(adjac);
-	a.push_back(oppos);
-
-	Combo combo(0, 1, 2, 3);
-
-	decimal angle = star_tracker::findAngle(a, combo);
-	EXPECT_DOUBLE_EQ(angle, 1.8545904360032242d);
-}
-
 
 
 TEST ( FindAngle, EqualSideLengths )
@@ -300,15 +342,8 @@ TEST ( FindAngle, EqualSideLengths )
 	Point<decimal> hypot(10, -10);
 	Point<decimal> adjac(9, -5);
 	Point<decimal> oppos(11, -5);
-	ArrayList<Point<decimal>> a;
-	a.push_back(pilot);
-	a.push_back(hypot);
-	a.push_back(adjac);
-	a.push_back(oppos);
 
-	Combo combo(0, 1, 2, 3);
-
-	decimal angle = (decimal) star_tracker::findAngle(a, combo);
+	decimal angle = star_tracker::findAngle(pilot, hypot, adjac, oppos);
 	EXPECT_FLOAT_EQ(angle, 0.3947911197);
 }
 
@@ -319,37 +354,23 @@ TEST ( FindAngle, PointsAwayFromPilot )
 	Point<decimal> hypot(5, 5);
 	Point<decimal> adjac(0, 5);
 	Point<decimal> oppos(1, 6);
-	ArrayList<Point<decimal>> a;
-	a.push_back(pilot);
-	a.push_back(hypot);
-	a.push_back(adjac);
-	a.push_back(oppos);
 
-	Combo combo(0, 1, 2, 3);
-
-	decimal angle = (decimal) star_tracker::findAngle(a, combo);
+	decimal angle = star_tracker::findAngle(pilot, hypot, adjac, oppos);
 	EXPECT_FLOAT_EQ(angle, 0.2449786631);
 }
+
 
 
 TEST ( FindAngle, RealExample )
 {
 	// Orions belt from hyg database
 	Point<decimal> pilot(5.603559,	-1.20192);	// Alnilam, mag: 1.69
-	Point<decimal> hypot(5.533445,	-0.299092);	// Mintaka, mag: 2.25
+	Point<decimal> hypot(5.645769,	-2.600069);	// 48 ori, mag: 3.77
 	Point<decimal> adjac(5.679313, -1.942572);	// Alnitak, mag: 1.74
-	Point<decimal> oppos(5.645769,	-2.600069);	// 48 ori, mag: 3.77
-	ArrayList<Point<decimal>> a;
-	a.push_back(pilot);
-	a.push_back(hypot);
-	a.push_back(adjac);
-	a.push_back(oppos);
-
-	Combo combo(0, 1, 2, 3);
+	Point<decimal> oppos(5.533445,	-0.299092);	// Mintaka, mag: 2.25
 
 
-
-	decimal angle = (decimal) star_tracker::findAngle(a, combo);
+	decimal angle = star_tracker::findAngle(pilot, hypot, adjac, oppos);
 	EXPECT_FLOAT_EQ(angle, 0.099750593); //, 0.099753); (Close enough?)
 }
 
@@ -365,21 +386,14 @@ TEST ( FindAngle, NanAllEqual )
 	Point<decimal> oppos(0, 0);
 	Point<decimal> adjac(0, 0);
 	Point<decimal> hypot(0, 0);
-	ArrayList<Point<decimal>> a;
-	a.push_back(pilot);
-	a.push_back(hypot);
-	a.push_back(adjac);
-	a.push_back(oppos);
 
-	Combo combo(0, 1, 2, 3);
-
-	decimal angle = (decimal) star_tracker::findAngle(a, combo);
+	decimal angle = star_tracker::findAngle(pilot, oppos, adjac, hypot);
 	EXPECT_FLOAT_EQ(angle, 1000);
 }
 
 
 
-
+// Tests that it can never output nan.
 TEST ( FindAngle, RandomTestNAN )
 {
 	srand(time(NULL));
@@ -390,16 +404,10 @@ TEST ( FindAngle, RandomTestNAN )
 		Point<decimal> oppos(rand() / i / 100000, rand() / i / 100000 - 100);
 		Point<decimal> adjac(rand() / i / 100000 - 100, rand() / i / 100000);
 		Point<decimal> hypot(rand() / i / 100000 - 100, rand() / i / 100000);
-		ArrayList<Point<decimal>> a;
-		a.push_back(pilot);
-		a.push_back(hypot);
-		a.push_back(adjac);
-		a.push_back(oppos);
 
-		Combo combo(0, 1, 2, 3);
+		deriveFuthest(&pilot, &oppos, &adjac, &hypot);
 
-		decimal angle = (decimal) star_tracker::findAngle(a, combo);
-
+		decimal angle = star_tracker::findAngle(pilot, oppos, adjac, hypot);
 		bool valid = !isnan(angle) && !isinf(angle);
 
 		EXPECT_TRUE(valid);

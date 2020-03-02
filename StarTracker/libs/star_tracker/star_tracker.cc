@@ -28,75 +28,81 @@ void deriveBrightest ( ArrayList<Blob>& list,
 
 
 
-void findAngles ( ArrayList<Point<decimal>>& points, ArrayList<Combo>& combos,
-												ArrayList<AngleStat>& angles )
+
+
+void findAnglesAllPilots ( ArrayList<Point<decimal>>& points,
+							ArrayList<AngleStat>& angles )
 {
-	for ( uint i = 0; i < combos.size(); i++ )
+	FIND_ANGLE_PTR ptr = *findAngle;
+	for ( uint i = 0; i < points.size() - 3; i++ )
 	{
-		AngleStat angle(findAngle(points, combos[i]), points[combos[i].pilot]);
-		angles.push_back(angle);
+		findAnglesSinglePilot(i, points.size(), points, ptr, angles);
 	}
 }
 
 
 
-void combinationsPilots ( uint numPilots, uint end, ArrayList<Combo>& combos )
-{
-	for ( uint i = 0; i < numPilots; i++ )
-	{
-		combinations(i, end, combos);
-	}
-}
 
-void combinations ( uint start, uint end, ArrayList<Combo>& combos )
+void findAnglesSinglePilot ( uint start, uint end,
+					ArrayList<Point<decimal>> points,
+					FIND_ANGLE_PTR func_ptr,
+					ArrayList<AngleStat>& angles )
 {
 	for ( uint ii = start + 1; ii < end; ii++ )
 		for ( uint jj = ii + 1; jj < end; jj++ )
 			for ( uint kk = jj + 1; kk < end; kk++ )
 			{
-				Combo combo(start, ii, jj, kk);
-				combos.push_back(Combo(start, ii, jj, kk));
+				Point<decimal> p	= points[start];
+				Point<decimal> s1	= points[ii];
+				Point<decimal> s2	= points[jj];
+				Point<decimal> s3	= points[kk];
 
+				deriveFuthest(&p, &s1, &s2, &s3);
+
+
+				const decimal angle = func_ptr(p, s1, s2, s3);
+				AngleStat stat(angle, p, s1);
+
+				angles.push_back(stat);
 			}
 }
 
 
 
-decimal findAngle ( ArrayList<Point<decimal>>& points, Combo& combo )
+
+void deriveFuthest ( Point<decimal>* pilot,
+					Point<decimal>* s1, Point<decimal>* s2, Point<decimal>* s3 )
 {
-	Point<decimal> pilot = points[combo.pilot];
-	Point<decimal> node1 = points[combo.s1];
-	Point<decimal> node2 = points[combo.s2];
-	Point<decimal> node3 = points[combo.s3];
+	// Finds the futhest star.
+	const decimal a = s1->distance(*pilot);
+	const decimal b = s2->distance(*pilot);
+	const decimal c = s3->distance(*pilot);
 
-	if ( !(node1.equal(node2) || node2.equal(node3) || node3.equal(node1)) )
+	if ( b > a && b > c )
 	{
-		//cosine rule: A = acos((b^2 + c^2 - a^2) / 2bc)
-		//a is farthest node from pilot.
-		decimal hyp = node1.distance(pilot);
-		decimal adj = node2.distance(pilot);
-		decimal opp = node3.distance(pilot);
+		Point<decimal> temp = *s1;
+		*s1 = *s2;
+		*s2 = temp;
+	}
+	else if ( c > a )
+	{
+		Point<decimal> temp = *s1;
+		*s1 = *s3;
+		*s3 = temp;
+	}
+}
 
-		// node1 is hyp
-		decimal a = node2.distance(node3);
-		// node2 is adj
-		decimal b = node1.distance(node3);
-		// node3 is opp
-		decimal c = node1.distance(node2);
 
-		//If our assumption is wrong, swap.
-		if (adj > hyp && adj > opp)
-		{ // if node2 is the futhest
-			decimal temp = a;
-			a = b;
-			b = temp;
-		}
-		else if (opp > hyp)
-		{ // if node3 is the futhest
-			decimal temp = a;
-			a = c;
-			c = temp;
-		}
+
+
+decimal findAngle ( Point<decimal>& pilot,
+					Point<decimal>& s1, Point<decimal>& s2, Point<decimal>& s3 )
+{
+	if ( !(s1.equal(s2) || s2.equal(s3) || s3.equal(s1)) )
+	{
+		decimal a = s2.distance(s3);
+		decimal b = s1.distance(s2);
+		decimal c = s1.distance(s3);
 
 		decimal angle = acos((b * b + c * c - a * a) / (2 * b * c));
 		return angle;

@@ -14,6 +14,12 @@ TEST ( DefaultConstructor, Valid )
 	EXPECT_EQ(point.y, 0);
 }
 
+TEST ( AlternateConstructor, SingleValue )
+{
+	util::Point<int> point(-1);
+	EXPECT_EQ(point.x, -1);
+	EXPECT_EQ(point.y, -1);
+}
 
 TEST ( AlternateConstructor, XandY )
 {
@@ -72,6 +78,8 @@ TEST ( Equal, IsTrue )
 	util::Point<util::decimal> p2(1000, -22);
 	EXPECT_TRUE(p1.equal(p1));
 	EXPECT_TRUE(p1.equal(p2));
+
+	EXPECT_TRUE(p1.equal(1000, -22));
 }
 
 
@@ -84,4 +92,6 @@ TEST ( Equal, IsFalse )
 
 	p2 = util::Point<util::decimal>(22, -1000);
 	EXPECT_FALSE(p1.equal(p2));
+
+	EXPECT_FALSE(p1.equal(1000, 22));
 }

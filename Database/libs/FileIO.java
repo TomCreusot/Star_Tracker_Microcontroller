@@ -1,4 +1,4 @@
-/*
+/**
  *	Peforms read/write functionality to specified files.
  *
  *	@author		Tom Creusot

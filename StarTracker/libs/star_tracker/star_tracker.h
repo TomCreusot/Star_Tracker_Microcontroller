@@ -15,57 +15,18 @@
 #include "libs/image_processing/blob.h"
 #include "libs/database/angle_stat.h"
 
+
 using namespace image_processing;
 using namespace database;
+
 
 namespace star_tracker
 {
 
-
-
-/**
-* A container class which stores 3 variables.
-* This is useful for storing the output of combinations.
-*/
-
-class Combo
-{
-public:
-	uint pilot, s1, s2, s3;
-
-	/**
-	* @brief 	Default Constructor
-	* @details	Sets all values to NULL.
-	*/
-
-	Combo	( );
-
-
-	/**
-	* @brief 		Alternate Constructor.
-	* @param p		The value of the pilot.
-	* @param sA		The value of s1
-	* @param sB		The value of s2
-	* @param sC		The value of s3
-	*/
-
-	Combo	( uint p, uint sA, uint sB, uint sC );
-
-
-	/**
-	* @brief 		Tests if the input and this object have the same value.
-	* @param p		The value of the pilot.
-	* @param sA		The element to test with.
-	* @param sB		The other element to test with.
-	* @param sC		The other other element to test with.
-	* @return		If they are equal.
-	* @details		If the nodes point to the same location, it is equal.
-	*/
-
-	bool equal	( uint , uint sA, uint sB, uint sC );
-};
-
-
+ typedef decimal (*FIND_ANGLE_PTR)	(	Point<decimal>&,
+									Point<decimal>&,
+									Point<decimal>&,
+									Point<decimal>&);
 
 
 /**
@@ -82,44 +43,50 @@ void deriveBrightest ( ArrayList<Blob>& list,
 /**
  * @brief				Finds all the combinations of angles from the supplied stars.
  * @param points [in]	The points to calculate with.
- * @param combos [in]	The combos to use with points.
  * @param angles [out]	The pilot position and the corresponding angle.
  */
 
-void findAngles ( ArrayList<Point<decimal>>& points, ArrayList<Combo>& combos,
-												ArrayList<AngleStat>& angles );
-
-
-
-
-/**
-* @brief					Gets every index conbination of multiple pilot stars in case of outlier.
-* @param numPilots	[in]	The number of pilots to sample.
-* @param end		[in]	The exclusive index to stop at.
-* @param combos	[out]	The combinations to append to.
-*/
-
-void combinationsPilots ( uint numPilots, uint end, ArrayList<Combo>& combos );
-
+ void findAnglesAllPilots ( ArrayList<Point<decimal>>& points,
+ 							ArrayList<AngleStat>& angles );
 
 
 /**
-* @brief				Creates a list of all the possible combinations of index's.
-* @param start	[in]	The start index of the array (inclusive) usualy the pilot.
-* @param end	[in]	The end index of the array (exclusive).
-* @param combos	[out]	The combinations as an output.
+ * @brief				Makes "s1" the futhest star from the pilot.
+ * @param pilot [in]	To allow to find distance.
+ * @param s1 [in/out]	The variable to be the futhest star.
+ * @param s2 [in/out]	The variable to possibly swap with.
+ * @param s3 [in/out]	The variabel to possibly swap with.
+ */
+
+void deriveFuthest ( Point<decimal>* pilot,
+				Point<decimal>* s1, Point<decimal>* s2, Point<decimal>* s3 );
+
+
+/**
+* @brief					Appends all angles with one pilot.
+* @param start		[in]	The start index of the array (inclusive) usualy the pilot.
+* @param end		[in]	The end index of the array (exclusive).
+* @param points 	[in]	The points to use.
+* @param func_ptr	[in]	The function to find an individual angle.
+* @param angles		[out]	The angles to append to.
 */
 
-void combinations ( uint start, uint end, ArrayList<Combo>& combos );
+void findAnglesSinglePilot ( uint start, uint end,
+							ArrayList<Point<decimal>> points,
+							FIND_ANGLE_PTR func_ptr,
+							ArrayList<AngleStat>& angles );
 
 
 
 /**
 * @brief 				Finds angle between the stars and the futhest from the pilot.
-* @param points	[in]	The points to read from.
-* @param combo	[in]	The combinations index of the stars.
+* @param pilot			The pilot star.
+* @param s1				The futhest star.
+* @param s2				The other star.
+* @param s3				The another other star.
 * @return 				The angle OR 1000 if invalid (points are the same).
 */
 
-decimal findAngle ( ArrayList<Point<decimal>>& points, Combo& combo);
+decimal findAngle (Point<decimal>& pilot,
+				   Point<decimal>& s1, Point<decimal>& s2, Point<decimal>& s3 );
 }

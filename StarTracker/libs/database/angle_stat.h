@@ -20,10 +20,11 @@ namespace database
 class AngleStat
 {
 public:
-	decimal angle;
-	Point<decimal> pilot;
-	AngleStat* pixel;
-	decimal odds;
+	decimal angle;				///< The angle of the opposite star.
+	Point<decimal> pilot;		///< The brightest star.
+	Point<decimal> opposite;	///< The star futhest from the pilot.
+	AngleStat* pixel;			///< The placement on the image.
+	decimal odds;				///< The likelyhood of this being the match.
 
 	/** @brief Default Constructor */
 	AngleStat ( );
@@ -32,22 +33,20 @@ public:
 	 * @brief Alternate Constructor
 	 * @param angle_	The value of angle.
 	 * @param pilot_	The value of the pilot.
+	 * @param opposite_	The value of the star futhest from the pilot.
 	 */
 
-	AngleStat ( decimal angle_, Point<decimal>& pilot_ );
+	AngleStat ( decimal angle_,
+					Point<decimal>& pilot_, Point<decimal>& opposite_ );
 
 
 	/**
 	 * @brief Alternate Constructor
 	 * @param px	The pixel AngleStat to copy and set.
-	 * @details sets pixel and sets all the values as a copy constructor.
+	 * @details 	Sets pixel and sets all the values as a copy constructor.
 	 */
 
 	AngleStat ( AngleStat& px );
-
-
-
-	// AngleStat ( AngleStat)
 
 
 

@@ -10,106 +10,33 @@
 
 public class Star
 {
-	// apperant Magnitude/angle, Right Asscention, Declination
-	public double attribute, ra, dec;
+	public double attribute;
+	public Point pilot;
 
 
 	/**
-	 * Default Constructor.
+	 * Default Constructor (sets everything to 0).
 	 */
 
 	public Star ( )
 	{
 		attribute = 0;
-		ra = 0;
-		dec = 0;
+		pilot = new Point();
 	}
-
-
 
 
 	/**
 	 * Alternate Constructor.
 	 * @param attribute_	Sets value for the attribute.
-	 * @param ra_			Sets the value for ra (right ascension).
-	 * @param dec_			Sets the value for dec (declination).
+	 * @param ra_			Sets the value for pRa (right ascension).
+	 * @param dec_			Sets the value for pDec (declination).
 	 */
 
-	public Star ( double attribute_, double ra_, double dec_ )
+	public Star ( double attribute, double ra, double dec )
 	{
-		attribute = attribute_;
-		ra = ra_;
-		dec = dec_;
+		attribute = attribute;
+		pilot = new Point(ra, dec);
 	}
-
-
-
-
-
-	/**
-	* Alternate Constructor.
-	* This constructor is only to aid the testing of difference classes.
-	* @param a  What all the values should be
-	*/
-
-	public Star ( double a )
-	{
-		attribute = a;
-		ra = a;
-		dec = a;
-	}
-
-
-
-
-
-	/**
-	 * Constructs the class by solving the attribute.
-	 * This is simmilar to ../src/StarTracker/StarTracker.cpp: findAngle().
-	 *
-	 * @param pilot		The brightest star.
-	 * @param s1		A random star.
-	 * @param s2		An other random star.
-	 * @param s3		An other other random star.
-	 */
-
-	public Star ( Star pilot, Star s1, Star s2, Star s3 )
-	{
-		//cosine rule: A = acos((b^2 + c^2 - a^2) / 2bc)
-		//a is farthest node from pilot.
-
-		double hyp = s1.distanceFromPilot(pilot);
-		double adj = s2.distanceFromPilot(pilot);
-		double opp = s3.distanceFromPilot(pilot);
-
-		// a is node2 to node3
-		double a = s2.distanceFromPilot(s3);
-		// b is node1 to node3
-		double b = s1.distanceFromPilot(s3);
-		// c is node1 to node2
-		double c = s1.distanceFromPilot(s2);
-
-		//If our assumption is wrong, swap.
-		if (adj > hyp && adj > opp)
-		{
-			double temp = a;
-			a = b;
-			b = temp;
-		}
-		else if (opp > hyp)
-		{
-			double temp = a;
-			a = c;
-			c = temp;
-		}
-
-		ra = pilot.ra;
-		dec = pilot.dec;
-		attribute = Math.acos((b * b + c * c - a * a) / (2d * b * c));
-	}
-
-
-
 
 
 
@@ -123,7 +50,8 @@ public class Star
 
 	public double distanceFromPilot ( Star pilot )
 	{
-		return Math.hypot(ra - pilot.ra, dec - pilot.dec);
+		return Math.hypot(	this.pilot.ra - pilot.pilot.ra,
+							this.pilot.dec - pilot.pilot.dec	);
 	}
 
 
@@ -136,23 +64,6 @@ public class Star
 
 	public String toCSVString ( )
 	{
-		return attribute + "," + ra + "," + dec;
+		return attribute + "," + pilot.toCSVString();
 	}
-
-
-
-	/**
-	 * Provides an easy to read version of the class.
-	 * @return The string.
-	 */
-
-	 @Override
-	 public String toString ( )
-	 {
-		 return attribute + ", " + ra + ", " + dec;
-	 }
-
-
-
-
 }

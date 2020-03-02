@@ -27,6 +27,19 @@ public:
 		y = 0;
 	}
 
+
+	/**
+	 * @brief		Alternate Constructor.
+	 * @param val	The value to set x and y.
+	 * @details		This is for testing code of users of Point.
+	 */
+
+	Point ( T val )
+	{
+		x = val;
+		y = val;
+	}
+
 	/**
 	* @brief 	Alternate Constructor
 	* @param x_	The x position.
@@ -101,18 +114,28 @@ public:
 
 
 	/**
-	* @brief		Finds if othe point is the same position.
+	* @brief		Finds if other point is the same position.
 	* @param 		other The other point to test against.
 	* @return 		True if x and y are equal to this x and y.
 	*/
 
 	bool equal ( Point<T>& other )
 	{
-		const T xx = fabs(x - other.x);
-		const T yy = fabs(y - other.y);
-		return xx < 0.0001 && yy < 0.0001;
+		return equal(other.x, other.y);
 	}
 
+
+	/**
+	 * @brief		Finds if the other point is the same position.
+	 * @param xx	The x position to compare to.
+	 * @param yy	The y position to compare to.
+	 * @return 		True if x and y are equal to xx and yy.
+	 */
+
+	bool equal ( T xx, T yy )
+	{
+		return fabs(x - xx) < 0.0001 && fabs(y - yy) < 0.0001;
+	}
 
 
 };
