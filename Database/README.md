@@ -2,13 +2,24 @@
 This part of the project is designed to convert the database into a format easily read by the main project microcontroller.
 The way this is done is:
 	1. Having a source database of apparent magnitude, right ascension and declination of star charts.
-	2. Calling CSVToCArray with the correct command line arguments.
+	2. Converting it to angle, right ascention and declination.
+	3. Filling in a template of an array header file.
 
 
 
 
 ## Getting Started
-Use bazel build //libs:csvToCArray
+type: `bazel run //src:Main` to run the main program or go into src and type `javac *.java; java Main config.properties`.
+
+### Config
+In src/ there will be a file `config.properties`, this file has all the requirements to construct the database:
+* *database*	The location of the mag,ra,dec database to convert.
+* *fov*			The diagonal field of view of the camera.
+* *cutoff-mag*	The maximum magnitude to include.
+* *pilot-sets*	The number of stars to sample for each pilot star angle calculation.
+* *array-name*	The name of the array to call in the c code.
+* *template*	The template file to read from.
+* *output*		Where to save the new database.
 
 
 
@@ -38,38 +49,16 @@ It is important ***NOT*** to sort the database magnitude in order, the sorting a
 
 ## Detailed Description
 
-### DPreprocessor.exe
-This program is designed to read a database in the format of:
-csv, with 3 columns in order of:
-Apparent magnitude, Right Ascension, Declination.
-The first row will be assumed as headers and will be ignored.
+### Preprocessor
+This converts a database of mag,ra,dec to angle,ra,dec.
 
-It will convert it into a more useful format for the main program.
-This format is:
-* The angle of the furthest star from the pilot star in the sample.
-* The right ascension of the pilot star.
-* The declination of the pilot star.
-
-The pyramid method will be calculated on a specified amount of the closest stars to the pilot.
-
-The program will also exclude any stars above a specified apparent magnitude.
-The pilot stars will not be reused, however the others can be.
-
-Depending on how large the database is, this may take a long time.
-
-### DToTree.exe
-This program converts the database specified into a balanced tree format from the first column.
-It only accepts 3 doubles.
-This should not take nearly as long as DPreprocessor.exe
-
-### DToBinary.exe
-This converts the database into a binary format.
-
+### FillTemplate
+This fills the template file with the array and several required variables to compile the c code.
 
 
 
 ## Running the tests
-
+type: `bazel test //tests/...`
 
 
 
