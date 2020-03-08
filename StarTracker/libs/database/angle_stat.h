@@ -58,6 +58,19 @@ public:
 	void personalProbability ( );
 
 
+	/**
+	 * @brief					Finds where the center pixel is in real world.
+	 * @param fov  		[in]	The diagonal feild of view of the camera.
+	 * @param wodth		[in]	The width of the image.
+	 * @param height	[in]	The height of the image.
+	 * @param center 	[out]	The position to assign.
+	 */
+
+	void findCenter ( decimal fovX, decimal fovY, decimal width, decimal height,
+									Point<decimal>& center );
+
+
+
 
 
 	/**
@@ -70,7 +83,6 @@ public:
 
 	static void clusterProbability ( ArrayList<AngleStat>& database,
 											decimal wSeparation, decimal fov );
-
 
 
 };

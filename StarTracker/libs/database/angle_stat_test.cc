@@ -1,6 +1,7 @@
 #include "gtest/gtest.h"
 #include "angle_stat.h"
 
+using namespace database;
 
 TEST ( DefaultConstructor, Valid )
 {
@@ -99,4 +100,36 @@ TEST ( ClusterProbability, OneElement )
 
 	AngleStat::clusterProbability(list, 10, 10);
 	EXPECT_FLOAT_EQ(a.odds, 0.023);
+}
+
+
+
+TEST( FindCenter, OnCenter )
+{
+	Point<decimal> px(50, 50);
+	Point<decimal> center();
+	AngleStat stat();
+	AngleStat pxS;
+	stat.pixel = *pxS;
+	stat.pixel->opposite = px;
+	clusterProbability(60, 50, 100, 100, center);
+
+	EXPECT_FLOAT_EQ(center.x, 0);
+	EXPECT_FLOAT_EQ(center.y, 0);
+}
+
+
+
+TEST( FindCenter, OnEdgeX )
+{
+	Point<decimal> px(0, 50);
+	Point<decimal> center();
+	AngleStat stat();
+	AngleStat pxS;
+	stat.pixel = *pxS;
+	stat.pixel->opposite = px;
+	clusterProbability(60, 50, 100, 100, center);
+
+	EXPECT_FLOAT_EQ(center.x, -30);
+	EXPECT_FLOAT_EQ(center.y, 0);
 }

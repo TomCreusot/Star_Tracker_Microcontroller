@@ -18,7 +18,6 @@ void deriveBrightest ( ArrayList<Blob>& list,
 		list[jj] = temp;
 	}
 
-
 	for ( uint i = 0; i < list.size() && i < num; i++ )
 	{
 		Point<decimal> point(list[i].getCentroidX(), list[i].getCentroidY());

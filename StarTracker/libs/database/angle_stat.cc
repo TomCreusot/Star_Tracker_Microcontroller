@@ -64,4 +64,13 @@ void AngleStat::clusterProbability ( ArrayList<AngleStat>& database,
 			}
 		}
 }
+
+
+void AngleStat::findCenter (	decimal fovX, decimal fovY,
+								decimal width, decimal height,
+								Point<decimal>& center )
+{
+	center.x = pixel->opposite.x / (width / 2) * fovX;
+	center.y = pixel->opposite.y / (height / 2) * fovY;
+}
 }
