@@ -14,8 +14,7 @@ namespace database
 const int database_size = $(num_elements);
 
 const decimal $(array_name) [$(num_elements)][5] =
-{
 $(array_elements)
-};
+
 
 }
