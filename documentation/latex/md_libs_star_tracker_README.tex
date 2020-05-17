@@ -1,0 +1,66 @@
+This package is to have points input, these will then be compared with each other to find unique angles.
+
+\subsection*{How To Use}
+
+In the {\itshape B\+U\+I\+LD} file, input\+: 
+\begin{DoxyCode}
+deps = ["//libs/star\_tracker/..."]
+\end{DoxyCode}
+ At the top of the desired file, input\+: 
+\begin{DoxyCode}
+#include "libs/star\_tracker/star\_set.h"
+using namespace star\_tracker;
+\end{DoxyCode}
+
+
+\subsubsection*{Build}
+
+Input the following into your command line\+: 
+\begin{DoxyCode}
+bazel build //libs/star\_tracker/...
+\end{DoxyCode}
+
+
+\subsubsection*{Test}
+
+Input the following into your command line\+: 
+\begin{DoxyCode}
+bazel test //libs/star\_tracker/... --test\_output=all
+\end{DoxyCode}
+
+
+\subsection*{Files}
+
+
+\begin{DoxyItemize}
+\item \hyperlink{star__set_8h_source}{star\+\_\+set.\+h}
+\item star\+\_\+set.\+cc
+\item find\+\_\+elements.\+h
+\item \hyperlink{database__array_8h}{database\+\_\+array.\+h} ~\newline
+~\newline
+
+\item star\+\_\+set\+\_\+test.\+cc
+\item find\+\_\+elements.\+cc ~\newline
+~\newline
+
+\item B\+U\+I\+LD
+\item R\+E\+A\+D\+M\+E.\+md
+\end{DoxyItemize}
+
+\subsection*{Built With}
+
+
+\begin{DoxyItemize}
+\item g++ 7.\+4.\+0
+\item bazel 2.\+0.\+0
+\item gtest 1.\+10.\+0
+\end{DoxyItemize}
+
+\subsection*{Contributing}
+
+\subsection*{Authors}
+
+
+\begin{DoxyItemize}
+\item Tom Creusot -\/ {\itshape Initial Creation} 
+\end{DoxyItemize}

@@ -1,0 +1,290 @@
+\hypertarget{classimage__processing_1_1Image}{}\section{image\+\_\+processing\+:\+:Image Class Reference}
+\label{classimage__processing_1_1Image}\index{image\+\_\+processing\+::\+Image@{image\+\_\+processing\+::\+Image}}
+
+
+Collaboration diagram for image\+\_\+processing\+:\+:Image\+:
+\nopagebreak
+\begin{figure}[H]
+\begin{center}
+\leavevmode
+\includegraphics[width=222pt]{classimage__processing_1_1Image__coll__graph}
+\end{center}
+\end{figure}
+\subsection*{Public Member Functions}
+\begin{DoxyCompactItemize}
+\item 
+\hyperlink{classimage__processing_1_1Image_abba75f0b2369c4776a5585b5106b5230}{Image} ()
+\begin{DoxyCompactList}\small\item\em Default Constructor. \end{DoxyCompactList}\item 
+\hyperlink{classimage__processing_1_1Image_af6d00bc8eea560982e2ea61c79a98882}{Image} (uint w, uint h)
+\begin{DoxyCompactList}\small\item\em Alternate Constructor. \end{DoxyCompactList}\item 
+\hyperlink{classimage__processing_1_1Image_ae0a46daf0a6697343674f4fc1d1a1da6}{Image} (const \hyperlink{classimage__processing_1_1Image}{Image} \&img)
+\begin{DoxyCompactList}\small\item\em Copy Constructor. \end{DoxyCompactList}\item 
+uint \hyperlink{classimage__processing_1_1Image_a9781426393507ea891a8c2e312317a60}{Get\+Width} () const
+\begin{DoxyCompactList}\small\item\em Getter for image width. \end{DoxyCompactList}\item 
+uint \hyperlink{classimage__processing_1_1Image_a13ef94cffdbbf778228062afec20795c}{Get\+Height} () const
+\begin{DoxyCompactList}\small\item\em Getter for image height. \end{DoxyCompactList}\item 
+byte \hyperlink{classimage__processing_1_1Image_a13ca8eb1de2d50b853df8fcb40526eeb}{Get\+Pixel} (uint x, uint y) const
+\begin{DoxyCompactList}\small\item\em Returns the pixels intensity. \end{DoxyCompactList}\item 
+bool \hyperlink{classimage__processing_1_1Image_a1128997bdc06d00663cefc4059cc5b36}{Valid\+Pixel} (uint x, uint y) const
+\begin{DoxyCompactList}\small\item\em Finds if the specified location is within the bounds of the image. \end{DoxyCompactList}\item 
+void \hyperlink{classimage__processing_1_1Image_a8686d6979e34ca0afc35d3e0e241e8b6}{Set\+Pixel} (uint x, uint y, byte color)
+\begin{DoxyCompactList}\small\item\em Sets the pixel intensity of a part on an image. \end{DoxyCompactList}\item 
+void \hyperlink{classimage__processing_1_1Image_aa0f895ef02220e7b81af8cbb85f6a479}{Set\+Width\+Height} (uint w, uint h)
+\begin{DoxyCompactList}\small\item\em If valid, sets the width and height. \end{DoxyCompactList}\item 
+void \hyperlink{classimage__processing_1_1Image_a784ff8562f684f20b1b35a69c0c22b67}{Find\+Min\+Max} (uint x, uint y, uint sample\+Radius, byte $\ast$min, byte $\ast$max)
+\begin{DoxyCompactList}\small\item\em Finds the minimum and maximum values in the specified area. \end{DoxyCompactList}\item 
+void \hyperlink{classimage__processing_1_1Image_a7cc53155ea74b8480a0ca8fbfa698a65}{Adaptive\+Threshold} (uint sample\+Radius, float aggression)
+\begin{DoxyCompactList}\small\item\em Reduces the image to 0 or important factors. \end{DoxyCompactList}\item 
+{\footnotesize template$<$const int N$>$ }\\uint \hyperlink{classimage__processing_1_1Image_a705a802c9e2fef367b84debddd8cc826}{Percent\+Threshold} (decimal aggression, \hyperlink{classutil_1_1ArrayList}{Array\+List}$<$ uint, N $>$ \&histogram)
+\begin{DoxyCompactList}\small\item\em Deletes any pixel below the specified \% of brightness in the image. \end{DoxyCompactList}\item 
+{\footnotesize template$<$const int N$>$ }\\void \hyperlink{classimage__processing_1_1Image_a26e15daaaca99d18255688d14fb2a349}{Generate\+Histogram} (\hyperlink{classutil_1_1ArrayList}{Array\+List}$<$ uint, N $>$ $\ast$histogram)
+\begin{DoxyCompactList}\small\item\em Fills an array with a colormap. \end{DoxyCompactList}\end{DoxyCompactItemize}
+
+
+\subsection{Detailed Description}
+\begin{Desc}
+\item[Examples\+: ]\par
+\hyperlink{_2mnt_2c_2Users_2soyuz_2Desktop_2Star_Tracker_Microcontroller_2libs_2nix_2get_image_8h-example}{/mnt/c/\+Users/soyuz/\+Desktop/\+Star\+\_\+\+Tracker\+\_\+\+Microcontroller/libs/nix/get\+\_\+image.\+h}.\end{Desc}
+
+
+\subsection{Constructor \& Destructor Documentation}
+\mbox{\Hypertarget{classimage__processing_1_1Image_abba75f0b2369c4776a5585b5106b5230}\label{classimage__processing_1_1Image_abba75f0b2369c4776a5585b5106b5230}} 
+\index{image\+\_\+processing\+::\+Image@{image\+\_\+processing\+::\+Image}!Image@{Image}}
+\index{Image@{Image}!image\+\_\+processing\+::\+Image@{image\+\_\+processing\+::\+Image}}
+\subsubsection{\texorpdfstring{Image()}{Image()}\hspace{0.1cm}{\footnotesize\ttfamily [1/3]}}
+{\footnotesize\ttfamily image\+\_\+processing\+::\+Image\+::\+Image (\begin{DoxyParamCaption}{ }\end{DoxyParamCaption})}
+
+
+
+Default Constructor. 
+
+A single pixel of value 0. \mbox{\Hypertarget{classimage__processing_1_1Image_af6d00bc8eea560982e2ea61c79a98882}\label{classimage__processing_1_1Image_af6d00bc8eea560982e2ea61c79a98882}} 
+\index{image\+\_\+processing\+::\+Image@{image\+\_\+processing\+::\+Image}!Image@{Image}}
+\index{Image@{Image}!image\+\_\+processing\+::\+Image@{image\+\_\+processing\+::\+Image}}
+\subsubsection{\texorpdfstring{Image()}{Image()}\hspace{0.1cm}{\footnotesize\ttfamily [2/3]}}
+{\footnotesize\ttfamily image\+\_\+processing\+::\+Image\+::\+Image (\begin{DoxyParamCaption}\item[{uint}]{w,  }\item[{uint}]{h }\end{DoxyParamCaption})}
+
+
+
+Alternate Constructor. 
+
+
+\begin{DoxyParams}{Parameters}
+{\em w} & The width of the image. \\
+\hline
+{\em h} & The height of the image.\\
+\hline
+\end{DoxyParams}
+Sets all pixels to 0. \mbox{\Hypertarget{classimage__processing_1_1Image_ae0a46daf0a6697343674f4fc1d1a1da6}\label{classimage__processing_1_1Image_ae0a46daf0a6697343674f4fc1d1a1da6}} 
+\index{image\+\_\+processing\+::\+Image@{image\+\_\+processing\+::\+Image}!Image@{Image}}
+\index{Image@{Image}!image\+\_\+processing\+::\+Image@{image\+\_\+processing\+::\+Image}}
+\subsubsection{\texorpdfstring{Image()}{Image()}\hspace{0.1cm}{\footnotesize\ttfamily [3/3]}}
+{\footnotesize\ttfamily image\+\_\+processing\+::\+Image\+::\+Image (\begin{DoxyParamCaption}\item[{const \hyperlink{classimage__processing_1_1Image}{Image} \&}]{img }\end{DoxyParamCaption})}
+
+
+
+Copy Constructor. 
+
+
+\begin{DoxyParams}{Parameters}
+{\em img} & \mbox{[}in\mbox{]} The image to copy. \\
+\hline
+\end{DoxyParams}
+
+
+\subsection{Member Function Documentation}
+\mbox{\Hypertarget{classimage__processing_1_1Image_a7cc53155ea74b8480a0ca8fbfa698a65}\label{classimage__processing_1_1Image_a7cc53155ea74b8480a0ca8fbfa698a65}} 
+\index{image\+\_\+processing\+::\+Image@{image\+\_\+processing\+::\+Image}!Adaptive\+Threshold@{Adaptive\+Threshold}}
+\index{Adaptive\+Threshold@{Adaptive\+Threshold}!image\+\_\+processing\+::\+Image@{image\+\_\+processing\+::\+Image}}
+\subsubsection{\texorpdfstring{Adaptive\+Threshold()}{AdaptiveThreshold()}}
+{\footnotesize\ttfamily void image\+\_\+processing\+::\+Image\+::\+Adaptive\+Threshold (\begin{DoxyParamCaption}\item[{uint}]{sample\+Radius,  }\item[{float}]{aggression }\end{DoxyParamCaption})}
+
+
+
+Reduces the image to 0 or important factors. 
+
+
+\begin{DoxyParams}{Parameters}
+{\em sample\+Radius} & Distance to take the average from the focus pixel. \\
+\hline
+{\em aggression} & The percentage of pixels to be removed (1 means delete everything).\\
+\hline
+\end{DoxyParams}
+Uses the average min/max method. \mbox{\Hypertarget{classimage__processing_1_1Image_a784ff8562f684f20b1b35a69c0c22b67}\label{classimage__processing_1_1Image_a784ff8562f684f20b1b35a69c0c22b67}} 
+\index{image\+\_\+processing\+::\+Image@{image\+\_\+processing\+::\+Image}!Find\+Min\+Max@{Find\+Min\+Max}}
+\index{Find\+Min\+Max@{Find\+Min\+Max}!image\+\_\+processing\+::\+Image@{image\+\_\+processing\+::\+Image}}
+\subsubsection{\texorpdfstring{Find\+Min\+Max()}{FindMinMax()}}
+{\footnotesize\ttfamily void image\+\_\+processing\+::\+Image\+::\+Find\+Min\+Max (\begin{DoxyParamCaption}\item[{uint}]{x,  }\item[{uint}]{y,  }\item[{uint}]{sample\+Radius,  }\item[{byte $\ast$}]{min,  }\item[{byte $\ast$}]{max }\end{DoxyParamCaption})}
+
+
+
+Finds the minimum and maximum values in the specified area. 
+
+
+\begin{DoxyParams}{Parameters}
+{\em x} & \mbox{[}in\mbox{]} The middle x position. \\
+\hline
+{\em y} & \mbox{[}in\mbox{]} The middle y position. \\
+\hline
+{\em sample\+Radius} & \mbox{[}in\mbox{]} The distance from the middle to sample. \\
+\hline
+{\em min} & \mbox{[}out\mbox{]} The minimum variable to set. \\
+\hline
+{\em max} & \mbox{[}out\mbox{]} The maximum variable to set. \\
+\hline
+\end{DoxyParams}
+\mbox{\Hypertarget{classimage__processing_1_1Image_a26e15daaaca99d18255688d14fb2a349}\label{classimage__processing_1_1Image_a26e15daaaca99d18255688d14fb2a349}} 
+\index{image\+\_\+processing\+::\+Image@{image\+\_\+processing\+::\+Image}!Generate\+Histogram@{Generate\+Histogram}}
+\index{Generate\+Histogram@{Generate\+Histogram}!image\+\_\+processing\+::\+Image@{image\+\_\+processing\+::\+Image}}
+\subsubsection{\texorpdfstring{Generate\+Histogram()}{GenerateHistogram()}}
+{\footnotesize\ttfamily template$<$const int N$>$ \\
+void image\+\_\+processing\+::\+Image\+::\+Generate\+Histogram (\begin{DoxyParamCaption}\item[{\hyperlink{classutil_1_1ArrayList}{Array\+List}$<$ uint, N $>$ $\ast$}]{histogram }\end{DoxyParamCaption})\hspace{0.3cm}{\ttfamily [inline]}}
+
+
+
+Fills an array with a colormap. 
+
+
+\begin{DoxyParams}{Parameters}
+{\em histogram} & \mbox{[}out\mbox{]} The array to fill. \\
+\hline
+\end{DoxyParams}
+
+\begin{DoxyTemplParams}{Template Parameters}
+{\em N} & The size of the array list \char`\"{}histogram\char`\"{}.\\
+\hline
+\end{DoxyTemplParams}
+0 brightness will be \mbox{[}0\mbox{]}. \mbox{\Hypertarget{classimage__processing_1_1Image_a13ef94cffdbbf778228062afec20795c}\label{classimage__processing_1_1Image_a13ef94cffdbbf778228062afec20795c}} 
+\index{image\+\_\+processing\+::\+Image@{image\+\_\+processing\+::\+Image}!Get\+Height@{Get\+Height}}
+\index{Get\+Height@{Get\+Height}!image\+\_\+processing\+::\+Image@{image\+\_\+processing\+::\+Image}}
+\subsubsection{\texorpdfstring{Get\+Height()}{GetHeight()}}
+{\footnotesize\ttfamily uint image\+\_\+processing\+::\+Image\+::\+Get\+Height (\begin{DoxyParamCaption}{ }\end{DoxyParamCaption}) const}
+
+
+
+Getter for image height. 
+
+\begin{DoxyReturn}{Returns}
+The height of the image. 
+\end{DoxyReturn}
+\mbox{\Hypertarget{classimage__processing_1_1Image_a13ca8eb1de2d50b853df8fcb40526eeb}\label{classimage__processing_1_1Image_a13ca8eb1de2d50b853df8fcb40526eeb}} 
+\index{image\+\_\+processing\+::\+Image@{image\+\_\+processing\+::\+Image}!Get\+Pixel@{Get\+Pixel}}
+\index{Get\+Pixel@{Get\+Pixel}!image\+\_\+processing\+::\+Image@{image\+\_\+processing\+::\+Image}}
+\subsubsection{\texorpdfstring{Get\+Pixel()}{GetPixel()}}
+{\footnotesize\ttfamily byte image\+\_\+processing\+::\+Image\+::\+Get\+Pixel (\begin{DoxyParamCaption}\item[{uint}]{x,  }\item[{uint}]{y }\end{DoxyParamCaption}) const}
+
+
+
+Returns the pixels intensity. 
+
+
+\begin{DoxyParams}{Parameters}
+{\em x} & The x coordinate. \\
+\hline
+{\em y} & The y coordinate. \\
+\hline
+\end{DoxyParams}
+\begin{DoxyReturn}{Returns}
+The intensity of the image at the x and y coordinate. 
+\end{DoxyReturn}
+\mbox{\Hypertarget{classimage__processing_1_1Image_a9781426393507ea891a8c2e312317a60}\label{classimage__processing_1_1Image_a9781426393507ea891a8c2e312317a60}} 
+\index{image\+\_\+processing\+::\+Image@{image\+\_\+processing\+::\+Image}!Get\+Width@{Get\+Width}}
+\index{Get\+Width@{Get\+Width}!image\+\_\+processing\+::\+Image@{image\+\_\+processing\+::\+Image}}
+\subsubsection{\texorpdfstring{Get\+Width()}{GetWidth()}}
+{\footnotesize\ttfamily uint image\+\_\+processing\+::\+Image\+::\+Get\+Width (\begin{DoxyParamCaption}{ }\end{DoxyParamCaption}) const}
+
+
+
+Getter for image width. 
+
+\begin{DoxyReturn}{Returns}
+The width of the image. 
+\end{DoxyReturn}
+\mbox{\Hypertarget{classimage__processing_1_1Image_a705a802c9e2fef367b84debddd8cc826}\label{classimage__processing_1_1Image_a705a802c9e2fef367b84debddd8cc826}} 
+\index{image\+\_\+processing\+::\+Image@{image\+\_\+processing\+::\+Image}!Percent\+Threshold@{Percent\+Threshold}}
+\index{Percent\+Threshold@{Percent\+Threshold}!image\+\_\+processing\+::\+Image@{image\+\_\+processing\+::\+Image}}
+\subsubsection{\texorpdfstring{Percent\+Threshold()}{PercentThreshold()}}
+{\footnotesize\ttfamily template$<$const int N$>$ \\
+uint image\+\_\+processing\+::\+Image\+::\+Percent\+Threshold (\begin{DoxyParamCaption}\item[{decimal}]{aggression,  }\item[{\hyperlink{classutil_1_1ArrayList}{Array\+List}$<$ uint, N $>$ \&}]{histogram }\end{DoxyParamCaption})\hspace{0.3cm}{\ttfamily [inline]}}
+
+
+
+Deletes any pixel below the specified \% of brightness in the image. 
+
+
+\begin{DoxyParams}{Parameters}
+{\em aggression} & \mbox{[}in\mbox{]} 0 does not change any pixels, 1 sets all to 0. \\
+\hline
+{\em histogram} & \mbox{[}in\mbox{]} The brightness histogram. \\
+\hline
+\end{DoxyParams}
+
+\begin{DoxyTemplParams}{Template Parameters}
+{\em N} & The size of the array list \char`\"{}histogram\char`\"{}.\\
+\hline
+\end{DoxyTemplParams}
+\begin{DoxyReturn}{Returns}
+The pixel brightness which is above the threshold. 
+\end{DoxyReturn}
+\mbox{\Hypertarget{classimage__processing_1_1Image_a8686d6979e34ca0afc35d3e0e241e8b6}\label{classimage__processing_1_1Image_a8686d6979e34ca0afc35d3e0e241e8b6}} 
+\index{image\+\_\+processing\+::\+Image@{image\+\_\+processing\+::\+Image}!Set\+Pixel@{Set\+Pixel}}
+\index{Set\+Pixel@{Set\+Pixel}!image\+\_\+processing\+::\+Image@{image\+\_\+processing\+::\+Image}}
+\subsubsection{\texorpdfstring{Set\+Pixel()}{SetPixel()}}
+{\footnotesize\ttfamily void image\+\_\+processing\+::\+Image\+::\+Set\+Pixel (\begin{DoxyParamCaption}\item[{uint}]{x,  }\item[{uint}]{y,  }\item[{byte}]{color }\end{DoxyParamCaption})}
+
+
+
+Sets the pixel intensity of a part on an image. 
+
+
+\begin{DoxyParams}{Parameters}
+{\em x} & The x coordinate. \\
+\hline
+{\em y} & The y coordinate. \\
+\hline
+{\em color} & The intensity. \\
+\hline
+\end{DoxyParams}
+\mbox{\Hypertarget{classimage__processing_1_1Image_aa0f895ef02220e7b81af8cbb85f6a479}\label{classimage__processing_1_1Image_aa0f895ef02220e7b81af8cbb85f6a479}} 
+\index{image\+\_\+processing\+::\+Image@{image\+\_\+processing\+::\+Image}!Set\+Width\+Height@{Set\+Width\+Height}}
+\index{Set\+Width\+Height@{Set\+Width\+Height}!image\+\_\+processing\+::\+Image@{image\+\_\+processing\+::\+Image}}
+\subsubsection{\texorpdfstring{Set\+Width\+Height()}{SetWidthHeight()}}
+{\footnotesize\ttfamily void image\+\_\+processing\+::\+Image\+::\+Set\+Width\+Height (\begin{DoxyParamCaption}\item[{uint}]{w,  }\item[{uint}]{h }\end{DoxyParamCaption})}
+
+
+
+If valid, sets the width and height. 
+
+
+\begin{DoxyParams}{Parameters}
+{\em w} & The new width of the image. \\
+\hline
+{\em h} & The new height of the image.\\
+\hline
+\end{DoxyParams}
+If the width or height exceeds I\+M\+A\+G\+E\+\_\+$\ast$\+\_\+\+M\+AX, neither will be set. \mbox{\Hypertarget{classimage__processing_1_1Image_a1128997bdc06d00663cefc4059cc5b36}\label{classimage__processing_1_1Image_a1128997bdc06d00663cefc4059cc5b36}} 
+\index{image\+\_\+processing\+::\+Image@{image\+\_\+processing\+::\+Image}!Valid\+Pixel@{Valid\+Pixel}}
+\index{Valid\+Pixel@{Valid\+Pixel}!image\+\_\+processing\+::\+Image@{image\+\_\+processing\+::\+Image}}
+\subsubsection{\texorpdfstring{Valid\+Pixel()}{ValidPixel()}}
+{\footnotesize\ttfamily bool image\+\_\+processing\+::\+Image\+::\+Valid\+Pixel (\begin{DoxyParamCaption}\item[{uint}]{x,  }\item[{uint}]{y }\end{DoxyParamCaption}) const}
+
+
+
+Finds if the specified location is within the bounds of the image. 
+
+
+\begin{DoxyParams}{Parameters}
+{\em x} & The x position. \\
+\hline
+{\em y} & The y position. \\
+\hline
+\end{DoxyParams}
+\begin{DoxyReturn}{Returns}
+True if safe to access. 
+\end{DoxyReturn}
+
+
+The documentation for this class was generated from the following files\+:\begin{DoxyCompactItemize}
+\item 
+libs/image\+\_\+processing/\hyperlink{image_8h}{image.\+h}\item 
+libs/image\+\_\+processing/image.\+cc\end{DoxyCompactItemize}

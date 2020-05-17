@@ -1,0 +1,69 @@
+This package is to manage blob image detection. It holds a class for storing images in byte monochrome and a class for storing details about significant pixels in the image. Through running, you can input an image and output all {\itshape blobs} in the image.
+
+\subsection*{How To Use}
+
+In the {\itshape B\+U\+I\+LD} file, input\+: 
+\begin{DoxyCode}
+deps = [
+    "//libs/image\_processing:image"
+    "//libs/image\_processing:blob",
+    ]
+\end{DoxyCode}
+ At the top of the desired file, input\+: 
+\begin{DoxyCode}
+#include "libs/image\_processing/image.h"
+#include "libs/image\_processing/blob.h"
+\end{DoxyCode}
+
+
+\subsubsection*{Build}
+
+Input the following into your command line\+: 
+\begin{DoxyCode}
+bazel build //libs/image\_processing/...
+\end{DoxyCode}
+
+
+\subsubsection*{Test}
+
+Input the following into your command line\+: 
+\begin{DoxyCode}
+bazel test //libs/image\_processing/... --test\_output=all
+\end{DoxyCode}
+
+
+\subsection*{Files}
+
+
+\begin{DoxyItemize}
+\item \hyperlink{blob_8h_source}{blob.\+h}
+\item blob.\+cc
+\item \hyperlink{image_8h}{image.\+h}
+\item image.\+cc ~\newline
+~\newline
+
+\item image\+\_\+test.\+cc
+\item blob\+\_\+test.\+cc ~\newline
+~\newline
+
+\item B\+U\+I\+LD
+\item R\+E\+A\+D\+M\+E.\+md
+\end{DoxyItemize}
+
+\subsection*{Built With}
+
+
+\begin{DoxyItemize}
+\item g++ 7.\+4.\+0
+\item bazel 2.\+0.\+0
+\item gtest 1.\+10.\+0
+\end{DoxyItemize}
+
+\subsection*{Contributing}
+
+\subsection*{Authors}
+
+
+\begin{DoxyItemize}
+\item Tom Creusot -\/ {\itshape Initial Creation} 
+\end{DoxyItemize}

@@ -1,0 +1,217 @@
+\hypertarget{classnix_1_1Properties}{}\section{nix\+:\+:Properties Class Reference}
+\label{classnix_1_1Properties}\index{nix\+::\+Properties@{nix\+::\+Properties}}
+
+
+Collaboration diagram for nix\+:\+:Properties\+:
+\nopagebreak
+\begin{figure}[H]
+\begin{center}
+\leavevmode
+\includegraphics[width=227pt]{classnix_1_1Properties__coll__graph}
+\end{center}
+\end{figure}
+\subsection*{Public Member Functions}
+\begin{DoxyCompactItemize}
+\item 
+void \hyperlink{classnix_1_1Properties_a9e98d0d77432603f545c083738548a4f}{Read\+File} (string file)
+\begin{DoxyCompactList}\small\item\em Reads a file and adds the elements to the hashmap. \end{DoxyCompactList}\item 
+void \hyperlink{classnix_1_1Properties_a4bfd95419c6ef1eed012b5b16513553d}{Add} (string name, string value)
+\begin{DoxyCompactList}\small\item\em Adds an element to the hashmap, this is useful for the test harness. \end{DoxyCompactList}\item 
+int \hyperlink{classnix_1_1Properties_a97b73ede4ad7170b95a2e034a62567ec}{Get\+Integer} (string name)
+\item 
+decimal \hyperlink{classnix_1_1Properties_a8ffb0319273c9ab82427d0c28ad0531b}{Get\+Decimal} (string name)
+\begin{DoxyCompactList}\small\item\em Retrieves a value from the hashmap and trys to convert to a decimal. \end{DoxyCompactList}\item 
+string \hyperlink{classnix_1_1Properties_a5b56a3806ce0f6a63af87af775a0e633}{Get\+String} (string name)
+\begin{DoxyCompactList}\small\item\em Retrievs a value from the hashmap as a string. \end{DoxyCompactList}\item 
+string \hyperlink{classnix_1_1Properties_af159ee4252f5121556ded91b2de5fc40}{Get\+File\+String} (string name)
+\begin{DoxyCompactList}\small\item\em Retrievs a value from the hashmap as a string with a reduced size so it works as a char$\ast$ for file names (c++ is wierd). \end{DoxyCompactList}\end{DoxyCompactItemize}
+\subsection*{Static Public Member Functions}
+\begin{DoxyCompactItemize}
+\item 
+static void \hyperlink{classnix_1_1Properties_a17d9056025f9bb3005987bdf5b36f47a}{Remove\+After\+Comment} (string $\ast$line)
+\begin{DoxyCompactList}\small\item\em Sets the string size to before the \textquotesingle{}\#\textquotesingle{} character. \end{DoxyCompactList}\item 
+static void \hyperlink{classnix_1_1Properties_a46ce937be586f08a66eda8a9b3cfca55}{Remove\+Tabs\+Spaces} (string $\ast$line)
+\begin{DoxyCompactList}\small\item\em Removes tabs and spaces from the line. \end{DoxyCompactList}\item 
+static bool \hyperlink{classnix_1_1Properties_aa6c42419ed1bfaa7ae0736d1e72a2fab}{Separate\+Name\+Value} (string \&line, string $\ast$name, string $\ast$value)
+\begin{DoxyCompactList}\small\item\em Separates the line into the name and value with an \textquotesingle{}=\textquotesingle{}. \end{DoxyCompactList}\end{DoxyCompactItemize}
+\subsection*{Protected Attributes}
+\begin{DoxyCompactItemize}
+\item 
+\mbox{\Hypertarget{classnix_1_1Properties_a9b38d6992137ab2276724e56af0cb3cf}\label{classnix_1_1Properties_a9b38d6992137ab2276724e56af0cb3cf}} 
+map$<$ string, string $>$ \hyperlink{classnix_1_1Properties_a9b38d6992137ab2276724e56af0cb3cf}{hash}
+\begin{DoxyCompactList}\small\item\em The name and values. \end{DoxyCompactList}\end{DoxyCompactItemize}
+
+
+\subsection{Member Function Documentation}
+\mbox{\Hypertarget{classnix_1_1Properties_a4bfd95419c6ef1eed012b5b16513553d}\label{classnix_1_1Properties_a4bfd95419c6ef1eed012b5b16513553d}} 
+\index{nix\+::\+Properties@{nix\+::\+Properties}!Add@{Add}}
+\index{Add@{Add}!nix\+::\+Properties@{nix\+::\+Properties}}
+\subsubsection{\texorpdfstring{Add()}{Add()}}
+{\footnotesize\ttfamily void nix\+::\+Properties\+::\+Add (\begin{DoxyParamCaption}\item[{string}]{name,  }\item[{string}]{value }\end{DoxyParamCaption})}
+
+
+
+Adds an element to the hashmap, this is useful for the test harness. 
+
+
+\begin{DoxyParams}{Parameters}
+{\em name} & The name of the variable to add. \\
+\hline
+{\em value} & The value of the variable to add. \\
+\hline
+\end{DoxyParams}
+\mbox{\Hypertarget{classnix_1_1Properties_a8ffb0319273c9ab82427d0c28ad0531b}\label{classnix_1_1Properties_a8ffb0319273c9ab82427d0c28ad0531b}} 
+\index{nix\+::\+Properties@{nix\+::\+Properties}!Get\+Decimal@{Get\+Decimal}}
+\index{Get\+Decimal@{Get\+Decimal}!nix\+::\+Properties@{nix\+::\+Properties}}
+\subsubsection{\texorpdfstring{Get\+Decimal()}{GetDecimal()}}
+{\footnotesize\ttfamily decimal nix\+::\+Properties\+::\+Get\+Decimal (\begin{DoxyParamCaption}\item[{string}]{name }\end{DoxyParamCaption})}
+
+
+
+Retrieves a value from the hashmap and trys to convert to a decimal. 
+
+
+\begin{DoxyParams}{Parameters}
+{\em name} & The name of the variable. \\
+\hline
+\end{DoxyParams}
+
+\begin{DoxyExceptions}{Exceptions}
+{\em illegal\+\_\+argument} & \\
+\hline
+{\em out\+\_\+of\+\_\+range} & \\
+\hline
+\end{DoxyExceptions}
+\begin{DoxyReturn}{Returns}
+The decimal if valid. 
+\end{DoxyReturn}
+\mbox{\Hypertarget{classnix_1_1Properties_af159ee4252f5121556ded91b2de5fc40}\label{classnix_1_1Properties_af159ee4252f5121556ded91b2de5fc40}} 
+\index{nix\+::\+Properties@{nix\+::\+Properties}!Get\+File\+String@{Get\+File\+String}}
+\index{Get\+File\+String@{Get\+File\+String}!nix\+::\+Properties@{nix\+::\+Properties}}
+\subsubsection{\texorpdfstring{Get\+File\+String()}{GetFileString()}}
+{\footnotesize\ttfamily string nix\+::\+Properties\+::\+Get\+File\+String (\begin{DoxyParamCaption}\item[{string}]{name }\end{DoxyParamCaption})}
+
+
+
+Retrievs a value from the hashmap as a string with a reduced size so it works as a char$\ast$ for file names (c++ is wierd). 
+
+
+\begin{DoxyParams}{Parameters}
+{\em name} & The name of the variable. \\
+\hline
+\end{DoxyParams}
+\begin{DoxyReturn}{Returns}
+The string if valid. 
+\end{DoxyReturn}
+\mbox{\Hypertarget{classnix_1_1Properties_a97b73ede4ad7170b95a2e034a62567ec}\label{classnix_1_1Properties_a97b73ede4ad7170b95a2e034a62567ec}} 
+\index{nix\+::\+Properties@{nix\+::\+Properties}!Get\+Integer@{Get\+Integer}}
+\index{Get\+Integer@{Get\+Integer}!nix\+::\+Properties@{nix\+::\+Properties}}
+\subsubsection{\texorpdfstring{Get\+Integer()}{GetInteger()}}
+{\footnotesize\ttfamily int nix\+::\+Properties\+::\+Get\+Integer (\begin{DoxyParamCaption}\item[{string}]{name }\end{DoxyParamCaption})}
+
+$\ast$brief Retrievs a value from the hashmap and trys to convert to an integer. 
+\begin{DoxyParams}{Parameters}
+{\em name} & The name of the variable. \\
+\hline
+\end{DoxyParams}
+
+\begin{DoxyExceptions}{Exceptions}
+{\em illegal\+\_\+argument} & \\
+\hline
+{\em out\+\_\+of\+\_\+range} & \\
+\hline
+\end{DoxyExceptions}
+\begin{DoxyReturn}{Returns}
+The integer if valid. 
+\end{DoxyReturn}
+\mbox{\Hypertarget{classnix_1_1Properties_a5b56a3806ce0f6a63af87af775a0e633}\label{classnix_1_1Properties_a5b56a3806ce0f6a63af87af775a0e633}} 
+\index{nix\+::\+Properties@{nix\+::\+Properties}!Get\+String@{Get\+String}}
+\index{Get\+String@{Get\+String}!nix\+::\+Properties@{nix\+::\+Properties}}
+\subsubsection{\texorpdfstring{Get\+String()}{GetString()}}
+{\footnotesize\ttfamily string nix\+::\+Properties\+::\+Get\+String (\begin{DoxyParamCaption}\item[{string}]{name }\end{DoxyParamCaption})}
+
+
+
+Retrievs a value from the hashmap as a string. 
+
+
+\begin{DoxyParams}{Parameters}
+{\em name} & The name of the variable. \\
+\hline
+\end{DoxyParams}
+\begin{DoxyReturn}{Returns}
+The string if valid. 
+\end{DoxyReturn}
+\mbox{\Hypertarget{classnix_1_1Properties_a9e98d0d77432603f545c083738548a4f}\label{classnix_1_1Properties_a9e98d0d77432603f545c083738548a4f}} 
+\index{nix\+::\+Properties@{nix\+::\+Properties}!Read\+File@{Read\+File}}
+\index{Read\+File@{Read\+File}!nix\+::\+Properties@{nix\+::\+Properties}}
+\subsubsection{\texorpdfstring{Read\+File()}{ReadFile()}}
+{\footnotesize\ttfamily void nix\+::\+Properties\+::\+Read\+File (\begin{DoxyParamCaption}\item[{string}]{file }\end{DoxyParamCaption})}
+
+
+
+Reads a file and adds the elements to the hashmap. 
+
+
+\begin{DoxyParams}{Parameters}
+{\em file} & The file to read from. \\
+\hline
+\end{DoxyParams}
+\mbox{\Hypertarget{classnix_1_1Properties_a17d9056025f9bb3005987bdf5b36f47a}\label{classnix_1_1Properties_a17d9056025f9bb3005987bdf5b36f47a}} 
+\index{nix\+::\+Properties@{nix\+::\+Properties}!Remove\+After\+Comment@{Remove\+After\+Comment}}
+\index{Remove\+After\+Comment@{Remove\+After\+Comment}!nix\+::\+Properties@{nix\+::\+Properties}}
+\subsubsection{\texorpdfstring{Remove\+After\+Comment()}{RemoveAfterComment()}}
+{\footnotesize\ttfamily void nix\+::\+Properties\+::\+Remove\+After\+Comment (\begin{DoxyParamCaption}\item[{string $\ast$}]{line }\end{DoxyParamCaption})\hspace{0.3cm}{\ttfamily [static]}}
+
+
+
+Sets the string size to before the \textquotesingle{}\#\textquotesingle{} character. 
+
+
+\begin{DoxyParams}{Parameters}
+{\em line} & \mbox{[}out\mbox{]} The line to adjust. \\
+\hline
+\end{DoxyParams}
+\mbox{\Hypertarget{classnix_1_1Properties_a46ce937be586f08a66eda8a9b3cfca55}\label{classnix_1_1Properties_a46ce937be586f08a66eda8a9b3cfca55}} 
+\index{nix\+::\+Properties@{nix\+::\+Properties}!Remove\+Tabs\+Spaces@{Remove\+Tabs\+Spaces}}
+\index{Remove\+Tabs\+Spaces@{Remove\+Tabs\+Spaces}!nix\+::\+Properties@{nix\+::\+Properties}}
+\subsubsection{\texorpdfstring{Remove\+Tabs\+Spaces()}{RemoveTabsSpaces()}}
+{\footnotesize\ttfamily void nix\+::\+Properties\+::\+Remove\+Tabs\+Spaces (\begin{DoxyParamCaption}\item[{string $\ast$}]{line }\end{DoxyParamCaption})\hspace{0.3cm}{\ttfamily [static]}}
+
+
+
+Removes tabs and spaces from the line. 
+
+
+\begin{DoxyParams}{Parameters}
+{\em line} & \mbox{[}out\mbox{]} The line to remove tabs and spaces from. \\
+\hline
+\end{DoxyParams}
+\mbox{\Hypertarget{classnix_1_1Properties_aa6c42419ed1bfaa7ae0736d1e72a2fab}\label{classnix_1_1Properties_aa6c42419ed1bfaa7ae0736d1e72a2fab}} 
+\index{nix\+::\+Properties@{nix\+::\+Properties}!Separate\+Name\+Value@{Separate\+Name\+Value}}
+\index{Separate\+Name\+Value@{Separate\+Name\+Value}!nix\+::\+Properties@{nix\+::\+Properties}}
+\subsubsection{\texorpdfstring{Separate\+Name\+Value()}{SeparateNameValue()}}
+{\footnotesize\ttfamily bool nix\+::\+Properties\+::\+Separate\+Name\+Value (\begin{DoxyParamCaption}\item[{string \&}]{line,  }\item[{string $\ast$}]{name,  }\item[{string $\ast$}]{value }\end{DoxyParamCaption})\hspace{0.3cm}{\ttfamily [static]}}
+
+
+
+Separates the line into the name and value with an \textquotesingle{}=\textquotesingle{}. 
+
+
+\begin{DoxyParams}{Parameters}
+{\em line} & \mbox{[}in\mbox{]} The line to read. \\
+\hline
+{\em name} & \mbox{[}out\mbox{]} The lhs. \\
+\hline
+{\em value} & \mbox{[}out\mbox{]} The rhs. \\
+\hline
+\end{DoxyParams}
+\begin{DoxyReturn}{Returns}
+True if valid. 
+\end{DoxyReturn}
+
+
+The documentation for this class was generated from the following files\+:\begin{DoxyCompactItemize}
+\item 
+libs/nix/properties.\+h\item 
+libs/nix/properties.\+cc\end{DoxyCompactItemize}

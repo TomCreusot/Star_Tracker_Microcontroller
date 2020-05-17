@@ -1,0 +1,315 @@
+\hypertarget{classutil_1_1ArrayList}{}\section{util\+:\+:Array\+List$<$ T, N $>$ Class Template Reference}
+\label{classutil_1_1ArrayList}\index{util\+::\+Array\+List$<$ T, N $>$@{util\+::\+Array\+List$<$ T, N $>$}}
+
+
+Inheritance diagram for util\+:\+:Array\+List$<$ T, N $>$\+:
+\nopagebreak
+\begin{figure}[H]
+\begin{center}
+\leavevmode
+\includegraphics[width=204pt]{classutil_1_1ArrayList__inherit__graph}
+\end{center}
+\end{figure}
+
+
+Collaboration diagram for util\+:\+:Array\+List$<$ T, N $>$\+:
+\nopagebreak
+\begin{figure}[H]
+\begin{center}
+\leavevmode
+\includegraphics[width=216pt]{classutil_1_1ArrayList__coll__graph}
+\end{center}
+\end{figure}
+\subsection*{Public Member Functions}
+\begin{DoxyCompactItemize}
+\item 
+\hyperlink{classutil_1_1ArrayList_ac1b4f10c45a0fb0fd56c6f923d209d9c}{Array\+List} ()
+\begin{DoxyCompactList}\small\item\em Default Constructor. \end{DoxyCompactList}\item 
+\hyperlink{classutil_1_1ArrayList_aafcc495cef650c37932106bd19d82af6}{Array\+List} (int size)
+\begin{DoxyCompactList}\small\item\em Alternate Constructor. \end{DoxyCompactList}\item 
+\hyperlink{classutil_1_1ArrayList_ad2358386b361aa4887ac558d81f1c049}{Array\+List} (\hyperlink{classutil_1_1ArrayList}{Array\+List} \&list)
+\begin{DoxyCompactList}\small\item\em Copy Constructor. \end{DoxyCompactList}\item 
+virtual bool \hyperlink{classutil_1_1ArrayList_a8e33bd4f9e6a67140696cf24b8cc66b1}{Is\+Empty} () const
+\begin{DoxyCompactList}\small\item\em Finds if the array has no elements. \end{DoxyCompactList}\item 
+virtual bool \hyperlink{classutil_1_1ArrayList_a09c81f9117f52503ee49e335c44fdd63}{Is\+Full} () const
+\begin{DoxyCompactList}\small\item\em Finds if the array is full. \end{DoxyCompactList}\item 
+constexpr int \hyperlink{classutil_1_1ArrayList_a272326016b27e5e48f0112a468b1f7b2}{Max\+Size} ()
+\item 
+virtual uint \hyperlink{classutil_1_1ArrayList_ae098e879892c23b682edc4b023a770de}{Size} () const
+\begin{DoxyCompactList}\small\item\em Getter for the number of elements. \end{DoxyCompactList}\item 
+void \hyperlink{classutil_1_1ArrayList_abd8439644f4bff823f69a3ba9a6b66ca}{Reduce\+Size} (uint size)
+\begin{DoxyCompactList}\small\item\em Resizes the list to the new size if it is smaller. This is useful if you want to remove some points from the end. \end{DoxyCompactList}\item 
+virtual T \& \hyperlink{classutil_1_1ArrayList_ac5a4259af59f7bac9df06851c29d9e37}{Get} (uint position)
+\begin{DoxyCompactList}\small\item\em Returns the element at the specified position. \end{DoxyCompactList}\item 
+virtual bool \hyperlink{classutil_1_1ArrayList_a75e2f1682ebe7a982b6fd301d416d536}{Push\+Back} (T val)
+\begin{DoxyCompactList}\small\item\em Appends an element to the end of the list. \end{DoxyCompactList}\item 
+virtual T \hyperlink{classutil_1_1ArrayList_ac03915c0d58b62bf78148737be86fafc}{Pop\+Back} ()
+\begin{DoxyCompactList}\small\item\em Removes the element at the end of the list. \end{DoxyCompactList}\item 
+void \hyperlink{classutil_1_1ArrayList_a6f42b37e970d8416b7036e05185ca1d2}{Sort} (bool($\ast$in\+Order)(T \&, T \&))
+\begin{DoxyCompactList}\small\item\em Sorts the list into ascending/decending order. \end{DoxyCompactList}\end{DoxyCompactItemize}
+\subsection*{Protected Attributes}
+\begin{DoxyCompactItemize}
+\item 
+\mbox{\Hypertarget{classutil_1_1ArrayList_ad7dccc1496cfdb432d6e8f290af66c7b}\label{classutil_1_1ArrayList_ad7dccc1496cfdb432d6e8f290af66c7b}} 
+T \hyperlink{classutil_1_1ArrayList_ad7dccc1496cfdb432d6e8f290af66c7b}{array} \mbox{[}N\mbox{]}
+\begin{DoxyCompactList}\small\item\em The array. \end{DoxyCompactList}\item 
+\mbox{\Hypertarget{classutil_1_1ArrayList_ad904fc999f0560f504e65be642ad9e86}\label{classutil_1_1ArrayList_ad904fc999f0560f504e65be642ad9e86}} 
+uint \hyperlink{classutil_1_1ArrayList_ad904fc999f0560f504e65be642ad9e86}{end}
+\begin{DoxyCompactList}\small\item\em end is the number of elements \hyperlink{classutil_1_1ArrayList_ae098e879892c23b682edc4b023a770de}{Size()}. \end{DoxyCompactList}\end{DoxyCompactItemize}
+
+
+\subsection{Detailed Description}
+\subsubsection*{template$<$class T, const int N$>$\newline
+class util\+::\+Array\+List$<$ T, N $>$}
+
+\begin{Desc}
+\item[Examples\+: ]\par
+\hyperlink{_2mnt_2c_2Users_2soyuz_2Desktop_2Star_Tracker_Microcontroller_2libs_2image_processing_2blob_8h-example}{/mnt/c/\+Users/soyuz/\+Desktop/\+Star\+\_\+\+Tracker\+\_\+\+Microcontroller/libs/image\+\_\+processing/blob.\+h}, \hyperlink{_2mnt_2c_2Users_2soyuz_2Desktop_2Star_Tracker_Microcontroller_2libs_2image_processing_2image_8h-example}{/mnt/c/\+Users/soyuz/\+Desktop/\+Star\+\_\+\+Tracker\+\_\+\+Microcontroller/libs/image\+\_\+processing/image.\+h}, \hyperlink{_2mnt_2c_2Users_2soyuz_2Desktop_2Star_Tracker_Microcontroller_2libs_2nix_2get_image_8h-example}{/mnt/c/\+Users/soyuz/\+Desktop/\+Star\+\_\+\+Tracker\+\_\+\+Microcontroller/libs/nix/get\+\_\+image.\+h}, \hyperlink{_2mnt_2c_2Users_2soyuz_2Desktop_2Star_Tracker_Microcontroller_2libs_2nix_2linked_list_8h-example}{/mnt/c/\+Users/soyuz/\+Desktop/\+Star\+\_\+\+Tracker\+\_\+\+Microcontroller/libs/nix/linked\+\_\+list.\+h}, \hyperlink{_2mnt_2c_2Users_2soyuz_2Desktop_2Star_Tracker_Microcontroller_2libs_2nix_2star_8h-example}{/mnt/c/\+Users/soyuz/\+Desktop/\+Star\+\_\+\+Tracker\+\_\+\+Microcontroller/libs/nix/star.\+h}, and \hyperlink{_2mnt_2c_2Users_2soyuz_2Desktop_2Star_Tracker_Microcontroller_2libs_2star_tracker_2star_set_8h-example}{/mnt/c/\+Users/soyuz/\+Desktop/\+Star\+\_\+\+Tracker\+\_\+\+Microcontroller/libs/star\+\_\+tracker/star\+\_\+set.\+h}.\end{Desc}
+
+
+\subsection{Constructor \& Destructor Documentation}
+\mbox{\Hypertarget{classutil_1_1ArrayList_ac1b4f10c45a0fb0fd56c6f923d209d9c}\label{classutil_1_1ArrayList_ac1b4f10c45a0fb0fd56c6f923d209d9c}} 
+\index{util\+::\+Array\+List@{util\+::\+Array\+List}!Array\+List@{Array\+List}}
+\index{Array\+List@{Array\+List}!util\+::\+Array\+List@{util\+::\+Array\+List}}
+\subsubsection{\texorpdfstring{Array\+List()}{ArrayList()}\hspace{0.1cm}{\footnotesize\ttfamily [1/3]}}
+{\footnotesize\ttfamily template$<$class T, const int N$>$ \\
+\hyperlink{classutil_1_1ArrayList}{util\+::\+Array\+List}$<$ T, N $>$\+::\hyperlink{classutil_1_1ArrayList}{Array\+List} (\begin{DoxyParamCaption}{ }\end{DoxyParamCaption})\hspace{0.3cm}{\ttfamily [inline]}}
+
+
+
+Default Constructor. 
+
+Sets all values to null and the array\+\_\+size to 0. \begin{Desc}
+\item[Examples\+: ]\par
+\hyperlink{_2mnt_2c_2Users_2soyuz_2Desktop_2Star_Tracker_Microcontroller_2libs_2util_2array_list_8h-example}{/mnt/c/\+Users/soyuz/\+Desktop/\+Star\+\_\+\+Tracker\+\_\+\+Microcontroller/libs/util/array\+\_\+list.\+h}.\end{Desc}
+\mbox{\Hypertarget{classutil_1_1ArrayList_aafcc495cef650c37932106bd19d82af6}\label{classutil_1_1ArrayList_aafcc495cef650c37932106bd19d82af6}} 
+\index{util\+::\+Array\+List@{util\+::\+Array\+List}!Array\+List@{Array\+List}}
+\index{Array\+List@{Array\+List}!util\+::\+Array\+List@{util\+::\+Array\+List}}
+\subsubsection{\texorpdfstring{Array\+List()}{ArrayList()}\hspace{0.1cm}{\footnotesize\ttfamily [2/3]}}
+{\footnotesize\ttfamily template$<$class T, const int N$>$ \\
+\hyperlink{classutil_1_1ArrayList}{util\+::\+Array\+List}$<$ T, N $>$\+::\hyperlink{classutil_1_1ArrayList}{Array\+List} (\begin{DoxyParamCaption}\item[{int}]{size }\end{DoxyParamCaption})\hspace{0.3cm}{\ttfamily [inline]}}
+
+
+
+Alternate Constructor. 
+
+
+\begin{DoxyParams}{Parameters}
+{\em size} & The size of the array to be sized to.\\
+\hline
+\end{DoxyParams}
+Does N\+OT F\+I\+LL T\+HE A\+R\+R\+AY \mbox{\Hypertarget{classutil_1_1ArrayList_ad2358386b361aa4887ac558d81f1c049}\label{classutil_1_1ArrayList_ad2358386b361aa4887ac558d81f1c049}} 
+\index{util\+::\+Array\+List@{util\+::\+Array\+List}!Array\+List@{Array\+List}}
+\index{Array\+List@{Array\+List}!util\+::\+Array\+List@{util\+::\+Array\+List}}
+\subsubsection{\texorpdfstring{Array\+List()}{ArrayList()}\hspace{0.1cm}{\footnotesize\ttfamily [3/3]}}
+{\footnotesize\ttfamily template$<$class T, const int N$>$ \\
+\hyperlink{classutil_1_1ArrayList}{util\+::\+Array\+List}$<$ T, N $>$\+::\hyperlink{classutil_1_1ArrayList}{Array\+List} (\begin{DoxyParamCaption}\item[{\hyperlink{classutil_1_1ArrayList}{Array\+List}$<$ T, N $>$ \&}]{list }\end{DoxyParamCaption})\hspace{0.3cm}{\ttfamily [inline]}}
+
+
+
+Copy Constructor. 
+
+
+\begin{DoxyParams}{Parameters}
+{\em list} & \mbox{[}in\mbox{]} The list to copy. \\
+\hline
+\end{DoxyParams}
+
+
+\subsection{Member Function Documentation}
+\mbox{\Hypertarget{classutil_1_1ArrayList_ac5a4259af59f7bac9df06851c29d9e37}\label{classutil_1_1ArrayList_ac5a4259af59f7bac9df06851c29d9e37}} 
+\index{util\+::\+Array\+List@{util\+::\+Array\+List}!Get@{Get}}
+\index{Get@{Get}!util\+::\+Array\+List@{util\+::\+Array\+List}}
+\subsubsection{\texorpdfstring{Get()}{Get()}}
+{\footnotesize\ttfamily template$<$class T, const int N$>$ \\
+virtual T\& \hyperlink{classutil_1_1ArrayList}{util\+::\+Array\+List}$<$ T, N $>$\+::Get (\begin{DoxyParamCaption}\item[{uint}]{position }\end{DoxyParamCaption})\hspace{0.3cm}{\ttfamily [inline]}, {\ttfamily [virtual]}}
+
+
+
+Returns the element at the specified position. 
+
+
+\begin{DoxyParams}{Parameters}
+{\em position} & The index. \\
+\hline
+\end{DoxyParams}
+\begin{DoxyReturn}{Returns}
+\mbox{[}in/out\mbox{]} The value at the index. 
+\end{DoxyReturn}
+
+
+Reimplemented in \hyperlink{classutil_1_1LinkedList_ad3586e05f1b6f9d6b4cebba91433a2e7}{util\+::\+Linked\+List$<$ T $>$}, and \hyperlink{classutil_1_1ArrayListMock_a84e20a60cd0268edafb36b88c0895b71}{util\+::\+Array\+List\+Mock$<$ T, N, N2 $>$}.
+
+\begin{Desc}
+\item[Examples\+: ]\par
+\hyperlink{_2mnt_2c_2Users_2soyuz_2Desktop_2Star_Tracker_Microcontroller_2libs_2util_2array_list_8h-example}{/mnt/c/\+Users/soyuz/\+Desktop/\+Star\+\_\+\+Tracker\+\_\+\+Microcontroller/libs/util/array\+\_\+list.\+h}, and \hyperlink{_2mnt_2c_2Users_2soyuz_2Desktop_2Star_Tracker_Microcontroller_2libs_2util_2array_list_mock_8h-example}{/mnt/c/\+Users/soyuz/\+Desktop/\+Star\+\_\+\+Tracker\+\_\+\+Microcontroller/libs/util/array\+\_\+list\+\_\+mock.\+h}.\end{Desc}
+\mbox{\Hypertarget{classutil_1_1ArrayList_a8e33bd4f9e6a67140696cf24b8cc66b1}\label{classutil_1_1ArrayList_a8e33bd4f9e6a67140696cf24b8cc66b1}} 
+\index{util\+::\+Array\+List@{util\+::\+Array\+List}!Is\+Empty@{Is\+Empty}}
+\index{Is\+Empty@{Is\+Empty}!util\+::\+Array\+List@{util\+::\+Array\+List}}
+\subsubsection{\texorpdfstring{Is\+Empty()}{IsEmpty()}}
+{\footnotesize\ttfamily template$<$class T, const int N$>$ \\
+virtual bool \hyperlink{classutil_1_1ArrayList}{util\+::\+Array\+List}$<$ T, N $>$\+::Is\+Empty (\begin{DoxyParamCaption}{ }\end{DoxyParamCaption}) const\hspace{0.3cm}{\ttfamily [inline]}, {\ttfamily [virtual]}}
+
+
+
+Finds if the array has no elements. 
+
+\begin{DoxyReturn}{Returns}
+True if the array has no elements. 
+\end{DoxyReturn}
+
+
+Reimplemented in \hyperlink{classutil_1_1LinkedList_abd21d7bb75ae121a4f164e1917845470}{util\+::\+Linked\+List$<$ T $>$}.
+
+\begin{Desc}
+\item[Examples\+: ]\par
+\hyperlink{_2mnt_2c_2Users_2soyuz_2Desktop_2Star_Tracker_Microcontroller_2libs_2util_2array_list_8h-example}{/mnt/c/\+Users/soyuz/\+Desktop/\+Star\+\_\+\+Tracker\+\_\+\+Microcontroller/libs/util/array\+\_\+list.\+h}.\end{Desc}
+\mbox{\Hypertarget{classutil_1_1ArrayList_a09c81f9117f52503ee49e335c44fdd63}\label{classutil_1_1ArrayList_a09c81f9117f52503ee49e335c44fdd63}} 
+\index{util\+::\+Array\+List@{util\+::\+Array\+List}!Is\+Full@{Is\+Full}}
+\index{Is\+Full@{Is\+Full}!util\+::\+Array\+List@{util\+::\+Array\+List}}
+\subsubsection{\texorpdfstring{Is\+Full()}{IsFull()}}
+{\footnotesize\ttfamily template$<$class T, const int N$>$ \\
+virtual bool \hyperlink{classutil_1_1ArrayList}{util\+::\+Array\+List}$<$ T, N $>$\+::Is\+Full (\begin{DoxyParamCaption}{ }\end{DoxyParamCaption}) const\hspace{0.3cm}{\ttfamily [inline]}, {\ttfamily [virtual]}}
+
+
+
+Finds if the array is full. 
+
+\begin{DoxyReturn}{Returns}
+True if the array cannot store any more elements. 
+\end{DoxyReturn}
+
+
+Reimplemented in \hyperlink{classutil_1_1LinkedList_aea5cd5b77e721fc152985904e391fc6d}{util\+::\+Linked\+List$<$ T $>$}.
+
+\begin{Desc}
+\item[Examples\+: ]\par
+\hyperlink{_2mnt_2c_2Users_2soyuz_2Desktop_2Star_Tracker_Microcontroller_2libs_2util_2array_list_8h-example}{/mnt/c/\+Users/soyuz/\+Desktop/\+Star\+\_\+\+Tracker\+\_\+\+Microcontroller/libs/util/array\+\_\+list.\+h}.\end{Desc}
+\mbox{\Hypertarget{classutil_1_1ArrayList_a272326016b27e5e48f0112a468b1f7b2}\label{classutil_1_1ArrayList_a272326016b27e5e48f0112a468b1f7b2}} 
+\index{util\+::\+Array\+List@{util\+::\+Array\+List}!Max\+Size@{Max\+Size}}
+\index{Max\+Size@{Max\+Size}!util\+::\+Array\+List@{util\+::\+Array\+List}}
+\subsubsection{\texorpdfstring{Max\+Size()}{MaxSize()}}
+{\footnotesize\ttfamily template$<$class T, const int N$>$ \\
+constexpr int \hyperlink{classutil_1_1ArrayList}{util\+::\+Array\+List}$<$ T, N $>$\+::Max\+Size (\begin{DoxyParamCaption}{ }\end{DoxyParamCaption})\hspace{0.3cm}{\ttfamily [inline]}}
+
+\begin{DoxyReturn}{Returns}
+The maximum size the array can store. 
+\end{DoxyReturn}
+\begin{Desc}
+\item[Examples\+: ]\par
+\hyperlink{_2mnt_2c_2Users_2soyuz_2Desktop_2Star_Tracker_Microcontroller_2libs_2util_2array_list_8h-example}{/mnt/c/\+Users/soyuz/\+Desktop/\+Star\+\_\+\+Tracker\+\_\+\+Microcontroller/libs/util/array\+\_\+list.\+h}.\end{Desc}
+\mbox{\Hypertarget{classutil_1_1ArrayList_ac03915c0d58b62bf78148737be86fafc}\label{classutil_1_1ArrayList_ac03915c0d58b62bf78148737be86fafc}} 
+\index{util\+::\+Array\+List@{util\+::\+Array\+List}!Pop\+Back@{Pop\+Back}}
+\index{Pop\+Back@{Pop\+Back}!util\+::\+Array\+List@{util\+::\+Array\+List}}
+\subsubsection{\texorpdfstring{Pop\+Back()}{PopBack()}}
+{\footnotesize\ttfamily template$<$class T, const int N$>$ \\
+virtual T \hyperlink{classutil_1_1ArrayList}{util\+::\+Array\+List}$<$ T, N $>$\+::Pop\+Back (\begin{DoxyParamCaption}{ }\end{DoxyParamCaption})\hspace{0.3cm}{\ttfamily [inline]}, {\ttfamily [virtual]}}
+
+
+
+Removes the element at the end of the list. 
+
+\begin{DoxyReturn}{Returns}
+The element removed. 
+\end{DoxyReturn}
+
+
+Reimplemented in \hyperlink{classutil_1_1LinkedList_ac7f5e9d19d9886b6b0b22232fc001424}{util\+::\+Linked\+List$<$ T $>$}, and \hyperlink{classutil_1_1ArrayListMock_ac6244094b159f4ab8986bf865afa90ff}{util\+::\+Array\+List\+Mock$<$ T, N, N2 $>$}.
+
+\begin{Desc}
+\item[Examples\+: ]\par
+\hyperlink{_2mnt_2c_2Users_2soyuz_2Desktop_2Star_Tracker_Microcontroller_2libs_2util_2array_list_8h-example}{/mnt/c/\+Users/soyuz/\+Desktop/\+Star\+\_\+\+Tracker\+\_\+\+Microcontroller/libs/util/array\+\_\+list.\+h}, and \hyperlink{_2mnt_2c_2Users_2soyuz_2Desktop_2Star_Tracker_Microcontroller_2libs_2util_2array_list_mock_8h-example}{/mnt/c/\+Users/soyuz/\+Desktop/\+Star\+\_\+\+Tracker\+\_\+\+Microcontroller/libs/util/array\+\_\+list\+\_\+mock.\+h}.\end{Desc}
+\mbox{\Hypertarget{classutil_1_1ArrayList_a75e2f1682ebe7a982b6fd301d416d536}\label{classutil_1_1ArrayList_a75e2f1682ebe7a982b6fd301d416d536}} 
+\index{util\+::\+Array\+List@{util\+::\+Array\+List}!Push\+Back@{Push\+Back}}
+\index{Push\+Back@{Push\+Back}!util\+::\+Array\+List@{util\+::\+Array\+List}}
+\subsubsection{\texorpdfstring{Push\+Back()}{PushBack()}}
+{\footnotesize\ttfamily template$<$class T, const int N$>$ \\
+virtual bool \hyperlink{classutil_1_1ArrayList}{util\+::\+Array\+List}$<$ T, N $>$\+::Push\+Back (\begin{DoxyParamCaption}\item[{T}]{val }\end{DoxyParamCaption})\hspace{0.3cm}{\ttfamily [inline]}, {\ttfamily [virtual]}}
+
+
+
+Appends an element to the end of the list. 
+
+
+\begin{DoxyParams}{Parameters}
+{\em val} & The element to add. \\
+\hline
+\end{DoxyParams}
+\begin{DoxyReturn}{Returns}
+True if added. 
+\end{DoxyReturn}
+
+
+Reimplemented in \hyperlink{classutil_1_1LinkedList_a4ef3d2a7e381d968d45605c87ef88f47}{util\+::\+Linked\+List$<$ T $>$}, and \hyperlink{classutil_1_1ArrayListMock_a6acf1a3166dae9970700218916560955}{util\+::\+Array\+List\+Mock$<$ T, N, N2 $>$}.
+
+\begin{Desc}
+\item[Examples\+: ]\par
+\hyperlink{_2mnt_2c_2Users_2soyuz_2Desktop_2Star_Tracker_Microcontroller_2libs_2util_2array_list_8h-example}{/mnt/c/\+Users/soyuz/\+Desktop/\+Star\+\_\+\+Tracker\+\_\+\+Microcontroller/libs/util/array\+\_\+list.\+h}, and \hyperlink{_2mnt_2c_2Users_2soyuz_2Desktop_2Star_Tracker_Microcontroller_2libs_2util_2array_list_mock_8h-example}{/mnt/c/\+Users/soyuz/\+Desktop/\+Star\+\_\+\+Tracker\+\_\+\+Microcontroller/libs/util/array\+\_\+list\+\_\+mock.\+h}.\end{Desc}
+\mbox{\Hypertarget{classutil_1_1ArrayList_abd8439644f4bff823f69a3ba9a6b66ca}\label{classutil_1_1ArrayList_abd8439644f4bff823f69a3ba9a6b66ca}} 
+\index{util\+::\+Array\+List@{util\+::\+Array\+List}!Reduce\+Size@{Reduce\+Size}}
+\index{Reduce\+Size@{Reduce\+Size}!util\+::\+Array\+List@{util\+::\+Array\+List}}
+\subsubsection{\texorpdfstring{Reduce\+Size()}{ReduceSize()}}
+{\footnotesize\ttfamily template$<$class T, const int N$>$ \\
+void \hyperlink{classutil_1_1ArrayList}{util\+::\+Array\+List}$<$ T, N $>$\+::Reduce\+Size (\begin{DoxyParamCaption}\item[{uint}]{size }\end{DoxyParamCaption})\hspace{0.3cm}{\ttfamily [inline]}}
+
+
+
+Resizes the list to the new size if it is smaller. This is useful if you want to remove some points from the end. 
+
+
+\begin{DoxyParams}{Parameters}
+{\em size} & The new size. \\
+\hline
+\end{DoxyParams}
+\begin{Desc}
+\item[Examples\+: ]\par
+\hyperlink{_2mnt_2c_2Users_2soyuz_2Desktop_2Star_Tracker_Microcontroller_2libs_2util_2array_list_8h-example}{/mnt/c/\+Users/soyuz/\+Desktop/\+Star\+\_\+\+Tracker\+\_\+\+Microcontroller/libs/util/array\+\_\+list.\+h}.\end{Desc}
+\mbox{\Hypertarget{classutil_1_1ArrayList_ae098e879892c23b682edc4b023a770de}\label{classutil_1_1ArrayList_ae098e879892c23b682edc4b023a770de}} 
+\index{util\+::\+Array\+List@{util\+::\+Array\+List}!Size@{Size}}
+\index{Size@{Size}!util\+::\+Array\+List@{util\+::\+Array\+List}}
+\subsubsection{\texorpdfstring{Size()}{Size()}}
+{\footnotesize\ttfamily template$<$class T, const int N$>$ \\
+virtual uint \hyperlink{classutil_1_1ArrayList}{util\+::\+Array\+List}$<$ T, N $>$\+::Size (\begin{DoxyParamCaption}{ }\end{DoxyParamCaption}) const\hspace{0.3cm}{\ttfamily [inline]}, {\ttfamily [virtual]}}
+
+
+
+Getter for the number of elements. 
+
+\begin{DoxyReturn}{Returns}
+The number of elements. 
+\end{DoxyReturn}
+
+
+Reimplemented in \hyperlink{classutil_1_1LinkedList_a83784f0749538889da04deb74b2bdd95}{util\+::\+Linked\+List$<$ T $>$}.
+
+\begin{Desc}
+\item[Examples\+: ]\par
+\hyperlink{_2mnt_2c_2Users_2soyuz_2Desktop_2Star_Tracker_Microcontroller_2libs_2util_2array_list_8h-example}{/mnt/c/\+Users/soyuz/\+Desktop/\+Star\+\_\+\+Tracker\+\_\+\+Microcontroller/libs/util/array\+\_\+list.\+h}.\end{Desc}
+\mbox{\Hypertarget{classutil_1_1ArrayList_a6f42b37e970d8416b7036e05185ca1d2}\label{classutil_1_1ArrayList_a6f42b37e970d8416b7036e05185ca1d2}} 
+\index{util\+::\+Array\+List@{util\+::\+Array\+List}!Sort@{Sort}}
+\index{Sort@{Sort}!util\+::\+Array\+List@{util\+::\+Array\+List}}
+\subsubsection{\texorpdfstring{Sort()}{Sort()}}
+{\footnotesize\ttfamily template$<$class T, const int N$>$ \\
+void \hyperlink{classutil_1_1ArrayList}{util\+::\+Array\+List}$<$ T, N $>$\+::Sort (\begin{DoxyParamCaption}\item[{bool($\ast$)(T \&, T \&)}]{in\+Order }\end{DoxyParamCaption})\hspace{0.3cm}{\ttfamily [inline]}}
+
+
+
+Sorts the list into ascending/decending order. 
+
+\begin{DoxyRefDesc}{Todo}
+\item[\hyperlink{todo__todo000002}{Todo}]\+: T\+H\+IS IS R\+E\+A\+LY P\+O\+O\+R\+LY M\+A\+DE, F\+IX.\end{DoxyRefDesc}
+
+
+
+\begin{DoxyParams}{Parameters}
+{\em in\+Order} & \mbox{[}in\mbox{]} must return true if the first parameter should be B\+E\+F\+O\+RE OR E\+Q\+U\+AL the second parameter, F\+A\+L\+SE if A\+F\+T\+ER. \\
+\hline
+\end{DoxyParams}
+\begin{Desc}
+\item[Examples\+: ]\par
+\hyperlink{_2mnt_2c_2Users_2soyuz_2Desktop_2Star_Tracker_Microcontroller_2libs_2util_2array_list_8h-example}{/mnt/c/\+Users/soyuz/\+Desktop/\+Star\+\_\+\+Tracker\+\_\+\+Microcontroller/libs/util/array\+\_\+list.\+h}.\end{Desc}
+
+
+The documentation for this class was generated from the following file\+:\begin{DoxyCompactItemize}
+\item 
+libs/util/\hyperlink{array__list_8h}{array\+\_\+list.\+h}\end{DoxyCompactItemize}

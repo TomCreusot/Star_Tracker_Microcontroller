@@ -1,0 +1,127 @@
+\hypertarget{classnix_1_1GetImage}{}\section{nix\+:\+:Get\+Image Class Reference}
+\label{classnix_1_1GetImage}\index{nix\+::\+Get\+Image@{nix\+::\+Get\+Image}}
+
+
+Collaboration diagram for nix\+:\+:Get\+Image\+:
+\nopagebreak
+\begin{figure}[H]
+\begin{center}
+\leavevmode
+\includegraphics[width=172pt]{classnix_1_1GetImage__coll__graph}
+\end{center}
+\end{figure}
+\subsection*{Public Member Functions}
+\begin{DoxyCompactItemize}
+\item 
+\mbox{\Hypertarget{classnix_1_1GetImage_a536cbe8b7e89fac6c9b7bf2b85866a44}\label{classnix_1_1GetImage_a536cbe8b7e89fac6c9b7bf2b85866a44}} 
+\hyperlink{classnix_1_1GetImage_a536cbe8b7e89fac6c9b7bf2b85866a44}{Get\+Image} ()
+\begin{DoxyCompactList}\small\item\em Default Constructor. \end{DoxyCompactList}\item 
+\hyperlink{classnix_1_1GetImage_aa56441c4e8c2ad40725e4ae3d4a20976}{Get\+Image} (string \&file)
+\begin{DoxyCompactList}\small\item\em Alternate Constructor. \end{DoxyCompactList}\item 
+{\footnotesize template$<$const uint N$>$ }\\void \hyperlink{classnix_1_1GetImage_a85a80ac19ce8cbb20ef873554f728535}{Draw\+Points} (\hyperlink{classutil_1_1ArrayList}{Array\+List}$<$ \hyperlink{classutil_1_1Point}{Point}$<$ decimal $>$, N $>$ \&points, byte r, byte g, byte b)
+\begin{DoxyCompactList}\small\item\em Draws point on the bitmap image. \end{DoxyCompactList}\item 
+void \hyperlink{classnix_1_1GetImage_a4b0d8789ce2e70585664262c6109ed89}{Get\+B\+MP} (\hyperlink{classimage__processing_1_1Image}{Image} $\ast$img)
+\begin{DoxyCompactList}\small\item\em Reads a bmp file from the computer and converts it to a byte image. \end{DoxyCompactList}\item 
+void \hyperlink{classnix_1_1GetImage_abe75e9f38ce1d1a8c44af1f56f57e342}{Set\+B\+MP} (\hyperlink{classimage__processing_1_1Image}{Image} \&img)
+\begin{DoxyCompactList}\small\item\em Sets the bitmap variable to the image supplied. \end{DoxyCompactList}\item 
+void \hyperlink{classnix_1_1GetImage_afcd6ae5e71996de60bd0b9204649e322}{Write\+Image} (string \&file)
+\begin{DoxyCompactList}\small\item\em Writes the bitmap to the file specified. \end{DoxyCompactList}\end{DoxyCompactItemize}
+
+
+\subsection{Constructor \& Destructor Documentation}
+\mbox{\Hypertarget{classnix_1_1GetImage_aa56441c4e8c2ad40725e4ae3d4a20976}\label{classnix_1_1GetImage_aa56441c4e8c2ad40725e4ae3d4a20976}} 
+\index{nix\+::\+Get\+Image@{nix\+::\+Get\+Image}!Get\+Image@{Get\+Image}}
+\index{Get\+Image@{Get\+Image}!nix\+::\+Get\+Image@{nix\+::\+Get\+Image}}
+\subsubsection{\texorpdfstring{Get\+Image()}{GetImage()}}
+{\footnotesize\ttfamily nix\+::\+Get\+Image\+::\+Get\+Image (\begin{DoxyParamCaption}\item[{string \&}]{file }\end{DoxyParamCaption})}
+
+
+
+Alternate Constructor. 
+
+
+\begin{DoxyParams}{Parameters}
+{\em file} & \mbox{[}in\mbox{]} The file to read.\\
+\hline
+\end{DoxyParams}
+Sets the bitmap variable to the file. 
+
+\subsection{Member Function Documentation}
+\mbox{\Hypertarget{classnix_1_1GetImage_a85a80ac19ce8cbb20ef873554f728535}\label{classnix_1_1GetImage_a85a80ac19ce8cbb20ef873554f728535}} 
+\index{nix\+::\+Get\+Image@{nix\+::\+Get\+Image}!Draw\+Points@{Draw\+Points}}
+\index{Draw\+Points@{Draw\+Points}!nix\+::\+Get\+Image@{nix\+::\+Get\+Image}}
+\subsubsection{\texorpdfstring{Draw\+Points()}{DrawPoints()}}
+{\footnotesize\ttfamily template$<$const uint N$>$ \\
+void nix\+::\+Get\+Image\+::\+Draw\+Points (\begin{DoxyParamCaption}\item[{\hyperlink{classutil_1_1ArrayList}{Array\+List}$<$ \hyperlink{classutil_1_1Point}{Point}$<$ decimal $>$, N $>$ \&}]{points,  }\item[{byte}]{r,  }\item[{byte}]{g,  }\item[{byte}]{b }\end{DoxyParamCaption})\hspace{0.3cm}{\ttfamily [inline]}}
+
+
+
+Draws point on the bitmap image. 
+
+
+\begin{DoxyParams}{Parameters}
+{\em points} & \mbox{[}in\mbox{]} The points to set the color of. \\
+\hline
+{\em r} & The value of red. \\
+\hline
+{\em g} & The value of green. \\
+\hline
+{\em b} & The value of blue. \\
+\hline
+\end{DoxyParams}
+
+\begin{DoxyTemplParams}{Template Parameters}
+{\em N} & The max size of the array list. \\
+\hline
+\end{DoxyTemplParams}
+\mbox{\Hypertarget{classnix_1_1GetImage_a4b0d8789ce2e70585664262c6109ed89}\label{classnix_1_1GetImage_a4b0d8789ce2e70585664262c6109ed89}} 
+\index{nix\+::\+Get\+Image@{nix\+::\+Get\+Image}!Get\+B\+MP@{Get\+B\+MP}}
+\index{Get\+B\+MP@{Get\+B\+MP}!nix\+::\+Get\+Image@{nix\+::\+Get\+Image}}
+\subsubsection{\texorpdfstring{Get\+B\+M\+P()}{GetBMP()}}
+{\footnotesize\ttfamily void nix\+::\+Get\+Image\+::\+Get\+B\+MP (\begin{DoxyParamCaption}\item[{\hyperlink{classimage__processing_1_1Image}{Image} $\ast$}]{img }\end{DoxyParamCaption})}
+
+
+
+Reads a bmp file from the computer and converts it to a byte image. 
+
+
+\begin{DoxyParams}{Parameters}
+{\em img} & \mbox{[}out\mbox{]} The image to copy/write to. \\
+\hline
+\end{DoxyParams}
+\mbox{\Hypertarget{classnix_1_1GetImage_abe75e9f38ce1d1a8c44af1f56f57e342}\label{classnix_1_1GetImage_abe75e9f38ce1d1a8c44af1f56f57e342}} 
+\index{nix\+::\+Get\+Image@{nix\+::\+Get\+Image}!Set\+B\+MP@{Set\+B\+MP}}
+\index{Set\+B\+MP@{Set\+B\+MP}!nix\+::\+Get\+Image@{nix\+::\+Get\+Image}}
+\subsubsection{\texorpdfstring{Set\+B\+M\+P()}{SetBMP()}}
+{\footnotesize\ttfamily void nix\+::\+Get\+Image\+::\+Set\+B\+MP (\begin{DoxyParamCaption}\item[{\hyperlink{classimage__processing_1_1Image}{Image} \&}]{img }\end{DoxyParamCaption})}
+
+
+
+Sets the bitmap variable to the image supplied. 
+
+
+\begin{DoxyParams}{Parameters}
+{\em img} & \mbox{[}in\mbox{]} The image to copy. \\
+\hline
+\end{DoxyParams}
+\mbox{\Hypertarget{classnix_1_1GetImage_afcd6ae5e71996de60bd0b9204649e322}\label{classnix_1_1GetImage_afcd6ae5e71996de60bd0b9204649e322}} 
+\index{nix\+::\+Get\+Image@{nix\+::\+Get\+Image}!Write\+Image@{Write\+Image}}
+\index{Write\+Image@{Write\+Image}!nix\+::\+Get\+Image@{nix\+::\+Get\+Image}}
+\subsubsection{\texorpdfstring{Write\+Image()}{WriteImage()}}
+{\footnotesize\ttfamily void nix\+::\+Get\+Image\+::\+Write\+Image (\begin{DoxyParamCaption}\item[{string \&}]{file }\end{DoxyParamCaption})}
+
+
+
+Writes the bitmap to the file specified. 
+
+
+\begin{DoxyParams}{Parameters}
+{\em file} & \mbox{[}in\mbox{]} The file to read from. \\
+\hline
+\end{DoxyParams}
+
+
+The documentation for this class was generated from the following files\+:\begin{DoxyCompactItemize}
+\item 
+libs/nix/get\+\_\+image.\+h\item 
+libs/nix/get\+\_\+image.\+cc\end{DoxyCompactItemize}

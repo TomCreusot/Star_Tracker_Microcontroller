@@ -1,0 +1,279 @@
+\hypertarget{_2mnt_2c_2Users_2soyuz_2Desktop_2Star_Tracker_Microcontroller_2libs_2star_tracker_2star_set_8h-example}{}\section{/mnt/c/\+Users/soyuz/\+Desktop/\+Star\+\_\+\+Tracker\+\_\+\+Microcontroller/libs/star\+\_\+tracker/star\+\_\+set.\+h}
+Stores data on a set of stars to make a unique set.
+
+\begin{DoxyVerb}- The unique features are the position of the opposite (angle) star.
+- The angle between the stars and the opposite.
+- The likelyhood of it being the correct match.
+- The orientation of the opposite star to its farthest not pilot.
+- A StarSet of the image.
+
+
+star_tracker::StarSet::set_fov(100);    // Sets the field of view to 100 for all calculations.
+
+
+const util::uint input_size = 3;
+const util::uint output_size = 5;
+util::ArrayList<util::Point<util::decimal>, input_size> input;
+util::ArrayList<star_tracker::StarSet, output_size> output;
+util::Point<util::decimal> pilot(0, 0);
+util::Point<util::decimal> s1(0, 1);
+util::Point<util::decimal> s2(1, 0);
+util::Point<util::decimal> s3(1, 1);
+util::Point<util::decimal> s4(1, 2);
+
+// The stars must be in order of magnitude:
+input.PushBack(pilot);
+input.PushBack(s1);
+input.PushBack(s2);
+input.PushBack(s3);
+input.PushBack(s4);
+
+// Finds all the combinations assuming they are ordered in apperant magnitude (brightest first).
+// Tries: (0, 1, 2, 3), (0, 1, 2, 4), (0, 1, 3, 4), (0, 2, 3, 4), (1, 2, 3, 4).
+star_tracker::StarSet::GenerateSetsPilots<input_size, output_size>(input, 0, 5, &output);
+
+cout << output.Get(0).angle << endl; // angle between (s1, s3, s2) as s3 is farthest the opposite (pi/4, (90 degrees)).
+
+// Cluster probability will favour close matching points.
+// If multiple matches are close to the same place, the likelyhood of this being the correct match is higher.
+// The more within the fov, the higher the odds.
+decimal fov = 1;
+star_tracker::StarSetClusterProbability<output_size>(fov, &output);
+output.Get(0).odds;
+
+// For constructing the database
+string str;
+for ( int i = 0; i < output.Size(); i++ )
+{
+    output.Get(i).ToArrayString(&str);
+}
+\end{DoxyVerb}
+ \begin{DoxyAuthor}{Author}
+Tom Creusot
+\end{DoxyAuthor}
+
+\begin{DoxyCodeInclude}
+\textcolor{comment}{/*}
+\textcolor{comment}{ *  Stores data on a set of stars to make a unique set.}
+\textcolor{comment}{ *  @file   StarSet.h}
+\textcolor{comment}{ *  @author Tom Creusot}
+\textcolor{comment}{ */}
+
+\textcolor{preprocessor}{#pragma once}
+\textcolor{preprocessor}{#include <string>}
+
+\textcolor{preprocessor}{#include "\hyperlink{util_8h}{libs/util/util.h}"}
+\textcolor{preprocessor}{#include "\hyperlink{array__list_8h}{libs/util/array\_list.h}"}
+\textcolor{preprocessor}{#include "\hyperlink{point_8h}{libs/util/point.h}"}
+
+\textcolor{keyword}{using namespace }\hyperlink{namespaceutil}{util};
+\textcolor{keyword}{using namespace }\hyperlink{namespacestd}{std};
+
+\textcolor{keyword}{namespace }\hyperlink{namespacestar__tracker}{star\_tracker}
+\{
+
+
+\textcolor{keyword}{class }StarSet
+\{
+\textcolor{keyword}{private}:
+    \textcolor{keyword}{static} util::decimal fov;
+    \textcolor{keyword}{static} util::decimal pixel\_resolution;
+
+
+\textcolor{keyword}{public}:
+    constexpr \textcolor{keyword}{static} util::uint kDatabaseIndexAngle         = 0;
+    constexpr \textcolor{keyword}{static} util::uint kDatabaseIndexDist          = 1;
+    constexpr \textcolor{keyword}{static} util::uint kDatabaseIndexOrientation   = 2;
+    constexpr \textcolor{keyword}{static} util::uint kDatabaseIndexOppositeX     = 3;
+    constexpr \textcolor{keyword}{static} util::uint kDatabaseIndexOppositeY     = 4;
+
+    constexpr \textcolor{keyword}{static} util::uint kDatabaseNumElements        = 5;
+
+
+
+    constexpr \textcolor{keyword}{static} util::decimal kInvalidAngle = NAN;
+    constexpr \textcolor{keyword}{static} util::decimal kSeparationDiv = 1.000001;
+
+
+
+
+
+
+    decimal angle;              
+    decimal distance;           
+    StarSet* pixel;             
+    decimal odds;               
+    decimal orientation;        
+    \hyperlink{classutil_1_1Point}{Point<decimal>} opposite;  
+
+    StarSet ( );
+
+
+
+
+    StarSet (   \hyperlink{classutil_1_1Point}{Point<decimal>}& p,
+                \hyperlink{classutil_1_1Point}{Point<decimal>}& s1, \hyperlink{classutil_1_1Point}{Point<decimal>}& s2, 
+      \hyperlink{classutil_1_1Point}{Point<decimal>}& s3 );
+
+
+
+
+    StarSet ( StarSet& px );
+
+
+
+
+    \textcolor{keywordtype}{void} FindCenter (   decimal fovPP,
+                        \hyperlink{classutil_1_1Point}{Point<int>}& size,
+                        \hyperlink{classutil_1_1Point}{Point<decimal>}* center );
+
+
+
+
+    \textcolor{keywordtype}{void} ToArrayString ( \textcolor{keywordtype}{string}* str );
+
+
+
+
+
+
+
+    \textcolor{keyword}{template}<\textcolor{keywordtype}{unsigned} \textcolor{keywordtype}{int} N1, \textcolor{keywordtype}{unsigned} \textcolor{keywordtype}{int} N2>
+    \textcolor{keyword}{static} \textcolor{keywordtype}{void} GenerateSetsPilots (    \hyperlink{classutil_1_1ArrayList}{ArrayList}<\hyperlink{classutil_1_1Point}{Point<decimal>}, N1>& list,
+                                        uint start, uint end,
+                                        \hyperlink{classutil_1_1ArrayList}{ArrayList<StarSet, N2>}* sets      )
+    \{
+        \textcolor{keywordflow}{for} ( uint ii = start; ii < end; ii++ )
+            \textcolor{keywordflow}{for} ( uint jj = ii + 1; jj < end; jj++ )
+                \textcolor{keywordflow}{for} ( uint kk = jj + 1; kk < end; kk++ )
+                    \textcolor{keywordflow}{for} ( uint ll = kk + 1; ll < end; ll++ )
+                    \{
+                        \hyperlink{classutil_1_1Point}{Point<decimal>}* pilot     = &list.Get(ii);
+                        \hyperlink{classutil_1_1Point}{Point<decimal>}* s1        = &list.Get(jj);
+                        \hyperlink{classutil_1_1Point}{Point<decimal>}* s2        = &list.Get(kk);
+                        \hyperlink{classutil_1_1Point}{Point<decimal>}* s3        = &list.Get(ll);
+
+                        StarSet \textcolor{keyword}{set}(*pilot, *s1, *s2, *s3);
+                        \textcolor{keywordflow}{if} ( \textcolor{keyword}{set}.angle != kInvalidAngle ) sets->\hyperlink{classutil_1_1ArrayList_a75e2f1682ebe7a982b6fd301d416d536}{PushBack}(\textcolor{keyword}{set});
+                    \}
+    \}
+
+
+
+
+
+
+    \textcolor{keyword}{template} < u\textcolor{keywordtype}{int} N1 >
+    \textcolor{keyword}{static} \textcolor{keywordtype}{void} ClusterProbability ( \hyperlink{classutil_1_1ArrayList}{ArrayList<StarSet, N1>}* database )
+    \{
+        \textcolor{keywordflow}{for} ( uint ii = 0; ii < database->\hyperlink{classutil_1_1ArrayList_ae098e879892c23b682edc4b023a770de}{Size}(); ii++ )
+            \textcolor{keywordflow}{for} ( uint jj = 0; jj < database->\hyperlink{classutil_1_1ArrayList_ae098e879892c23b682edc4b023a770de}{Size}(); jj++ )
+            \{
+                \textcolor{keywordflow}{if} ( ii != jj )
+                \{
+                    decimal dist =
+                            database->\hyperlink{classutil_1_1ArrayList_ac5a4259af59f7bac9df06851c29d9e37}{Get}(ii).opposite.Distance(database->\hyperlink{classutil_1_1ArrayList_ac5a4259af59f7bac9df06851c29d9e37}{Get}(jj).opposite);
+                    \textcolor{keywordflow}{if} ( dist > fov )
+                    \{
+                        database->\hyperlink{classutil_1_1ArrayList_ac5a4259af59f7bac9df06851c29d9e37}{Get}(ii).odds /= kSeparationDiv;
+                    \}
+                \}
+            \}
+    \}
+
+
+
+
+    \textcolor{keyword}{static} \textcolor{keywordtype}{void} SortDistance    (   \hyperlink{classutil_1_1Point}{Point<decimal>}& pilot,
+                                    \hyperlink{classutil_1_1Point}{Point<decimal>}* s1, 
+      \hyperlink{classutil_1_1Point}{Point<decimal>}* s2    );
+
+
+
+
+    \textcolor{keyword}{static} decimal FindAngle (  \hyperlink{classutil_1_1Point}{Point<decimal>}& center,
+                                \hyperlink{classutil_1_1Point}{Point<decimal>}& left, 
+      \hyperlink{classutil_1_1Point}{Point<decimal>}& right );
+
+
+    \textcolor{keyword}{static} \textcolor{keyword}{inline} decimal FindRealDistance (    \hyperlink{classutil_1_1Point}{Point<decimal>}& opposite,
+                                                \hyperlink{classutil_1_1Point}{Point<decimal>}& other )
+    \{
+        \textcolor{keywordflow}{return} opposite.\hyperlink{classutil_1_1Point_a8f90a6d1ce481f74c1d8790f4e30770a}{Distance}(other) * fov / pixel\_resolution;
+    \}
+
+
+
+
+    \textcolor{keyword}{static} \textcolor{keywordtype}{bool} SortByOdds          ( StarSet& larger, StarSet& smaller );
+
+
+
+
+
+
+
+
+    \textcolor{keyword}{template}<const u\textcolor{keywordtype}{int} NI, const u\textcolor{keywordtype}{int} NO>
+    \textcolor{keyword}{static} \textcolor{keywordtype}{void} FindElements (
+                            \textcolor{keyword}{const} decimal database[][6], uint \hyperlink{namespacestar__tracker_aec9619ecae222c6615d448fa87324566}{database\_size},
+                            \hyperlink{classutil_1_1ArrayList}{ArrayList<star\_tracker::StarSet, NI>}& 
+      angles,
+                            decimal tA, decimal tD,
+                            \hyperlink{classutil_1_1ArrayList}{ArrayList<star\_tracker::StarSet, NO>}* found
+                            )
+    \{
+        \textcolor{keywordflow}{for} ( uint ii = 0; ii < angles.\hyperlink{classutil_1_1ArrayList_ae098e879892c23b682edc4b023a770de}{Size}(); ii++)
+        \{
+            \textcolor{keywordflow}{for} ( uint jj = 0; jj < \hyperlink{namespacestar__tracker_aec9619ecae222c6615d448fa87324566}{database\_size}; jj++ )
+            \{
+                decimal dAngle = database[jj][kDatabaseIndexAngle];
+                decimal dDist = database[jj][kDatabaseIndexDist];
+
+                \textcolor{keywordflow}{if} (    fabs(dAngle - angles.\hyperlink{classutil_1_1ArrayList_ac5a4259af59f7bac9df06851c29d9e37}{Get}(ii).\hyperlink{classstar__tracker_1_1StarSet_af834c889627c1d36810ed570f869bcf8}{angle}) < tA)\textcolor{comment}{// &&}
+                    \textcolor{comment}{//  fabs(dDist - angles.Get(ii).distance) < tD  )}
+                \{
+                    \hyperlink{classutil_1_1Point}{Point<decimal>} opposite(
+                                database[jj][kDatabaseIndexOppositeX],
+                                database[jj][kDatabaseIndexOppositeY]);
+                    \hyperlink{classstar__tracker_1_1StarSet}{star\_tracker::StarSet} \textcolor{keyword}{set};
+                    \textcolor{keyword}{set}.\hyperlink{classstar__tracker_1_1StarSet_af834c889627c1d36810ed570f869bcf8}{angle} = dAngle;
+                    \textcolor{keyword}{set}.distance = dDist;
+                    \textcolor{keyword}{set}.opposite = opposite;
+                    \textcolor{keyword}{set}.orientation = database[jj][kDatabaseIndexOrientation];
+
+                    \textcolor{keyword}{set}.pixel = &angles.\hyperlink{classutil_1_1ArrayList_ac5a4259af59f7bac9df06851c29d9e37}{Get}(ii);
+                    found->\hyperlink{classutil_1_1ArrayList_a75e2f1682ebe7a982b6fd301d416d536}{PushBack}(\textcolor{keyword}{set});
+                \}
+            \}
+        \}
+    \}
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+    \textcolor{keyword}{static} \textcolor{keyword}{inline} \textcolor{keywordtype}{void} set\_fov              ( decimal f ) \{     fov = f;    \}
+
+    \textcolor{keyword}{static} \textcolor{keyword}{inline} \textcolor{keywordtype}{void} set\_pixel\_resolution ( decimal p )\{pixel\_resolution = p;\}
+\};
+\}
+\end{DoxyCodeInclude}
+ 

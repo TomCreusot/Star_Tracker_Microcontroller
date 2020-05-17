@@ -1,0 +1,25 @@
+var searchData=
+[
+  ['separatenamevalue',['SeparateNameValue',['../classnix_1_1Properties.html#aa6c42419ed1bfaa7ae0736d1e72a2fab',1,'nix::Properties']]],
+  ['set',['Set',['../classutil_1_1Point.html#aae6e38572d0141a2a819dfab3ea15eae',1,'util::Point::Set(T x_, T y_)'],['../classutil_1_1Point.html#adc1fb46aa99606d6eb31767ea6527432',1,'util::Point::Set(T degrees_x, T minutes_x, T seconds_x, T degrees_y, T minutes_y, T seconds_y)']]],
+  ['set_5ffov',['set_fov',['../classstar__tracker_1_1StarSet.html#a4ac44bbf443182649f4607ca8375099f',1,'star_tracker::StarSet']]],
+  ['set_5fpixel_5fresolution',['set_pixel_resolution',['../classstar__tracker_1_1StarSet.html#a773579d8b4868f48a3bdbd23a7f3f55b',1,'star_tracker::StarSet']]],
+  ['set_5fx',['set_x',['../classutil_1_1Point.html#a6111d60c3e51f1aaa4d73b2fd24d0789',1,'util::Point']]],
+  ['set_5fy',['set_y',['../classutil_1_1Point.html#aeb4963095d32bf0ab74f4f8c7762e1db',1,'util::Point']]],
+  ['setbmp',['SetBMP',['../classnix_1_1GetImage.html#abe75e9f38ce1d1a8c44af1f56f57e342',1,'nix::GetImage']]],
+  ['setpixel',['SetPixel',['../classimage__processing_1_1Image.html#a8686d6979e34ca0afc35d3e0e241e8b6',1,'image_processing::Image']]],
+  ['setwidthheight',['SetWidthHeight',['../classimage__processing_1_1Image.html#aa0f895ef02220e7b81af8cbb85f6a479',1,'image_processing::Image']]],
+  ['size',['Size',['../classutil_1_1LinkedList.html#a83784f0749538889da04deb74b2bdd95',1,'util::LinkedList::Size()'],['../classutil_1_1ArrayList.html#ae098e879892c23b682edc4b023a770de',1,'util::ArrayList::Size()'],['../classutil_1_1LinkedList.html#a8418657f94925a9d4240e3d96e1abab3',1,'util::LinkedList::size()']]],
+  ['sort',['Sort',['../classutil_1_1LinkedList.html#ab77a211e4961b76e7b68b5d3ff1cd7ee',1,'util::LinkedList::Sort()'],['../classutil_1_1ArrayList.html#a6f42b37e970d8416b7036e05185ca1d2',1,'util::ArrayList::Sort()']]],
+  ['sortbyintensity',['SortByIntensity',['../classimage__processing_1_1Blob.html#a79ee4aef000ec123d01bdbb21d6d9054',1,'image_processing::Blob']]],
+  ['sortbymagnitude',['SortByMagnitude',['../classstar__tracker_1_1Star.html#af06e825ada5958c0c3f60bb118867fac',1,'star_tracker::Star']]],
+  ['sortbyodds',['SortByOdds',['../classstar__tracker_1_1StarSet.html#a6073fd52d08603e0e73729a8f6319b7c',1,'star_tracker::StarSet']]],
+  ['sortdistance',['SortDistance',['../classstar__tracker_1_1StarSet.html#a29b12bd3b22a9a500a45c90e18160c2e',1,'star_tracker::StarSet']]],
+  ['split',['Split',['../classstar__tracker_1_1Star.html#a9b2ed6550ce96db70536a139a815c2df',1,'star_tracker::Star']]],
+  ['spreadgrassfire',['SpreadGrassFire',['../classimage__processing_1_1Blob.html#ae51f78c334cd1c1fe415c2a989a7f5bd',1,'image_processing::Blob']]],
+  ['star',['Star',['../classstar__tracker_1_1Star.html',1,'star_tracker::Star'],['../classstar__tracker_1_1Star.html#a5537e9df68881b2fdcb560af95f045a5',1,'star_tracker::Star::Star()'],['../classstar__tracker_1_1Star.html#a371887a36edc9ede4cf3a1ce34d6a9a0',1,'star_tracker::Star::Star(util::decimal ra, util::decimal dec, util::decimal mag)']]],
+  ['star_2eh',['star.h',['../star_8h.html',1,'']]],
+  ['star_5ftracker',['star_tracker',['../namespacestar__tracker.html',1,'']]],
+  ['starset',['StarSet',['../classstar__tracker_1_1StarSet.html',1,'star_tracker::StarSet'],['../classstar__tracker_1_1StarSet.html#aad9e0a41ab7e675c242721e434f8b70a',1,'star_tracker::StarSet::StarSet()'],['../classstar__tracker_1_1StarSet.html#a08509f797475cb038d1e917c9371fa71',1,'star_tracker::StarSet::StarSet(Point&lt; decimal &gt; &amp;p, Point&lt; decimal &gt; &amp;s1, Point&lt; decimal &gt; &amp;s2, Point&lt; decimal &gt; &amp;s3)'],['../classstar__tracker_1_1StarSet.html#a261ad8a5977ce9e81d04e6d829cdc619',1,'star_tracker::StarSet::StarSet(StarSet &amp;px)']]],
+  ['starsfromcsv',['StarsFromCSV',['../classstar__tracker_1_1Star.html#a88467ca924b874aabbed260788018c45',1,'star_tracker::Star']]]
+];

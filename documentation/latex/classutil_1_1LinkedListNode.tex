@@ -1,0 +1,83 @@
+\hypertarget{classutil_1_1LinkedListNode}{}\section{util\+:\+:Linked\+List\+Node$<$ T $>$ Class Template Reference}
+\label{classutil_1_1LinkedListNode}\index{util\+::\+Linked\+List\+Node$<$ T $>$@{util\+::\+Linked\+List\+Node$<$ T $>$}}
+
+
+Collaboration diagram for util\+:\+:Linked\+List\+Node$<$ T $>$\+:
+\nopagebreak
+\begin{figure}[H]
+\begin{center}
+\leavevmode
+\includegraphics[width=263pt]{classutil_1_1LinkedListNode__coll__graph}
+\end{center}
+\end{figure}
+\subsection*{Public Member Functions}
+\begin{DoxyCompactItemize}
+\item 
+\hyperlink{classutil_1_1LinkedListNode_a7bb8008f6d5a04ed6229c7f3d241d442}{Linked\+List\+Node} (T \hyperlink{classutil_1_1LinkedListNode_a190922a539e799d955b40673f8aa79bc}{value}, \hyperlink{classutil_1_1LinkedListNode}{Linked\+List\+Node}$<$ T $>$ $\ast$\hyperlink{classutil_1_1LinkedListNode_acdb98170eeeeb05c187a8aff5f613b20}{prev}, \hyperlink{classutil_1_1LinkedListNode}{Linked\+List\+Node}$<$ T $>$ $\ast$\hyperlink{classutil_1_1LinkedListNode_a293bf69c48417a2487d2c479ab74f4d0}{next})
+\begin{DoxyCompactList}\small\item\em Alternate Constructor constructs a node with a copy of the value. \end{DoxyCompactList}\item 
+\mbox{\Hypertarget{classutil_1_1LinkedListNode_a814c4dcba5bdfa585ca344e70cb70883}\label{classutil_1_1LinkedListNode_a814c4dcba5bdfa585ca344e70cb70883}} 
+void \hyperlink{classutil_1_1LinkedListNode_a814c4dcba5bdfa585ca344e70cb70883}{Remove\+Node} ()
+\begin{DoxyCompactList}\small\item\em Removes the current node from the list and links the adjacent nodes. \end{DoxyCompactList}\item 
+void \hyperlink{classutil_1_1LinkedListNode_a51ad4d3472a7d5808c45f480e83c4a32}{Insert\+Node} (\hyperlink{classutil_1_1LinkedListNode}{Linked\+List\+Node}$<$ T $>$ $\ast$\hyperlink{classutil_1_1LinkedListNode_acdb98170eeeeb05c187a8aff5f613b20}{prev}, \hyperlink{classutil_1_1LinkedListNode}{Linked\+List\+Node}$<$ T $>$ $\ast$\hyperlink{classutil_1_1LinkedListNode_a293bf69c48417a2487d2c479ab74f4d0}{next})
+\begin{DoxyCompactList}\small\item\em Safely inserts the node between prev and next. \end{DoxyCompactList}\end{DoxyCompactItemize}
+\subsection*{Public Attributes}
+\begin{DoxyCompactItemize}
+\item 
+\mbox{\Hypertarget{classutil_1_1LinkedListNode_a190922a539e799d955b40673f8aa79bc}\label{classutil_1_1LinkedListNode_a190922a539e799d955b40673f8aa79bc}} 
+T \hyperlink{classutil_1_1LinkedListNode_a190922a539e799d955b40673f8aa79bc}{value}
+\begin{DoxyCompactList}\small\item\em The value of the node. \end{DoxyCompactList}\item 
+\mbox{\Hypertarget{classutil_1_1LinkedListNode_a293bf69c48417a2487d2c479ab74f4d0}\label{classutil_1_1LinkedListNode_a293bf69c48417a2487d2c479ab74f4d0}} 
+\hyperlink{classutil_1_1LinkedListNode}{Linked\+List\+Node}$<$ T $>$ $\ast$ \hyperlink{classutil_1_1LinkedListNode_a293bf69c48417a2487d2c479ab74f4d0}{next}
+\begin{DoxyCompactList}\small\item\em The next element in the linkedlist. \end{DoxyCompactList}\item 
+\mbox{\Hypertarget{classutil_1_1LinkedListNode_acdb98170eeeeb05c187a8aff5f613b20}\label{classutil_1_1LinkedListNode_acdb98170eeeeb05c187a8aff5f613b20}} 
+\hyperlink{classutil_1_1LinkedListNode}{Linked\+List\+Node}$<$ T $>$ $\ast$ \hyperlink{classutil_1_1LinkedListNode_acdb98170eeeeb05c187a8aff5f613b20}{prev}
+\begin{DoxyCompactList}\small\item\em The previous element in the linkedlist. \end{DoxyCompactList}\end{DoxyCompactItemize}
+
+
+\subsection{Constructor \& Destructor Documentation}
+\mbox{\Hypertarget{classutil_1_1LinkedListNode_a7bb8008f6d5a04ed6229c7f3d241d442}\label{classutil_1_1LinkedListNode_a7bb8008f6d5a04ed6229c7f3d241d442}} 
+\index{util\+::\+Linked\+List\+Node@{util\+::\+Linked\+List\+Node}!Linked\+List\+Node@{Linked\+List\+Node}}
+\index{Linked\+List\+Node@{Linked\+List\+Node}!util\+::\+Linked\+List\+Node@{util\+::\+Linked\+List\+Node}}
+\subsubsection{\texorpdfstring{Linked\+List\+Node()}{LinkedListNode()}}
+{\footnotesize\ttfamily template$<$class T$>$ \\
+\hyperlink{classutil_1_1LinkedListNode}{util\+::\+Linked\+List\+Node}$<$ T $>$\+::\hyperlink{classutil_1_1LinkedListNode}{Linked\+List\+Node} (\begin{DoxyParamCaption}\item[{T}]{value,  }\item[{\hyperlink{classutil_1_1LinkedListNode}{Linked\+List\+Node}$<$ T $>$ $\ast$}]{prev,  }\item[{\hyperlink{classutil_1_1LinkedListNode}{Linked\+List\+Node}$<$ T $>$ $\ast$}]{next }\end{DoxyParamCaption})\hspace{0.3cm}{\ttfamily [inline]}}
+
+
+
+Alternate Constructor constructs a node with a copy of the value. 
+
+
+\begin{DoxyParams}{Parameters}
+{\em value} & \mbox{[}in\mbox{]} The value to copy into the node. \\
+\hline
+{\em prev} & \mbox{[}in/out\mbox{]} Sets the previous value of this node and the next value of the previous node if not N\+U\+LL. \\
+\hline
+{\em next} & \mbox{[}in/out\mbox{]} Sets the next value of this node and the previous value of the next node if not N\+U\+LL. \\
+\hline
+\end{DoxyParams}
+
+
+\subsection{Member Function Documentation}
+\mbox{\Hypertarget{classutil_1_1LinkedListNode_a51ad4d3472a7d5808c45f480e83c4a32}\label{classutil_1_1LinkedListNode_a51ad4d3472a7d5808c45f480e83c4a32}} 
+\index{util\+::\+Linked\+List\+Node@{util\+::\+Linked\+List\+Node}!Insert\+Node@{Insert\+Node}}
+\index{Insert\+Node@{Insert\+Node}!util\+::\+Linked\+List\+Node@{util\+::\+Linked\+List\+Node}}
+\subsubsection{\texorpdfstring{Insert\+Node()}{InsertNode()}}
+{\footnotesize\ttfamily template$<$class T$>$ \\
+void \hyperlink{classutil_1_1LinkedListNode}{util\+::\+Linked\+List\+Node}$<$ T $>$\+::Insert\+Node (\begin{DoxyParamCaption}\item[{\hyperlink{classutil_1_1LinkedListNode}{Linked\+List\+Node}$<$ T $>$ $\ast$}]{prev,  }\item[{\hyperlink{classutil_1_1LinkedListNode}{Linked\+List\+Node}$<$ T $>$ $\ast$}]{next }\end{DoxyParamCaption})\hspace{0.3cm}{\ttfamily [inline]}}
+
+
+
+Safely inserts the node between prev and next. 
+
+
+\begin{DoxyParams}{Parameters}
+{\em prev} & \mbox{[}in\mbox{]} The node to insert after. \\
+\hline
+{\em next} & \mbox{[}in\mbox{]} The node to insert before. \\
+\hline
+\end{DoxyParams}
+
+
+The documentation for this class was generated from the following file\+:\begin{DoxyCompactItemize}
+\item 
+libs/nix/linked\+\_\+list.\+h\end{DoxyCompactItemize}

@@ -1,0 +1,113 @@
+\hypertarget{_2mnt_2c_2Users_2soyuz_2Desktop_2Star_Tracker_Microcontroller_2libs_2image_processing_2image_8h-example}{}\section{/mnt/c/\+Users/soyuz/\+Desktop/\+Star\+\_\+\+Tracker\+\_\+\+Microcontroller/libs/image\+\_\+processing/image.\+h}
+Stores an 8 bit image and peforms thresholding for blob detection. Image img(10, 10); // Creates an image 10x10 with all pixels set to 0. cout $<$$<$ img.\+Get\+Width() $<$$<$ endl; // 10. img.\+Set\+Pixel(2, 3, 20) // Sets the brightness of the pixel (2,3). cout $<$$<$ img.\+Get\+Pixel(2, 3) $<$$<$ endl; // 20.
+
+const int list\+\_\+size = 40; Array\+List$<$int, list\+\_\+size$>$ histogram(list\+\_\+size); // A brightness histogram with 20 bars. img.\+Generate\+Histogram$<$list\+\_\+size$>$(histogram); // histogram\mbox{[}0\mbox{]} = 10 $\ast$ 10 -\/ 1 = 99, histogram\mbox{[}20/255$\ast$40 = 3\mbox{]} = 1.
+
+Thresholding finds the bar that the aggression \% of pixels is less. int threshold = img.\+Percent\+Threshold$<$list\+\_\+size$>$(0, histogram); // 0 int threshold = img.\+Percent\+Threshold$<$list\+\_\+size$>$(0.\+5, histogram); // 0 (50 \% of pixels $<$= 0) int threshold = img.\+Percent\+Threshold$<$list\+\_\+size$>$(0.\+01, histogram); // 3 (100 \% of pixels $<$= 20 $<$-\/ index 3)
+
+\begin{DoxyAuthor}{Author}
+Tom Creusot
+\end{DoxyAuthor}
+
+\begin{DoxyCodeInclude}
+
+\textcolor{preprocessor}{#pragma once}
+\textcolor{preprocessor}{#include "\hyperlink{util_8h}{libs/util/util.h}"}
+\textcolor{preprocessor}{#include "\hyperlink{array__list_8h}{libs/util/array\_list.h}"}
+
+\textcolor{keyword}{using namespace }\hyperlink{namespaceutil}{util};
+
+\textcolor{keyword}{namespace }\hyperlink{namespaceimage__processing}{image\_processing}
+\{
+
+    \textcolor{keyword}{static} \textcolor{keyword}{const} uint kImageWidthMax = 2000;
+    \textcolor{keyword}{static} \textcolor{keyword}{const} uint kImageHeightMax = 2000;
+
+\textcolor{keyword}{class }Image
+\{
+\textcolor{keyword}{private}:
+    uint width, height;
+    byte image[kImageHeightMax][kImageWidthMax];
+
+
+\textcolor{keyword}{public}:
+
+    Image   ( );
+
+    Image   ( uint w, uint h );
+
+
+    Image   ( \textcolor{keyword}{const} Image& img );
+
+
+    uint GetWidth   ( ) \textcolor{keyword}{const};
+
+    uint GetHeight  ( ) \textcolor{keyword}{const};
+
+
+    byte GetPixel   ( uint x, uint y ) \textcolor{keyword}{const} ;
+
+
+    \textcolor{keywordtype}{bool} ValidPixel ( uint x, uint y ) \textcolor{keyword}{const};
+
+
+
+
+
+
+    \textcolor{keywordtype}{void} SetPixel   ( uint x, uint y, byte color );
+
+
+    \textcolor{keywordtype}{void} SetWidthHeight ( uint w, uint h );
+
+
+
+
+
+    \textcolor{keywordtype}{void} FindMinMax ( uint x, uint y, uint sampleRadius, byte* min, byte* max );
+
+
+    \textcolor{keywordtype}{void} AdaptiveThreshold ( uint sampleRadius, \textcolor{keywordtype}{float} aggression );
+
+
+
+    \textcolor{keyword}{template}<const \textcolor{keywordtype}{int} N>
+    uint PercentThreshold ( decimal aggression, \hyperlink{classutil_1_1ArrayList}{ArrayList<uint, N>}& histogram )
+    \{
+        \textcolor{comment}{// Finds where the cutoff is (inclusive).}
+        uint threshold = (uint)((decimal)width * (decimal)height * aggression);
+        uint current = 0;
+        uint i = 0;
+        \textcolor{keywordflow}{while} ( current + histogram.\hyperlink{classutil_1_1ArrayList_ac5a4259af59f7bac9df06851c29d9e37}{Get}(i) < threshold && i < histogram.\hyperlink{classutil_1_1ArrayList_ae098e879892c23b682edc4b023a770de}{Size}() )
+        \{
+            current += histogram.\hyperlink{classutil_1_1ArrayList_ac5a4259af59f7bac9df06851c29d9e37}{Get}(i);
+            \textcolor{comment}{// cout << current << "  " << threshold << endl;}
+            i++;
+        \}
+        \textcolor{keywordflow}{return} 255 * i / histogram.\hyperlink{classutil_1_1ArrayList_ae098e879892c23b682edc4b023a770de}{Size}();
+    \}
+
+
+
+    \textcolor{keyword}{template}<const \textcolor{keywordtype}{int} N>
+    \textcolor{keywordtype}{void} GenerateHistogram ( \hyperlink{classutil_1_1ArrayList}{ArrayList<uint, N>}* histogram )
+    \{   \textcolor{comment}{// Fills the histogram with intensities.}
+
+        \textcolor{comment}{// Ensures all values are 0 to start with.}
+        \textcolor{keywordflow}{for} ( uint i = 0; i < histogram->\hyperlink{classutil_1_1ArrayList_ae098e879892c23b682edc4b023a770de}{Size}(); i++ )
+            histogram->\hyperlink{classutil_1_1ArrayList_ac5a4259af59f7bac9df06851c29d9e37}{Get}(i) = 0;
+
+        \textcolor{comment}{//}
+        \textcolor{keywordflow}{for} ( uint xx = 0; xx < width; xx++ )
+            \textcolor{keywordflow}{for} ( uint yy = 0; yy < height; yy++ )
+            \{
+                uint i = (uint)(
+                    (decimal) GetPixel(xx, yy) * (decimal) histogram->\hyperlink{classutil_1_1ArrayList_ae098e879892c23b682edc4b023a770de}{Size}()
+                                                                        / 256);
+                histogram->\hyperlink{classutil_1_1ArrayList_ac5a4259af59f7bac9df06851c29d9e37}{Get}(i)++;
+            \}
+    \}
+\};
+\}
+\end{DoxyCodeInclude}
+ 

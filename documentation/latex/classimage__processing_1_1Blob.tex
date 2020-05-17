@@ -1,0 +1,209 @@
+\hypertarget{classimage__processing_1_1Blob}{}\section{image\+\_\+processing\+:\+:Blob Class Reference}
+\label{classimage__processing_1_1Blob}\index{image\+\_\+processing\+::\+Blob@{image\+\_\+processing\+::\+Blob}}
+
+
+Collaboration diagram for image\+\_\+processing\+:\+:Blob\+:
+\nopagebreak
+\begin{figure}[H]
+\begin{center}
+\leavevmode
+\includegraphics[width=350pt]{classimage__processing_1_1Blob__coll__graph}
+\end{center}
+\end{figure}
+\subsection*{Public Member Functions}
+\begin{DoxyCompactItemize}
+\item 
+\hyperlink{classimage__processing_1_1Blob_a28446a1a7d8e24aa3f17c1fd4030a216}{Blob} ()
+\begin{DoxyCompactList}\small\item\em Default Constructor. \end{DoxyCompactList}\item 
+\hyperlink{classimage__processing_1_1Blob_aa1388b1af488ef5151e33db83ba0f395}{Blob} (uint x, uint y)
+\begin{DoxyCompactList}\small\item\em Creates a blob at the position provided. \end{DoxyCompactList}\item 
+{\footnotesize template$<$const uint N$>$ }\\void \hyperlink{classimage__processing_1_1Blob_ae51f78c334cd1c1fe415c2a989a7f5bd}{Spread\+Grass\+Fire} (uint threshold, \hyperlink{classimage__processing_1_1Image}{Image} $\ast$img)
+\begin{DoxyCompactList}\small\item\em Uses the grass fire method to find the true bounds of the blob. Sets any used pixels to 0. \end{DoxyCompactList}\item 
+decimal \hyperlink{classimage__processing_1_1Blob_a37368a3984c61551a6b866d3a49abff3}{Find\+Centroid} (decimal \hyperlink{classimage__processing_1_1Blob_a99da260a75ef943f09711bfefa37ab4e}{centroid}, uint intense, uint point, byte weight)
+\begin{DoxyCompactList}\small\item\em Finds the new center of mass in one dimention. \end{DoxyCompactList}\end{DoxyCompactItemize}
+\subsection*{Static Public Member Functions}
+\begin{DoxyCompactItemize}
+\item 
+{\footnotesize template$<$const uint N1, const uint N2$>$ }\\static void \hyperlink{classimage__processing_1_1Blob_aef3741a23c94dac01e69ccd20455b719}{Find\+Blobs} (byte threshold, \hyperlink{classimage__processing_1_1Image}{Image} $\ast$img, \hyperlink{classutil_1_1ArrayList}{Array\+List}$<$ \hyperlink{classimage__processing_1_1Blob}{Blob}, N1 $>$ $\ast$list)
+\begin{DoxyCompactList}\small\item\em Peforms grassfire blob detection on the desired image. \end{DoxyCompactList}\item 
+{\footnotesize template$<$const int N$>$ }\\static void \hyperlink{classimage__processing_1_1Blob_af9e1b968ae336b91c42b4574f97477de}{To\+Point\+List} (\hyperlink{classutil_1_1ArrayList}{Array\+List}$<$ \hyperlink{classimage__processing_1_1Blob}{Blob}, N $>$ \&blobs, \hyperlink{classutil_1_1ArrayList}{Array\+List}$<$ \hyperlink{classutil_1_1Point}{Point}$<$ decimal $>$, N $>$ $\ast$points)
+\begin{DoxyCompactList}\small\item\em Converts the \hyperlink{classimage__processing_1_1Blob}{Blob} list to a Point list using the centroid. \end{DoxyCompactList}\item 
+static bool \hyperlink{classimage__processing_1_1Blob_a79ee4aef000ec123d01bdbb21d6d9054}{Sort\+By\+Intensity} (\hyperlink{classimage__processing_1_1Blob}{Blob} \&larger, \hyperlink{classimage__processing_1_1Blob}{Blob} \&smaller)
+\begin{DoxyCompactList}\small\item\em Used for util\+::\+Array\+List$<$\+Blob$>$.\+sort() to sort in decending order. \end{DoxyCompactList}\end{DoxyCompactItemize}
+\subsection*{Public Attributes}
+\begin{DoxyCompactItemize}
+\item 
+\mbox{\Hypertarget{classimage__processing_1_1Blob_ab42c355b4a3d7be3a9533fdffb21c593}\label{classimage__processing_1_1Blob_ab42c355b4a3d7be3a9533fdffb21c593}} 
+\hyperlink{classutil_1_1Point}{Point}$<$ uint $>$ \hyperlink{classimage__processing_1_1Blob_ab42c355b4a3d7be3a9533fdffb21c593}{origin}
+\begin{DoxyCompactList}\small\item\em The top-\/left position\+: \end{DoxyCompactList}\item 
+\mbox{\Hypertarget{classimage__processing_1_1Blob_a11722fcf524938e1fcdff1f176bf19e3}\label{classimage__processing_1_1Blob_a11722fcf524938e1fcdff1f176bf19e3}} 
+uint \hyperlink{classimage__processing_1_1Blob_a11722fcf524938e1fcdff1f176bf19e3}{width}
+\begin{DoxyCompactList}\small\item\em The width of the blob, if it is elongated or large, it is probably not a star. \end{DoxyCompactList}\item 
+\mbox{\Hypertarget{classimage__processing_1_1Blob_a8b426974f1d12dce53d56cfb1efba84b}\label{classimage__processing_1_1Blob_a8b426974f1d12dce53d56cfb1efba84b}} 
+uint \hyperlink{classimage__processing_1_1Blob_a8b426974f1d12dce53d56cfb1efba84b}{height}
+\begin{DoxyCompactList}\small\item\em The height of the blob, if it is elongated or large, it is probably not a star. \end{DoxyCompactList}\item 
+\mbox{\Hypertarget{classimage__processing_1_1Blob_aec90a3f53aa18e2544d38732e8f9839f}\label{classimage__processing_1_1Blob_aec90a3f53aa18e2544d38732e8f9839f}} 
+uint \hyperlink{classimage__processing_1_1Blob_aec90a3f53aa18e2544d38732e8f9839f}{pixels}
+\begin{DoxyCompactList}\small\item\em The number of pixels. \end{DoxyCompactList}\item 
+\mbox{\Hypertarget{classimage__processing_1_1Blob_a9d69612e5931c12bbbfa25e44b626f5f}\label{classimage__processing_1_1Blob_a9d69612e5931c12bbbfa25e44b626f5f}} 
+uint \hyperlink{classimage__processing_1_1Blob_a9d69612e5931c12bbbfa25e44b626f5f}{intensity}
+\begin{DoxyCompactList}\small\item\em Sum of the intensity of all the pixels. \end{DoxyCompactList}\item 
+\mbox{\Hypertarget{classimage__processing_1_1Blob_a99da260a75ef943f09711bfefa37ab4e}\label{classimage__processing_1_1Blob_a99da260a75ef943f09711bfefa37ab4e}} 
+\hyperlink{classutil_1_1Point}{Point}$<$ decimal $>$ \hyperlink{classimage__processing_1_1Blob_a99da260a75ef943f09711bfefa37ab4e}{centroid}
+\begin{DoxyCompactList}\small\item\em The center weighted point. \end{DoxyCompactList}\end{DoxyCompactItemize}
+
+
+\subsection{Constructor \& Destructor Documentation}
+\mbox{\Hypertarget{classimage__processing_1_1Blob_a28446a1a7d8e24aa3f17c1fd4030a216}\label{classimage__processing_1_1Blob_a28446a1a7d8e24aa3f17c1fd4030a216}} 
+\index{image\+\_\+processing\+::\+Blob@{image\+\_\+processing\+::\+Blob}!Blob@{Blob}}
+\index{Blob@{Blob}!image\+\_\+processing\+::\+Blob@{image\+\_\+processing\+::\+Blob}}
+\subsubsection{\texorpdfstring{Blob()}{Blob()}\hspace{0.1cm}{\footnotesize\ttfamily [1/2]}}
+{\footnotesize\ttfamily image\+\_\+processing\+::\+Blob\+::\+Blob (\begin{DoxyParamCaption}{ }\end{DoxyParamCaption})}
+
+
+
+Default Constructor. 
+
+Sets everything to 0. \mbox{\Hypertarget{classimage__processing_1_1Blob_aa1388b1af488ef5151e33db83ba0f395}\label{classimage__processing_1_1Blob_aa1388b1af488ef5151e33db83ba0f395}} 
+\index{image\+\_\+processing\+::\+Blob@{image\+\_\+processing\+::\+Blob}!Blob@{Blob}}
+\index{Blob@{Blob}!image\+\_\+processing\+::\+Blob@{image\+\_\+processing\+::\+Blob}}
+\subsubsection{\texorpdfstring{Blob()}{Blob()}\hspace{0.1cm}{\footnotesize\ttfamily [2/2]}}
+{\footnotesize\ttfamily image\+\_\+processing\+::\+Blob\+::\+Blob (\begin{DoxyParamCaption}\item[{uint}]{x,  }\item[{uint}]{y }\end{DoxyParamCaption})}
+
+
+
+Creates a blob at the position provided. 
+
+
+\begin{DoxyParams}{Parameters}
+{\em x} & The initial x position. \\
+\hline
+{\em y} & The initial y position. \\
+\hline
+\end{DoxyParams}
+
+
+\subsection{Member Function Documentation}
+\mbox{\Hypertarget{classimage__processing_1_1Blob_aef3741a23c94dac01e69ccd20455b719}\label{classimage__processing_1_1Blob_aef3741a23c94dac01e69ccd20455b719}} 
+\index{image\+\_\+processing\+::\+Blob@{image\+\_\+processing\+::\+Blob}!Find\+Blobs@{Find\+Blobs}}
+\index{Find\+Blobs@{Find\+Blobs}!image\+\_\+processing\+::\+Blob@{image\+\_\+processing\+::\+Blob}}
+\subsubsection{\texorpdfstring{Find\+Blobs()}{FindBlobs()}}
+{\footnotesize\ttfamily template$<$const uint N1, const uint N2$>$ \\
+static void image\+\_\+processing\+::\+Blob\+::\+Find\+Blobs (\begin{DoxyParamCaption}\item[{byte}]{threshold,  }\item[{\hyperlink{classimage__processing_1_1Image}{Image} $\ast$}]{img,  }\item[{\hyperlink{classutil_1_1ArrayList}{Array\+List}$<$ \hyperlink{classimage__processing_1_1Blob}{Blob}, N1 $>$ $\ast$}]{list }\end{DoxyParamCaption})\hspace{0.3cm}{\ttfamily [inline]}, {\ttfamily [static]}}
+
+
+
+Peforms grassfire blob detection on the desired image. 
+
+
+\begin{DoxyParams}{Parameters}
+{\em threshold} & \mbox{[}in\mbox{]} What the intensity must be above to qualify as a blob. (0 means 1 qualifies). \\
+\hline
+{\em img} & \mbox{[}in/out\mbox{]} The image to examine. \\
+\hline
+{\em list} & \mbox{[}out\mbox{]} The list to append to.\\
+\hline
+\end{DoxyParams}
+
+\begin{DoxyTemplParams}{Template Parameters}
+{\em N1} & The size of the array list \char`\"{}list\char`\"{}. \\
+\hline
+{\em N2} & The max size of a \char`\"{}blob\char`\"{}.\\
+\hline
+\end{DoxyTemplParams}
+Calls Blob.\+grassfire which deletes all pixels considered a blob. \mbox{\Hypertarget{classimage__processing_1_1Blob_a37368a3984c61551a6b866d3a49abff3}\label{classimage__processing_1_1Blob_a37368a3984c61551a6b866d3a49abff3}} 
+\index{image\+\_\+processing\+::\+Blob@{image\+\_\+processing\+::\+Blob}!Find\+Centroid@{Find\+Centroid}}
+\index{Find\+Centroid@{Find\+Centroid}!image\+\_\+processing\+::\+Blob@{image\+\_\+processing\+::\+Blob}}
+\subsubsection{\texorpdfstring{Find\+Centroid()}{FindCentroid()}}
+{\footnotesize\ttfamily decimal image\+\_\+processing\+::\+Blob\+::\+Find\+Centroid (\begin{DoxyParamCaption}\item[{decimal}]{centroid,  }\item[{uint}]{intense,  }\item[{uint}]{point,  }\item[{byte}]{weight }\end{DoxyParamCaption})}
+
+
+
+Finds the new center of mass in one dimention. 
+
+
+\begin{DoxyParams}{Parameters}
+{\em centroid} & The old center of mass. \\
+\hline
+{\em intense} & The previous intensity. \\
+\hline
+{\em point} & The new point position to add. \\
+\hline
+{\em weight} & The weight of the new blob.\\
+\hline
+\end{DoxyParams}
+\begin{DoxyReturn}{Returns}
+The new center of mass. 
+\end{DoxyReturn}
+\mbox{\Hypertarget{classimage__processing_1_1Blob_a79ee4aef000ec123d01bdbb21d6d9054}\label{classimage__processing_1_1Blob_a79ee4aef000ec123d01bdbb21d6d9054}} 
+\index{image\+\_\+processing\+::\+Blob@{image\+\_\+processing\+::\+Blob}!Sort\+By\+Intensity@{Sort\+By\+Intensity}}
+\index{Sort\+By\+Intensity@{Sort\+By\+Intensity}!image\+\_\+processing\+::\+Blob@{image\+\_\+processing\+::\+Blob}}
+\subsubsection{\texorpdfstring{Sort\+By\+Intensity()}{SortByIntensity()}}
+{\footnotesize\ttfamily bool image\+\_\+processing\+::\+Blob\+::\+Sort\+By\+Intensity (\begin{DoxyParamCaption}\item[{\hyperlink{classimage__processing_1_1Blob}{Blob} \&}]{larger,  }\item[{\hyperlink{classimage__processing_1_1Blob}{Blob} \&}]{smaller }\end{DoxyParamCaption})\hspace{0.3cm}{\ttfamily [static]}}
+
+
+
+Used for util\+::\+Array\+List$<$\+Blob$>$.\+sort() to sort in decending order. 
+
+
+\begin{DoxyParams}{Parameters}
+{\em larger} & \mbox{[}in\mbox{]} The element that should be larger than the other. \\
+\hline
+{\em smaller} & \mbox{[}in\mbox{]} The element that should be smaller than the other. \\
+\hline
+\end{DoxyParams}
+\begin{DoxyReturn}{Returns}
+True if in order. 
+\end{DoxyReturn}
+\mbox{\Hypertarget{classimage__processing_1_1Blob_ae51f78c334cd1c1fe415c2a989a7f5bd}\label{classimage__processing_1_1Blob_ae51f78c334cd1c1fe415c2a989a7f5bd}} 
+\index{image\+\_\+processing\+::\+Blob@{image\+\_\+processing\+::\+Blob}!Spread\+Grass\+Fire@{Spread\+Grass\+Fire}}
+\index{Spread\+Grass\+Fire@{Spread\+Grass\+Fire}!image\+\_\+processing\+::\+Blob@{image\+\_\+processing\+::\+Blob}}
+\subsubsection{\texorpdfstring{Spread\+Grass\+Fire()}{SpreadGrassFire()}}
+{\footnotesize\ttfamily template$<$const uint N$>$ \\
+void image\+\_\+processing\+::\+Blob\+::\+Spread\+Grass\+Fire (\begin{DoxyParamCaption}\item[{uint}]{threshold,  }\item[{\hyperlink{classimage__processing_1_1Image}{Image} $\ast$}]{img }\end{DoxyParamCaption})\hspace{0.3cm}{\ttfamily [inline]}}
+
+
+
+Uses the grass fire method to find the true bounds of the blob. Sets any used pixels to 0. 
+
+
+\begin{DoxyParams}{Parameters}
+{\em threshold} & The brightness cut off (0 means will allow 1). \\
+\hline
+{\em img} & \mbox{[}out\mbox{]} The image to examine S\+E\+TS A\+LL U\+S\+ED P\+I\+X\+E\+LS TO 0.\\
+\hline
+\end{DoxyParams}
+
+\begin{DoxyTemplParams}{Template Parameters}
+{\em N} & The max size of a blob. \\
+\hline
+\end{DoxyTemplParams}
+\mbox{\Hypertarget{classimage__processing_1_1Blob_af9e1b968ae336b91c42b4574f97477de}\label{classimage__processing_1_1Blob_af9e1b968ae336b91c42b4574f97477de}} 
+\index{image\+\_\+processing\+::\+Blob@{image\+\_\+processing\+::\+Blob}!To\+Point\+List@{To\+Point\+List}}
+\index{To\+Point\+List@{To\+Point\+List}!image\+\_\+processing\+::\+Blob@{image\+\_\+processing\+::\+Blob}}
+\subsubsection{\texorpdfstring{To\+Point\+List()}{ToPointList()}}
+{\footnotesize\ttfamily template$<$const int N$>$ \\
+static void image\+\_\+processing\+::\+Blob\+::\+To\+Point\+List (\begin{DoxyParamCaption}\item[{\hyperlink{classutil_1_1ArrayList}{Array\+List}$<$ \hyperlink{classimage__processing_1_1Blob}{Blob}, N $>$ \&}]{blobs,  }\item[{\hyperlink{classutil_1_1ArrayList}{Array\+List}$<$ \hyperlink{classutil_1_1Point}{Point}$<$ decimal $>$, N $>$ $\ast$}]{points }\end{DoxyParamCaption})\hspace{0.3cm}{\ttfamily [inline]}, {\ttfamily [static]}}
+
+
+
+Converts the \hyperlink{classimage__processing_1_1Blob}{Blob} list to a Point list using the centroid. 
+
+
+\begin{DoxyParams}{Parameters}
+{\em blobs} & \mbox{[}in\mbox{]} The list of blobs. \\
+\hline
+{\em points} & \mbox{[}out\mbox{]} The list of centroids to be created.\\
+\hline
+\end{DoxyParams}
+
+\begin{DoxyTemplParams}{Template Parameters}
+{\em N} & The size of the array list \char`\"{}points\char`\"{}. \\
+\hline
+\end{DoxyTemplParams}
+
+
+The documentation for this class was generated from the following files\+:\begin{DoxyCompactItemize}
+\item 
+libs/image\+\_\+processing/blob.\+h\item 
+libs/image\+\_\+processing/blob.\+cc\end{DoxyCompactItemize}

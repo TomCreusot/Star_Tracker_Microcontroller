@@ -2,8 +2,6 @@
 
 ## TODO
 * Get Working.
-* Test Harness for Database and StarTracker/database.
-* Embedded Implementation for StarTracker/get_image.
 * Find the apparent offset of actual pixel and distortion due to lens.
 * Account for hot pixels.
 * Find centre of camera from pixel off centre.

@@ -1,0 +1,103 @@
+\hypertarget{_2mnt_2c_2Users_2soyuz_2Desktop_2Star_Tracker_Microcontroller_2libs_2nix_2fill_template_8h-example}{}\section{/mnt/c/\+Users/soyuz/\+Desktop/\+Star\+\_\+\+Tracker\+\_\+\+Microcontroller/libs/nix/fill\+\_\+template.\+h}
+This class is to replace \char`\"{}keys\char`\"{} with \char`\"{}values\char`\"{} in a template file. Fill\+Template template; template.\+Add\+Key(\char`\"{}key\char`\"{}, \char`\"{}value\char`\"{}); string str = \char`\"{}keys of a quadratic\char`\"{}; template.\+Replace\+Variables(\&str); //values of a quadratic. Replace\+File(\char`\"{}template\char`\"{}, \char`\"{}out\+\_\+database\char`\"{});
+
+\begin{DoxyAuthor}{Author}
+Tom Creusot.
+\end{DoxyAuthor}
+
+\begin{DoxyCodeInclude}
+
+\textcolor{preprocessor}{#include <list>}
+\textcolor{preprocessor}{#include <string>}
+\textcolor{preprocessor}{#include <iostream>}
+\textcolor{preprocessor}{#include <istream>}
+\textcolor{preprocessor}{#include <fstream>}
+
+\textcolor{keyword}{using namespace }\hyperlink{namespacestd}{std};
+\textcolor{keyword}{namespace }\hyperlink{namespacenix}{nix}
+\{
+
+\textcolor{keyword}{class }FillTemplate
+\{
+\textcolor{keyword}{private}:
+    list<string> file\_lines;
+
+\textcolor{keyword}{public}:
+    list<string> keys;
+    list<string> values;
+
+
+    \textcolor{keywordtype}{void} ReplaceFile ( \textcolor{keywordtype}{string} file\_input, \textcolor{keywordtype}{string} file\_output )
+    \{
+        file\_input = \textcolor{stringliteral}{"template.cc"};
+        cout << \textcolor{stringliteral}{"Reading file: "} << file\_input << endl;
+        ifstream inStrm;
+        inStrm.open(file\_input);
+        \textcolor{keywordflow}{if} ( !inStrm.is\_open() )    cout << \textcolor{stringliteral}{"invalid file: "} << file\_input << endl;
+        \textcolor{keywordflow}{else}
+        \{
+            \textcolor{keywordtype}{string} line;
+            \textcolor{keywordflow}{while} ( std::getline(inStrm, line) )
+            \{
+                \textcolor{keywordtype}{string} copy(line);
+                file\_lines.push\_back(copy);
+            \}
+        \}
+        inStrm.close();
+
+        cout << \textcolor{stringliteral}{"Filling file."} << endl;
+        \textcolor{keywordflow}{for} ( list<string>::iterator it = file\_lines.begin(); it != file\_lines.end(); it++ )
+        \{
+            ReplaceVariables(&(*it));
+        \}
+
+        cout << \textcolor{stringliteral}{"Writing to file: "} << file\_output << endl;
+
+
+        ofstream outStrm;
+        outStrm.open(file\_output.c\_str());
+        \textcolor{keywordflow}{for} ( list<string>::iterator it = file\_lines.begin(); it != file\_lines.end(); it++ )
+        \{
+            outStrm << *it << endl;
+        \}
+        outStrm.close();
+
+    \}
+
+
+
+
+    \textcolor{keywordtype}{void} AddKey ( \textcolor{keywordtype}{string} key, \textcolor{keywordtype}{string} value )
+    \{
+        keys.push\_back(key);
+        values.push\_back(value);
+    \}
+
+
+    \textcolor{keywordtype}{void} ReplaceVariables ( \textcolor{keywordtype}{string}* replace )
+    \{
+        list<string>::iterator k\_it = keys.begin();
+        list<string>::iterator v\_it = values.begin();
+        \textcolor{keywordflow}{while} ( k\_it != keys.end() && v\_it != values.end() )
+        \{
+            Replace(*k\_it, *v\_it, replace);
+            k\_it++;
+            v\_it++;
+        \}
+    \}
+
+
+    \textcolor{keyword}{static} \textcolor{keywordtype}{void} Replace ( \textcolor{keywordtype}{string} key, \textcolor{keywordtype}{string} value, \textcolor{keywordtype}{string}* str )
+    \{
+        uint index = str->find(key);
+        \textcolor{keywordflow}{while} ( index != std::string::npos && index != (uint)-1 )
+        \{
+            str->replace(index, key.size(), value);
+            index = str->find(key);
+        \}
+    \}
+
+\};
+\}
+\end{DoxyCodeInclude}
+ 

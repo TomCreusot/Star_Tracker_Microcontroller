@@ -1,0 +1,218 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN">
+
+<html lang="en">
+
+<head>
+  <meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
+  <title>LCOV - _coverage_report.dat - nix/fill_template.h</title>
+  <link rel="stylesheet" type="text/css" href="../gcov.css">
+</head>
+
+<body>
+
+  <table width="100%" border=0 cellspacing=0 cellpadding=0>
+    <tr><td class="title">LCOV - code coverage report</td></tr>
+    <tr><td class="ruler"><img src="../glass.png" width=3 height=3 alt=""></td></tr>
+
+    <tr>
+      <td width="100%">
+        <table cellpadding=1 border=0 width="100%">
+          <tr>
+            <td width="10%" class="headerItem">Current view:</td>
+            <td width="35%" class="headerValue"><a href="../index.html" target="_parent">top level</a> - <a href="index.html" target="_parent">nix</a> - fill_template.h<span style="font-size: 80%;"> (source / <a href="fill_template.h.func-sort-c.html">functions</a>)</span></td>
+            <td width="5%"></td>
+            <td width="15%"></td>
+            <td width="10%" class="headerCovTableHead">Hit</td>
+            <td width="10%" class="headerCovTableHead">Total</td>
+            <td width="15%" class="headerCovTableHead">Coverage</td>
+          </tr>
+          <tr>
+            <td class="headerItem">Test:</td>
+            <td class="headerValue">_coverage_report.dat</td>
+            <td></td>
+            <td class="headerItem">Lines:</td>
+            <td class="headerCovTableEntry">19</td>
+            <td class="headerCovTableEntry">19</td>
+            <td class="headerCovTableEntryHi">100.0 %</td>
+          </tr>
+          <tr>
+            <td class="headerItem">Date:</td>
+            <td class="headerValue">2020-05-16 23:43:15</td>
+            <td></td>
+            <td class="headerItem">Functions:</td>
+            <td class="headerCovTableEntry">5</td>
+            <td class="headerCovTableEntry">5</td>
+            <td class="headerCovTableEntryHi">100.0 %</td>
+          </tr>
+          <tr><td><img src="../glass.png" width=3 height=3 alt=""></td></tr>
+        </table>
+      </td>
+    </tr>
+
+    <tr><td class="ruler"><img src="../glass.png" width=3 height=3 alt=""></td></tr>
+  </table>
+
+  <table cellpadding=0 cellspacing=0 border=0>
+    <tr>
+      <td><br></td>
+    </tr>
+    <tr>
+      <td>
+<pre class="sourceHeading">          Line data    Source code</pre>
+<pre class="source">
+<a name="1"><span class="lineNum">       1 </span>            : /**</a>
+<span class="lineNum">       2 </span>            :  *      @brief Replaces a template file variable slots, this is for constructing a database.
+<span class="lineNum">       3 </span>            :  *
+<span class="lineNum">       4 </span>            :  *
+<a name="5"><span class="lineNum">       5 </span>            :  *      @file fill_template.h</a>
+<span class="lineNum">       6 </span>            :  *      @author Tom Creusot.
+<span class="lineNum">       7 </span>            :  *
+<span class="lineNum">       8 </span>            :  */
+<a name="9"><span class="lineNum">       9 </span>            : </a>
+<span class="lineNum">      10 </span>            : 
+<span class="lineNum">      11 </span>            : #include &lt;list&gt;
+<span class="lineNum">      12 </span>            : #include &lt;string&gt;
+<a name="13"><span class="lineNum">      13 </span>            : #include &lt;iostream&gt;</a>
+<span class="lineNum">      14 </span>            : #include &lt;istream&gt;
+<span class="lineNum">      15 </span>            : #include &lt;fstream&gt;
+<span class="lineNum">      16 </span>            : 
+<a name="17"><span class="lineNum">      17 </span>            : using namespace std;</a>
+<span class="lineNum">      18 </span>            : /// @namespace nix Unix implementation.
+<span class="lineNum">      19 </span>            : namespace nix
+<span class="lineNum">      20 </span>            : {
+<a name="21"><span class="lineNum">      21 </span>            : </a>
+<span class="lineNum">      22 </span>            : /**
+<span class="lineNum">      23 </span>            :  * @brief       This class is to replace &quot;keys&quot; with &quot;values&quot; in a template file.
+<span class="lineNum">      24 </span>            :  *
+<a name="25"><span class="lineNum">      25 </span>            :  * @example</a>
+<span class="lineNum">      26 </span>            :  *              FillTemplate template;
+<span class="lineNum">      27 </span>            :  *              template.AddKey(&quot;key&quot;, &quot;value&quot;);
+<span class="lineNum">      28 </span>            :  *              string str = &quot;keys of a quadratic&quot;;
+<a name="29"><span class="lineNum">      29 </span>            :  *              template.ReplaceVariables(&amp;str); //values of a quadratic.</a>
+<span class="lineNum">      30 </span>            :  *              ReplaceFile(&quot;template&quot;, &quot;out_database&quot;);
+<span class="lineNum">      31 </span>            :  *
+<a name="32"><span class="lineNum">      32 </span>            :  * @author      Tom Creusot.</a>
+<a name="33"><span class="lineNum">      33 </span>            :  */</a>
+<span class="lineNum">      34 </span><span class="lineCov">          4 : class FillTemplate</span>
+<span class="lineNum">      35 </span>            : {
+<span class="lineNum">      36 </span>            : private:
+<a name="37"><span class="lineNum">      37 </span>            :         /// Each line of the file being read in.</a>
+<span class="lineNum">      38 </span>            :         list&lt;string&gt; file_lines;
+<span class="lineNum">      39 </span>            : 
+<span class="lineNum">      40 </span>            : public:
+<a name="41"><span class="lineNum">      41 </span>            :         /// The key to replace with a value.</a>
+<span class="lineNum">      42 </span>            :         list&lt;string&gt; keys;
+<span class="lineNum">      43 </span>            :         /// The value to replace the key.
+<span class="lineNum">      44 </span>            :         list&lt;string&gt; values;
+<a name="45"><span class="lineNum">      45 </span>            : </a>
+<span class="lineNum">      46 </span>            : 
+<span class="lineNum">      47 </span>            :         /**
+<span class="lineNum">      48 </span>            :          * @brief       Opens a file, replaces the keys with values, then outputs to the output file.
+<a name="49"><span class="lineNum">      49 </span>            :          * @param file_input    [in]    The file to read.</a>
+<span class="lineNum">      50 </span>            :          * @param file_output   [out]   The file to write.
+<span class="lineNum">      51 </span>            :          */
+<span class="lineNum">      52 </span>            : 
+<a name="53"><span class="lineNum">      53 </span>            :         void ReplaceFile ( string file_input, string file_output )</a>
+<span class="lineNum">      54 </span>            :         {
+<span class="lineNum">      55 </span>            :                 file_input = &quot;template.cc&quot;;
+<span class="lineNum">      56 </span>            :                 cout &lt;&lt; &quot;Reading file: &quot; &lt;&lt; file_input &lt;&lt; endl;
+<a name="57"><span class="lineNum">      57 </span>            :                 ifstream inStrm;</a>
+<span class="lineNum">      58 </span>            :                 inStrm.open(file_input);
+<span class="lineNum">      59 </span>            :                 if ( !inStrm.is_open() )        cout &lt;&lt; &quot;invalid file: &quot; &lt;&lt; file_input &lt;&lt; endl;
+<span class="lineNum">      60 </span>            :                 else
+<a name="61"><span class="lineNum">      61 </span>            :                 {</a>
+<span class="lineNum">      62 </span>            :                         string line;
+<span class="lineNum">      63 </span>            :                         while ( std::getline(inStrm, line) )
+<span class="lineNum">      64 </span>            :                         {
+<a name="65"><span class="lineNum">      65 </span>            :                                 string copy(line);</a>
+<span class="lineNum">      66 </span>            :                                 file_lines.push_back(copy);
+<span class="lineNum">      67 </span>            :                         }
+<span class="lineNum">      68 </span>            :                 }
+<a name="69"><span class="lineNum">      69 </span>            :                 inStrm.close();</a>
+<span class="lineNum">      70 </span>            : 
+<span class="lineNum">      71 </span>            :                 cout &lt;&lt; &quot;Filling file.&quot; &lt;&lt; endl;
+<span class="lineNum">      72 </span>            :                 for ( list&lt;string&gt;::iterator it = file_lines.begin(); it != file_lines.end(); it++ )
+<a name="73"><span class="lineNum">      73 </span>            :                 {</a>
+<span class="lineNum">      74 </span>            :                         ReplaceVariables(&amp;(*it));
+<span class="lineNum">      75 </span>            :                 }
+<span class="lineNum">      76 </span>            : 
+<a name="77"><span class="lineNum">      77 </span>            :                 cout &lt;&lt; &quot;Writing to file: &quot; &lt;&lt; file_output &lt;&lt; endl;</a>
+<span class="lineNum">      78 </span>            : 
+<span class="lineNum">      79 </span>            : 
+<span class="lineNum">      80 </span>            :                 ofstream outStrm;
+<a name="81"><span class="lineNum">      81 </span>            :                 outStrm.open(file_output.c_str());</a>
+<span class="lineNum">      82 </span>            :                 for ( list&lt;string&gt;::iterator it = file_lines.begin(); it != file_lines.end(); it++ )
+<span class="lineNum">      83 </span>            :                 {
+<span class="lineNum">      84 </span>            :                         outStrm &lt;&lt; *it &lt;&lt; endl;
+<a name="85"><span class="lineNum">      85 </span>            :                 }</a>
+<span class="lineNum">      86 </span>            :                 outStrm.close();
+<span class="lineNum">      87 </span>            : 
+<span class="lineNum">      88 </span>            :         }
+<a name="89"><span class="lineNum">      89 </span>            : </a>
+<span class="lineNum">      90 </span>            : 
+<span class="lineNum">      91 </span>            : 
+<span class="lineNum">      92 </span>            : 
+<a name="93"><span class="lineNum">      93 </span>            :         /**</a>
+<span class="lineNum">      94 </span>            :          * @brief       Appends a key-value set to the end of keys and values to be used with ReplaceVariables.
+<span class="lineNum">      95 </span>            :          * @param key   The key to add.
+<span class="lineNum">      96 </span>            :          * @param value The value for the key.
+<a name="97"><span class="lineNum">      97 </span>            :          */</a>
+<span class="lineNum">      98 </span>            : 
+<span class="lineNum">      99 </span><span class="lineCov">          5 :         void AddKey ( string key, string value )</span>
+<span class="lineNum">     100 </span>            :         {
+<a name="101"><span class="lineNum">     101 </span><span class="lineCov">          5 :                 keys.push_back(key);</span></a>
+<span class="lineNum">     102 </span><span class="lineCov">          5 :                 values.push_back(value);</span>
+<span class="lineNum">     103 </span><span class="lineCov">          5 :         }</span>
+<span class="lineNum">     104 </span>            : 
+<a name="105"><span class="lineNum">     105 </span>            : </a>
+<span class="lineNum">     106 </span>            :         /**
+<span class="lineNum">     107 </span>            :          * @brief       Replaces all instances of a key with a value.
+<span class="lineNum">     108 </span>            :          * @param       replace [in/out]        The string to replace the key for a value.
+<a name="109"><span class="lineNum">     109 </span>            :          */</a>
+<span class="lineNum">     110 </span>            : 
+<span class="lineNum">     111 </span><span class="lineCov">          1 :         void ReplaceVariables ( string* replace )</span>
+<span class="lineNum">     112 </span>            :         {
+<a name="113"><span class="lineNum">     113 </span><span class="lineCov">          1 :                 list&lt;string&gt;::iterator k_it = keys.begin();</span></a>
+<span class="lineNum">     114 </span><span class="lineCov">          1 :                 list&lt;string&gt;::iterator v_it = values.begin();</span>
+<span class="lineNum">     115 </span><span class="lineCov">          7 :                 while ( k_it != keys.end() &amp;&amp; v_it != values.end() )</span>
+<span class="lineNum">     116 </span>            :                 {
+<a name="117"><span class="lineNum">     117 </span><span class="lineCov">          3 :                         Replace(*k_it, *v_it, replace);</span></a>
+<span class="lineNum">     118 </span><span class="lineCov">          3 :                         k_it++;</span>
+<span class="lineNum">     119 </span><span class="lineCov">          3 :                         v_it++;</span>
+<span class="lineNum">     120 </span>            :                 }
+<a name="121"><span class="lineNum">     121 </span><span class="lineCov">          1 :         }</span></a>
+<span class="lineNum">     122 </span>            : 
+<span class="lineNum">     123 </span>            : 
+<span class="lineNum">     124 </span>            :         /**
+<a name="125"><span class="lineNum">     125 </span>            :          * @brief       Replaces the key with value iteratively.</a>
+<span class="lineNum">     126 </span>            :          * @param key                           The value to be replaced.
+<span class="lineNum">     127 </span>            :          * @param value                         The replacement for key.
+<span class="lineNum">     128 </span>            :          * @param str   [in/out]        The string to replace key with value.
+<a name="129"><span class="lineNum">     129 </span>            :          */</a>
+<span class="lineNum">     130 </span>            : 
+<span class="lineNum">     131 </span><span class="lineCov">          5 :         static void Replace ( string key, string value, string* str )</span>
+<span class="lineNum">     132 </span>            :         {
+<a name="133"><span class="lineNum">     133 </span><span class="lineCov">          5 :                 uint index = str-&gt;find(key);</span></a>
+<span class="lineNum">     134 </span><span class="lineCov">         27 :                 while ( index != std::string::npos &amp;&amp; index != (uint)-1 )</span>
+<span class="lineNum">     135 </span>            :                 {
+<span class="lineNum">     136 </span><span class="lineCov">         11 :                         str-&gt;replace(index, key.size(), value);</span>
+<a name="137"><span class="lineNum">     137 </span><span class="lineCov">         11 :                         index = str-&gt;find(key);</span></a>
+<span class="lineNum">     138 </span>            :                 }
+<span class="lineNum">     139 </span><span class="lineCov">          5 :         }</span>
+<span class="lineNum">     140 </span>            : 
+<a name="141"><span class="lineNum">     141 </span>            : };</a>
+<span class="lineNum">     142 </span>            : }
+</pre>
+      </td>
+    </tr>
+  </table>
+  <br>
+
+  <table width="100%" border=0 cellspacing=0 cellpadding=0>
+    <tr><td class="ruler"><img src="../glass.png" width=3 height=3 alt=""></td></tr>
+    <tr><td class="versionInfo">Generated by: <a href="http://ltp.sourceforge.net/coverage/lcov.php" target="_parent">LCOV version 1.13</a></td></tr>
+  </table>
+  <br>
+
+</body>
+</html>

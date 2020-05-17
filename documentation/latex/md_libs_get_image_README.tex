@@ -1,0 +1,59 @@
+Obtaining the image, this currently only supports {\itshape nix}. It has been tested with the windows .bmp. Uses the library \href{http://prdownloads.sourceforge.net/easybmp/EasyBMP_1.06.zip}{\tt easybmp}
+
+\subsection*{How To Use}
+
+In the {\itshape B\+U\+I\+LD} file, input\+: 
+\begin{DoxyCode}
+deps = ["//libs/get\_image:get\_image"]
+\end{DoxyCode}
+ At the top of the desired file, input\+: 
+\begin{DoxyCode}
+#include "libs/get\_image/get\_image.h"
+\end{DoxyCode}
+
+
+\subsubsection*{Build}
+
+Input the following into your command line\+: 
+\begin{DoxyCode}
+bazel build //libs/get\_image/...
+\end{DoxyCode}
+
+
+\subsubsection*{Test}
+
+Input the following into your command line\+: 
+\begin{DoxyCode}
+bazel test //get\_image/get\_image/... --test\_output=all
+\end{DoxyCode}
+
+
+\subsection*{Files}
+
+
+\begin{DoxyItemize}
+\item \hyperlink{get__image_8h_source}{get\+\_\+image.\+h} ~\newline
+~\newline
+
+\item get\+\_\+image.\+cc ~\newline
+~\newline
+
+\item B\+U\+I\+LD
+\item R\+E\+A\+D\+M\+E.\+md
+\end{DoxyItemize}
+
+\subsection*{Built With}
+
+
+\begin{DoxyItemize}
+\item g++ 7.\+4.\+0
+\item bazel 2.\+0.\+0
+\item gtest 1.\+10.\+0
+\end{DoxyItemize}
+
+\subsection*{Authors}
+
+
+\begin{DoxyItemize}
+\item Tom Creusot -\/ {\itshape Initial Creation} 
+\end{DoxyItemize}

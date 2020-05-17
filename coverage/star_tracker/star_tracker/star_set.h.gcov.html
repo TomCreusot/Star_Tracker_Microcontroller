@@ -1,0 +1,456 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN">
+
+<html lang="en">
+
+<head>
+  <meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
+  <title>LCOV - _coverage_report.dat - star_tracker/star_set.h</title>
+  <link rel="stylesheet" type="text/css" href="../gcov.css">
+</head>
+
+<body>
+
+  <table width="100%" border=0 cellspacing=0 cellpadding=0>
+    <tr><td class="title">LCOV - code coverage report</td></tr>
+    <tr><td class="ruler"><img src="../glass.png" width=3 height=3 alt=""></td></tr>
+
+    <tr>
+      <td width="100%">
+        <table cellpadding=1 border=0 width="100%">
+          <tr>
+            <td width="10%" class="headerItem">Current view:</td>
+            <td width="35%" class="headerValue"><a href="../index.html" target="_parent">top level</a> - <a href="index.html" target="_parent">star_tracker</a> - star_set.h<span style="font-size: 80%;"> (source / <a href="star_set.h.func-sort-c.html">functions</a>)</span></td>
+            <td width="5%"></td>
+            <td width="15%"></td>
+            <td width="10%" class="headerCovTableHead">Hit</td>
+            <td width="10%" class="headerCovTableHead">Total</td>
+            <td width="15%" class="headerCovTableHead">Coverage</td>
+          </tr>
+          <tr>
+            <td class="headerItem">Test:</td>
+            <td class="headerValue">_coverage_report.dat</td>
+            <td></td>
+            <td class="headerItem">Lines:</td>
+            <td class="headerCovTableEntry">25</td>
+            <td class="headerCovTableEntry">25</td>
+            <td class="headerCovTableEntryHi">100.0 %</td>
+          </tr>
+          <tr>
+            <td class="headerItem">Date:</td>
+            <td class="headerValue">2020-05-16 23:43:03</td>
+            <td></td>
+            <td class="headerItem">Functions:</td>
+            <td class="headerCovTableEntry">7</td>
+            <td class="headerCovTableEntry">7</td>
+            <td class="headerCovTableEntryHi">100.0 %</td>
+          </tr>
+          <tr><td><img src="../glass.png" width=3 height=3 alt=""></td></tr>
+        </table>
+      </td>
+    </tr>
+
+    <tr><td class="ruler"><img src="../glass.png" width=3 height=3 alt=""></td></tr>
+  </table>
+
+  <table cellpadding=0 cellspacing=0 border=0>
+    <tr>
+      <td><br></td>
+    </tr>
+    <tr>
+      <td>
+<pre class="sourceHeading">          Line data    Source code</pre>
+<pre class="source">
+<a name="1"><span class="lineNum">       1 </span>            : /*</a>
+<span class="lineNum">       2 </span>            :  *  Stores data on a set of stars to make a unique set.
+<span class="lineNum">       3 </span>            :  *      @file   StarSet.h
+<span class="lineNum">       4 </span>            :  *      @author Tom Creusot
+<a name="5"><span class="lineNum">       5 </span>            :  */</a>
+<span class="lineNum">       6 </span>            : 
+<span class="lineNum">       7 </span>            : #pragma once
+<span class="lineNum">       8 </span>            : #include &lt;string&gt;
+<a name="9"><span class="lineNum">       9 </span>            : </a>
+<span class="lineNum">      10 </span>            : #include &quot;libs/util/util.h&quot;
+<span class="lineNum">      11 </span>            : #include &quot;libs/util/array_list.h&quot;
+<span class="lineNum">      12 </span>            : #include &quot;libs/util/point.h&quot;
+<a name="13"><span class="lineNum">      13 </span>            : </a>
+<span class="lineNum">      14 </span>            : using namespace util;
+<span class="lineNum">      15 </span>            : using namespace std;
+<span class="lineNum">      16 </span>            : 
+<a name="17"><span class="lineNum">      17 </span>            : /// @namespace star_tracker     Finds unique features about the provided stars.</a>
+<span class="lineNum">      18 </span>            : namespace star_tracker
+<span class="lineNum">      19 </span>            : {
+<span class="lineNum">      20 </span>            : 
+<a name="21"><span class="lineNum">      21 </span>            : </a>
+<span class="lineNum">      22 </span>            : /**
+<span class="lineNum">      23 </span>            :  *  Stores data on a set of stars to make a unique set.
+<span class="lineNum">      24 </span>            :  *      @details
+<a name="25"><span class="lineNum">      25 </span>            :  *              - The unique features are the position of the opposite (angle) star.</a>
+<span class="lineNum">      26 </span>            :  *              - The angle between the stars and the opposite.
+<span class="lineNum">      27 </span>            :  *              - The likelyhood of it being the correct match.
+<span class="lineNum">      28 </span>            :  *              - The orientation of the opposite star to its farthest not pilot.
+<a name="29"><span class="lineNum">      29 </span>            :  *              - A StarSet of the image.</a>
+<span class="lineNum">      30 </span>            :  *
+<span class="lineNum">      31 </span>            :  *      @example
+<span class="lineNum">      32 </span>            :  *              star_tracker::StarSet::set_fov(100);    // Sets the field of view to 100 for all calculations.
+<a name="33"><span class="lineNum">      33 </span>            :  *</a>
+<span class="lineNum">      34 </span>            :  *
+<span class="lineNum">      35 </span>            :  *              const util::uint input_size = 3;
+<span class="lineNum">      36 </span>            :  *              const util::uint output_size = 5;
+<a name="37"><span class="lineNum">      37 </span>            :  *              util::ArrayList&lt;util::Point&lt;util::decimal&gt;, input_size&gt; input;</a>
+<span class="lineNum">      38 </span>            :  *              util::ArrayList&lt;star_tracker::StarSet, output_size&gt; output;
+<span class="lineNum">      39 </span>            :  *              util::Point&lt;util::decimal&gt; pilot(0, 0);
+<span class="lineNum">      40 </span>            :  *              util::Point&lt;util::decimal&gt; s1(0, 1);
+<a name="41"><span class="lineNum">      41 </span>            :  *              util::Point&lt;util::decimal&gt; s2(1, 0);</a>
+<span class="lineNum">      42 </span>            :  *              util::Point&lt;util::decimal&gt; s3(1, 1);
+<span class="lineNum">      43 </span>            :  *              util::Point&lt;util::decimal&gt; s4(1, 2);
+<span class="lineNum">      44 </span>            :  *
+<a name="45"><span class="lineNum">      45 </span>            :  *              // The stars must be in order of magnitude:</a>
+<span class="lineNum">      46 </span>            :  *              input.PushBack(pilot);
+<span class="lineNum">      47 </span>            :  *              input.PushBack(s1);
+<span class="lineNum">      48 </span>            :  *              input.PushBack(s2);
+<a name="49"><span class="lineNum">      49 </span>            :  *              input.PushBack(s3);</a>
+<span class="lineNum">      50 </span>            :  *              input.PushBack(s4);
+<span class="lineNum">      51 </span>            :  *
+<span class="lineNum">      52 </span>            :  *              // Finds all the combinations assuming they are ordered in apperant magnitude (brightest first).
+<a name="53"><span class="lineNum">      53 </span>            :  *              // Tries: (0, 1, 2, 3), (0, 1, 2, 4), (0, 1, 3, 4), (0, 2, 3, 4), (1, 2, 3, 4).</a>
+<span class="lineNum">      54 </span>            :  *              star_tracker::StarSet::GenerateSetsPilots&lt;input_size, output_size&gt;(input, 0, 5, &amp;output);
+<span class="lineNum">      55 </span>            :  *
+<span class="lineNum">      56 </span>            :  *              cout &lt;&lt; output.Get(0).angle &lt;&lt; endl; // angle between (s1, s3, s2) as s3 is farthest the opposite (pi/4, (90 degrees)).
+<a name="57"><span class="lineNum">      57 </span>            :  *</a>
+<span class="lineNum">      58 </span>            :  *              // Cluster probability will favour close matching points.
+<span class="lineNum">      59 </span>            :  *              // If multiple matches are close to the same place, the likelyhood of this being the correct match is higher.
+<span class="lineNum">      60 </span>            :  *              // The more within the fov, the higher the odds.
+<a name="61"><span class="lineNum">      61 </span>            :  *              decimal fov = 1;</a>
+<span class="lineNum">      62 </span>            :  *              star_tracker::StarSetClusterProbability&lt;output_size&gt;(fov, &amp;output);
+<span class="lineNum">      63 </span>            :  *              output.Get(0).odds;
+<span class="lineNum">      64 </span>            :  *
+<a name="65"><span class="lineNum">      65 </span>            :  *              // For constructing the database</a>
+<span class="lineNum">      66 </span>            :  *              string str;
+<span class="lineNum">      67 </span>            :  *              for ( int i = 0; i &lt; output.Size(); i++ )
+<span class="lineNum">      68 </span>            :  *              {
+<a name="69"><span class="lineNum">      69 </span>            :  *                      output.Get(i).ToArrayString(&amp;str);</a>
+<span class="lineNum">      70 </span>            :  *              }
+<span class="lineNum">      71 </span>            :  * @author Tom Creusot
+<span class="lineNum">      72 </span>            :  */
+<a name="73"><span class="lineNum">      73 </span>            : </a>
+<span class="lineNum">      74 </span>            : class StarSet
+<span class="lineNum">      75 </span>            : {
+<span class="lineNum">      76 </span>            : private:
+<a name="77"><span class="lineNum">      77 </span>            :         /// The field of view of the camera (diagonal).</a>
+<span class="lineNum">      78 </span>            :         static util::decimal fov;
+<span class="lineNum">      79 </span>            :         /// The number of pixels diagonaly on the camera.
+<span class="lineNum">      80 </span>            :         static util::decimal pixel_resolution;
+<a name="81"><span class="lineNum">      81 </span>            : </a>
+<span class="lineNum">      82 </span>            : 
+<span class="lineNum">      83 </span>            : public:
+<span class="lineNum">      84 </span>            :         /// The index of the angle in the database
+<a name="85"><span class="lineNum">      85 </span>            :         constexpr static util::uint kDatabaseIndexAngle                 = 0;</a>
+<span class="lineNum">      86 </span>            :         /// The index of the distance in the database
+<span class="lineNum">      87 </span>            :         constexpr static util::uint kDatabaseIndexDist                  = 1;
+<span class="lineNum">      88 </span>            :         /// The index of the orientation in the database
+<a name="89"><span class="lineNum">      89 </span>            :         constexpr static util::uint kDatabaseIndexOrientation   = 2;</a>
+<span class="lineNum">      90 </span>            :         /// The index of the opposite star ra/x in the database
+<span class="lineNum">      91 </span>            :         constexpr static util::uint kDatabaseIndexOppositeX     = 3;
+<span class="lineNum">      92 </span>            :         /// The index of the opposite star dec/y in the database
+<a name="93"><span class="lineNum">      93 </span>            :         constexpr static util::uint kDatabaseIndexOppositeY     = 4;</a>
+<span class="lineNum">      94 </span>            : 
+<span class="lineNum">      95 </span>            :         /// The number of elements per set.
+<span class="lineNum">      96 </span>            :         constexpr static util::uint kDatabaseNumElements                = 5;
+<a name="97"><span class="lineNum">      97 </span>            : </a>
+<span class="lineNum">      98 </span>            : 
+<span class="lineNum">      99 </span>            : 
+<span class="lineNum">     100 </span>            :         /// If the angle could not be found, this is what it is equal to.
+<a name="101"><span class="lineNum">     101 </span>            :         constexpr static util::decimal kInvalidAngle = NAN;</a>
+<span class="lineNum">     102 </span>            :         ///     When finding ClusterProbability, divide by this if not within range.
+<span class="lineNum">     103 </span>            :         constexpr static util::decimal kSeparationDiv = 1.000001;
+<span class="lineNum">     104 </span>            : 
+<a name="105"><span class="lineNum">     105 </span>            : </a>
+<span class="lineNum">     106 </span>            : 
+<span class="lineNum">     107 </span>            : 
+<span class="lineNum">     108 </span>            : 
+<a name="109"><span class="lineNum">     109 </span>            : </a>
+<span class="lineNum">     110 </span>            :         decimal angle;                          ///&lt; The angle of the opposite star.
+<span class="lineNum">     111 </span>            :         decimal distance;                       ///&lt; The farthest distance from the opposite to the farthest other star.
+<span class="lineNum">     112 </span>            :         StarSet* pixel;                         ///&lt; The placement on the image.
+<a name="113"><span class="lineNum">     113 </span>            :         decimal odds;                           ///&lt; The likelyhood of this being the match.</a>
+<span class="lineNum">     114 </span>            :         decimal orientation;            ///&lt; The angle from up (0, 1).
+<span class="lineNum">     115 </span>            :         Point&lt;decimal&gt; opposite;  ///&lt; The star farthest from the pilot.
+<span class="lineNum">     116 </span>            : 
+<a name="117"><span class="lineNum">     117 </span>            :         /** @brief Default Constructor */</a>
+<span class="lineNum">     118 </span>            :         StarSet ( );
+<span class="lineNum">     119 </span>            : 
+<span class="lineNum">     120 </span>            : 
+<a name="121"><span class="lineNum">     121 </span>            : </a>
+<span class="lineNum">     122 </span>            : 
+<span class="lineNum">     123 </span>            :         /**
+<span class="lineNum">     124 </span>            :         * @brief                        Alternate Constructor. Creates a star set from a set of stars finding the angle...etc.
+<a name="125"><span class="lineNum">     125 </span>            :         * @param p      [in]    The pilot star (the brightest).</a>
+<span class="lineNum">     126 </span>            :         * @param s1     [in]    Another star.
+<span class="lineNum">     127 </span>            :         * @param s2     [in]    Another other star.
+<span class="lineNum">     128 </span>            :         * @param s3     [in]    Another other, another star.
+<a name="129"><span class="lineNum">     129 </span>            :         */</a>
+<span class="lineNum">     130 </span>            : 
+<span class="lineNum">     131 </span>            :         StarSet (       Point&lt;decimal&gt;&amp; p,
+<span class="lineNum">     132 </span>            :                                 Point&lt;decimal&gt;&amp; s1, Point&lt;decimal&gt;&amp; s2, Point&lt;decimal&gt;&amp; s3 );
+<a name="133"><span class="lineNum">     133 </span>            : </a>
+<span class="lineNum">     134 </span>            : 
+<span class="lineNum">     135 </span>            : 
+<span class="lineNum">     136 </span>            : 
+<a name="137"><span class="lineNum">     137 </span>            :         /**</a>
+<span class="lineNum">     138 </span>            :          * @brief               Copy Constructor.
+<span class="lineNum">     139 </span>            :          * @param px    The pixel StarSet to copy.
+<span class="lineNum">     140 </span>            :          * @details     Sets all the values as a copy constructor.
+<a name="141"><span class="lineNum">     141 </span>            :          */</a>
+<span class="lineNum">     142 </span>            : 
+<span class="lineNum">     143 </span>            :         StarSet ( StarSet&amp; px );
+<span class="lineNum">     144 </span>            : 
+<a name="145"><span class="lineNum">     145 </span>            : </a>
+<span class="lineNum">     146 </span>            : 
+<span class="lineNum">     147 </span>            : 
+<span class="lineNum">     148 </span>            :         /**
+<a name="149"><span class="lineNum">     149 </span>            :          * @brief                                       Finds where the center pixel is in real world.</a>
+<span class="lineNum">     150 </span>            :          * @param fovPP         [in]    The degrees per pixel field of view.
+<span class="lineNum">     151 </span>            :          * @param size          [in]    The size of the image.
+<span class="lineNum">     152 </span>            :          * @param center        [out]   The position to assign.
+<a name="153"><span class="lineNum">     153 </span>            :          */</a>
+<span class="lineNum">     154 </span>            : 
+<span class="lineNum">     155 </span>            :         void FindCenter (       decimal fovPP,
+<span class="lineNum">     156 </span>            :                                                 Point&lt;int&gt;&amp; size,
+<a name="157"><span class="lineNum">     157 </span>            :                                                 Point&lt;decimal&gt;* center );</a>
+<span class="lineNum">     158 </span>            : 
+<span class="lineNum">     159 </span>            : 
+<span class="lineNum">     160 </span>            : 
+<a name="161"><span class="lineNum">     161 </span>            : </a>
+<span class="lineNum">     162 </span>            :         /**
+<span class="lineNum">     163 </span>            :          * @brief       This is to compile the database, a string is returned of one line of values describing the set.
+<span class="lineNum">     164 </span>            :          * @param str [out]     The string to append to.
+<a name="165"><span class="lineNum">     165 </span>            :          */</a>
+<span class="lineNum">     166 </span>            : 
+<span class="lineNum">     167 </span>            :         void ToArrayString ( string* str );
+<span class="lineNum">     168 </span>            : 
+<a name="169"><span class="lineNum">     169 </span>            : </a>
+<span class="lineNum">     170 </span>            : 
+<span class="lineNum">     171 </span>            : 
+<span class="lineNum">     172 </span>            : 
+<a name="173"><span class="lineNum">     173 </span>            : </a>
+<span class="lineNum">     174 </span>            : 
+<span class="lineNum">     175 </span>            :         /**
+<span class="lineNum">     176 </span>            :          * @brief                               Takes in a list of stars sorted in apperant magnitude and finds all the sets.
+<a name="177"><span class="lineNum">     177 </span>            :          * @param list   [in]   A sorted list of star locations, brightest first.</a>
+<span class="lineNum">     178 </span>            :          * @param start  [in]   The first element to start in the list (inclusive).
+<span class="lineNum">     179 </span>            :          * @param end    [in]   The element to end at (exclusive).
+<span class="lineNum">     180 </span>            :          * @param sets   [out]  The output sets.
+<a name="181"><span class="lineNum">     181 </span>            :          *</a>
+<span class="lineNum">     182 </span>            :          * @tparam N1                   The max number of input points.
+<span class="lineNum">     183 </span>            :          * @tparam N2                   The max number of output sets.
+<span class="lineNum">     184 </span>            :          */
+<a name="185"><span class="lineNum">     185 </span>            : </a>
+<span class="lineNum">     186 </span>            :         template&lt;unsigned int N1, unsigned int N2&gt;
+<span class="lineNum">     187 </span><span class="lineCov">          5 :         static void GenerateSetsPilots (        ArrayList&lt;Point&lt;decimal&gt;, N1&gt;&amp; list,</span>
+<span class="lineNum">     188 </span>            :                                                                                 uint start, uint end,
+<a name="189"><span class="lineNum">     189 </span>            :                                                                                 ArrayList&lt;StarSet, N2&gt;* sets              )</a>
+<span class="lineNum">     190 </span>            :         {
+<span class="lineNum">     191 </span><span class="lineCov">         18 :                 for ( uint ii = start; ii &lt; end; ii++ )</span>
+<span class="lineNum">     192 </span><span class="lineCov">         30 :                         for ( uint jj = ii + 1; jj &lt; end; jj++ )</span>
+<a name="193"><span class="lineNum">     193 </span><span class="lineCov">         29 :                                 for ( uint kk = jj + 1; kk &lt; end; kk++ )</span></a>
+<span class="lineNum">     194 </span><span class="lineCov">         17 :                                         for ( uint ll = kk + 1; ll &lt; end; ll++ )</span>
+<span class="lineNum">     195 </span>            :                                         {
+<span class="lineNum">     196 </span><span class="lineCov">          5 :                                                 Point&lt;decimal&gt;* pilot     = &amp;list.Get(ii);</span>
+<a name="197"><span class="lineNum">     197 </span><span class="lineCov">          5 :                                                 Point&lt;decimal&gt;* s1                = &amp;list.Get(jj);</span></a>
+<span class="lineNum">     198 </span><span class="lineCov">          5 :                                                 Point&lt;decimal&gt;* s2                = &amp;list.Get(kk);</span>
+<span class="lineNum">     199 </span><span class="lineCov">          5 :                                                 Point&lt;decimal&gt;* s3                = &amp;list.Get(ll);</span>
+<span class="lineNum">     200 </span>            : 
+<a name="201"><span class="lineNum">     201 </span><span class="lineCov">          5 :                                                 StarSet set(*pilot, *s1, *s2, *s3);</span></a>
+<span class="lineNum">     202 </span><span class="lineCov">          5 :                                                 if ( set.angle != kInvalidAngle ) sets-&gt;PushBack(set);</span>
+<span class="lineNum">     203 </span>            :                                         }
+<span class="lineNum">     204 </span><span class="lineCov">          5 :         }</span>
+<a name="205"><span class="lineNum">     205 </span>            : </a>
+<span class="lineNum">     206 </span>            : 
+<span class="lineNum">     207 </span>            : 
+<span class="lineNum">     208 </span>            : 
+<a name="209"><span class="lineNum">     209 </span>            : </a>
+<span class="lineNum">     210 </span>            : 
+<span class="lineNum">     211 </span>            :         /**
+<span class="lineNum">     212 </span>            :          *      @brief  Derives the probability of each node being the most accurate by testing how clustered they are (higher if clustered).
+<a name="213"><span class="lineNum">     213 </span>            :          *      @param database         [in/out]        The valid elements of the database to compare and modify odds.</a>
+<span class="lineNum">     214 </span>            :          *
+<span class="lineNum">     215 </span>            :          *      @tparam N1      The max size of the input database.
+<span class="lineNum">     216 </span>            :          *      @details        If stars are within the FOV, they will not loose odds, if they are outside they start loosing at a weighting of &quot;kSeparationDiv&quot;.
+<a name="217"><span class="lineNum">     217 </span>            :          */</a>
+<a name="218"><span class="lineNum">     218 </span>            : </a>
+<span class="lineNum">     219 </span>            :         template &lt; uint N1 &gt;
+<span class="lineNum">     220 </span><span class="lineCov">          5 :         static void ClusterProbability ( ArrayList&lt;StarSet, N1&gt;* database )</span>
+<a name="221"><span class="lineNum">     221 </span>            :         {</a>
+<span class="lineNum">     222 </span><span class="lineCov">         16 :                 for ( uint ii = 0; ii &lt; database-&gt;Size(); ii++ )</span>
+<span class="lineNum">     223 </span><span class="lineCov">         38 :                         for ( uint jj = 0; jj &lt; database-&gt;Size(); jj++ )</span>
+<span class="lineNum">     224 </span>            :                         {
+<a name="225"><span class="lineNum">     225 </span><span class="lineCov">         27 :                                 if ( ii != jj )</span></a>
+<span class="lineNum">     226 </span>            :                                 {
+<span class="lineNum">     227 </span><span class="lineCov">         32 :                                         decimal dist =</span>
+<span class="lineNum">     228 </span><span class="lineCov">         32 :                                                         database-&gt;Get(ii).opposite.Distance(database-&gt;Get(jj).opposite);</span>
+<a name="229"><span class="lineNum">     229 </span><span class="lineCov">         16 :                                         if ( dist &gt; fov )</span></a>
+<span class="lineNum">     230 </span>            :                                         {
+<span class="lineNum">     231 </span><span class="lineCov">         12 :                                                 database-&gt;Get(ii).odds /= kSeparationDiv;</span>
+<span class="lineNum">     232 </span>            :                                         }
+<a name="233"><span class="lineNum">     233 </span>            :                                 }</a>
+<span class="lineNum">     234 </span>            :                         }
+<span class="lineNum">     235 </span><span class="lineCov">          5 :         }</span>
+<span class="lineNum">     236 </span>            : 
+<a name="237"><span class="lineNum">     237 </span>            : </a>
+<span class="lineNum">     238 </span>            : 
+<span class="lineNum">     239 </span>            : 
+<span class="lineNum">     240 </span>            :         /**
+<a name="241"><span class="lineNum">     241 </span>            :          * @brief orders s1/s2 in order of distance from pilot closest first.</a>
+<span class="lineNum">     242 </span>            :          * @param pilot [in]            The point to compare to.
+<span class="lineNum">     243 </span>            :          * @param s1    [in/out]        Will be the closest.
+<span class="lineNum">     244 </span>            :          * @param s2    [in/out]        Will be the farthest.
+<a name="245"><span class="lineNum">     245 </span>            :          */</a>
+<span class="lineNum">     246 </span>            : 
+<span class="lineNum">     247 </span>            :         static void SortDistance        (       Point&lt;decimal&gt;&amp; pilot,
+<span class="lineNum">     248 </span>            :                                                                         Point&lt;decimal&gt;* s1, Point&lt;decimal&gt;* s2      );
+<a name="249"><span class="lineNum">     249 </span>            : </a>
+<span class="lineNum">     250 </span>            : 
+<span class="lineNum">     251 </span>            : 
+<span class="lineNum">     252 </span>            : 
+<a name="253"><span class="lineNum">     253 </span>            :         /**</a>
+<span class="lineNum">     254 </span>            :         * @brief                                Finds angle between 3 points.
+<span class="lineNum">     255 </span>            :         * @param center [in]    The star in the middle.
+<span class="lineNum">     256 </span>            :         * @param left   [in]    The other star.
+<a name="257"><span class="lineNum">     257 </span>            :         * @param right  [in]    The another other star.</a>
+<span class="lineNum">     258 </span>            :         * @return                               The angle OR 1000 if invalid (points are the same).
+<span class="lineNum">     259 </span>            :         * @details                              If any are the same position, it would cause a problem, an invalid value is equal kInvalidAngle.
+<span class="lineNum">     260 </span>            :         */
+<a name="261"><span class="lineNum">     261 </span>            : </a>
+<span class="lineNum">     262 </span>            :         static decimal FindAngle (      Point&lt;decimal&gt;&amp; center,
+<span class="lineNum">     263 </span>            :                                                                 Point&lt;decimal&gt;&amp; left, Point&lt;decimal&gt;&amp; right );
+<span class="lineNum">     264 </span>            : 
+<a name="265"><span class="lineNum">     265 </span>            : </a>
+<span class="lineNum">     266 </span>            :         /**
+<span class="lineNum">     267 </span>            :          * @brief                                       Input pixel positions, output real distance between the two.
+<span class="lineNum">     268 </span>            :          * @param opposite      [in]    The pixel position of the found opposite.
+<a name="269"><span class="lineNum">     269 </span>            :          * @param other         [in]    The pixel position of the found farthest from the opposite.</a>
+<span class="lineNum">     270 </span>            :          * @return                                      The distance in real coordinates.
+<a name="271"><span class="lineNum">     271 </span>            :          */</a>
+<span class="lineNum">     272 </span>            : 
+<a name="273"><span class="lineNum">     273 </span><span class="lineCov">          1 :         static inline decimal FindRealDistance (        Point&lt;decimal&gt;&amp; opposite,</span></a>
+<span class="lineNum">     274 </span>            :                                                                                                 Point&lt;decimal&gt;&amp; other )
+<span class="lineNum">     275 </span>            :         {
+<span class="lineNum">     276 </span><span class="lineCov">          1 :                 return opposite.Distance(other) * fov / pixel_resolution;</span>
+<a name="277"><span class="lineNum">     277 </span>            :         }</a>
+<span class="lineNum">     278 </span>            : 
+<span class="lineNum">     279 </span>            : 
+<span class="lineNum">     280 </span>            : 
+<a name="281"><span class="lineNum">     281 </span>            : </a>
+<span class="lineNum">     282 </span>            :         /**
+<span class="lineNum">     283 </span>            :          * @brief Used for util::ArrayList&lt;StarSet&gt;.sort() to sort in decending order.
+<span class="lineNum">     284 </span>            :          * @param larger        The element that should be larger than the other.
+<a name="285"><span class="lineNum">     285 </span>            :          * @param smaller       The element that should be smaller than the other.</a>
+<span class="lineNum">     286 </span>            :          * @return                      True if in order.
+<span class="lineNum">     287 </span>            :          */
+<span class="lineNum">     288 </span>            : 
+<a name="289"><span class="lineNum">     289 </span>            :         static bool SortByOdds                  ( StarSet&amp; larger, StarSet&amp; smaller );</a>
+<span class="lineNum">     290 </span>            : 
+<span class="lineNum">     291 </span>            : 
+<span class="lineNum">     292 </span>            : 
+<a name="293"><span class="lineNum">     293 </span>            : </a>
+<span class="lineNum">     294 </span>            : 
+<span class="lineNum">     295 </span>            : 
+<span class="lineNum">     296 </span>            : 
+<a name="297"><span class="lineNum">     297 </span>            : </a>
+<span class="lineNum">     298 </span>            :         /**
+<span class="lineNum">     299 </span>            :          * @brief       Finds any similar angles and appends it to the list.
+<span class="lineNum">     300 </span>            :          * @param database              [in]    The database to read from.
+<a name="301"><span class="lineNum">     301 </span>            :          * @param database_size [in]    The number of elements in the database.</a>
+<span class="lineNum">     302 </span>            :          * @param angles                [in]    The origional angles to search for and copy.
+<span class="lineNum">     303 </span>            :          * @param tA                    [in]    The +- threshold for the angle.
+<span class="lineNum">     304 </span>            :          * @param tD                    [in]    The +- threshold for the distance from the opposite.
+<a name="305"><span class="lineNum">     305 </span>            :          * @param found                 [out]   The found points.</a>
+<span class="lineNum">     306 </span>            : 
+<span class="lineNum">     307 </span>            :          * @tparam NI                           The size of the input list.
+<span class="lineNum">     308 </span>            :          * @tparam NO                           The size of the output list.
+<a name="309"><span class="lineNum">     309 </span>            :          */</a>
+<span class="lineNum">     310 </span>            : 
+<span class="lineNum">     311 </span>            :         template&lt;const uint NI, const uint NO&gt;
+<span class="lineNum">     312 </span>            :         static void FindElements (
+<a name="313"><span class="lineNum">     313 </span>            :                                                         const decimal database[][6], uint database_size,</a>
+<span class="lineNum">     314 </span>            :                                                         ArrayList&lt;star_tracker::StarSet, NI&gt;&amp; angles,
+<span class="lineNum">     315 </span>            :                                                         decimal tA, decimal tD,
+<span class="lineNum">     316 </span>            :                                                         ArrayList&lt;star_tracker::StarSet, NO&gt;* found
+<a name="317"><span class="lineNum">     317 </span>            :                                                         )</a>
+<span class="lineNum">     318 </span>            :         {
+<span class="lineNum">     319 </span>            :                 for ( uint ii = 0; ii &lt; angles.Size(); ii++)
+<span class="lineNum">     320 </span>            :                 {
+<a name="321"><span class="lineNum">     321 </span>            :                         for ( uint jj = 0; jj &lt; database_size; jj++ )</a>
+<span class="lineNum">     322 </span>            :                         {
+<span class="lineNum">     323 </span>            :                                 decimal dAngle = database[jj][kDatabaseIndexAngle];
+<span class="lineNum">     324 </span>            :                                 decimal dDist = database[jj][kDatabaseIndexDist];
+<a name="325"><span class="lineNum">     325 </span>            : </a>
+<span class="lineNum">     326 </span>            :                                 if (    fabs(dAngle - angles.Get(ii).angle) &lt; tA)// &amp;&amp;
+<span class="lineNum">     327 </span>            :                                         //      fabs(dDist - angles.Get(ii).distance) &lt; tD   )
+<span class="lineNum">     328 </span>            :                                 {
+<a name="329"><span class="lineNum">     329 </span>            :                                         Point&lt;decimal&gt; opposite(</a>
+<span class="lineNum">     330 </span>            :                                                                 database[jj][kDatabaseIndexOppositeX],
+<span class="lineNum">     331 </span>            :                                                                 database[jj][kDatabaseIndexOppositeY]);
+<span class="lineNum">     332 </span>            :                                         star_tracker::StarSet set;
+<a name="333"><span class="lineNum">     333 </span>            :                                         set.angle = dAngle;</a>
+<span class="lineNum">     334 </span>            :                                         set.distance = dDist;
+<span class="lineNum">     335 </span>            :                                         set.opposite = opposite;
+<span class="lineNum">     336 </span>            :                                         set.orientation = database[jj][kDatabaseIndexOrientation];
+<a name="337"><span class="lineNum">     337 </span>            : </a>
+<span class="lineNum">     338 </span>            :                                         set.pixel = &amp;angles.Get(ii);
+<span class="lineNum">     339 </span>            :                                         found-&gt;PushBack(set);
+<span class="lineNum">     340 </span>            :                                 }
+<a name="341"><span class="lineNum">     341 </span>            :                         }</a>
+<span class="lineNum">     342 </span>            :                 }
+<span class="lineNum">     343 </span>            :         }
+<span class="lineNum">     344 </span>            : 
+<a name="345"><span class="lineNum">     345 </span>            : </a>
+<span class="lineNum">     346 </span>            : 
+<span class="lineNum">     347 </span>            : 
+<span class="lineNum">     348 </span>            : 
+<a name="349"><span class="lineNum">     349 </span>            : </a>
+<span class="lineNum">     350 </span>            : 
+<span class="lineNum">     351 </span>            : 
+<span class="lineNum">     352 </span>            : 
+<a name="353"><span class="lineNum">     353 </span>            : </a>
+<span class="lineNum">     354 </span>            : 
+<span class="lineNum">     355 </span>            : 
+<span class="lineNum">     356 </span>            : 
+<a name="357"><span class="lineNum">     357 </span>            : </a>
+<span class="lineNum">     358 </span>            : 
+<span class="lineNum">     359 </span>            : 
+<span class="lineNum">     360 </span>            : 
+<a name="361"><span class="lineNum">     361 </span>            : </a>
+<span class="lineNum">     362 </span>            : 
+<span class="lineNum">     363 </span>            : 
+<span class="lineNum">     364 </span>            : 
+<a name="365"><span class="lineNum">     365 </span>            : </a>
+<span class="lineNum">     366 </span>            :         /**
+<span class="lineNum">     367 </span>            :          * @brief       Sets the DIAGONAL field of view of the camera for all future calculations.
+<span class="lineNum">     368 </span>            :          * @param f     The field of view.
+<a name="369"><span class="lineNum">     369 </span>            :          * @details     This is static as it requires less memory storage, it is assumed that there will be only one fov.</a>
+<span class="lineNum">     370 </span>            :          */
+<span class="lineNum">     371 </span><span class="lineCov">          6 :         static inline void set_fov                              ( decimal f ) {         fov = f;        }</span>
+<span class="lineNum">     372 </span>            : 
+<a name="373"><span class="lineNum">     373 </span>            :         /**</a>
+<span class="lineNum">     374 </span>            :         * @brief        Sets the DIAGNONAL resolution of the camera for all future calculations.
+<span class="lineNum">     375 </span>            :         * @param p      The diagonal resolution.
+<a name="376"><span class="lineNum">     376 </span>            :         * @details      This is static as it requires less memory storage, it is assumed that there will be only one resolution.</a>
+<a name="377"><span class="lineNum">     377 </span>            :         */</a>
+<span class="lineNum">     378 </span><span class="lineCov">          1 :         static inline void set_pixel_resolution ( decimal p ){pixel_resolution = p;}</span>
+<span class="lineNum">     379 </span>            : };
+<span class="lineNum">     380 </span>            : }
+</pre>
+      </td>
+    </tr>
+  </table>
+  <br>
+
+  <table width="100%" border=0 cellspacing=0 cellpadding=0>
+    <tr><td class="ruler"><img src="../glass.png" width=3 height=3 alt=""></td></tr>
+    <tr><td class="versionInfo">Generated by: <a href="http://ltp.sourceforge.net/coverage/lcov.php" target="_parent">LCOV version 1.13</a></td></tr>
+  </table>
+  <br>
+
+</body>
+</html>

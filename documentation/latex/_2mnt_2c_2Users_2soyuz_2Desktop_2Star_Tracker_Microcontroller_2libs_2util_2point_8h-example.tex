@@ -1,0 +1,112 @@
+\hypertarget{_2mnt_2c_2Users_2soyuz_2Desktop_2Star_Tracker_Microcontroller_2libs_2util_2point_8h-example}{}\section{/mnt/c/\+Users/soyuz/\+Desktop/\+Star\+\_\+\+Tracker\+\_\+\+Microcontroller/libs/util/point.\+h}
+A class template that stores an x and y coordinate. 
+\begin{DoxyTemplParams}{Template Parameters}
+{\em T} & The datatype to store.\\
+\hline
+\end{DoxyTemplParams}
+\begin{DoxyVerb}Point<int> point(1, 0);
+point.x = 10;
+Point<int> point2(10, 10);
+cout << point2.Distance(point) << endl; // 10
+cout << point2.Equal(point) << endl;    // false
+\end{DoxyVerb}
+
+
+\begin{DoxyAuthor}{Author}
+Tom Creusot
+\end{DoxyAuthor}
+
+\begin{DoxyCodeInclude}
+
+\textcolor{preprocessor}{#pragma once}
+
+\textcolor{preprocessor}{#include <cmath>}
+
+\textcolor{keyword}{namespace }\hyperlink{namespaceutil}{util}
+\{
+\textcolor{keyword}{template} <\textcolor{keyword}{class} T> \textcolor{keyword}{class }Point
+\{
+\textcolor{keyword}{public}:
+    T \hyperlink{classutil_1_1Point_aacd055853a71c08675e1210ee7d7777b}{x};
+    T \hyperlink{classutil_1_1Point_abf5df9373ece02d9b87f367cf12dd319}{y};
+
+    \hyperlink{classutil_1_1Point_a805a2536f7312ac891a4c729174c1514}{Point} ( )
+    \{
+        x = 0;
+        y = 0;
+    \}
+
+
+    \hyperlink{classutil_1_1Point_a805a2536f7312ac891a4c729174c1514}{Point} ( T val )
+    \{
+        x = val;
+        y = val;
+    \}
+
+    \hyperlink{classutil_1_1Point_a805a2536f7312ac891a4c729174c1514}{Point} ( T x\_, T y\_ )
+    \{
+        x = x\_;
+        y = y\_;
+    \}
+
+
+    \hyperlink{classutil_1_1Point_a805a2536f7312ac891a4c729174c1514}{Point}  (   T degreesX, T minutesX, T secondsX,
+                T degreesY, T minutesY, T secondsY  )
+    \{
+        \hyperlink{classutil_1_1Point_aae6e38572d0141a2a819dfab3ea15eae}{Set} ( degreesX, minutesX, secondsX, degreesY, minutesY, secondsY );
+    \}
+
+    \hyperlink{classutil_1_1Point_a805a2536f7312ac891a4c729174c1514}{Point} ( \textcolor{keyword}{const} \hyperlink{classutil_1_1Point_a805a2536f7312ac891a4c729174c1514}{Point}& p )
+    \{
+        x = p.x;
+        y = p.y;
+    \}
+
+    \textcolor{keyword}{inline} T& \hyperlink{classutil_1_1Point_ab5a39259be6edc0a30e2a92bb4b7e526}{get\_x}        ()          \{ \textcolor{keywordflow}{return} \hyperlink{classutil_1_1Point_aacd055853a71c08675e1210ee7d7777b}{x}; \}
+    \textcolor{keyword}{inline} T& \hyperlink{classutil_1_1Point_aaf8b4a81f8cb3b841efac6009e849545}{get\_y}    ()          \{ \textcolor{keywordflow}{return} \hyperlink{classutil_1_1Point_abf5df9373ece02d9b87f367cf12dd319}{y}; \}
+
+    \textcolor{keyword}{inline} \textcolor{keywordtype}{void} \hyperlink{classutil_1_1Point_a6111d60c3e51f1aaa4d73b2fd24d0789}{set\_x}  ( T& \_x )   \{ x = \_x; \}
+    \textcolor{keyword}{inline} \textcolor{keywordtype}{void} \hyperlink{classutil_1_1Point_aeb4963095d32bf0ab74f4f8c7762e1db}{set\_y}  ( T& \_y )   \{ y = \_y; \}
+
+
+
+
+    \textcolor{keywordtype}{void} \hyperlink{classutil_1_1Point_aae6e38572d0141a2a819dfab3ea15eae}{Set} ( T x\_, T y\_ )
+    \{
+        x = x\_;
+        y = y\_;
+    \}
+
+
+    \textcolor{keywordtype}{void} \hyperlink{classutil_1_1Point_aae6e38572d0141a2a819dfab3ea15eae}{Set} (   T degrees\_x, T minutes\_x, T seconds\_x,
+                T degrees\_y, T minutes\_y, T seconds\_y   )
+    \{
+        T sign = 1 - (degrees\_x < 0) * 2;
+        x = degrees\_x + (minutes\_x / 60 + seconds\_x / 3600) * sign;
+        sign = 1 - (degrees\_y < 0) * 2;
+        y = degrees\_y + (minutes\_y / 60 + seconds\_y / 3600) * sign;
+    \}
+
+
+    T \hyperlink{classutil_1_1Point_a8f90a6d1ce481f74c1d8790f4e30770a}{Distance} ( Point<T>& other )\textcolor{keyword}{ const}
+\textcolor{keyword}{    }\{
+        \textcolor{keywordflow}{return} (T) hypot(x - other.x, y - other.y);
+    \}
+
+
+
+    \textcolor{keywordtype}{bool} \hyperlink{classutil_1_1Point_a1f0490a8d366dccc9e09ac5217c74f50}{Equal} ( Point<T>& other )\textcolor{keyword}{ const}
+\textcolor{keyword}{    }\{
+        \textcolor{keywordflow}{return} \hyperlink{classutil_1_1Point_a1f0490a8d366dccc9e09ac5217c74f50}{Equal}(other.x, other.y);
+    \}
+
+
+    \textcolor{keywordtype}{bool} \hyperlink{classutil_1_1Point_a1f0490a8d366dccc9e09ac5217c74f50}{Equal} ( T xx, T yy )\textcolor{keyword}{ const}
+\textcolor{keyword}{    }\{
+        \textcolor{keywordflow}{return} fabs(x - xx) < 0.0001 && fabs(y - yy) < 0.0001;
+    \}
+
+\};
+\}
+\end{DoxyCodeInclude}
+ 

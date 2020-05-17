@@ -1,0 +1,262 @@
+\hypertarget{classutil_1_1LinkedList}{}\section{util\+:\+:Linked\+List$<$ T $>$ Class Template Reference}
+\label{classutil_1_1LinkedList}\index{util\+::\+Linked\+List$<$ T $>$@{util\+::\+Linked\+List$<$ T $>$}}
+
+
+Inheritance diagram for util\+:\+:Linked\+List$<$ T $>$\+:
+\nopagebreak
+\begin{figure}[H]
+\begin{center}
+\leavevmode
+\includegraphics[width=202pt]{classutil_1_1LinkedList__inherit__graph}
+\end{center}
+\end{figure}
+
+
+Collaboration diagram for util\+:\+:Linked\+List$<$ T $>$\+:
+\nopagebreak
+\begin{figure}[H]
+\begin{center}
+\leavevmode
+\includegraphics[width=350pt]{classutil_1_1LinkedList__coll__graph}
+\end{center}
+\end{figure}
+\subsection*{Public Member Functions}
+\begin{DoxyCompactItemize}
+\item 
+\mbox{\Hypertarget{classutil_1_1LinkedList_a6262d0ad2cc39d2818dfff07c2eb96ca}\label{classutil_1_1LinkedList_a6262d0ad2cc39d2818dfff07c2eb96ca}} 
+\hyperlink{classutil_1_1LinkedList_a6262d0ad2cc39d2818dfff07c2eb96ca}{$\sim$\+Linked\+List} ()
+\begin{DoxyCompactList}\small\item\em Destructor. \end{DoxyCompactList}\item 
+bool \hyperlink{classutil_1_1LinkedList_abd21d7bb75ae121a4f164e1917845470}{Is\+Empty} () const
+\begin{DoxyCompactList}\small\item\em Finds if the list has no elements. \end{DoxyCompactList}\item 
+bool \hyperlink{classutil_1_1LinkedList_aea5cd5b77e721fc152985904e391fc6d}{Is\+Full} () const
+\begin{DoxyCompactList}\small\item\em A linked list is never full. \end{DoxyCompactList}\item 
+uint \hyperlink{classutil_1_1LinkedList_a83784f0749538889da04deb74b2bdd95}{Size} () const
+\begin{DoxyCompactList}\small\item\em The size of the list. \end{DoxyCompactList}\item 
+virtual T \& \hyperlink{classutil_1_1LinkedList_ad3586e05f1b6f9d6b4cebba91433a2e7}{Get} (uint position)
+\begin{DoxyCompactList}\small\item\em Returns the element at the specified position, (S\+L\+OW AS F\+OR I\+T\+E\+R\+A\+T\+I\+ON). \end{DoxyCompactList}\item 
+bool \hyperlink{classutil_1_1LinkedList_a4ef3d2a7e381d968d45605c87ef88f47}{Push\+Back} (T val)
+\begin{DoxyCompactList}\small\item\em Appends an element to the end of the list. \end{DoxyCompactList}\item 
+bool \hyperlink{classutil_1_1LinkedList_afac5b9fc8305e19fa4ebdeb8a2d74e1c}{Push\+Node\+Back} (\hyperlink{classutil_1_1LinkedListNode}{Linked\+List\+Node}$<$ T $>$ $\ast$node)
+\begin{DoxyCompactList}\small\item\em Appends a node to the end of the list. \end{DoxyCompactList}\item 
+T \hyperlink{classutil_1_1LinkedList_ac7f5e9d19d9886b6b0b22232fc001424}{Pop\+Back} ()
+\begin{DoxyCompactList}\small\item\em Removes the element at the end of the list. \end{DoxyCompactList}\item 
+T \hyperlink{classutil_1_1LinkedList_a07c6ba47539024e050d1fb4d2498632e}{Pop\+Front} ()
+\begin{DoxyCompactList}\small\item\em Removes the element at the start of the list. \end{DoxyCompactList}\item 
+void \hyperlink{classutil_1_1LinkedList_ab77a211e4961b76e7b68b5d3ff1cd7ee}{Sort} (bool($\ast$in\+Order)(T \&, T \&))
+\begin{DoxyCompactList}\small\item\em Sorts the list into order. \end{DoxyCompactList}\end{DoxyCompactItemize}
+\subsection*{Static Public Member Functions}
+\begin{DoxyCompactItemize}
+\item 
+static string $\ast$ \hyperlink{classutil_1_1LinkedList_a712945761054fdafd091b40bb5772003}{List\+To\+String} (\hyperlink{classutil_1_1LinkedList}{Linked\+List}$<$ string $>$ \&list)
+\begin{DoxyCompactList}\small\item\em Converts a linked list of strings to a string. \end{DoxyCompactList}\end{DoxyCompactItemize}
+\subsection*{Public Attributes}
+\begin{DoxyCompactItemize}
+\item 
+\mbox{\Hypertarget{classutil_1_1LinkedList_a5d07996afe2eb21d93dc16696e993f17}\label{classutil_1_1LinkedList_a5d07996afe2eb21d93dc16696e993f17}} 
+\hyperlink{classutil_1_1LinkedListNode}{Linked\+List\+Node}$<$ T $>$ $\ast$ \hyperlink{classutil_1_1LinkedList_a5d07996afe2eb21d93dc16696e993f17}{head}
+\begin{DoxyCompactList}\small\item\em The first element of the linked list. \end{DoxyCompactList}\item 
+\mbox{\Hypertarget{classutil_1_1LinkedList_a7f9270c04b21a3e60cb295949da09059}\label{classutil_1_1LinkedList_a7f9270c04b21a3e60cb295949da09059}} 
+\hyperlink{classutil_1_1LinkedListNode}{Linked\+List\+Node}$<$ T $>$ $\ast$ \hyperlink{classutil_1_1LinkedList_a7f9270c04b21a3e60cb295949da09059}{tail}
+\begin{DoxyCompactList}\small\item\em The last element of the linked list. \end{DoxyCompactList}\item 
+\mbox{\Hypertarget{classutil_1_1LinkedList_a8418657f94925a9d4240e3d96e1abab3}\label{classutil_1_1LinkedList_a8418657f94925a9d4240e3d96e1abab3}} 
+uint \hyperlink{classutil_1_1LinkedList_a8418657f94925a9d4240e3d96e1abab3}{size} = 0
+\begin{DoxyCompactList}\small\item\em The size of the linked list. (assuming you have not messed with the nodes) \end{DoxyCompactList}\end{DoxyCompactItemize}
+\subsection*{Additional Inherited Members}
+
+
+\subsection{Member Function Documentation}
+\mbox{\Hypertarget{classutil_1_1LinkedList_ad3586e05f1b6f9d6b4cebba91433a2e7}\label{classutil_1_1LinkedList_ad3586e05f1b6f9d6b4cebba91433a2e7}} 
+\index{util\+::\+Linked\+List@{util\+::\+Linked\+List}!Get@{Get}}
+\index{Get@{Get}!util\+::\+Linked\+List@{util\+::\+Linked\+List}}
+\subsubsection{\texorpdfstring{Get()}{Get()}}
+{\footnotesize\ttfamily template$<$class T$>$ \\
+virtual T\& \hyperlink{classutil_1_1LinkedList}{util\+::\+Linked\+List}$<$ T $>$\+::Get (\begin{DoxyParamCaption}\item[{uint}]{position }\end{DoxyParamCaption})\hspace{0.3cm}{\ttfamily [inline]}, {\ttfamily [virtual]}}
+
+
+
+Returns the element at the specified position, (S\+L\+OW AS F\+OR I\+T\+E\+R\+A\+T\+I\+ON). 
+
+
+\begin{DoxyParams}{Parameters}
+{\em position} & The index. \\
+\hline
+\end{DoxyParams}
+\begin{DoxyReturn}{Returns}
+\mbox{[}in/out\mbox{]} The value at the index. 
+\end{DoxyReturn}
+
+
+Reimplemented from \hyperlink{classutil_1_1ArrayList_ac5a4259af59f7bac9df06851c29d9e37}{util\+::\+Array\+List$<$ T, 0 $>$}.
+
+\mbox{\Hypertarget{classutil_1_1LinkedList_abd21d7bb75ae121a4f164e1917845470}\label{classutil_1_1LinkedList_abd21d7bb75ae121a4f164e1917845470}} 
+\index{util\+::\+Linked\+List@{util\+::\+Linked\+List}!Is\+Empty@{Is\+Empty}}
+\index{Is\+Empty@{Is\+Empty}!util\+::\+Linked\+List@{util\+::\+Linked\+List}}
+\subsubsection{\texorpdfstring{Is\+Empty()}{IsEmpty()}}
+{\footnotesize\ttfamily template$<$class T$>$ \\
+bool \hyperlink{classutil_1_1LinkedList}{util\+::\+Linked\+List}$<$ T $>$\+::Is\+Empty (\begin{DoxyParamCaption}{ }\end{DoxyParamCaption}) const\hspace{0.3cm}{\ttfamily [inline]}, {\ttfamily [virtual]}}
+
+
+
+Finds if the list has no elements. 
+
+\begin{DoxyReturn}{Returns}
+True if the \char`\"{}array\char`\"{} has no elements. 
+\end{DoxyReturn}
+
+
+Reimplemented from \hyperlink{classutil_1_1ArrayList_a8e33bd4f9e6a67140696cf24b8cc66b1}{util\+::\+Array\+List$<$ T, 0 $>$}.
+
+\mbox{\Hypertarget{classutil_1_1LinkedList_aea5cd5b77e721fc152985904e391fc6d}\label{classutil_1_1LinkedList_aea5cd5b77e721fc152985904e391fc6d}} 
+\index{util\+::\+Linked\+List@{util\+::\+Linked\+List}!Is\+Full@{Is\+Full}}
+\index{Is\+Full@{Is\+Full}!util\+::\+Linked\+List@{util\+::\+Linked\+List}}
+\subsubsection{\texorpdfstring{Is\+Full()}{IsFull()}}
+{\footnotesize\ttfamily template$<$class T$>$ \\
+bool \hyperlink{classutil_1_1LinkedList}{util\+::\+Linked\+List}$<$ T $>$\+::Is\+Full (\begin{DoxyParamCaption}{ }\end{DoxyParamCaption}) const\hspace{0.3cm}{\ttfamily [inline]}, {\ttfamily [virtual]}}
+
+
+
+A linked list is never full. 
+
+\begin{DoxyReturn}{Returns}
+False. 
+\end{DoxyReturn}
+
+
+Reimplemented from \hyperlink{classutil_1_1ArrayList_a09c81f9117f52503ee49e335c44fdd63}{util\+::\+Array\+List$<$ T, 0 $>$}.
+
+\mbox{\Hypertarget{classutil_1_1LinkedList_a712945761054fdafd091b40bb5772003}\label{classutil_1_1LinkedList_a712945761054fdafd091b40bb5772003}} 
+\index{util\+::\+Linked\+List@{util\+::\+Linked\+List}!List\+To\+String@{List\+To\+String}}
+\index{List\+To\+String@{List\+To\+String}!util\+::\+Linked\+List@{util\+::\+Linked\+List}}
+\subsubsection{\texorpdfstring{List\+To\+String()}{ListToString()}}
+{\footnotesize\ttfamily template$<$class T$>$ \\
+static string$\ast$ \hyperlink{classutil_1_1LinkedList}{util\+::\+Linked\+List}$<$ T $>$\+::List\+To\+String (\begin{DoxyParamCaption}\item[{\hyperlink{classutil_1_1LinkedList}{Linked\+List}$<$ string $>$ \&}]{list }\end{DoxyParamCaption})\hspace{0.3cm}{\ttfamily [inline]}, {\ttfamily [static]}}
+
+
+
+Converts a linked list of strings to a string. 
+
+
+\begin{DoxyParams}{Parameters}
+{\em list} & \mbox{[}in\mbox{]} The list of strings. \\
+\hline
+\end{DoxyParams}
+\begin{DoxyReturn}{Returns}
+The malloced string. 
+\end{DoxyReturn}
+\mbox{\Hypertarget{classutil_1_1LinkedList_ac7f5e9d19d9886b6b0b22232fc001424}\label{classutil_1_1LinkedList_ac7f5e9d19d9886b6b0b22232fc001424}} 
+\index{util\+::\+Linked\+List@{util\+::\+Linked\+List}!Pop\+Back@{Pop\+Back}}
+\index{Pop\+Back@{Pop\+Back}!util\+::\+Linked\+List@{util\+::\+Linked\+List}}
+\subsubsection{\texorpdfstring{Pop\+Back()}{PopBack()}}
+{\footnotesize\ttfamily template$<$class T$>$ \\
+T \hyperlink{classutil_1_1LinkedList}{util\+::\+Linked\+List}$<$ T $>$\+::Pop\+Back (\begin{DoxyParamCaption}{ }\end{DoxyParamCaption})\hspace{0.3cm}{\ttfamily [inline]}, {\ttfamily [virtual]}}
+
+
+
+Removes the element at the end of the list. 
+
+\begin{DoxyReturn}{Returns}
+The element removed. 
+\end{DoxyReturn}
+
+
+Reimplemented from \hyperlink{classutil_1_1ArrayList_ac03915c0d58b62bf78148737be86fafc}{util\+::\+Array\+List$<$ T, 0 $>$}.
+
+\mbox{\Hypertarget{classutil_1_1LinkedList_a07c6ba47539024e050d1fb4d2498632e}\label{classutil_1_1LinkedList_a07c6ba47539024e050d1fb4d2498632e}} 
+\index{util\+::\+Linked\+List@{util\+::\+Linked\+List}!Pop\+Front@{Pop\+Front}}
+\index{Pop\+Front@{Pop\+Front}!util\+::\+Linked\+List@{util\+::\+Linked\+List}}
+\subsubsection{\texorpdfstring{Pop\+Front()}{PopFront()}}
+{\footnotesize\ttfamily template$<$class T$>$ \\
+T \hyperlink{classutil_1_1LinkedList}{util\+::\+Linked\+List}$<$ T $>$\+::Pop\+Front (\begin{DoxyParamCaption}{ }\end{DoxyParamCaption})\hspace{0.3cm}{\ttfamily [inline]}}
+
+
+
+Removes the element at the start of the list. 
+
+\begin{DoxyReturn}{Returns}
+The element removed. 
+\end{DoxyReturn}
+\mbox{\Hypertarget{classutil_1_1LinkedList_a4ef3d2a7e381d968d45605c87ef88f47}\label{classutil_1_1LinkedList_a4ef3d2a7e381d968d45605c87ef88f47}} 
+\index{util\+::\+Linked\+List@{util\+::\+Linked\+List}!Push\+Back@{Push\+Back}}
+\index{Push\+Back@{Push\+Back}!util\+::\+Linked\+List@{util\+::\+Linked\+List}}
+\subsubsection{\texorpdfstring{Push\+Back()}{PushBack()}}
+{\footnotesize\ttfamily template$<$class T$>$ \\
+bool \hyperlink{classutil_1_1LinkedList}{util\+::\+Linked\+List}$<$ T $>$\+::Push\+Back (\begin{DoxyParamCaption}\item[{T}]{val }\end{DoxyParamCaption})\hspace{0.3cm}{\ttfamily [inline]}, {\ttfamily [virtual]}}
+
+
+
+Appends an element to the end of the list. 
+
+
+\begin{DoxyParams}{Parameters}
+{\em val} & The element to add. \\
+\hline
+\end{DoxyParams}
+\begin{DoxyReturn}{Returns}
+True if added. 
+\end{DoxyReturn}
+
+
+Reimplemented from \hyperlink{classutil_1_1ArrayList_a75e2f1682ebe7a982b6fd301d416d536}{util\+::\+Array\+List$<$ T, 0 $>$}.
+
+\mbox{\Hypertarget{classutil_1_1LinkedList_afac5b9fc8305e19fa4ebdeb8a2d74e1c}\label{classutil_1_1LinkedList_afac5b9fc8305e19fa4ebdeb8a2d74e1c}} 
+\index{util\+::\+Linked\+List@{util\+::\+Linked\+List}!Push\+Node\+Back@{Push\+Node\+Back}}
+\index{Push\+Node\+Back@{Push\+Node\+Back}!util\+::\+Linked\+List@{util\+::\+Linked\+List}}
+\subsubsection{\texorpdfstring{Push\+Node\+Back()}{PushNodeBack()}}
+{\footnotesize\ttfamily template$<$class T$>$ \\
+bool \hyperlink{classutil_1_1LinkedList}{util\+::\+Linked\+List}$<$ T $>$\+::Push\+Node\+Back (\begin{DoxyParamCaption}\item[{\hyperlink{classutil_1_1LinkedListNode}{Linked\+List\+Node}$<$ T $>$ $\ast$}]{node }\end{DoxyParamCaption})\hspace{0.3cm}{\ttfamily [inline]}}
+
+
+
+Appends a node to the end of the list. 
+
+
+\begin{DoxyParams}{Parameters}
+{\em node} & \mbox{[}in\mbox{]} The node to add. \\
+\hline
+\end{DoxyParams}
+\begin{DoxyReturn}{Returns}
+True if added. 
+\end{DoxyReturn}
+\mbox{\Hypertarget{classutil_1_1LinkedList_a83784f0749538889da04deb74b2bdd95}\label{classutil_1_1LinkedList_a83784f0749538889da04deb74b2bdd95}} 
+\index{util\+::\+Linked\+List@{util\+::\+Linked\+List}!Size@{Size}}
+\index{Size@{Size}!util\+::\+Linked\+List@{util\+::\+Linked\+List}}
+\subsubsection{\texorpdfstring{Size()}{Size()}}
+{\footnotesize\ttfamily template$<$class T$>$ \\
+uint \hyperlink{classutil_1_1LinkedList}{util\+::\+Linked\+List}$<$ T $>$\+::Size (\begin{DoxyParamCaption}{ }\end{DoxyParamCaption}) const\hspace{0.3cm}{\ttfamily [inline]}, {\ttfamily [virtual]}}
+
+
+
+The size of the list. 
+
+\begin{DoxyReturn}{Returns}
+The size of the list. 
+\end{DoxyReturn}
+
+
+Reimplemented from \hyperlink{classutil_1_1ArrayList_ae098e879892c23b682edc4b023a770de}{util\+::\+Array\+List$<$ T, 0 $>$}.
+
+\mbox{\Hypertarget{classutil_1_1LinkedList_ab77a211e4961b76e7b68b5d3ff1cd7ee}\label{classutil_1_1LinkedList_ab77a211e4961b76e7b68b5d3ff1cd7ee}} 
+\index{util\+::\+Linked\+List@{util\+::\+Linked\+List}!Sort@{Sort}}
+\index{Sort@{Sort}!util\+::\+Linked\+List@{util\+::\+Linked\+List}}
+\subsubsection{\texorpdfstring{Sort()}{Sort()}}
+{\footnotesize\ttfamily template$<$class T$>$ \\
+void \hyperlink{classutil_1_1LinkedList}{util\+::\+Linked\+List}$<$ T $>$\+::Sort (\begin{DoxyParamCaption}\item[{bool($\ast$)(T \&, T \&)}]{in\+Order }\end{DoxyParamCaption})\hspace{0.3cm}{\ttfamily [inline]}}
+
+
+
+Sorts the list into order. 
+
+\begin{DoxyRefDesc}{Todo}
+\item[\hyperlink{todo__todo000001}{Todo}]\+: T\+H\+IS IS R\+E\+A\+LY P\+O\+O\+R\+LY M\+A\+DE, F\+IX.\end{DoxyRefDesc}
+
+
+
+\begin{DoxyParams}{Parameters}
+{\em in\+Order} & \mbox{[}in\mbox{]} must return true if the first parameter should be B\+E\+F\+O\+RE OR E\+Q\+U\+AL the second parameter, F\+A\+L\+SE if A\+F\+T\+ER. \\
+\hline
+\end{DoxyParams}
+
+
+The documentation for this class was generated from the following file\+:\begin{DoxyCompactItemize}
+\item 
+libs/nix/linked\+\_\+list.\+h\end{DoxyCompactItemize}

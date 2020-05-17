@@ -1,0 +1,71 @@
+This is stuff which will only work on a nix system.
+
+\subsection*{How To Use}
+
+In the {\itshape B\+U\+I\+LD} file, input\+: 
+\begin{DoxyCode}
+deps = [//libs/nix:properties", "//libs/nix:star"]
+\end{DoxyCode}
+ At the top of the desired file, input\+: 
+\begin{DoxyCode}
+#include "libs/nix/star.h"
+#include "libs/nix/properties.h"
+\end{DoxyCode}
+
+
+\subsubsection*{Build}
+
+Input the following into your command line\+: 
+\begin{DoxyCode}
+bazel build //libs/nix/...
+\end{DoxyCode}
+
+
+\subsubsection*{Test}
+
+Input the following into your command line\+: 
+\begin{DoxyCode}
+bazel test //libs/nix/... --test\_output=all
+\end{DoxyCode}
+
+
+\subsection*{Files}
+
+
+\begin{DoxyItemize}
+\item \hyperlink{properties_8h_source}{properties.\+h}
+\item properties.\+c
+\item \hyperlink{star_8h}{star.\+h}
+\item star.\+cc
+\item \hyperlink{fill__template_8h}{fill\+\_\+template.\+h}
+\item fill\+\_\+template.\+cc
+\item \hyperlink{linked__list_8h_source}{linked\+\_\+list.\+h}
+\item \hyperlink{get__image_8h_source}{get\+\_\+image.\+h}
+\item get\+\_\+image.\+cc ~\newline
+~\newline
+
+\item star\+\_\+test.\+cc
+\item properties\+\_\+test.\+cc
+\item linked\+\_\+list\+\_\+test.\+cc
+\item star\+\_\+test.\+cc ~\newline
+~\newline
+
+\item B\+U\+I\+LD
+\item R\+E\+A\+D\+M\+E.\+md
+\end{DoxyItemize}
+
+\subsection*{Built With}
+
+
+\begin{DoxyItemize}
+\item g++ 7.\+4.\+0
+\item bazel 2.\+0.\+0
+\item gtest 1.\+10.\+0
+\end{DoxyItemize}
+
+\subsection*{Authors}
+
+
+\begin{DoxyItemize}
+\item Tom Creusot -\/ {\itshape Initial Creation} 
+\end{DoxyItemize}
