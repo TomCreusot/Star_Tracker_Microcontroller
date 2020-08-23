@@ -1,9 +1,0 @@
-<map id="libs/nix" name="libs/nix">
-<area shape="rect" id="node1" href="dir_6e15f2ccb4402cfa26266ca5bd724ab8.html" title="nix" alt="" coords="27,52,99,100"/>
-<area shape="rect" id="node2" href="dir_2e5bde0e768e1c9a7f40cd5999af9f90.html" title="util" alt="" coords="25,244,97,292"/>
-<area shape="rect" id="edge1-headlabel" href="dir_000002_000004.html" title="12" alt="" coords="42,217,60,231"/>
-<area shape="rect" id="node3" href="dir_d342688b90cb480d44ebd4242b7b706b.html" title="image_processing" alt="" coords="46,148,186,196"/>
-<area shape="rect" id="edge2-headlabel" href="dir_000002_000001.html" title="1" alt="" coords="96,120,106,135"/>
-<area shape="rect" id="edge3-headlabel" href="dir_000001_000004.html" title="5" alt="" coords="87,225,96,239"/>
-<area shape="rect" id="clust1" href="dir_6719ab1f1f7655efc2fa43f7eb574fd1.html" title="libs" alt="" coords="16,16,109,111"/>
-</map>
