@@ -3,11 +3,11 @@
 
 using namespace image_processing;
 
-/*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*\
-|													|
-|			------ Constructors	------				|
-|													|
-\*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*/
+//////////////////////////////////////////////////////////////////////////////
+//																			//
+//								Constructors							//
+//																			//
+//////////////////////////////////////////////////////////////////////////////
 
 
 TEST ( DefaultConstructor, Standard )
@@ -38,17 +38,18 @@ TEST ( AlternateConstructor, Standard )
 
 
 
-/*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*\
-|													|
-|		------- SpreadGrassFire	-------				|
-|													|
-\*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*/
+//////////////////////////////////////////////////////////////////////////////
+//																			//
+//								SpreadGrassFire								//
+//																			//
+//////////////////////////////////////////////////////////////////////////////
+// The grass fire method slowly spreads out over a set of pixels above the threshold.
+// Currently it is set to have no diagonals as stars usualy dont.
 
-
-TEST ( SpreadGrassFire, StandardNix )
+TEST ( SpreadGrassFire, Valid )
 {
 	//		|	10	|	11	|	12	|
-	//		-------------------------
+	//		------------------------
 	//	10	|		|		|	1	|
 	//	11	|		|		|	2	|
 	//	12	|	6	|	5	|	3	|
@@ -67,18 +68,18 @@ TEST ( SpreadGrassFire, StandardNix )
 
 	a.SpreadGrassFire<100>(0, &img);
 
-	EXPECT_EQ(a.pixels, 7);
-	EXPECT_EQ(a.intensity, 28);
+	EXPECT_EQ(a.pixels, 6);//7);
+	EXPECT_EQ(a.intensity, 21);//28);
 	EXPECT_EQ(a.width, 3);
-	EXPECT_EQ(a.height, 5);
-	EXPECT_FLOAT_EQ(a.centroid.x, 11.14285714);
-	EXPECT_FLOAT_EQ(a.centroid.y, 12.5);
+	EXPECT_EQ(a.height, 4);//5);
+	EXPECT_FLOAT_EQ(a.centroid.x, 11.1904761904762);//11.14285714);
+	EXPECT_FLOAT_EQ(a.centroid.y, 12);//12.5);
 }
 
 
 
 
-TEST ( SpreadGrassFire, OnePixelNix)
+TEST ( SpreadGrassFire, SinglePixel )
 {
 	image_processing::Blob a(12, 20);
 	Image img(200, 200);
@@ -93,37 +94,6 @@ TEST ( SpreadGrassFire, OnePixelNix)
 	EXPECT_FLOAT_EQ(a.centroid.x, 12);
 	EXPECT_FLOAT_EQ(a.centroid.y, 20);
 }
-
-
-TEST ( SpreadGrassFire, IntensityVariation )
-{
-	//		|	10	|	11	|	12	|
-	//		-------------------------
-	//	10	|		|	7	|	~1	|
-	//	11	|		|		|	2	|
-	//	12	|	6	|	5	|	3	|
-	//	13	|		|		|	4	|
-	image_processing::Blob a(11, 10);
-	Image img(100, 100);
-	img.SetPixel(12, 10, 1);
-	img.SetPixel(12, 11, 2);
-	img.SetPixel(12, 12, 3);
-	img.SetPixel(12, 13, 4);
-	img.SetPixel(11, 12, 5);
-	img.SetPixel(10, 12, 6);
-	img.SetPixel(11, 10, 7);
-
-	a.SpreadGrassFire<100>(1, &img);
-
-	EXPECT_EQ(a.pixels, 6);
-	EXPECT_EQ(a.intensity, 27);
-	EXPECT_EQ(a.width, 3);
-	EXPECT_EQ(a.height, 4);
-	EXPECT_FLOAT_EQ(a.centroid.x, 11.111111111);
-	EXPECT_FLOAT_EQ(a.centroid.y, 11.555555556);
-
-}
-
 
 
 TEST ( SpreadGrassFire, InvalidIntensity )
@@ -149,23 +119,23 @@ TEST ( SpreadGrassFire, InvalidIntensity )
 
 
 
-/*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*\
-|													|
-|			------- FindCentroid	-------			|
-|													|
-\*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*/
+//////////////////////////////////////////////////////////////////////////////
+//																			//
+//								Find Centroid								//
+//																			//
+//////////////////////////////////////////////////////////////////////////////
+// This is a way of searching for recalculating moments to find the true center of a blob.
 
-TEST ( FindCentroid, Standard )
+TEST ( FindCentroid, Valid )
 {
 	// Value:		5 	6	0	2	1	1	2	0	6
 	// Position:	0	7	8	9	10	11	12	13	14
-	image_processing::Blob a(0, 0);
-	EXPECT_FLOAT_EQ(a.FindCentroid(10, 1, 11, 1), 10.5);
-	EXPECT_FLOAT_EQ(a.FindCentroid(10.5, 2, 9, 2), 9.75);
-	EXPECT_FLOAT_EQ(a.FindCentroid(9.75, 4, 12, 2), 10.5);
-	EXPECT_FLOAT_EQ(a.FindCentroid(10.5, 6, 7, 6), 8.75);
-	EXPECT_FLOAT_EQ(a.FindCentroid(8.75, 12, 14, 6), 10.5);
-	EXPECT_FLOAT_EQ(a.FindCentroid(10.5, 18, 0, 5), 8.217391304);
+	EXPECT_FLOAT_EQ(Blob::FindCentroid(10, 1, 11, 1),		10.5);
+	EXPECT_FLOAT_EQ(Blob::FindCentroid(10.5, 2, 9, 2),		9.75);
+	EXPECT_FLOAT_EQ(Blob::FindCentroid(9.75, 4, 12, 2),		10.5);
+	EXPECT_FLOAT_EQ(Blob::FindCentroid(10.5, 6, 7, 6),		8.75);
+	EXPECT_FLOAT_EQ(Blob::FindCentroid(8.75, 12, 14, 6),	10.5);
+	EXPECT_FLOAT_EQ(Blob::FindCentroid(10.5, 18, 0, 5),		8.217391304);
 }
 
 
@@ -173,11 +143,11 @@ TEST ( FindCentroid, Standard )
 
 
 
-/*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*\
-|													|
-|			------- FindBlobs	-------				|
-|													|
-\*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*/
+//////////////////////////////////////////////////////////////////////////////
+//																			//
+//								Find Blobs									//
+//																			//
+//////////////////////////////////////////////////////////////////////////////
 
 TEST ( FindBlobs, Valid )
 {
@@ -239,13 +209,42 @@ TEST ( FindBlobs, Bounds )
 
 
 
-/*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*\
-|													|
-|		------- SortByIntensity	-------				|
-|													|
-\*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*/
+//////////////////////////////////////////////////////////////////////////////
+//																			//
+//								ToPointList									//
+//																			//
+//////////////////////////////////////////////////////////////////////////////
+// To reduce coupling and memory, blobs should be converted to Points as the rest is not useful.
 
-TEST ( SortByIntensity, All )
+TEST ( ToPointList, Valid )
+{
+	const uint LIST_SIZE = 4;
+	ArrayList<Blob, LIST_SIZE> blobs;
+	ArrayList<Point<decimal>, LIST_SIZE> points;
+
+	blobs.PushBack(Blob(0, 0));
+	blobs.PushBack(Blob(1, 1));
+	blobs.PushBack(Blob(2, 2));
+	blobs.PushBack(Blob(3, 3));
+
+	Blob::ToPointList<LIST_SIZE>(blobs, &points);
+
+	for ( uint i = 0; i < blobs.Size(); i++ )
+	{
+		EXPECT_FLOAT_EQ(points.Get(i).x, i);
+		EXPECT_FLOAT_EQ(points.Get(i).y, i);
+	}
+}
+
+
+//////////////////////////////////////////////////////////////////////////////
+//																			//
+//								SortByIntensity								//
+//																			//
+//////////////////////////////////////////////////////////////////////////////
+// Function for the ArrayList to sort brightest first.
+
+TEST ( SortByIntensity, Valid )
 {
 	image_processing::Blob b1;
 	image_processing::Blob b2;

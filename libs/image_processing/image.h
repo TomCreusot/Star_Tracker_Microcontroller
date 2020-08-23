@@ -5,20 +5,17 @@
  */
 
 #pragma once
+#include <cmath>
+#include "libs/properties/properties.h"
 #include "libs/util/util.h"
 #include "libs/util/array_list.h"
 
 using namespace util;
+using namespace properties;
 
 /// @namespace image_processing	This is designed to peform blob detection on an image.
 namespace image_processing
 {
-
-	/// The maximum width of the image, set this before release.
-	static const uint kImageWidthMax = 2000;
-	/// The maximum height of the image, set this before release.
-	static const uint kImageHeightMax = 2000;
-
 /**
  *	@brief	Stores an 8 bit image and peforms thresholding for blob detection.
  *
@@ -39,13 +36,14 @@ namespace image_processing
  *
  *	@author	Tom Creusot
  */
+
 class Image
 {
 private:
 	/// The current dimentions of the image.
 	uint width, height;
 	/// The image.
-	byte image[kImageHeightMax][kImageWidthMax];
+	byte image[Properties::kImageWidth][Properties::kImageHeight];
 
 
 public:
@@ -88,6 +86,22 @@ public:
 	 */
 
 	uint GetHeight 	( ) const;
+
+
+
+	/**
+	 * @brief	The maximum height of the image.
+	 * @return	The maximum height of the image.
+	 */
+	static const uint MaxHeight	( );
+
+	/**
+	* @brief	The maximum width of the image.
+	* @return	The maximum width of the image.
+	*/
+	static const uint MaxWidth	( );
+
+
 
 
 	/**
@@ -173,16 +187,15 @@ public:
 	uint PercentThreshold ( decimal aggression, ArrayList<uint, N>& histogram )
 	{
 		// Finds where the cutoff is (inclusive).
-		uint threshold = (uint)((decimal)width * (decimal)height * aggression);
+		uint threshold = lround((decimal)width * (decimal)height * aggression);
 		uint current = 0;
 		uint i = 0;
 		while ( current + histogram.Get(i) < threshold && i < histogram.Size() )
 		{
 			current += histogram.Get(i);
-			// cout << current << "  " << threshold << endl;
 			i++;
 		}
-		return 255 * i / histogram.Size();
+		return lround(255.0 * (decimal)i / (decimal)histogram.Size());
 	}
 
 

@@ -6,8 +6,8 @@ Image::Image			( )
 {
 	// Sets all pixels to 0 incase of a resize and sets the size to 0.
 	width = height = 0;
-	for ( uint xx = 0; xx < kImageWidthMax; xx++ )
-		for ( uint yy = 0; yy < kImageHeightMax; yy++ ) image[yy][xx] = 0;
+	for ( uint xx = 0; xx < MaxWidth(); xx++ )
+		for ( uint yy = 0; yy < MaxHeight(); yy++ ) image[yy][xx] = 0;
 }
 
 
@@ -16,9 +16,9 @@ Image::Image			( uint w, uint h )
 	// Sets all pixels to 0 incase of a resize and sets the size to the specified size.
 	width = w;
 	height = h;
-	for ( uint yy = 0; yy < kImageHeightMax; yy++ )
+	for ( uint yy = 0; yy < MaxHeight(); yy++ )
 	{
-		for ( uint xx = 0; xx < kImageWidthMax; xx++ )	image[yy][xx] = 0;
+		for ( uint xx = 0; xx < MaxWidth(); xx++ )	image[yy][xx] = 0;
 	}
 }
 
@@ -40,6 +40,12 @@ uint Image::GetWidth	( ) const { return width;  }
 uint Image::GetHeight	( ) const { return height; }
 
 
+const uint Image::MaxWidth	( )	{	return Properties::kImageWidth;		}
+const uint Image::MaxHeight	( )	{	return Properties::kImageHeight;	}
+
+
+
+
 byte Image::GetPixel	( uint x, uint y ) const		{ return image[y][x];  }
 void Image::SetPixel	( uint x, uint y, byte color ) 	{ image[y][x] = color; }
 
@@ -57,7 +63,7 @@ bool Image::ValidPixel	( uint x, uint y ) const
 void Image::SetWidthHeight ( uint w, uint h )
 {
 	// Sets the width and height of the image.
-	if ( w <= kImageWidthMax && h <= kImageHeightMax )
+	if ( w <= MaxWidth() && h <= MaxHeight() )
 	{
 		width = w; height = h;
 	}

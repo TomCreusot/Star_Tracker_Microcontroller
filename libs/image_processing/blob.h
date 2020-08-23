@@ -71,19 +71,38 @@ public:
 
 public:
 	/**
+	* @brief		Default Constructor.
+	* @details		Sets everything to 0.
+	*/
+
+	Blob					( );
+
+
+	/**
+	* @brief Creates a blob at the position provided.
+	* @param x The initial x position.
+	* @param y The initial y position.
+	*/
+
+	Blob 					( uint x, uint y );
+
+
+
+
+	/**
 	 * @brief							Peforms grassfire blob detection on the desired image.
 	 * @param threshold 	[in]		What the intensity must be above to qualify as a blob. (0 means 1 qualifies).
 	 * @param img			[in/out]	The image to examine.
 	 * @param list			[out]		The list to append to.
 	 *
-	 * @tparam N1			The size of the array list "list".
-	 * @tparam N2			The max size of a "blob".
+	 * @tparam NL			The size of the array list "list".
+	 * @tparam NB			The max size of a "blob".
 	 *
 	 * @details	Calls Blob.grassfire which deletes all pixels considered a blob.
 	 */
 
-	template<const uint N1, const uint N2>
-	static void FindBlobs ( byte threshold, Image* img, ArrayList<Blob, N1>* list )
+	template<const uint NL, const uint NB>
+	static void FindBlobs ( byte threshold, Image* img, ArrayList<Blob, NL>* list )
 	{
 		for ( uint y = 0; y < img->GetHeight(); y++ )
 		{
@@ -93,7 +112,7 @@ public:
 				if ( img->GetPixel(x, y) > threshold )
 				{
 					Blob blob(x, y);
-					blob.SpreadGrassFire<N2> ( threshold, img );
+					blob.SpreadGrassFire<NB> ( threshold, img );
 					list->PushBack(blob);
 				}
 			}
@@ -101,50 +120,12 @@ public:
 	}
 
 
-	/**
-	 * @brief		Default Constructor.
-	 * @details		Sets everything to 0.
-	 */
-
-	Blob					( );
-
-
-	/**
-	 * @brief Creates a blob at the position provided.
-	 * @param x The initial x position.
-	 * @param y The initial y position.
-	 */
-
-	Blob 					( uint x, uint y );
-
-
-
-
-	// /// @return The number of pixels in the blob.
-	// uint 	inline	get_pixels			( ) const	{ return pixels;		}
-	// /// @return The intensity of all the pixels added together.
-	// uint 	inline 	get_intensity		( ) const	{ return intensity;		}
-	// /// @return The actual center of the blob x.
-	// decimal	inline	get_centroid_x		( ) const	{ return centroid.x;	}
-	// /// @return The actual center of the blob y.
-	// decimal	inline	get_centroid_y		( ) const	{ return centroid.y;	}
-	// /// @return The left of the blob.
-	// decimal inline	get_origin_x		( ) const	{ return origin.x;		}
-	// /// @return The top of the blob.
-	// decimal inline	get_origin_y		( ) const	{ return origin.y;		}
-	//
-	// /// @return The bounding width of the blob.
-	// uint	inline	get_width			( ) const	{ return width;			}
-	// /// @return The bounding height of the blob.
-	// uint	inline	get_height			( )	const	{ return height;		}
-
-
 
 	/**
 	 * @brief	Uses the grass fire method to find the true bounds of the blob.
 	 * Sets any used pixels to 0.
 	 *
-	 * @param threshold			The brightness cut off (0 means will allow 1).
+	 * @param threshold			The brightness cut off (exclusive).
 	 * @param img		[out]	The image to examine SETS ALL USED PIXELS TO 0.
 	 *
 	 * @tparam	N				The max size of a blob.
@@ -163,18 +144,19 @@ public:
 		while ( !q.IsEmpty() )
 		{
 			util::Point<util::uint> pt = q.PopBack();
-			if(img->ValidPixel(pt.x, pt.y)&&img->GetPixel(pt.x, pt.y)>threshold)
+			if(img->ValidPixel(pt.x,pt.y)&&img->GetPixel(pt.x,pt.y)>threshold)
 			{	// 4 directional
 
 				q.PushBack(util::Point<uint>(pt.x + 1, pt.y));
 				q.PushBack(util::Point<uint>(pt.x - 1, pt.y));
 				q.PushBack(util::Point<uint>(pt.x, pt.y + 1));
 				q.PushBack(util::Point<uint>(pt.x, pt.y - 1));
+
 				// Diagonals
-				q.PushBack(util::Point<uint>(pt.x - 1, pt.y - 1));
+			/*	q.PushBack(util::Point<uint>(pt.x - 1, pt.y - 1));
 				q.PushBack(util::Point<uint>(pt.x - 1, pt.y + 1));
 				q.PushBack(util::Point<uint>(pt.x + 1, pt.y - 1));
-				q.PushBack(util::Point<uint>(pt.x + 1, pt.y + 1));
+				q.PushBack(util::Point<uint>(pt.x + 1, pt.y + 1));*/
 
 
 				minX 		= (pt.x < minX ? pt.x : minX);
@@ -213,8 +195,8 @@ public:
 	 * @return			The new center of mass.
 	 */
 
-	decimal FindCentroid ( decimal centroid, uint intense,
-											 uint point, byte weight );
+	static decimal FindCentroid ( decimal centroid, uint intense,
+													uint point, byte weight );
 
 
 

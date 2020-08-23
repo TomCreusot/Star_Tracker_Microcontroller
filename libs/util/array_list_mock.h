@@ -27,11 +27,11 @@ namespace util
  *		list.Get(1);
  *		list.Get(0);
  *		list.PopBack();
- *		cout << push_list.Get(0) << endl; // 10
- *		cout << push_list.Get(0) << endl; // 20
- *		cout << get_list.Get(0) << endl; // 1
- *		cout << get_list.Get(0) << endl; // 0
- *		cout << pop_list.Get(0) << endl; // 20
+ *		cout << list.push_list.Get(0) << endl; // 10
+ *		cout << list.push_list.Get(0) << endl; // 20
+ *		cout << list.get_list.Get(0) << endl; // 1
+ *		cout << list.get_list.Get(0) << endl; // 0
+ *		cout << list.pop_list.Get(0) << endl; // 20
  */
 
 template <class T, const int N, const int N2>

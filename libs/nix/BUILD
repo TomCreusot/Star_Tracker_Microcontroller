@@ -59,14 +59,14 @@ cc_library(
 
 
 cc_library(
-	name = "properties",
-	srcs = ["properties.cc"],
-	hdrs = ["properties.h"],
+	name = "config",
+	srcs = ["config.cc"],
+	hdrs = ["config.h"],
 	deps = ["//libs/util:util"]
 )
 
 cc_test(
-	name = "properties_test",
-	srcs = ["properties_test.cc"],
-	deps = [":properties", "@gtest//:gtest_main"]
+	name = "config_test",
+	srcs = ["config_test.cc"],
+	deps = [":config", "@gtest//:gtest_main"]
 )

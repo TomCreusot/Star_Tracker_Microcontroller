@@ -2,12 +2,11 @@
 
 #include "gtest/gtest.h"
 #include "array_list.h"
-#include "point.h"
 
 using namespace util;
 using namespace std;
 
-TEST		( DefaultConstructor, WithPrimative )
+TEST		( DefaultConstructor, Int )
 {
 	util::ArrayList<int, 10> list;
 	EXPECT_EQ(list.Size(), 0);
@@ -16,7 +15,7 @@ TEST		( DefaultConstructor, WithPrimative )
 }
 
 
-TEST		( DefaultConstructor, WithObject )
+TEST		( DefaultConstructor, String )
 {
 	util::ArrayList<string, 0> list;
 	EXPECT_EQ(list.Size(), 0);
@@ -26,7 +25,7 @@ TEST		( DefaultConstructor, WithObject )
 
 
 
-TEST		( AlternateConstructor, WithPrimative )
+TEST		( AlternateConstructor, Int )
 {
 	util::ArrayList<int, 4> list(3);
 	EXPECT_EQ(list.Size(), 3);
@@ -38,7 +37,7 @@ TEST		( AlternateConstructor, WithPrimative )
 }
 
 
-TEST		( AlternateConstructor, WithObject )
+TEST		( AlternateConstructor, String )
 {
 	util::ArrayList<string, 10> list(3);
 	EXPECT_EQ(list.Size(), 3);
@@ -53,7 +52,7 @@ TEST		( AlternateConstructor, WithObject )
 
 
 
-TEST		( CopyConstructor, WithPrimative )
+TEST		( CopyConstructor, Int )
 {
 	util::ArrayList<int, 10> list;
 	list.PushBack(1);
@@ -69,7 +68,7 @@ TEST		( CopyConstructor, WithPrimative )
 }
 
 
-TEST		( CopyConstructor, WithObject )
+TEST		( CopyConstructor, String )
 {
 	util::ArrayList<string, 10> list;
 	list.PushBack("a");
@@ -95,7 +94,7 @@ TEST		( CopyConstructor, WithObject )
 
 
 
-TEST		( Empty_Full_Size_MaxSize, Valid )
+TEST		( Empty_Full_Size_MaxSize, Int )
 {
 	util::ArrayList<int, 3> list;
 	EXPECT_EQ(list.Size(), 0);
@@ -120,8 +119,23 @@ TEST		( Empty_Full_Size_MaxSize, Valid )
 }
 
 
+TEST		( Empty_Full_Size_MaxSize, String )
+{
+	util::ArrayList<string, 1> list;
+	EXPECT_EQ(list.Size(), 0);
+	EXPECT_TRUE(list.IsEmpty());
+	EXPECT_FALSE(list.IsFull());
 
-TEST 		( ReduceSize, WhenGreater)
+	list.PushBack("0");
+	EXPECT_FALSE(list.IsEmpty());
+	EXPECT_TRUE(list.IsFull());
+	EXPECT_EQ(list.Size(), 1);
+}
+
+
+
+
+TEST 		( ReduceSize, WhenGreater_Int )
 {
 	util::ArrayList<int, 5> list;
 	list.PushBack(1);
@@ -139,7 +153,7 @@ TEST 		( ReduceSize, WhenGreater)
 }
 
 
-TEST 		( ReduceSize, WhenValid)
+TEST 		( ReduceSize, WhenValid_Int )
 {
 	util::ArrayList<int, 10> list;
 	list.PushBack(1);
@@ -156,7 +170,15 @@ TEST 		( ReduceSize, WhenValid)
 }
 
 
-
+TEST		( ReduceSize, String )
+{
+	util::ArrayList<string, 3> list;
+	list.PushBack("1");
+	list.PushBack("2");
+	list.ReduceSize(1);
+	EXPECT_EQ(list.Size(), 1);
+	EXPECT_FALSE(list.IsEmpty());
+}
 
 
 
@@ -168,7 +190,7 @@ TEST 		( ReduceSize, WhenValid)
 
 
 
-TEST		( PushBack,  Standard_WhenFull )
+TEST		( PushBack,  Int )
 {
 	util::ArrayList<int, 100> list;
 
@@ -187,7 +209,26 @@ TEST		( PushBack,  Standard_WhenFull )
 }
 
 
-TEST		( PopBack, Valid )
+TEST		( PushBack,  String )
+{
+	util::ArrayList<string, 100> list;
+
+	for ( uint i = 0; i < 100; i++ )
+	EXPECT_TRUE(list.PushBack("1"));
+
+	EXPECT_TRUE(list.IsFull());
+	EXPECT_FALSE(list.IsEmpty());
+	EXPECT_EQ(list.Size(), 100);
+
+	EXPECT_FALSE(list.PushBack("2"));
+
+	EXPECT_TRUE(list.IsFull());
+	EXPECT_FALSE(list.IsEmpty());
+	EXPECT_EQ(list.Size(), 100);
+}
+
+
+TEST		( PopBack, Int )
 {
 	const int size = 5;
 	util::ArrayList<int, size> list;
@@ -202,7 +243,7 @@ TEST		( PopBack, Valid )
 }
 
 
-TEST		( PopBack, WhenEmpty )
+TEST		( PopBack, Int_WhenEmpty )
 {
 	const int size = 5;
 	util::ArrayList<int, size> list;
@@ -215,7 +256,7 @@ TEST		( PopBack, WhenEmpty )
 }
 
 
-TEST		( PopBack, WhenFull )
+TEST		( PopBack, Int_WhenFull )
 {
 	const int size = 5;
 	util::ArrayList<int, size> list;
@@ -228,13 +269,23 @@ TEST		( PopBack, WhenFull )
 }
 
 
+TEST		( PopBack,  String )
+{
+	util::ArrayList<string, 100> list;
+	list.PushBack("1");
+
+	EXPECT_EQ(list.PopBack()[0], '1');
+	EXPECT_EQ(list.Size(), 0);
+}
+
+
 /*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*\
 |																	|
 |							---- Other ----							|
 |																	|
 \*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*/
 
-TEST		( Operator, Valid )
+TEST		( Operator, Int )
 {
 	const int size = 100;
 	util::ArrayList<int, size> list;
@@ -247,6 +298,14 @@ TEST		( Operator, Valid )
 	}
 }
 
+TEST		( Operator, String )
+{
+	const int size = 100;
+	util::ArrayList<string, size> list;
+	list.PushBack("1");
+	EXPECT_EQ(list.Get(0)[0], '1');
+}
+
 
 
 
@@ -257,22 +316,27 @@ TEST		( Operator, Valid )
 
 
 // Sort
-bool sortDecending ( int& a, int& b )
+bool SortDecending ( float& a, float& b )
 {
 	return a >= b;
 }
 
 
-bool sortAscending ( Point<int>& a, Point<int>& b )
+bool SortAscending ( string& a, string& b )
 {
-	return a.x <= b.x;
+	return a[0] <= b[0];
+}
+
+bool SortAscending ( float& a, float& b )
+{
+	return a <= b;
 }
 
 
-TEST		( SortList, WithPrimative )
+TEST		( SortList, Int )
 {
 	const int size = 10;
-	util::ArrayList<int, size> input;
+	util::ArrayList<float, size> input;
 	input.PushBack(3);
 	input.PushBack(1);
 	input.PushBack(0);
@@ -280,51 +344,241 @@ TEST		( SortList, WithPrimative )
 	input.PushBack(2);
 	input.PushBack(4);
 	input.PushBack(1);
-	input.Sort(&sortDecending);
+	input.Sort(&SortDecending);
 
-	EXPECT_EQ(input.Get(0), 5);
-	EXPECT_EQ(input.Get(1), 4);
-	EXPECT_EQ(input.Get(2), 3);
-	EXPECT_EQ(input.Get(3), 2);
-	EXPECT_EQ(input.Get(4), 1);
-	EXPECT_EQ(input.Get(5), 1);
-	EXPECT_EQ(input.Get(6), 0);
-	EXPECT_EQ(input.Size(), 7);
+	EXPECT_FLOAT_EQ(input.Get(0), 5);
+	EXPECT_FLOAT_EQ(input.Get(1), 4);
+	EXPECT_FLOAT_EQ(input.Get(2), 3);
+	EXPECT_FLOAT_EQ(input.Get(3), 2);
+	EXPECT_FLOAT_EQ(input.Get(4), 1);
+	EXPECT_FLOAT_EQ(input.Get(5), 1);
+	EXPECT_FLOAT_EQ(input.Get(6), 0);
+	EXPECT_FLOAT_EQ(input.Size(), 7);
 }
 
 
 
 
-
-
-
-
-
-
-
-TEST		( SortList, WithObjects )
+TEST		( SortList, String )
 {
 	const int size = 10;
 
-	Point<int> e1(0, 0);
-	Point<int> e2(1, 0);
-	Point<int> e3(2, 0);
-	Point<int> e4(3, 0);
-	Point<int> e5(5, 0);
+	string e1 = "1";
+	string e2 = "2";
+	string e3 = "3";
+	string e4 = "4";
+	string e5 = "5";
 
 
-	util::ArrayList<Point<int>, size> input;
+	util::ArrayList<string, size> input;
 	input.PushBack(e4);
 	input.PushBack(e1);
 	input.PushBack(e5);
 	input.PushBack(e3);
 	input.PushBack(e2);
-	input.Sort(&sortAscending);
+	input.Sort(&SortAscending);
 
-	ASSERT_EQ(input.Get(0).x, 0);
-	ASSERT_EQ(input.Get(1).x, 1);
-	ASSERT_EQ(input.Get(2).x, 2);
-	ASSERT_EQ(input.Get(3).x, 3);
-	ASSERT_EQ(input.Get(4).x, 5);
+	ASSERT_EQ(input.Get(0)[0], '1');
+	ASSERT_EQ(input.Get(1)[0], '2');
+	ASSERT_EQ(input.Get(2)[0], '3');
+	ASSERT_EQ(input.Get(3)[0], '4');
+	ASSERT_EQ(input.Get(4)[0], '5');
 	ASSERT_EQ(input.Size(), 5);
+}
+
+/*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*\
+|																	|
+|							---- Slot ----							|
+|																	|
+\*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*/
+
+TEST ( Slot, Branch )
+{
+	// SlotFilling should always return true as it will fill.
+	// SlotFull if always sent smaller values will return false.
+	const uint size = 6;
+	util::ArrayList<float, size> input;
+	float to_slot = 5;
+	EXPECT_TRUE(input.Slot(0, size, to_slot, &SortAscending));
+	to_slot = 4;
+	EXPECT_TRUE(input.Slot(0, size, to_slot, &SortAscending));
+	to_slot = 3;
+	EXPECT_TRUE(input.Slot(0, size, to_slot, &SortAscending));
+	to_slot = 2;
+	EXPECT_TRUE(input.Slot(0, size, to_slot, &SortAscending));
+	to_slot = 1;
+	EXPECT_TRUE(input.Slot(0, size, to_slot, &SortAscending));
+	to_slot = 0;
+	EXPECT_TRUE(input.Slot(0, size, to_slot, &SortAscending));
+
+	EXPECT_EQ(input.Size(), size);
+	// Full
+	to_slot = -1;
+	EXPECT_FALSE(input.Slot(0, size, to_slot, &SortAscending));
+	to_slot = -2;
+	EXPECT_FALSE(input.Slot(0, size, to_slot, &SortAscending));
+	to_slot = 1;	// Should Insert
+	EXPECT_TRUE(input.Slot(0, size, to_slot, &SortAscending));
+	to_slot = 10;	// Should Insert
+	EXPECT_TRUE(input.Slot(0, size, to_slot, &SortAscending));
+	to_slot = 100;	// Should Insert
+	EXPECT_TRUE(input.Slot(size - 1, size, to_slot, &SortAscending));
+	to_slot = 10;	// Should Insert
+	EXPECT_FALSE(input.Slot(size - 1, size, to_slot, &SortAscending));
+}
+
+/*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*\
+|																	|
+|						---- SlotFilling ----						|
+|																	|
+\*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*/
+
+TEST ( SlotFilling, Ascending )
+{
+	// In ascending it is always adding to the front.
+	const uint size = 6;
+	util::ArrayList<float, size> input;
+	input.PushBack(0);
+
+	float to_slot = 1;
+	bool outcome = input.SlotFilling ( 1, size, to_slot, &SortAscending );
+
+	to_slot = 3;
+	outcome &= input.SlotFilling ( 1, size, to_slot, &SortAscending );
+
+	to_slot = 5;
+	outcome &= input.SlotFilling ( 1, size, to_slot, &SortAscending );
+
+	to_slot = 7;
+	outcome &= input.SlotFilling ( 1, size, to_slot, &SortAscending );
+
+	to_slot = 11;
+	outcome &= input.SlotFilling ( 1, size, to_slot, &SortAscending );
+
+	EXPECT_TRUE(outcome);
+	EXPECT_FLOAT_EQ(input.Get(0), 0);
+	EXPECT_FLOAT_EQ(input.Get(1), 1);
+	EXPECT_FLOAT_EQ(input.Get(2), 3);
+	EXPECT_FLOAT_EQ(input.Get(3), 5);
+	EXPECT_FLOAT_EQ(input.Get(4), 7);
+	EXPECT_FLOAT_EQ(input.Get(5), 11);
+	EXPECT_EQ(input.Size(), size);
+}
+
+
+TEST ( SlotFilling, Random )
+{
+	// In ascending it is always adding to the front.
+	const uint size = 5;
+	util::ArrayList<float, size> input;
+
+	float to_slot = 5;
+	bool outcome = input.SlotFilling ( 0, size, to_slot, &SortAscending );
+
+	to_slot = 11;
+	outcome &= input.SlotFilling ( 0, size, to_slot, &SortAscending );
+
+	to_slot = 7;
+	outcome &= input.SlotFilling ( 0, size, to_slot, &SortAscending );
+
+	to_slot = 1;
+	outcome &= input.SlotFilling ( 0, size, to_slot, &SortAscending );
+
+	to_slot = 3;
+	outcome &= input.SlotFilling ( 0, size, to_slot, &SortAscending );
+
+	EXPECT_TRUE(outcome);
+	EXPECT_FLOAT_EQ(input.Get(0), 1);
+	EXPECT_FLOAT_EQ(input.Get(1), 3);
+	EXPECT_FLOAT_EQ(input.Get(2), 5);
+	EXPECT_FLOAT_EQ(input.Get(3), 7);
+	EXPECT_FLOAT_EQ(input.Get(4), 11);
+	EXPECT_EQ(input.Size(), size);
+}
+
+
+
+/*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*\
+|																	|
+|						---- SlotFull ----							|
+|																	|
+\*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*/
+
+TEST ( SlotFull, Bounds )
+{
+	const uint size = 10;
+	util::ArrayList<float, size> input;
+	input.PushBack(1);	// 0
+	input.PushBack(5);	// 1 First Element
+	input.PushBack(10);	// 2
+	input.PushBack(15);	// 3
+	input.PushBack(25);	// 4
+	input.PushBack(30);	// 5
+
+	// LOWER BOUNDS
+	// Not Big Enough
+	float to_slot = 2;
+	bool outcome = input.SlotFull ( 1, input.Size(), to_slot, &SortAscending );
+	EXPECT_FALSE(outcome);
+	EXPECT_FLOAT_EQ(input.Get(0), 1);
+	EXPECT_FLOAT_EQ(input.Get(1), 5);
+	EXPECT_FLOAT_EQ(input.Get(2), 10);
+
+	// Big Enough
+	to_slot = 6;
+	outcome = input.SlotFull ( 1, input.Size(), to_slot, &SortAscending );
+	EXPECT_TRUE(outcome);
+	EXPECT_FLOAT_EQ(input.Get(0), 1);
+	EXPECT_FLOAT_EQ(input.Get(1), 6);
+	EXPECT_FLOAT_EQ(input.Get(2), 10);
+
+
+	// UPPER BOUNDS
+	// not to end
+	to_slot = 35;
+	outcome = input.SlotFull ( 1, input.Size() - 1, to_slot, &SortAscending );
+	EXPECT_TRUE(outcome);
+	EXPECT_FLOAT_EQ(input.Get(0), 1);
+	EXPECT_FLOAT_EQ(input.Get(1), 10);
+	EXPECT_FLOAT_EQ(input.Get(2), 15);
+	EXPECT_FLOAT_EQ(input.Get(3), 25);
+	EXPECT_FLOAT_EQ(input.Get(4), 35);
+	EXPECT_FLOAT_EQ(input.Get(5), 30);
+
+	// to end
+	to_slot = 55;
+	outcome = input.SlotFull ( 1, input.Size(), to_slot, &SortAscending );
+	EXPECT_TRUE(outcome);
+	EXPECT_FLOAT_EQ(input.Get(0), 1);
+	EXPECT_FLOAT_EQ(input.Get(1), 15);
+	EXPECT_FLOAT_EQ(input.Get(2), 25);
+	EXPECT_FLOAT_EQ(input.Get(3), 35);
+	EXPECT_FLOAT_EQ(input.Get(4), 30);
+	EXPECT_FLOAT_EQ(input.Get(5), 55);
+	EXPECT_EQ(input.Size(), 6);
+}
+
+
+TEST ( SlotFull, Middle )
+{
+	const uint size = 10;
+	util::ArrayList<float, size> input;
+	input.PushBack(1);	// 0
+	input.PushBack(5);	// 1 First Element
+	input.PushBack(10);	// 2
+	input.PushBack(15);	// 3
+	input.PushBack(25);	// 4
+	input.PushBack(30);	// 5
+
+	float to_slot = 13;
+	bool outcome = input.SlotFull(1, input.Size() - 2, to_slot, &SortAscending);
+	EXPECT_TRUE(outcome);
+	EXPECT_FLOAT_EQ(input.Get(0), 1);
+	EXPECT_FLOAT_EQ(input.Get(1), 10);
+	EXPECT_FLOAT_EQ(input.Get(2), 13);
+	EXPECT_FLOAT_EQ(input.Get(3), 15);
+	EXPECT_FLOAT_EQ(input.Get(4), 25);
+	EXPECT_FLOAT_EQ(input.Get(5), 30);
+	EXPECT_EQ(input.Size(), 6);
+
 }

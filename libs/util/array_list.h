@@ -5,6 +5,7 @@
  */
 
 #pragma once
+#include <iostream>
 namespace util
 {
 
@@ -109,7 +110,7 @@ public:
 	 * @returns The maximum size the array can store.
 	 */
 
-	/*inline*/ constexpr int MaxSize ( )
+	/*inline*/ constexpr uint MaxSize ( )
 	{
 		return N;
 	}
@@ -224,6 +225,102 @@ public:
 			}
 			array[jj] = temp;
 		}
+	}
+
+
+
+	/**
+	 * @brief	Either calls SlotFilling or SlotFull if the area is full or not.
+	 * @param min_index	The inclusive start of the area to slot.
+	 * @param max_index The exclusive end of the area to slot.
+	 * @param to_slot	The element to slot.
+	 * @param in_order	The sorting method.
+	 * @return If the element was inserted.
+	 */
+
+	bool Slot (	uint min_index, uint max_index,
+				T& to_slot, bool (*in_order)(T&, T&) )
+	{
+		if ( max_index <= Size() )
+		{
+			return SlotFull(min_index, max_index, to_slot, in_order);
+		}
+		else
+		{
+			return SlotFilling(min_index, max_index, to_slot, in_order);
+		}
+	}
+
+	/**
+	 * @brief	Fills a section of a list in order by shifting everything right.
+	 * @param min_index	[in]	The lower end of the array to use (inclusive).
+	 * @param max_index [in]	The higher end of the array to use (exclusive).
+	 * @param to_slot	[in]	The element to insert.
+	 * @param in_order	[in]	The sorting method.
+	 * @return	True.
+	 */
+
+	bool SlotFilling (	uint min_index, uint max_index,
+						T& to_slot, bool (*in_order)(T&, T&) )
+	{
+		for ( uint ii = min_index; ii < max_index && ii < Size(); ii++ )
+		{
+			bool left_curr = in_order(to_slot, Get(ii));
+			if ( left_curr )
+			{
+				T to_insert = to_slot;
+				for ( uint jj = ii; jj < max_index && jj < Size(); jj++ )
+				{
+					T to_move = Get(jj);
+					Get(jj) = to_insert;
+					to_insert = to_move;
+				}
+				PushBack(to_insert);
+				return true;
+			}
+		}
+		PushBack(to_slot);
+		return true;
+	}
+
+	/**
+	 * @brief	Slots an element into the list so it is in sorted order by shifting everything left.
+	 * @param min_index	[in]	The lower end of the array to use (inclusive).
+	 * @param max_index [in]	The higher end of the array to use (exclusive).
+	 * @param to_slot	[in]	The element to insert.
+	 * @param in_order	[in]	The sorting method.
+	 * @return					If the element was inserted.
+	 */
+
+	bool SlotFull ( uint min_index, uint max_index,
+					T& to_slot, bool (*in_order)(T&, T&) )
+	{
+		// The element is too small/big and it falls off the list at the start.
+		if ( in_order(to_slot, Get(min_index)) )
+		{
+			return false;
+		}
+		// It is inserted.
+		for ( uint ii = min_index + 1; ii <= max_index; ii++ )
+		{
+			bool right_prev = in_order(Get(ii - 1), to_slot);
+			bool left_curr = in_order(to_slot, Get(ii)) || ii == max_index;
+			// To insert element, everything must be shifted left.
+			if ( right_prev && left_curr )
+			{
+				// Shift everything back.
+				T to_insert = to_slot;
+				// using int instead of uint as int(-1) > uint(0) ?
+				for ( int jj = ii - 1; jj >= (int)min_index; jj-- )
+				{
+					T to_move = Get(jj);
+					Get(jj) = to_insert;
+					to_insert = to_move;
+				}
+				return true;
+			}
+		}
+		return false;
 	}
 };
 }

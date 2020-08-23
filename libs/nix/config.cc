@@ -1,10 +1,10 @@
 #include <iostream>
-#include "properties.h"
+#include "config.h"
 
 namespace nix
 {
 
-void Properties::ReadFile ( string file )
+void Config::ReadFile ( string file )
 {
 	string line;
 	ifstream fileStrm;
@@ -25,31 +25,43 @@ void Properties::ReadFile ( string file )
 }
 
 
-void Properties::Add			( string name, string value )
+void Config::Add			( string name, string value )
 {
 	hash.insert(pair<string, string>(name, value));
 }
 
 
-int Properties::GetInteger		( string name )
+int Config::GetInteger		( string name )
 {
+	if ( hash.count(name) == 0 )
+	{
+		PrintError(name);
+	}
 	return std::stoi(hash[name]);
 }
 
-decimal Properties::GetDecimal 	( string name )
+decimal Config::GetDecimal 	( string name )
 {
+	if ( hash.count(name) == 0 )
+	{
+		PrintError(name);
+	}
 	return std::stof(hash[name]);
 }
 
-string Properties::GetString 	( string name )
+string Config::GetString 	( string name )
 {
+	if ( hash.count(name) == 0 )
+	{
+		PrintError(name);
+	}
 	return string(hash[name]);
 }
 
 
 
 
-void Properties::ConvertString ( string& str, char* array )
+void Config::ConvertString ( string& str, char* array )
 {
 	for ( uint i = 0; i < str.length(); i++ ) array[i] = str[i];//str.c_str()[i];
 	array[str.length()] = '\0';
@@ -59,7 +71,7 @@ void Properties::ConvertString ( string& str, char* array )
 
 
 
-void Properties::RemoveAfterComment( string* line )
+void Config::RemoveAfterComment( string* line )
 {
 	bool found = false;
 	for ( uint i = 0; i < line->length() && !found; i++ )
@@ -73,7 +85,7 @@ void Properties::RemoveAfterComment( string* line )
 }
 
 
-void Properties::RemoveTabsSpaces ( string* line )
+void Config::RemoveTabsSpaces ( string* line )
 {
 	string comp;
 	for ( uint i = 0; i < line->length(); i++ )
@@ -86,7 +98,7 @@ void Properties::RemoveTabsSpaces ( string* line )
 
 
 
-bool Properties::SeparateNameValue ( string& line, string* name, string* value )
+bool Config::SeparateNameValue ( string& line, string* name, string* value )
 {
 	bool found = false;
 	for ( uint i = 0; i < line.length(); i++ )
@@ -101,7 +113,13 @@ bool Properties::SeparateNameValue ( string& line, string* name, string* value )
 }
 
 
-
+inline void Config::PrintError ( string name )
+{
+	const string red_font = "\033[0;31m";
+	const string red_highlight = "\e[41m";
+	const string default_font = "\x1B[0m";
+	cout << red_highlight << "ERROR, invalid key: " << name << default_font << endl;
+}
 
 
 }

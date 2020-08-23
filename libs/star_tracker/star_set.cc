@@ -1,132 +1,124 @@
 #include "star_set.h"
 namespace star_tracker
 {
-util::decimal StarSet::fov = 10;
-util::decimal StarSet::pixel_resolution = 800; // 480x640
+
+//////////////////////////////////////////////////////////////////////////////
+//																			//
+//						------	Constructors	------						//
+//																			//
+//////////////////////////////////////////////////////////////////////////////
 
 StarSet::StarSet ( )
 {
-	angle	= 0;
-	opposite	= util::Point<decimal>(0, 0);
-	pixel	= NULL;
-	odds	= 1;
-	distance = 0;
-}
-
-StarSet::StarSet ( StarSet& px )
-{
-	angle 		= px.angle;
-	opposite	= px.opposite;
-	odds 		= px.odds;
-	distance 	= px.distance;
-	orientation = px.orientation;
+	area		= 0;
+	moment 		= 0;
+	position	= util::Point<decimal>(0, 0);
+	pixel		= NULL;
+	vote		= 1;
 }
 
 
-
-StarSet::StarSet (	Point<decimal>& p,
-					Point<decimal>& s1, Point<decimal>& s2, Point<decimal>& s3 )
+// Distance only
+StarSet::StarSet ( Point<decimal> pos, decimal area, decimal moment )
 {
-	//Point<decimal> pilot = p;
-	Point<decimal> o1 = s1;
-	Point<decimal> other = s2;
-	Point<decimal> opposite = s3;
+	this->area		= area;
+	this->moment	= moment;
+	this->position	= pos;
+	this->pixel 	= NULL;
+	this->vote 		= 1;
+}
 
-	// Makes opposite the opposite.
-	SortDistance(p, &o1, &opposite);
-	SortDistance(p, &other, &opposite);
 
-	// Makes other the farthest from opposite.
-	SortDistance(opposite, &o1, &other);
 
-	angle = FindAngle(o1, other, opposite);
-	distance = opposite.Distance(other);
-
-	this->opposite = opposite;
-	pixel	= NULL;
-	odds	= 1;
+StarSet::StarSet ( const StarSet& px )
+{
+	area		= px.area;
+	moment		= px.moment;
+	position	= px.position;
+	pixel		= NULL;
+	vote		= px.vote;
 }
 
 
 
 
 
-void StarSet::FindCenter	 (	decimal fovPP,
-								Point<int>& size,
-								Point<decimal>* center )
+
+//////////////////////////////////////////////////////////////////////////////
+//																			//
+//						------	Core Functions	------						//
+//																			//
+//////////////////////////////////////////////////////////////////////////////
+/*
+Point<decimal> StarSet::FindCenter	 ( Point<int>& size )
 {
+	return Point<decimal>(0);
 	//decimal angle = orientation - pixel->orientation;
-}
+}*/
 
 
 
 
 
-void StarSet::ToArrayString	( string* str )
+
+
+
+//////////////////////////////////////////////////////////////////////////////
+//																			//
+//					------	Function Pointers	------						//
+//																			//
+//////////////////////////////////////////////////////////////////////////////
+
+
+
+decimal StarSet::CalcArea	( decimal a, decimal b, decimal c )
 {
-	for ( uint i = 0; i < kDatabaseNumElements; i++ )
-	{
-		switch ( i )
-		{
-			case kDatabaseIndexAngle:
-				*str += to_string(angle);
-				break;
-			case kDatabaseIndexDist:
-				*str += to_string(distance);
-				break;
-			case kDatabaseIndexOrientation:
-				*str += to_string(orientation);
-				break;
-			case kDatabaseIndexOppositeX:
-				*str += to_string(opposite.x);
-				break;
-			case kDatabaseIndexOppositeY:
-				*str += to_string(opposite.y);
-				break;
-		}
-		if ( i != kDatabaseNumElements - 1 ) *str += ", ";
-	}
+	decimal s = (a + b + c) / 2;
+	return std::sqrt(s * (s - a) * (s - b) * (s - c));
 }
 
-
-
-void StarSet::SortDistance	( 		Point<decimal>& pilot,
-									Point<decimal>* s1, Point<decimal>* s2	)
+decimal StarSet::CalcMoment	( decimal area, decimal a, decimal b, decimal c )
 {
-	if ( s1->Distance(pilot) > s2->Distance(pilot) )
-	{
-		Point<decimal> temp;
-		temp = *s1;
-		*s1 = *s2;
-		*s2 = temp;
-	}
+	return area * ( a * a + b * b + c * c ) / 36;
 }
 
-
-
-decimal StarSet::FindAngle ( 	Point<decimal>& center,
-								Point<decimal>& left, Point<decimal>& right )
+decimal StarSet::VoteSingle (	decimal area1, decimal area2,
+								decimal moment1, decimal moment2,
+								decimal toleranceArea, decimal toleranceMoment )
 {
-	if ( !(center.Equal(left)| center.Equal(right) || left.Equal(right)) )
-	{
-		decimal a = left.Distance(right);
-		decimal b = left.Distance(center);
-		decimal c = right.Distance(center);
-
-		decimal angle = acos((b * b + c * c - a * a) / (2 * b * c));
-		return angle;
-	}
-	else
-	{
-		return StarSet::kInvalidAngle;
-	}
+	decimal areaVote 	= 1 - fabs(area1 - area2) / toleranceArea;
+	decimal momentVote	= 1 - fabs(moment1 - moment2) / toleranceMoment;
+	return (areaVote + momentVote) / 2;
 }
 
-bool StarSet::SortByOdds ( StarSet& larger, StarSet& smaller )
+
+decimal StarSet::CartesianAngle (
+							Cartesian<decimal>& p1, Cartesian<decimal>& p2,
+							decimal rad_per_pixel )
 {
-	return larger.odds >= smaller.odds;
+	return p1.Distance(p2) * rad_per_pixel;
 }
 
 
+decimal StarSet::EquatorialAngle (
+							Equatorial<decimal>& p1, Equatorial<decimal>& p2,
+							decimal rad_per_pixel	)
+{
+	return p1.RadialDistance(p2);
+}
+
+
+
+
+
+bool StarSet::SortByVoteDecending ( StarSet& larger, StarSet& smaller )
+{
+	return larger.vote >= smaller.vote;
+}
+
+bool StarSet::SortByVoteAscending ( StarSet& larger, StarSet& smaller )
+{
+	return larger.vote <= smaller.vote;
+}
 
 }

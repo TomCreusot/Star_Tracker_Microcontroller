@@ -10,13 +10,28 @@ LIBS_DIR = libs
 
 
 run:
+	clear
+	reset
+	bazel build //libs:runtime_properties_generator
+	mv -f bazel-bin/libs/runtime_properties_generator ./$(OUT_DIR)/
+	cd $(OUT_DIR); ./runtime_properties_generator config.properties
+	@- rm -f /$(OUT_DIR)/runtime_properties_generator
+
 	bazel build //libs:demo
 	@- rm -f /$(OUT_DIR)/demo
 	mv -f bazel-bin/libs/demo ./$(OUT_DIR)/
-	cd out; ./demo config.properties
+	cd $(OUT_DIR); ./demo config.properties
+
+valgrind:
+	clear
+	reset
+	bazel run //libs:demo --config debug --run_under='valgrind --tool=massif'
+	# cd $(OUT_DIR); valgrind --leak-check=yes --track-origins=yes ./demo config.properties
 
 
 database:
+	clear
+	reset
 	bazel build //libs:database_generator
 	@- rm -f /$(OUT_DIR)/database_generator
 	mv -f bazel-bin/libs/database_generator ./$(OUT_DIR)/
@@ -24,17 +39,21 @@ database:
 
 
 docs: $(find $(DOCS_DIR) -type f) $(find $(LIBS_DIR) -type f)
+	clear
+	reset
 	rm $(DOCS_DIR)/latex/ -f -r
 	rm $(DOCS_DIR)/html/ -f -r
-	doxygen $(DOCS_DIR)/doxygen_config
+	sudo doxygen doxygen_config
 
 test:
+	clear
+	reset
 	@ echo $(fBold) $(fBRed)		util				$(fNorm)
 	bazel test //libs/util/... --test_output=all
 
 
 	@ echo $(fBold) $(fBRed)		star_tracker		$(fNorm)
-	# bazel test //libs/star_tracker/... --test_output=all
+	bazel test //libs/star_tracker/... --test_output=all
 
 
 	@ echo $(fBold) $(fBRed)		image_processing	$(fNorm)
@@ -44,14 +63,9 @@ test:
 	bazel test //libs/nix/... --test_output=all
 
 
-	# @ echo $(fBold) $(fBRed)		get_image			$(fNorm)
-	# @ bazel test //libs/get_image/... --test_output=all
-
-
-	# @ echo $(fBold) $(fBRed)		coms				$(fNorm)
-
-
 lcov:
+	clear
+	reset
 	@echo $(fBold) $(fBRed)\n		util		echo $(fNorm)
 	bazel coverage //libs/util/... --combined_report=lcov
 	lcov --l bazel-out/_coverage/_coverage_report.dat
@@ -73,17 +87,24 @@ lcov:
 	genhtml bazel-out/_coverage/_coverage_report.dat -o $(LCOV_DIR)/nix -f
 
 
-	@echo $(fBold) $(fBRed)\n		get_image					$(fNorm)
-	bazel coverage //libs/get_image/... --combined_report=lcov
-	lcov --l bazel-out/_coverage/_coverage_report.dat
-	genhtml bazel-out/_coverage/_coverage_report.dat -o $(LCOV_DIR)/get_image -f
-
-
-
 help:
-	@echo Type 'make' to run a demo.
-	@echo Type 'make database' to construct the database to use.
-	@echo Type 'make docs' to generate doxygen documentation.
-	@echo Type 'make test' to run a bazel test harness.
-	@echo Type 'make lcov' to run test coverage.
-	@echo Type 'make help' if you have no idea what you are doing, it wont help.
+	@echo "This makefile is to help assist with long commands:"
+	@echo "\t- Type 'make' to run a demo."
+	@echo "\t- Type 'make database' to construct the database to use."
+	@echo "\t- Type 'make docs' to generate doxygen documentation."
+	@echo "\t- Type 'make test' to run a bazel test harness."
+	@echo "\t- Type 'make lcov' to run test coverage."
+	@echo "\t- Type 'make help' if you have no idea what you are doing, it wont help."
+
+
+clean:
+	clear
+	reset
+	bazel clean
+	rm -f $(OUT_DIR)/demo
+	rm -f $(OUT_DIR)/runtime_properties_generator
+	rm -f $(OUT_DIR)/database_generator
+	rm -f $(OUT_DIR)/out.bmp
+	rm -r -f $(DOCS_DIR)
+	rm -r -f $(LCOV_DIR)
+	rm -r -f coverage

@@ -44,9 +44,9 @@ class Star
 {
 public:
 	/// The location x: ra, y: dec.
-	util::Point<util::decimal> position;
+	Equatorial<decimal> position;
 	/// The apparant brightness of the star.
-	util::decimal magnitude;
+	decimal magnitude;
 
 	/**
 	 *	@brief		Default Constructor.
@@ -65,7 +65,7 @@ public:
 	*	@param mag	The apparant magnitude.
 	*/
 
-	Star ( util::Point<util::decimal> pos, util::decimal mag  )
+	Star ( Point<decimal> pos, decimal mag  )
 	{
 		position = pos;
 		magnitude = mag;
@@ -78,7 +78,7 @@ public:
 	 *	@param mag	The apparant magnitude.
 	 */
 
-	Star ( util::decimal ra, util::decimal dec, util::decimal mag  )
+	Star ( decimal ra, decimal dec, decimal mag  )
 	{
 		position.x = ra;
 		position.y = dec;
@@ -123,7 +123,10 @@ public:
 				{
 					// util::Point<util::decimal> pt(x, 0, 0, y, 0, 0); // Converts to 90/90 degrees from 24/90 degrees
 					// Star s(pt, m);
-					Star s(x, y, m);
+					Equatorial<decimal> point;
+					point.RaHour(x);
+					point.DecDeg(y);
+					Star s(point, m);//s(x, y, m);
 					columns = std::vector<string>();
 					star_list->PushBack(s);
 				}
@@ -175,15 +178,16 @@ public:
 	 *	@note
 	 *			Requires a sorted list.
 	 */
+
 	template<const uint NI, const uint NO>
 	static void FindCloseStars (	uint start, uint num, decimal dist,
 									ArrayList<Star, NI>& in,
-									ArrayList<Point<decimal>, NO>* out)
+									ArrayList<Equatorial<decimal>, NO>* out)
 	{
 		for ( uint i = start; i < in.Size() && out->Size() < num; i++ )
 		{
 			// The start will always be added because the distance to itself is 0.
-			util::decimal distance = in.Get(start).position.Distance(in.Get(i).position);
+			decimal distance = in.Get(start).position.RadialDistance(in.Get(i).position);
 
 			if ( distance < dist )
 			{

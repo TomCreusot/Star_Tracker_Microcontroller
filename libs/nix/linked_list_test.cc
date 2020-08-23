@@ -16,7 +16,7 @@ using namespace std;
 
 
 
-TEST		( LinkedListNode, AlternateConstructor )
+TEST		( AlternateConstructor_LinkedListNode, Int )
 {
 	LinkedListNode<int> prev(0, NULL, NULL);
 	LinkedListNode<int> curr(1, &prev, NULL);
@@ -36,8 +36,20 @@ TEST		( LinkedListNode, AlternateConstructor )
 }
 
 
+TEST 	( AlternateConstructor_LinkedListNode, String )
+{
+	LinkedListNode<string> curr("0", NULL, NULL);
 
-TEST		( LinkedListNode, RemoveNodeEdge )
+	EXPECT_TRUE(curr.next == NULL);
+	EXPECT_TRUE(curr.prev == NULL);
+
+	EXPECT_EQ(curr.value[0], '0');
+}
+
+
+
+
+TEST		( LinkedListNode_RemoveNode, Edge_Int )
 {
 	LinkedListNode<int> prev(0, NULL, NULL);
 	LinkedListNode<int> curr(1, &prev, NULL);
@@ -60,7 +72,7 @@ TEST		( LinkedListNode, RemoveNodeEdge )
 
 
 
-TEST		( LinkedListNode, RemoveNodeMiddle )
+TEST		( LinkedListNode_RemoveNode, Middle_Int )
 {
 	LinkedListNode<int> prev(0, NULL, NULL);
 	LinkedListNode<int> curr(1, &prev, NULL);
@@ -83,7 +95,22 @@ TEST		( LinkedListNode, RemoveNodeMiddle )
 
 
 
-TEST		( LinkedListNode, InsertMiddle )
+TEST		( LinkedListNode_RemoveNode, Middle_String )
+{
+	LinkedListNode<string> curr("1", NULL, NULL);
+
+	curr.RemoveNode();
+
+	EXPECT_TRUE(curr.next == NULL);
+	EXPECT_TRUE(curr.prev == NULL);
+	EXPECT_EQ(curr.value, "1");
+}
+
+
+
+
+
+TEST		( LinkedListNode_InsertNode, Middle_Int )
 {
 	LinkedListNode<int> prev(0, NULL, NULL);
 	LinkedListNode<int> curr(1, NULL, NULL);
@@ -105,17 +132,35 @@ TEST		( LinkedListNode, InsertMiddle )
 }
 
 
+TEST		( LinkedListNode_InsertNode, Middle_String )
+{
+	LinkedListNode<string> prev("0", NULL, NULL);
+	LinkedListNode<string> curr("1", NULL, NULL);
+	LinkedListNode<string> next("2", NULL, NULL);
+
+	curr.InsertNode(&prev, &next);
+
+	EXPECT_TRUE(curr.next == &next);
+	EXPECT_TRUE(curr.prev == &prev);
+	EXPECT_EQ(curr.value, "1");
+	EXPECT_TRUE(prev.prev == NULL);
+	EXPECT_TRUE(next.next == NULL);
+
+	EXPECT_TRUE(prev.next == &curr);
+	EXPECT_TRUE(next.prev == &curr);
+}
+
 
 
 /*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*\
 |																	|
-|					---- Dimentions ----							|
+|					---- LinkedList ----							|
 |																	|
 \*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*/
 
 
 
-TEST		( Empty_Full_Size_MaxSize, Valid )
+TEST		( Empty_Full_Size_MaxSize, Int )
 {
 	util::LinkedList<int> linked;
 	EXPECT_EQ(linked.Size(), 0);
@@ -137,6 +182,28 @@ TEST		( Empty_Full_Size_MaxSize, Valid )
 }
 
 
+TEST		( Empty_Full_Size_MaxSize, String )
+{
+	util::LinkedList<string> linked;
+	EXPECT_EQ(linked.Size(), 0);
+	EXPECT_TRUE(linked.IsEmpty());
+	EXPECT_FALSE(linked.IsFull());
+
+	linked.PushBack("0");
+	EXPECT_FALSE(linked.IsEmpty());
+	EXPECT_FALSE(linked.IsFull());
+	EXPECT_EQ(linked.Size(), 1);
+
+	linked.PushBack("0");
+	linked.PushBack("1");
+	linked.PushBack("2");
+
+	EXPECT_FALSE(linked.IsEmpty());
+	EXPECT_FALSE(linked.IsFull());
+	EXPECT_EQ(linked.Size(), 4);
+}
+
+
 
 
 
@@ -148,7 +215,7 @@ TEST		( Empty_Full_Size_MaxSize, Valid )
 
 
 
-TEST		( PushBack,  Standard_WhenFull )
+TEST		( PushBack,  WhenFull_Int )
 {
 	util::LinkedList<int> linked;
 
@@ -165,8 +232,19 @@ TEST		( PushBack,  Standard_WhenFull )
 	EXPECT_EQ(linked.Size(), 101);
 }
 
+TEST		( PushBack, String )
+{
+	util::LinkedList<string> linked;
 
-TEST		( PushNodeBack, Standard )
+	linked.PushBack("a");
+	linked.PushBack("b");
+
+	EXPECT_EQ(linked.PopBack()[0], 'b');
+	EXPECT_EQ(linked.PopBack()[0], 'a');
+}
+
+
+TEST		( PushNodeBack, Int )
 {
 	util::LinkedList<int> linked;
 
@@ -196,9 +274,22 @@ TEST		( PushNodeBack, Standard )
 }
 
 
+TEST		( PushNodeBack, String )
+{
+	util::LinkedList<string> linked;
+	LinkedListNode<string>* n1 = new LinkedListNode<string>("a", NULL, NULL);
+	LinkedListNode<string>* n2 = new LinkedListNode<string>("b", NULL, NULL);
+
+	linked.PushNodeBack(n1);
+	linked.PushNodeBack(n2);
+
+	EXPECT_EQ(linked.PopBack()[0], 'b');
+	EXPECT_EQ(linked.PopBack()[0], 'a');
+}
 
 
-TEST		( PopBack, All )
+
+TEST		( PopBack, All_Int )
 {
 	util::LinkedList<int> linked;
 	linked.PushBack(1);
@@ -209,15 +300,17 @@ TEST		( PopBack, All )
 	EXPECT_EQ(linked.PopBack(), 3);
 	EXPECT_EQ(linked.PopBack(), 2);
 	EXPECT_EQ(linked.PopBack(), 1);
+
+	bool worked = false;
 	try
 	{
 		linked.PopBack();
-		EXPECT_TRUE(false);
 	}
 	catch ( std::string )
 	{
-		EXPECT_TRUE(true);
+		worked = true;
 	}
+	EXPECT_TRUE(worked);
 	linked.PushBack(1);
 	EXPECT_EQ(linked.PopBack(), 1);
 	EXPECT_EQ(linked.Size(), 0);
@@ -235,20 +328,34 @@ TEST 		( PopFront, All )
 	EXPECT_EQ(linked.PopFront(), 2);
 	EXPECT_EQ(linked.PopFront(), 3);
 	EXPECT_EQ(linked.PopFront(), 4);
+
+	bool worked = false;
 	try
 	{
 		linked.PopFront();
-		EXPECT_TRUE(false);
 	}
 	catch ( std::string )
 	{
-		EXPECT_TRUE(true);
+		worked = true;
 	}
+	EXPECT_TRUE(worked);
 	linked.PushBack(1);
 	EXPECT_EQ(linked.PopFront(), 1);
 	EXPECT_EQ(linked.Size(), 0);
 }
 
+
+TEST		( PopBack_PopFront, String )
+{
+	util::LinkedList<string> linked;
+	linked.PushBack("a");
+	linked.PushBack("b");
+	linked.PushBack("c");
+
+	EXPECT_EQ(linked.PopBack()[0], 'c');
+	EXPECT_EQ(linked.PopFront()[0], 'a');
+	EXPECT_EQ(linked.PopFront()[0], 'b');
+}
 
 /*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*\
 |																	|
@@ -256,7 +363,7 @@ TEST 		( PopFront, All )
 |																	|
 \*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*/
 
-TEST		( Operator, Valid )
+TEST		( Operator, Int )
 {
 	const int size = 100;
 	util::LinkedList<int> linked;
@@ -269,6 +376,17 @@ TEST		( Operator, Valid )
 	}
 }
 
+TEST		( Operator, String )
+{
+	util::LinkedList<string> linked;
+	linked.PushBack("a");
+	linked.PushBack("b");
+	linked.PushBack("c");
+	EXPECT_EQ(linked.Get(0)[0], 'a');
+	EXPECT_EQ(linked.Get(1)[0], 'b');
+	EXPECT_EQ(linked.Get(2)[0], 'c');
+}
+
 
 
 /*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*\
@@ -277,19 +395,27 @@ TEST		( Operator, Valid )
 |																	|
 \*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*/
 
-bool sortDecending ( int& a, int& b )
+bool SortDecending ( int& a, int& b )
 {
 	return a >= b;
 }
 
 
-bool sortAscending ( Point<int>& a, Point<int>& b )
+bool SortAscending ( string& a, string& b )
 {
-	return a.x <= b.x;
+	return a[0] <= b[0];
+}
+
+TEST		( SortingMethods, JustCause )	// This is to stop lcov being annoying
+{
+	int a = 1, b = 2;
+	EXPECT_TRUE(SortDecending(b, a));
+	string c = "1", d = "2";
+	EXPECT_TRUE(SortAscending(c, d));
 }
 
 
-TEST		( SortList, WithPrimative )
+TEST		( SortList, Int )
 {
 	util::LinkedList<int> input;
 	input.PushBack(3);
@@ -299,7 +425,7 @@ TEST		( SortList, WithPrimative )
 	input.PushBack(2);
 	input.PushBack(4);
 	input.PushBack(1);
-	input.Sort(&sortDecending);
+	input.Sort(&SortDecending);
 
 	EXPECT_EQ(input.Size(), 7);
 	ASSERT_EQ(input.PopFront(), 5);
@@ -315,32 +441,31 @@ TEST		( SortList, WithPrimative )
 
 
 
-TEST		( SortList, WithObjects )
+TEST		( SortList, String )
 {
-	Point<int> e1(0, 0);
-	Point<int> e2(1, 0);
-	Point<int> e3(2, 0);
-	Point<int> e4(3, 0);
-	Point<int> e5(5, 0);
-	Point<int> e6(5, 0);
+	string e1 = "a";
+	string e2 = "b";
+	string e3 = "c";
+	string e4 = "d";
+	string e5 = "e";
+	string e6 = "f";
 
-
-	util::LinkedList<Point<int>> input;
+	util::LinkedList<string> input;
 	input.PushBack(e4);
 	input.PushBack(e1);
 	input.PushBack(e5);
 	input.PushBack(e3);
 	input.PushBack(e6);
 	input.PushBack(e2);
-	input.Sort(&sortAscending);
+	input.Sort(&SortAscending);
 
 	ASSERT_EQ(input.Size(), 6);
-	ASSERT_EQ(input.PopFront().x, 0);
-	ASSERT_EQ(input.PopFront().x, 1);
-	ASSERT_EQ(input.PopFront().x, 2);
-	ASSERT_EQ(input.PopFront().x, 3);
-	ASSERT_EQ(input.PopFront().x, 5);
-	ASSERT_EQ(input.PopFront().x, 5);
+	ASSERT_EQ(input.PopFront()[0], 'a');
+	ASSERT_EQ(input.PopFront()[0], 'b');
+	ASSERT_EQ(input.PopFront()[0], 'c');
+	ASSERT_EQ(input.PopFront()[0], 'd');
+	ASSERT_EQ(input.PopFront()[0], 'e');
+	ASSERT_EQ(input.PopFront()[0], 'f');
 }
 
 

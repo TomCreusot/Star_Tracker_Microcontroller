@@ -6,7 +6,7 @@
  */
 
 #pragma once
-/// @namespace util	Any items which fit into mutltiple modules.
+/// @namespace util	Any items which fit into multiple modules.
 namespace util
 {
 	/// @var byte 8 bits.

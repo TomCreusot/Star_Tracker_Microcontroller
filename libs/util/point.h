@@ -5,13 +5,26 @@
  */
 
 #pragma once
-
-#include <cmath>
+#include <math.h>
+#include <assert.h>
 
 namespace util
 {
+// Forward Declaration
+template <class T> class Point;
+
+/// @var Point describing a Cartesian Coordinate.
+template <class T>	using Cartesian = Point<T>;
+template <class T>	using Equatorial = Point<T>;
+
+
+
+
 /**
- *  A class template that stores an x and y coordinate.
+ *  A class template that stores an x and y coordinates.
+ *	Consider x as Right Ascension and y as Declination.
+ *	There are several typedefs for the class depending on what system the object is using.
+ *
  *	@tparam T	The datatype to store.
  *
  *	@example
@@ -32,6 +45,7 @@ public:
 	T x;
 	/// The y variable.
 	T y;
+
 
 	/**
 	 * @brief 	Default Constructor.
@@ -57,34 +71,17 @@ public:
 		y = val;
 	}
 
-	/**
-	* @brief 	Alternate Constructor
-	* @param x_	The x position.
-	* @param y_	The y position.
-	*/
-
-	Point ( T x_, T y_ )
-	{
-		x = x_;
-		y = y_;
-	}
-
 
 	/**
-	 * @brief			Alternate Constructor.
-	 * @param hoursX	The whole decimal.
-	 * @param minutesX	The whole minute.
-	 * @param secondsX	Seconds and anything bellow.
-	 * @param degreesY	The whole decimal.
-	 * @param minutesY	The whole minute.
-	 * @param secondsY	Seconds and anything bellow.
-	 * @details Creates a Point object with the ra/dec coordinate.
+	 * @brief 	Alternate Constructor
+	 * @param x	The x position.
+	 * @param y	The y position.
 	 */
 
-	Point  ( 	T hoursX, T minutesX, T secondsX,
-				T degreesY, T minutesY, T secondsY	)
+	Point ( T x, T y )
 	{
-		Set ( hoursX * 90 / 24, minutesX, secondsX, degreesY, minutesY, secondsY );
+		this->x = x;
+		this->y = y;
 	}
 
 	/**
@@ -98,58 +95,69 @@ public:
 		y = p.y;
 	}
 
-	/** @brief Getter of x. @return x. */
-	inline T& get_x		()			{ return x; }
-	/** @brief Getter of y. @return y. */
-	inline T& get_y 	()			{ return y; }
-
-	/** @brief setter of x. @param _x x. */
-	inline void set_x	( T& _x )	{ x = _x; }
-	/** @brief setter of y. @param _y y. */
-	inline void set_y	( T& _y )	{ y = _y; }
 
 
+	/// @brief		Alias for x.
+	/// @return		x.
+	T Ra 		( )			{	return this->x;		}
+
+	/// @brief		Alias for x (COPY).
+	/// @param x	The value to assign to x.
+	void Ra 	( T x )		{	this->x = x;	}
+
+
+
+	/// @brief		Alias for right ascention with 24 hour time.
+	/// @return		The 0-24h Range of 0-2PIdeg.
+	T RaHour	( )			{	return this->x * 12.0 / M_PI;	}
+
+	/// @brief		Alias for right ascention from a Range of 0 to 24h instead of 0 to 2PIdeg.
+	/// @param x	The value to assign to x.
+	void RaHour	( T x )		{	this->x = x * M_PI / 12.0;	}
+
+	/// @brief		Returns the angle in degrees.
+	/// @return		The angle in degrees.
+	T DecDeg	( )			{	return this->y * 180 / M_PI;	}
+	/// @brief		Alias for declination from a Range of 0 to 180h instead of 0 to 2PIdeg.
+	/// @param y	The value of Declination in degrees.
+	void DecDeg	( T y )		{	this->y = y * M_PI / 180;	}
+
+	/// @brief		Alias for y.
+	/// @return		y.
+	T Dec 		( )			{	return this->y;		}
+
+	/// @brief		Alias for y (COPY).
+	/// @param y	The value to assign to y.
+	void Dec	( T y )		{	this->y = y;	}
 
 
 	/**
 	 * @brief		Sets the position of the x and y (for malloced pointers).
-	 * @param x_	The x position.
-	 * @param y_	The y position.
+	 * @param x		The x position.
+	 * @param y		The y position.
 	 */
 
-	void Set ( T x_, T y_ )
+	void Set ( T x, T y )
 	{
-		x = x_;
-		y = y_;
+		this->x = x;
+		this->y = y;
 	}
 
 
+
+
+
+
+
+
+
 	/**
-	 * @brief Creates a Point object with the ra/dec coordinate.
-	 * @param degrees_x	The whole decimal.
-	 * @param minutes_x	The whole minute.
-	 * @param seconds_x	Seconds and anything below.
-	 * @param degrees_y	The whole decimal.
-	 * @param minutes_y	The whole minute.
-	 * @param seconds_y	Seconds and anything below.
+	 * @brief		Finds the hypotenues between this and the other point in cartesian coordinates.
+	 * @param [in]	other The other point to measure with.
+	 * @return		The distance between the points.
 	 */
-	void Set (	T degrees_x, T minutes_x, T seconds_x,
-				T degrees_y, T minutes_y, T seconds_y	)
-	{
-		T sign = 1 - (degrees_x < 0) * 2;
-		x = degrees_x + (minutes_x / 60 + seconds_x / 3600) * sign;
-		sign = 1 - (degrees_y < 0) * 2;
-		y = degrees_y + (minutes_y / 60 + seconds_y / 3600) * sign;
-	}
 
-
-	/**
-	* @brief		Finds the hypotenues between this and the other point.
-	* @param [in]	other The other point to measure with.
-	* @return		The distance between the points.
-	*/
-
-	T Distance ( Point<T>& other ) const
+	T Distance ( Cartesian<T>& other ) const
 	{
 		return (T) hypot(x - other.x, y - other.y);
 	}
@@ -157,10 +165,56 @@ public:
 
 
 	/**
-	* @brief		Finds if other point is the same position.
-	* @param [in]	other The other point to test against.
-	* @return 		True if x and y are equal to this x and y.
-	*/
+	 * @brief		The angle between 2 points, considering the plane is curved to a field of view.
+	 * @param rad_per_pixel	The angle between each pixel.
+	 * @param other [in]	The other point to find the distance of.
+	 * @return		The vector difference.
+	 */
+
+	T RadialDistance ( T rad_per_pixel, Cartesian<T>& other )
+	{
+		return Distance(other) * rad_per_pixel;
+	}
+
+
+	/**
+	 * @brief		Finds the Radial distance on a unit sphere between the equitorial points.
+	 * @param other [in]	The other point to find the distance of.
+	 * @return		The vector difference.
+	 */
+
+	T RadialDistance ( Equatorial<T>& other )
+	{
+		T ascention = Ra() - other.Ra();
+		return acos(	sin(Dec()) * sin(other.Dec()) +
+						cos(Dec()) * cos(other.Dec()) * cos(ascention)	);
+	}
+
+
+
+
+
+
+
+
+
+
+	/**
+	 * @brief	The magnitude of the vector.
+	 * @return	The magnitude of the vector.
+	 */
+
+	T Magnitude ( )
+	{
+		return std::hypot(x, y);
+	}
+
+
+	/**
+	 * @brief		Finds if other point is the same position.
+	 * @param [in]	other The other point to test against.
+	 * @return 		True if x and y are equal to this x and y.
+	 */
 
 	bool Equal ( Point<T>& other ) const
 	{

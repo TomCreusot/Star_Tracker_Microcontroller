@@ -27,8 +27,8 @@ namespace nix
  *			The variables will be read as a string, when you try and access it, it will convert it to the requested datatype.
  *
  *	@example
- *		Properties p;							// Creates the object.
- *		p.ReadFile("config.properties");		// Reads in the variables from the file.
+ *		Config c;								// Creates the object.
+ *		c.ReadFile("config.properties");		// Reads in the variables from the file.
  *		int a = p.GetInteger("variable_int");	// a now is what "variable_int" was.
  *
  *		Sample file (config.properites):
@@ -40,13 +40,14 @@ namespace nix
  *	@author	Tom Creusot
  */
 
-class Properties
+class Config
 {
 protected:
 	/// The name and values.
 	map<string, string> hash;
 
 public:
+
 	/**
 	 *	@brief	Reads a file and adds the elements to the hashmap.
 	 *	@param file	The file to read from.
@@ -92,6 +93,14 @@ public:
 	 */
 
 	string GetString 	( string name );
+
+
+	/**
+	 *	@brief		Prints an error message in an easy to read format.
+	 *	@param name	The key which does not exist.
+	 */
+
+	void PrintError ( string name );
 
 
 	/**

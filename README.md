@@ -43,8 +43,6 @@ It also contains [demo.cc](libs/demo.cc) which is the program in the implementat
 * g++	7.4.0
 * bazel	2.0.0
 * gtest	1.10.0
-* java jdk-headless 1.8.0_232
-* java jre 1.8.0_232
 
 ## Contributing
 

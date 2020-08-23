@@ -15,7 +15,9 @@ cc_binary(
 			"//libs/star_tracker:database_array",
 
 			"//libs/nix:get_image",
-			"//libs/nix:properties",
+			"//libs/nix:config",
+
+			"//libs/properties:properties"
 		]
 )
 
@@ -29,11 +31,25 @@ cc_binary(
 			"//libs/util:util",
 			"//libs/util:point",
 			"//libs/util:array_list",
-			"//libs/nix:properties",
+			"//libs/nix:config",
 			"//libs/nix:star",
 			"//libs/nix:fill_template",
 			"//libs/nix:linked_list",
 
 			"//libs/star_tracker:star_set",
+			"//libs/star_tracker:database",
+		]
+)
+
+
+
+cc_binary(
+	name = "runtime_properties_generator",
+	srcs = ["runtime_properties_generator.cc"],
+	deps =
+		[
+			"//libs/util:util",
+			"//libs/nix:config",
+			"//libs/nix:fill_template",
 		]
 )

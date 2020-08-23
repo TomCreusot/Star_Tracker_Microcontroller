@@ -1,5 +1,5 @@
 #include "gtest/gtest.h"
-#include "properties.h"
+#include "config.h"
 
 
 using namespace std;
@@ -14,7 +14,7 @@ using namespace std;
 
 TEST 		( GetInteger, WhenInvalidKey )
 {
-	nix::Properties p;
+	nix::Config p;
 	bool valid = false;
 	try
 	{
@@ -30,7 +30,7 @@ TEST 		( GetInteger, WhenInvalidKey )
 
 TEST 		( GetDecimal, WhenInvalidKey )
 {
-	nix::Properties p;
+	nix::Config p;
 	bool valid = false;
 	try
 	{
@@ -46,7 +46,7 @@ TEST 		( GetDecimal, WhenInvalidKey )
 
 TEST 		( GetInteger, WhenInvalidValue )
 {
-	nix::Properties p;
+	nix::Config p;
 	bool valid = false;
 
 	p.Add("Does not exist", "DNE");
@@ -64,7 +64,7 @@ TEST 		( GetInteger, WhenInvalidValue )
 
 TEST 		( GetDecimal, WhenInvalidValue )
 {
-	nix::Properties p;
+	nix::Config p;
 	bool valid = false;
 
 	p.Add("Does not exist", "DNE");
@@ -80,9 +80,16 @@ TEST 		( GetDecimal, WhenInvalidValue )
 }
 
 
+TEST 		( GetString, WhenInvalidValid )
+{
+	nix::Config p;
+	EXPECT_EQ(p.GetString("exists"), "");
+}
+
+
 TEST 		( GetInteger, WhenValid )
 {
-	nix::Properties p;
+	nix::Config p;
 
 	p.Add("exists", "321");
 	EXPECT_EQ(p.GetInteger("exists"), 321);
@@ -91,7 +98,7 @@ TEST 		( GetInteger, WhenValid )
 
 TEST 		( GetDecimal, WhenValid )
 {
-	nix::Properties p;
+	nix::Config p;
 
 	p.Add("exists", "123");
 	EXPECT_FLOAT_EQ(p.GetDecimal("exists"), 123);
@@ -100,7 +107,7 @@ TEST 		( GetDecimal, WhenValid )
 
 TEST 		( GetString, WhenValid )
 {
-	nix::Properties p;
+	nix::Config p;
 
 	p.Add("exists", "123");
 	EXPECT_EQ(p.GetString("exists"), "123");
@@ -111,7 +118,7 @@ TEST 		( ConvertString, WhenValid )
 {
 	string str = "abcd\tasdf\n.";
 	char array[100];
-	nix::Properties::ConvertString(str, array);
+	nix::Config::ConvertString(str, array);
 	EXPECT_EQ(array[0], 'a');
 	EXPECT_EQ(array[1], 'b');
 	EXPECT_EQ(array[2], 'c');
@@ -130,7 +137,7 @@ TEST 		( ConvertString, WhenValid )
 
 TEST 		( GetInteger, WhenValidNegativeDecimal )
 {
-	nix::Properties p;
+	nix::Config p;
 
 	p.Add("exists", "-123.5");
 	EXPECT_EQ(p.GetInteger("exists"), -123);
@@ -139,7 +146,7 @@ TEST 		( GetInteger, WhenValidNegativeDecimal )
 
 TEST 		( GetDecimal, WhenValidNegativeDecimal )
 {
-	nix::Properties p;
+	nix::Config p;
 
 	p.Add("exists", "-123.01234");
 	EXPECT_FLOAT_EQ(p.GetDecimal("exists"), -123.01234);
@@ -161,7 +168,7 @@ TEST 		( GetDecimal, WhenValidNegativeDecimal )
 TEST		( RemoveAfterComment,  WhenEmpty )
 {
 	std::string line;
-	nix::Properties::RemoveAfterComment(&line);
+	nix::Config::RemoveAfterComment(&line);
 	EXPECT_EQ(line.length(), 0);
 }
 
@@ -171,7 +178,7 @@ TEST		( RemoveAfterComment,  WhenNoComment )
 {
 	std::string line("HELLO THIS IS A SENTANCE, PLEASE DONT IGNORE");
 	std::string expected = line;
-	nix::Properties::RemoveAfterComment(&line);
+	nix::Config::RemoveAfterComment(&line);
 	EXPECT_EQ( line, expected );
 }
 
@@ -179,7 +186,7 @@ TEST		( RemoveAfterComment,  WhenOnlyComment )
 {
 	std::string line("#HELLO THIS IS A SENTANCE, PLEASE DONT IGNORE");
 	std::string expected = "";
-	nix::Properties::RemoveAfterComment(&line);
+	nix::Config::RemoveAfterComment(&line);
 	EXPECT_EQ( line.compare(expected), 0 );
 }
 
@@ -188,7 +195,7 @@ TEST		( RemoveAfterComment,  WhenCommentHalfLine )
 {
 	std::string line("HELLO# THIS IS A SENTANCE, PLEASE DONT IGNORE");
 	std::string expected = "HELLO";
-	nix::Properties::RemoveAfterComment(&line);
+	nix::Config::RemoveAfterComment(&line);
 	EXPECT_EQ( line, expected );
 }
 
@@ -197,7 +204,7 @@ TEST		( RemoveAfterComment,  WhenMultipleComments )
 {
 	std::string line("HELLO# THIS IS A SENTANCE# PLEASE DONT IGNORE");
 	std::string expected = "HELLO";
-	nix::Properties::RemoveAfterComment(&line);
+	nix::Config::RemoveAfterComment(&line);
 	EXPECT_EQ( line, expected );
 }
 
@@ -213,7 +220,7 @@ TEST ( RemoveTabsSpaces, WhenEmpty )
 {
 	std:: string line;
 
-	nix::Properties::RemoveTabsSpaces(&line);
+	nix::Config::RemoveTabsSpaces(&line);
 
 	EXPECT_EQ(line, "");
 }
@@ -223,7 +230,7 @@ TEST ( RemoveTabsSpaces, WhenNone )
 {
 	std:: string line = "\nasdf1234";
 
-	nix::Properties::RemoveTabsSpaces(&line);
+	nix::Config::RemoveTabsSpaces(&line);
 
 	EXPECT_EQ(line, "\nasdf1234");
 }
@@ -233,7 +240,7 @@ TEST ( RemoveTabsSpaces, WhenTab )
 {
 	std:: string line = "\tasdf1234\t";
 
-	nix::Properties::RemoveTabsSpaces(&line);
+	nix::Config::RemoveTabsSpaces(&line);
 
 	EXPECT_EQ(line, "asdf1234");
 }
@@ -242,7 +249,7 @@ TEST ( RemoveTabsSpaces, WhenSpace )
 {
 	std:: string line = " asdf1234 ";
 
-	nix::Properties::RemoveTabsSpaces(&line);
+	nix::Config::RemoveTabsSpaces(&line);
 
 	EXPECT_EQ(line, "asdf1234");
 }
@@ -251,7 +258,7 @@ TEST ( RemoveTabsSpaces, WhenBoth )
 {
 	std:: string line = " asdf1234\t";
 
-	nix::Properties::RemoveTabsSpaces(&line);
+	nix::Config::RemoveTabsSpaces(&line);
 
 	EXPECT_EQ(line, "asdf1234");
 }
@@ -276,7 +283,7 @@ TEST ( SeparateNameValue, WhenEmpty )
 	std::string name;
 	std::string value;
 
-	bool valid = nix::Properties::SeparateNameValue(line, &name, &value);
+	bool valid = nix::Config::SeparateNameValue(line, &name, &value);
 
 	EXPECT_FALSE(valid);
 	EXPECT_EQ(line, "");
@@ -290,7 +297,7 @@ TEST ( SeparateNameValue, WhenInvalid )
 	std::string name;
 	std::string value;
 
-	bool valid = nix::Properties::SeparateNameValue(line, &name, &value);
+	bool valid = nix::Config::SeparateNameValue(line, &name, &value);
 
 	EXPECT_FALSE(valid);
 	EXPECT_EQ(name, line);
@@ -303,7 +310,7 @@ TEST ( SeparateNameValue, WhenSingleEquals )
 	std::string name;
 	std::string value;
 
-	bool valid = nix::Properties::SeparateNameValue(line, &name, &value);
+	bool valid = nix::Config::SeparateNameValue(line, &name, &value);
 
 	EXPECT_TRUE(valid);
 	EXPECT_EQ(name, "hello");
@@ -316,7 +323,7 @@ TEST ( SeparateNameValue, MultipleEquals )
 	std::string name;
 	std::string value;
 
-	bool valid = nix::Properties::SeparateNameValue(line, &name, &value);
+	bool valid = nix::Config::SeparateNameValue(line, &name, &value);
 
 	EXPECT_TRUE(valid);
 	EXPECT_EQ(name, "hello");

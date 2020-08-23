@@ -109,11 +109,11 @@ TEST ( FindCloseStars, Valid )
 	util::ArrayList<Point<decimal>, size> points;
 
 	Star s1(0, 0, 1);
-	Star s2(1, 0, 2);
-	Star s3(-100, 0, 3);
-	Star s4(-3, -1, 4);
-	Star s5(3.999, 0, 5);
-	Star s6(-3.999, 0, 5);
+	Star s2(0.1, 0, 2);
+	Star s3(2.01, 0, 3);	// Futhest distance
+	Star s4(-2.01, -1, 4);
+	Star s5(1.999, 0, 5);
+	Star s6(-1.999, 0, 5);
 	Star s7(4.001, 0, 5);
 	Star s8(-4.001, 0, 5);
 
@@ -126,14 +126,13 @@ TEST ( FindCloseStars, Valid )
 	stars.PushBack(s7);
 	stars.PushBack(s8);
 
-	star_tracker::Star::FindCloseStars<size, size>(0, 5, 4, stars, &points);
+	star_tracker::Star::FindCloseStars<size, size>(0, 4, 2, stars, &points);
 
 	EXPECT_EQ(points.Get(0).x, 0);
-	EXPECT_EQ(points.Get(1).x, 1);
-	EXPECT_EQ(points.Get(2).x, -3);
-	EXPECT_EQ(points.Get(3).x, 3.999);
-	EXPECT_EQ(points.Get(4).x, -3.999);
-	EXPECT_EQ(points.Size(), 5);
+	EXPECT_EQ(points.Get(1).x, 0.1);
+	EXPECT_EQ(points.Get(3).x, 1.999);
+	// EXPECT_EQ(points.Get(4).x, -1.999); // This is the 5th element
+	EXPECT_EQ(points.Size(), 4);
 }
 
 
@@ -144,20 +143,20 @@ TEST ( FindCloseStars, NotEnoughElements )
 	util::ArrayList<Point<decimal>, size> points;
 
 	Star s1(0, 1, 1);
-	Star s2(0, 2, 2);
-	Star s3(0, -100, 3);
-	Star s4(0, -3, 4);
+	Star s2(0, 1.5, 2);
+	Star s3(0, -2, 3);
+	Star s4(0, -0.4, 4);
 
 	stars.PushBack(s1);
 	stars.PushBack(s2);
 	stars.PushBack(s3);
 	stars.PushBack(s4);
 
-	star_tracker::Star::FindCloseStars<size, size>(0, 4, 5, stars, &points);
+	star_tracker::Star::FindCloseStars<size, size>(0, 4, 1.5, stars, &points);
 
 	EXPECT_EQ(points.Get(0).y, 1);
-	EXPECT_EQ(points.Get(1).y, 2);
-	EXPECT_EQ(points.Get(2).y, -3);
+	EXPECT_EQ(points.Get(1).y, 1.5);
+	EXPECT_EQ(points.Get(2).y, -0.4);
 	EXPECT_EQ(points.Size(), 3);
 }
 
