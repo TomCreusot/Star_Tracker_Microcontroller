@@ -341,7 +341,7 @@ TEST ( PercentThreshold, ByteSizedArray )
 	util::ArrayList<util::uint, ARRAY_SIZE> v(ARRAY_SIZE);
 
 
-	for ( int i = 0; i < v.Size(); i++ )
+	for ( uint i = 0; i < v.Size(); i++ )
 		v.Get(i) = 1;
 
 
