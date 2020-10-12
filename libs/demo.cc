@@ -16,9 +16,9 @@
 #include "libs/util/point.h"
 #include "libs/util/array_list.h"
 #include "libs/nix/get_image.h"
-#include "libs/nix/config.h"
 
-#include "libs/properties/properties.h"
+#include "config/demo.h"
+#include "config/runtime.h"
 
 using namespace chrono;
 
@@ -47,11 +47,9 @@ int main ( int argc, char** argv )
 	* Namespace: 	nix
 	*/
 		// Gets the properties of the image, camera and thresholds.
-		nix::Config config;
-		config.ReadFile(argv[1]);
-		string IMAGE_FILE 				= config.GetString("image_file");
-		string IMAGE_OUT_FILE		 	= config.GetString("image_out_file");
-		util::uint MAX_DISPLAY			= config.GetInteger("max_display");
+		string IMAGE_FILE 				= config::image_file;
+		string IMAGE_OUT_FILE		 	= config::image_out_file;
+		util::uint MAX_DISPLAY			= config::max_display;
 
 		// Get Duration
 		milliseconds start_time = GetTimeStamp();
@@ -84,8 +82,8 @@ int main ( int argc, char** argv )
 		// Scope, this stuff is only relevant here.
 		{
 			// Required Properties
-			constexpr util::uint NUM_BARS 	= Properties::kHistogramBars;
-			constexpr util::uint THRESHOLD 	= Properties::kThresholdTolerance;
+			const util::uint NUM_BARS 	= config::histogram_bars;
+			const util::uint THRESHOLD 	= config::threshold_tolerance;
 
 			// It takes a number from 1-255 being the number of sample brightnesses.
 			// The larger the number, the more memory it uses but more accurate.
@@ -108,7 +106,7 @@ int main ( int argc, char** argv )
 	 */
 
 		// The maximum number of stars to observe in the image.
-		const util::uint MAX_STARS		= Properties::kMaxPoints;
+		const util::uint MAX_STARS		= config::max_points;
 
 		// It is no longer useful to store the details of the blobs.
 		// This converts them to points only.
@@ -144,7 +142,7 @@ int main ( int argc, char** argv )
 	 */
 
 		// The maximum number of sets of stars to use.
-		const util::uint MAX_SETS = properties::Properties::kMaxSets;
+		const util::uint MAX_SETS = config::max_sets;
 
 		// Setup the database.
 		// This is important for getting the field of view, pixel resolution and the database to compare the stars to.
@@ -170,16 +168,16 @@ int main ( int argc, char** argv )
 	 * Namespace: 	star_tracker
 	 */
 
-		const uint MAX_MATCHES		= properties::Properties::kMaxMatches;
-		const uint MAX_MATCHES_STAR =properties::Properties::kMaxMatchesPerStar;
-		const uint TOLERANCE_AREA	= properties::Properties::kToleranceArea;
-		const uint TOLERANCE_MOMENT = properties::Properties::kToleranceMoment;
+		const uint MAX_MATCHES			= config::max_matches;
+		const uint MAX_MATCHES_STAR 	= config::max_matches_per_star;
+		const decimal TOLERANCE_AREA	= config::tolerance_area;
+		const decimal TOLERANCE_MOMENT	= config::tolerance_moment;
 
 		// The elements will be found, these are all the elements within the threshold.
 		util::ArrayList<star_tracker::StarSet, MAX_MATCHES> database_angles;
 		database.FindElements<MAX_SETS, MAX_MATCHES>
 				(	triangles, TOLERANCE_AREA, TOLERANCE_MOMENT,
-					MAX_MATCHES_STAR, &database_angles);
+					MAX_MATCHES_STAR, &database_angles );
 
 		// The elements are then compared with each other.
 		// If the distance between the stars are > fov, their likelyhood drops.

@@ -1,7 +1,8 @@
 #include <iostream>
 #include "gtest/gtest.h"
 #include "image.h"
-#include "libs/properties/properties.h"
+
+#include "config/runtime.h"
 
 using namespace std;
 using namespace image_processing;
@@ -65,8 +66,8 @@ TEST ( CopyConstructor_SetPixel, Valid )
 
 TEST ( GetMaxWidthHeight, Valid )
 {
-	EXPECT_TRUE(Image::MaxWidth() == properties::Properties::kImageWidth  );
-	EXPECT_TRUE(Image::MaxHeight() == properties::Properties::kImageHeight );
+	EXPECT_TRUE(Image::MaxWidth() == config::image_width  );
+	EXPECT_TRUE(Image::MaxHeight() == config::image_height );
 }
 
 

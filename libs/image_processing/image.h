@@ -6,18 +6,23 @@
 
 #pragma once
 #include <cmath>
-#include "libs/properties/properties.h"
 #include "libs/util/util.h"
 #include "libs/util/array_list.h"
 
+#include "config/runtime.h"
+
 using namespace util;
-using namespace properties;
 
 /// @namespace image_processing	This is designed to peform blob detection on an image.
 namespace image_processing
 {
+
 /**
- *	@brief	Stores an 8 bit image and peforms thresholding for blob detection.
+ *	Stores an 8 bit image and peforms thresholding for blob detection.
+ *
+ *	@details
+ *		The maximum size of the image is the specified Properties::kImageWidth
+ *		and Properties::kImageHeight.
  *
  *	@example
  *		Image img(10, 10);									// Creates an image 10x10 with all pixels set to 0.
@@ -43,7 +48,7 @@ private:
 	/// The current dimentions of the image.
 	uint width, height;
 	/// The image.
-	byte image[Properties::kImageWidth][Properties::kImageHeight];
+	byte image[config::image_width][config::image_height];
 
 
 public:

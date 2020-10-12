@@ -4,12 +4,11 @@ This is stuff which will only work on a nix system.
 ## How To Use
 In the *BUILD* file, input:
 ```
-deps = [//libs/nix:config", "//libs/nix:star"]
+deps = ["//libs/nix:star"]
 ```
 At the top of the desired file, input:
 ```
 #include "libs/nix/star.h"
-#include "libs/nix/config.h"
 ```
 
 ### Build
@@ -25,8 +24,6 @@ bazel test //libs/nix/... --test_output=all
 ```
 
 ## Files
-* config.h
-* config.c
 * star.h
 * star.cc
 * fill_template.h

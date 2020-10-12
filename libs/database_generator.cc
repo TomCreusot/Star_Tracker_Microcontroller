@@ -11,17 +11,19 @@
 #include "libs/star_tracker/star_set.h"
 #include "libs/star_tracker/database.h"
 #include "libs/nix/star.h"
-#include "libs/nix/config.h"
 #include "libs/nix/fill_template.h"
 #include "libs/nix/linked_list.h"
 #include "libs/util/util.h"
 #include "libs/util/point.h"
 #include "libs/util/array_list.h"
 
+#include "config/database.h"
+
 using namespace util;
 using namespace star_tracker;
 using namespace std;
 using namespace nix;
+
 
 
 int main ( int argc, char** argv )
@@ -34,20 +36,18 @@ int main ( int argc, char** argv )
 /**********************************************************************
 *			Gets properties input file.
 */
-		cout << "reading properties file:..." << endl;
-		Config c;
-		c.ReadFile(argv[1]);
-		string DATABASE_FILE 		= c.GetString("database_file");
-		string TEMPLATE_FILE		= c.GetString("database_template_file");
-		string OUTPUT_FILE	 		= c.GetString("database_out_file");
+		cout << "Aliasing Variables" << endl;
+		string DATABASE_FILE 		= config::database_file;
+		string TEMPLATE_FILE		= config::template_file;
+		string OUTPUT_FILE	 		= config::out_file;
 
 
-		util::uint C_MAG 			= c.GetInteger("mag_column");
-		util::uint C_RA				= c.GetDecimal("ra_column");
-		util::uint C_DEC			= c.GetDecimal("dec_column");
-		util::decimal FOV 			= c.GetDecimal("fov") / 180.0 * M_PI;
-		util::uint CUTOFF_MAG		= c.GetInteger("cutoff_mag");
-		util::uint PILOT_SETS		= c.GetInteger("pilot_sets");
+		util::uint C_MAG 			= config::mag_column;
+		util::uint C_RA				= config::ra_column;
+		util::uint C_DEC			= config::dec_column;
+		util::decimal FOV 			= config::fov / 180.0 * M_PI;
+		util::uint CUTOFF_MAG		= config::cutoff_mag;
+		util::uint PILOT_SETS		= config::pilot_sets;
 
 
 /**********************************************************************
@@ -57,8 +57,7 @@ int main ( int argc, char** argv )
 
 		util::LinkedList<Star> stars;
 		Star::StarsFromCSV<0>(		DATABASE_FILE, CUTOFF_MAG,
-									C_RA, C_DEC, C_MAG,
-									&stars	);
+									C_RA, C_DEC, C_MAG, &stars		);
 
 		cout <<  "\tfound: " << stars.Size()  << endl;
 		cout << "sorting:..." << endl;

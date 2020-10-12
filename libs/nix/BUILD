@@ -54,19 +54,3 @@ cc_library(
 	hdrs = ["get_image.h"],
 	deps = ["@net_sourceforge_easybmp//:EasyBMP", "//libs/image_processing:image", "//libs/util:array_list", "//libs/util:util", "//libs/util:point"],
 )
-
-
-
-
-cc_library(
-	name = "config",
-	srcs = ["config.cc"],
-	hdrs = ["config.h"],
-	deps = ["//libs/util:util"]
-)
-
-cc_test(
-	name = "config_test",
-	srcs = ["config_test.cc"],
-	deps = [":config", "@gtest//:gtest_main"]
-)

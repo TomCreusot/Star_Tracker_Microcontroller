@@ -29,7 +29,7 @@ cc_library(
 	name = "image",
 	hdrs = ["image.h"],
 	srcs = ["image.cc"],
-	deps = ["//libs/util:util", "//libs/util:array_list", "//libs/properties:properties"]
+	deps = ["//libs/util:util", "//libs/util:array_list", "//config:runtime"]
 )
 
 
@@ -44,7 +44,7 @@ cc_library(
 cc_test(
 	name = "image_test",
 	srcs = ["image_test.cc"],
-	deps = ["@gtest//:gtest_main", ":image", "//libs/properties:properties"],
+	deps = ["@gtest//:gtest_main", ":image", "//config:runtime"],
 )
 
 

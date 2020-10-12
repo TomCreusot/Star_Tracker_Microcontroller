@@ -5,18 +5,13 @@ fBDGrey="\e[100m"
 
 OUT_DIR = out
 LCOV_DIR = coverage
-DOCS_DIR = documentation
+DOCS_DIR = doc
 LIBS_DIR = libs
 
 
 run:
 	clear
 	reset
-	bazel build //libs:runtime_properties_generator
-	mv -f bazel-bin/libs/runtime_properties_generator ./$(OUT_DIR)/
-	cd $(OUT_DIR); ./runtime_properties_generator config.properties
-	@- rm -f /$(OUT_DIR)/runtime_properties_generator
-
 	bazel build //libs:demo
 	@- rm -f /$(OUT_DIR)/demo
 	mv -f bazel-bin/libs/demo ./$(OUT_DIR)/

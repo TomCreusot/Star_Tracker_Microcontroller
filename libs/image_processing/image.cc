@@ -40,8 +40,8 @@ uint Image::GetWidth	( ) const { return width;  }
 uint Image::GetHeight	( ) const { return height; }
 
 
-const uint Image::MaxWidth	( )	{	return Properties::kImageWidth;		}
-const uint Image::MaxHeight	( )	{	return Properties::kImageHeight;	}
+const uint Image::MaxWidth	( )	{	return config::image_width;		}
+const uint Image::MaxHeight	( )	{	return config::image_height;	}
 
 
 
