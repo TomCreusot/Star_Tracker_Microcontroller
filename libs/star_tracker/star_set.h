@@ -10,6 +10,7 @@
 #include "libs/util/util.h"
 #include "libs/util/array_list.h"
 #include "libs/util/point.h"
+
 using namespace util;
 using namespace std;
 
@@ -76,8 +77,8 @@ public:
 	decimal area;				///< The area of the triangle.
 	decimal moment;				///< The shape?
 	StarSet* pixel;				///< The placement on the image.
-	decimal vote;				///< The likelyhood of this being the match.
-	Point<decimal> position;	///< The star farthest from the pilot.
+	decimal vote;					///< The likelyhood of this being the match.
+	Equatorial<decimal> position;	///< The star farthest from the pilot.
 
 
 
@@ -153,16 +154,20 @@ public:
 	 * @param start			[in]	The index to start from (inclusive).
 	 * @param end			[in]	The index to end on (exclusive).
 	 * @param rad_per_pixel	[in]	The angle resolution in the camera.
-	 * @param func_dist		[in]	The function to generate the distance (Cartesian/Equatorial Angle).
+	 * @param func_dist		[in]
+	 	The function to generate the distance (Cartesian/Equatorial Angle).
 	 * @param sets			[out]	The constructed StarSets.
+	 *
+	 * @tparam NI	The size of the list to read from.
+	 * @tparam NO	The size of the list to write to.
 	 */
 
-	template<unsigned int N1, unsigned int N2>
+	template<unsigned int NI, unsigned int NO>
 	static void GenerateSets (
-				ArrayList<Point<decimal>, N1>& list, uint start, uint end,
+				ArrayList<Point<decimal>, NI>& list, uint start, uint end,
 				decimal rad_per_pixel,
 				decimal (*func_dist)(Point<decimal>&, Point<decimal>&, decimal),
-				ArrayList<StarSet, N2>* sets )
+				ArrayList<StarSet, NO>* sets )
 	{
 		for ( uint ii = start; ii < end; ii++ )
 			for ( uint jj = ii + 1; jj < end; jj++ )
@@ -189,27 +194,27 @@ public:
 
 	/**
 	 *	@brief	Derives the probability of each node being the most accurate by testing how clustered they are (higher if clustered).
-	 *	@param fov	[in]		The field of view which is valid.
 	 *	@param sets	[in/out]	The valid elements of the database to compare and modify odds.
 	 *
 	 *	@tparam N1	The max size of the input set.
-	 *	@details	If stars are within the FOV, they will not loose odds, if they are outside they start loosing at a weighting of "kSeparationDiv".
 	 */
 
 	template < uint N1 >
-	static void Vote ( decimal fov, ArrayList<StarSet, N1>* sets )
+	static void Vote ( ArrayList<StarSet, N1>* sets )
 	{
 		for ( uint ii = 0; ii < sets->Size(); ii++ )
 			for ( uint jj = ii + 1; jj < sets->Size(); jj++ ) // No repeates
 			{
-				decimal dist =
+				decimal dist_data =
 					sets->Get(ii).position.RadialDistance(sets->Get(jj).position);
-				std::cout << dist << " > " << fov << " " << (dist > fov) << "\t" << ii << ", " << jj << std::endl;
-				if ( dist > fov )
-				{
-					sets->Get(ii).vote /= StarSet::kSeparationDiv;
-					sets->Get(jj).vote /= StarSet::kSeparationDiv;
-				}
+
+				decimal dist_pixel =
+					sets->Get(ii).pixel->position.RadialDistance(sets->Get(jj).pixel->position);
+
+				decimal error = fabs(dist_data - dist_pixel) + 1;
+
+				sets->Get(ii).vote /= error;
+				sets->Get(jj).vote /= error;
 			}
 	}
 
@@ -293,20 +298,20 @@ public:
 
 	/**
 	 * @brief Used for util::ArrayList<StarSet>.sort() to sort in decending order.
-	 * @param larger	The element that should be larger than the other.
-	 * @param smaller	The element that should be smaller than the other.
+	 * @param right	The element that should be larger than the other.
+	 * @param left	The element that should be smaller than the other.
 	 * @return			True if in order.
 	 */
 
-	static bool SortByVoteDecending		( StarSet& larger, StarSet& smaller );
+	static bool SortByVoteDecending		( StarSet& left, StarSet& right );
 
 	/**
 	 * @brief Used for util::ArrayList<StarSet>.sort() to sort in decending order.
-	 * @param larger	The element that should be larger than the other.
-	 * @param smaller	The element that should be smaller than the other.
+	 * @param left	The element that should be smaller than the other.
+	 * @param right	The element that should be larger than the other.
 	 * @return			True if in order.
 	 */
 
-	static bool SortByVoteAscending			( StarSet& larger, StarSet& smaller );
+	static bool SortByVoteAscending			( StarSet& left, StarSet& right );
 };
 }

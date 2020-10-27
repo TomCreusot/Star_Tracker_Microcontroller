@@ -94,11 +94,14 @@ TEST ( FindElements, InsideTolerance )
 	EXPECT_EQ(out.Get(0).area, -5);
 
 	// TEST MOMENT
-	set = StarSet(Point<decimal>(0), 10, 5);
+	out = ArrayList<StarSet, NO>();
+	set = StarSet(Point<decimal>(0), 13, 5);
 	in.Get(0) = set;
 	database.FindElements<NI, NO>(in, 1000, 1, 1, &out);
-	EXPECT_EQ(out.Size(), 2);
-	EXPECT_EQ(out.Get(1).area, 4);
+	EXPECT_EQ(out.Get(0).area, 4);
+
+
+
 }
 
 TEST ( FindElements, MultipleInputs )
@@ -146,12 +149,12 @@ TEST ( FindElements, MultipleOutputs )
 	database.FindElements<NI, NO>(in, 1.1, 1.1, 100, &out);
 
 	EXPECT_EQ(out.Size(), 6);
-	EXPECT_EQ(out.Get(0).area, -2);
-	EXPECT_EQ(out.Get(1).area, -4);
-	EXPECT_EQ(out.Get(2).area, -3);
-	EXPECT_EQ(out.Get(3).area, 1);
-	EXPECT_EQ(out.Get(4).area, 3);
-	EXPECT_EQ(out.Get(5).area, 2);
+	EXPECT_EQ(out.Get(0).area, -3);
+	EXPECT_EQ(out.Get(1).area, 2);
+	EXPECT_EQ(out.Get(2).area, -4);
+	EXPECT_EQ(out.Get(3).area, 3);
+	EXPECT_EQ(out.Get(4).area, -2);
+	EXPECT_EQ(out.Get(5).area, 1);
 }
 
 
@@ -161,9 +164,10 @@ TEST ( FindElements, Overflow )
 	Database database(0, 0, &sample_database);
 
 	// Array List Sizes
-	const uint NI = 10, NO = 5;
+	const uint NI = 10, NO = 4;
 	ArrayList<StarSet, NI> in;
 	ArrayList<StarSet, NO> out;
+	// The moment and area are on the outsides of the list.
 	StarSet set1(Point<decimal>(0), -10, -10);
 	StarSet set2(Point<decimal>(0), 10, 10);
 	in.PushBack(set1);
@@ -171,10 +175,9 @@ TEST ( FindElements, Overflow )
 	out = ArrayList<StarSet, NO>();
 	database.FindElements<NI, NO>(in, 100, 100, 3, &out);
 
-	EXPECT_EQ(out.Size(), 5);
-	EXPECT_EQ(out.Get(0).area, -3);
+	EXPECT_EQ(out.Size(), 4);
+	EXPECT_EQ(out.Get(0).area, -5); // Will search set1 first.
 	EXPECT_EQ(out.Get(1).area, -4);
-	EXPECT_EQ(out.Get(2).area, -5);
-	EXPECT_EQ(out.Get(3).area, 3);
-	EXPECT_EQ(out.Get(4).area, 4);
+	EXPECT_EQ(out.Get(2).area, 4);
+	EXPECT_EQ(out.Get(3).area, -3);
 }

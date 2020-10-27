@@ -35,7 +35,7 @@ StarSet::StarSet ( const StarSet& px )
 	area		= px.area;
 	moment		= px.moment;
 	position	= px.position;
-	pixel		= NULL;
+	pixel		= px.pixel;
 	vote		= px.vote;
 }
 
@@ -74,7 +74,7 @@ Point<decimal> StarSet::FindCenter	 ( Point<int>& size )
 decimal StarSet::CalcArea	( decimal a, decimal b, decimal c )
 {
 	decimal s = (a + b + c) / 2;
-	return std::sqrt(s * (s - a) * (s - b) * (s - c));
+	return sqrt(s * (s - a) * (s - b) * (s - c));
 }
 
 decimal StarSet::CalcMoment	( decimal area, decimal a, decimal b, decimal c )
@@ -111,14 +111,14 @@ decimal StarSet::EquatorialAngle (
 
 
 
-bool StarSet::SortByVoteDecending ( StarSet& larger, StarSet& smaller )
+bool StarSet::SortByVoteDecending ( StarSet& left, StarSet& right )
 {
-	return larger.vote >= smaller.vote;
+	return left.vote > right.vote;
 }
 
-bool StarSet::SortByVoteAscending ( StarSet& larger, StarSet& smaller )
+bool StarSet::SortByVoteAscending ( StarSet& left, StarSet& right )
 {
-	return larger.vote <= smaller.vote;
+	return left.vote < right.vote;
 }
 
 }

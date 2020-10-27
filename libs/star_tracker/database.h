@@ -4,6 +4,7 @@
  *	@author	Tom Creusot
  */
 #pragma once
+
 #include <array>
 #include <vector>
 #include "libs/util/util.h"
@@ -148,24 +149,19 @@ public:
 	{
 		for ( uint ii = 0; ii < stars.Size(); ii++)
 		{
-			// Setup the number of elements
-			uint min_bounds = found->Size();				// Inclusive
-			uint max_bounds = min_bounds + max_per_star;	// Exclusive
-			if ( max_bounds > found->MaxSize() )
-				max_bounds = found->MaxSize();
-
 			// Check every item in the input list.
 			for ( uint jj = 0; jj < Size(); jj++ )
 			{
-				StarSet dbSet, pxSet = stars.Get(ii);
+				StarSet dbSet;
 				DatabaseToStar(jj, &dbSet);
 				dbSet.vote =
-					StarSet::VoteSingle(pxSet.area, dbSet.area, pxSet.moment, dbSet.moment, t_a, t_m);
+					StarSet::VoteSingle(stars.Get(ii).area, dbSet.area, stars.Get(ii).moment, dbSet.moment, t_a, t_m);
+
 
 				if ( dbSet.vote > 0 )
 				{
-					dbSet.pixel = &pxSet;
-					found->Slot(min_bounds, max_bounds, dbSet, &StarSet::SortByVoteAscending);
+					dbSet.pixel = &stars.Get(ii);
+					found->Slot(dbSet, &StarSet::SortByVoteDecending);
 				}
 			}
 		}

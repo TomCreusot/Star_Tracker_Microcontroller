@@ -147,61 +147,60 @@ TEST ( GenerateSets, ValidFiveElements )
 TEST ( Vote, SingleElement )
 {
 	const int kSize = 10;
-	const decimal fov = 0;
 	ArrayList<StarSet, kSize> list;
-	StarSet e1 ( Point<decimal>(0, 0), 0, 0 );
-	list.PushBack(e1);
-	StarSet::Vote<kSize>(fov, &list);
+	StarSet d1 ( Point<decimal>(0, 0), 0, 0 );
+	StarSet p1 ( Point<decimal>(0, 0), 0, 0 );
+	list.PushBack(d1);
+	StarSet::Vote<kSize>(&list);
 
-	EXPECT_FLOAT_EQ(e1.vote, 1);
+	EXPECT_FLOAT_EQ(list.Get(0).vote, 1);
 }
 
-TEST ( Vote, AllInvalid )
+TEST ( Vote, SameDistance )
 {
 	const int kSize = 10;
-	const decimal fov = M_PI / 2 - 0.001;
 	ArrayList<StarSet, kSize> list;
-	StarSet e1 ( Point<decimal>(M_PI / 2, 0), 0, 0 );
-	StarSet e2 ( Point<decimal>(0, 0), 0, 0 );
-	list.PushBack(e1);
-	list.PushBack(e2);
-	StarSet::Vote<kSize>(fov, &list);
+	StarSet p1 ( Point<decimal>(M_PI / 2, 0), 0, 0 );
+	StarSet d1 ( Point<decimal>(M_PI / 2, 0), 0, 0 );
+	d1.pixel = &p1;
 
-	EXPECT_FLOAT_EQ(list.Get(0).vote, 1 / StarSet::kSeparationDiv);
-	EXPECT_FLOAT_EQ(list.Get(1).vote, 1 / StarSet::kSeparationDiv);
-}
+	StarSet p2 ( 0, 0, 0 );
+	StarSet d2 ( Point<decimal>(0, 0), 0, 0 );
+	d2.pixel = &p2;
 
-TEST ( Vote, AllValid )
-{
-	const int kSize = 10;
-	const decimal fov = M_PI / 2 + 0.001;
-	ArrayList<StarSet, kSize> list;
-	StarSet e1 ( Point<decimal>(M_PI / 2, 0), 0, 0 );
-	StarSet e2 ( Point<decimal>(0, 0), 0, 0 );
-	list.PushBack(e1);
-	list.PushBack(e2);
-	StarSet::Vote<kSize>(fov, &list);
+	list.PushBack(d1);
+	list.PushBack(d2);
 
-	EXPECT_FLOAT_EQ(e1.vote, 1);
-	EXPECT_FLOAT_EQ(e2.vote, 1);
-}
+	StarSet::Vote<kSize>(&list);
 
-TEST ( Vote, Valid )
-{
-	const int kSize = 10;
-	const decimal fov = M_PI / 2 + 0.1;
-	ArrayList<StarSet, kSize> list;
-	StarSet e1 ( Point<decimal>(M_PI / 2, 0), 0, 0 );
-	StarSet e2 ( Point<decimal>(0, 0), 0, 0 );
-	StarSet e3 ( Point<decimal>(-M_PI / 2, 0), 0, 0 );
-	list.PushBack(e1);
-	list.PushBack(e2);
-	list.PushBack(e3);
-	StarSet::Vote<kSize>(fov, &list);
-
-	EXPECT_FLOAT_EQ(list.Get(0).vote, 1 / StarSet::kSeparationDiv);
+	EXPECT_FLOAT_EQ(list.Get(0).vote, 1);
 	EXPECT_FLOAT_EQ(list.Get(1).vote, 1);
-	EXPECT_FLOAT_EQ(list.Get(2).vote, 1 / StarSet::kSeparationDiv);
+}
+
+
+TEST ( Vote, InAccuracy )
+{
+	const int kSize = 10;
+	ArrayList<StarSet, kSize> list;
+	StarSet p1 ( Point<decimal>(1, 1), 0, 0 );
+	StarSet d1 ( Point<decimal>(2, 2), 0, 0 );
+	d1.pixel = &p1;
+
+	StarSet p2 ( Point<decimal>(0.01, 0.01), 0, 0 );
+	StarSet d2 ( Point<decimal>(0.6, 0.5), 0, 0 );
+	d2.pixel = &p2;
+
+	StarSet p3 ( Point<decimal>(0, 0), 0, 0 );
+	StarSet d3 ( Point<decimal>(3, 1), 0, 0 );
+	d3.pixel = &p3;
+	list.PushBack(d1);
+	list.PushBack(d2);
+	list.PushBack(d3);
+	StarSet::Vote<kSize>(&list);
+
+	EXPECT_TRUE(list.Get(0).vote > list.Get(2).vote);
+	EXPECT_TRUE(list.Get(0).vote > list.Get(1).vote);
+	EXPECT_TRUE(list.Get(1).vote > list.Get(2).vote);
 }
 
 
