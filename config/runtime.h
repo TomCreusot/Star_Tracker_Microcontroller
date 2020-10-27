@@ -26,7 +26,7 @@ const decimal	tolerance_moment	= 1;
 const uint 		histogram_bars		= 255;
 
 /// The agression of the threshold (ideal ~ 0.999).
-const decimal	threshold_tolerance	= 0.999;
+const decimal	threshold_tolerance	= 0.9991;
 
 
 /// The maximum amount of stars to observe from the image.
