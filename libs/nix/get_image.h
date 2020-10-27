@@ -36,10 +36,11 @@ namespace nix
 
 class GetImage
 {
-private:
-	BMP bmp;
 
 public:
+	BMP bmp;
+
+
 	/**
 	 * @brief		Default Constructor.
 	 */
@@ -71,12 +72,25 @@ public:
 	{
 		for ( uint i = 0; i < points.Size(); i++ )
 		{
-			bmp(points.Get(i).x, points.Get(i).y)->Red = r;
-			bmp(points.Get(i).x, points.Get(i).y)->Green = g;
-			bmp(points.Get(i).x, points.Get(i).y)->Blue = b;
+			DrawPoint(points.Get(i), r, g, b);
 		}
 	}
 
+
+	/**
+	 * @brief 				Draws point on the bitmap image.
+	 * @param point [in]	The point to set the color of.
+	 * @param r				The value of red.
+	 * @param g				The value of green.
+	 * @param b				The value of blue.
+	 */
+
+	void DrawPoint(Point<decimal>& point, byte r, byte g, byte b)
+	{
+		bmp(round(point.x), round(point.y))->Red = r;
+		bmp(round(point.x), round(point.y))->Green = g;
+		bmp(round(point.x), round(point.y))->Blue = b;
+	}
 
 
 	/**
