@@ -12,8 +12,7 @@
 
 #pragma once
 
-// #include <queue>
-#include <iostream>
+#include <cmath>
 
 #include "libs/util/util.h"
 #include "libs/util/point.h"
@@ -55,12 +54,10 @@ class Blob
 {
 // protected:
 public:
-	/// The top-left position:
-	Point<uint> origin;
-	/// The width of the blob, if it is elongated or large, it is probably not a star.
-	uint width;
-	/// The height of the blob, if it is elongated or large, it is probably not a star.
-	uint height;
+	/// Top-Left Position
+	Point<uint> boundsMin;
+	/// Bottom-Right Position
+	Point<uint> boundsMax;
 	/// The number of pixels.
 	uint pixels;
 	/// Sum of the intensity of all the pixels.
@@ -90,16 +87,17 @@ public:
 
 
 	/**
-	 * @brief							Peforms grassfire blob detection on the desired image.
-	 * @param threshold 	[in]		What the intensity must be above to qualify as a blob. (0 means 1 qualifies).
-	 * @param img			[in/out]	The image to examine.
-	 * @param list			[out]		The list to append to.
-	 *
-	 * @tparam NL			The size of the array list "list".
-	 * @tparam NB			The max size of a "blob".
-	 *
-	 * @details	Calls Blob.grassfire which deletes all pixels considered a blob.
-	 */
+	* @brief			Peforms grassfire blob detection on the desired image.
+	*					Prioritieses the brightest blobs.
+	* @param threshold 	[in]		What the intensity must be above to qualify as a blob. (0 means 1 qualifies).
+	* @param img		[in/out]	The image to examine.
+	* @param list		[out]		The list to append to.
+	*
+	* @tparam NL		The size of the array list "list".
+	* @tparam NB		The max size of a "blob".
+	*
+	* @details	Calls Blob.grassfire which deletes all pixels considered a blob.
+	*/
 
 	template<const uint NL, const uint NB>
 	static void FindBlobs ( byte threshold, Image* img, ArrayList<Blob, NL>* list )
@@ -113,7 +111,9 @@ public:
 				{
 					Blob blob(x, y);
 					blob.SpreadGrassFire<NB> ( threshold, img );
-					list->PushBack(blob);
+
+					list->Slot(blob, &SortByIntensity);
+					// list->PushBack(blob);
 				}
 			}
 		}
@@ -122,80 +122,88 @@ public:
 
 
 	/**
-	 * @brief	Uses the grass fire method to find the true bounds of the blob.
-	 * Sets any used pixels to 0.
-	 *
-	 * @param threshold			The brightness cut off (exclusive).
-	 * @param img		[out]	The image to examine SETS ALL USED PIXELS TO 0.
-	 *
-	 * @tparam	N				The max size of a blob.
-	 */
+	* @brief	Uses the grass fire method to find the true bounds of the blob.
+	* Sets any used pixels to 0.
+	*
+	* @param threshold			The brightness cut off (exclusive).
+	* @param img		[out]	The image to examine SETS ALL USED PIXELS TO 0.
+	*
+	* @tparam N					The max size of a blob.
+	*/
 
 	template<const uint N>
 	void SpreadGrassFire ( uint threshold, Image* img )
 	{
-		util::ArrayList<util::Point<util::uint>, N> q;
+		ArrayList<Point<uint>, N> stack;
 
-		uint minX = round(centroid.x), minY = round(centroid.y);
-		uint maxX = minX, maxY = minY;
+		stack.PushBack(Point<uint>(boundsMin.x, boundsMin.y));
 
-		q.PushBack(Point<uint>(minX, minY));
-
-		while ( !q.IsEmpty() )
+		while ( !stack.IsEmpty() )
 		{
-			util::Point<util::uint> pt = q.PopBack();
-			if(img->ValidPixel(pt.x,pt.y)&&img->GetPixel(pt.x,pt.y)>threshold)
-			{	// 4 directional
-
-				q.PushBack(util::Point<uint>(pt.x + 1, pt.y));
-				q.PushBack(util::Point<uint>(pt.x - 1, pt.y));
-				q.PushBack(util::Point<uint>(pt.x, pt.y + 1));
-				q.PushBack(util::Point<uint>(pt.x, pt.y - 1));
-
-				// Diagonals
-			/*	q.PushBack(util::Point<uint>(pt.x - 1, pt.y - 1));
-				q.PushBack(util::Point<uint>(pt.x - 1, pt.y + 1));
-				q.PushBack(util::Point<uint>(pt.x + 1, pt.y - 1));
-				q.PushBack(util::Point<uint>(pt.x + 1, pt.y + 1));*/
-
-
-				minX 		= (pt.x < minX ? pt.x : minX);
-				minY 		= (pt.y < minY ? pt.y : minY);
-				maxX 		= (pt.x > maxX ? pt.x : maxX);
-				maxY 		= (pt.y > maxY ? pt.y : maxY);
-
-				const byte px = img->GetPixel(pt.x, pt.y);
-				// Setting new centroid.
-				centroid.x = FindCentroid(centroid.x, intensity, pt.x, px);
-				centroid.y = FindCentroid(centroid.y, intensity, pt.y, px);
-				// Setting intensity.
-				intensity += (uint) px;
-				// Setting pixels
-				pixels++;
-				// Stops reading same px
-				img->SetPixel(pt.x, pt.y, 0);
-			}
-		}
-		if ( pixels == 0 )	width = height = 0;
-		else
-		{
-			width = maxX - minX + 1;
-			height = maxY - minY + 1;
+			Point<uint> pt = stack.PopBack();
+			FindNeighbours<N>(threshold, pt, img, &stack);
+			ConsumePixel(pt, img);
 		}
 	}
 
-	/**
-	 * @brief			Finds the new center of mass in one dimention.
-	 *
-	 * @param centroid	The old center of mass.
-	 * @param intense	The previous intensity.
-	 * @param point		The new point position to add.
-	 * @param weight	The weight of the new blob.
-	 *
-	 * @return			The new center of mass.
-	 */
 
-	static decimal FindCentroid ( decimal centroid, uint intense,
+
+	/**
+	* @brief	Finds all pixels around the current pixel
+	* @param threshold			The brightness cut off (exclusive).
+	* @param pt			[in]	The point on the image.
+	* @param img		[in]	The image to observer.
+	* @param stack		[out]	The arraylist to append the points to.
+	*/
+
+	template<const uint N>
+	void FindNeighbours ( uint threshold, Point<uint>& pt, Image* img, ArrayList<Point<uint>, N>* stack )
+	{
+		// 4 directional
+		Point<uint> cur(pt.x + 1, pt.y);	// Right
+		bool valid = img->ValidPixel(cur.x, cur.y);
+		if ( valid && threshold < img->GetPixel(cur.x, cur.y) )
+			stack->PushBack(cur);
+
+		cur = Point<uint>(pt.x - 1, pt.y); // Left
+		valid = img->ValidPixel(cur.x, cur.y);
+		if ( valid && threshold < img->GetPixel(cur.x, cur.y) )
+			stack->PushBack(cur);
+
+		cur = Point<uint>(pt.x, pt.y + 1); // Down
+		valid = img->ValidPixel(cur.x, cur.y);
+		if ( valid && threshold < img->GetPixel(cur.x, cur.y) )
+			stack->PushBack(cur);
+
+		cur = Point<uint>(pt.x, pt.y - 1); // Up
+		valid = img->ValidPixel(cur.x, cur.y);
+		if ( valid && threshold < img->GetPixel(cur.x, cur.y) )
+			stack->PushBack(cur);
+	}
+
+
+
+	/**
+	* @brief Sets current pixel to 0 and adjusts the blobs dimentions to acomidate it.
+	* @param pt		[out]		The position of the pixel.
+	* @param img	[in/out]	The image to read / write the pixel to.
+	*/
+
+	void ConsumePixel ( Point<uint>& pt, Image* img );
+
+
+	/**
+	* @brief			Finds the new center of mass in one dimention.
+	*
+	* @param centroid	The old center of mass.
+	* @param intensity	The previous intensity.
+	* @param point		The new point position to add.
+	* @param weight	The weight of the new blob.
+	*
+	* @return			The new center of mass.
+	*/
+
+	static decimal FindCentroid ( decimal centroid, uint intensity,
 													uint point, byte weight );
 
 
@@ -203,12 +211,12 @@ public:
 
 
 	/**
-	 * @brief					Converts the Blob list to a Point list using the centroid.
-	 * @param blobs		[in]	The list of blobs.
-	 * @param points	[out]	The list of centroids to be created.
-	 *
-	 * @tparam N				The size of the array list "points".
-	 */
+	* @brief					Converts the Blob list to a Point list using the centroid.
+	* @param blobs		[in]	The list of blobs.
+	* @param points	[out]	The list of centroids to be created.
+	*
+	* @tparam N				The size of the array list "points".
+	*/
 
 	template<const int N>
 	static void ToPointList ( 	ArrayList<Blob, N>& blobs,
@@ -222,13 +230,23 @@ public:
 
 
 	/**
-	 * @brief				Used for util::ArrayList<Blob>.sort() to sort in decending order.
-	 * @param larger  [in]	The element that should be larger than the other.
-	 * @param smaller [in]	The element that should be smaller than the other.
-	 * @return				True if in order.
-	 */
+	* @brief				Used for util::ArrayList<Blob>.sort() to sort in decending order.
+	* @param larger  [in]	The element that should be larger than the other.
+	* @param smaller [in]	The element that should be smaller than the other.
+	* @return				True if in order.
+	*/
 
 	static bool SortByIntensity ( Blob& larger, Blob& smaller );
+
+
+	/**
+	* @brief				Used for util::ArrayList<Blob>.sort() to sort in ascending order.
+	* @param larger  [in]	The element that should be larger than the other.
+	* @param smaller [in]	The element that should be smaller than the other.
+	* @return				True if in order.
+	*/
+
+	static bool SortByIntensityAscending ( Blob& smaller, Blob& larger );
 
 };
 }

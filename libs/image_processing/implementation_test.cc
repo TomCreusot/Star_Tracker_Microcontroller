@@ -247,10 +247,9 @@ TEST ( ImageProcessing, Dots )
 		uint intense = blobs.Get(i).intensity;
 		EXPECT_TRUE( intense < prev );
 	}
-	// The brightest point could not inserted as it exceeded the size of the list.
-	// The second brightest is 9, 7
-	EXPECT_FLOAT_EQ(blobs.Get(0).origin.x, 9);
-	EXPECT_FLOAT_EQ(blobs.Get(0).origin.y, 7);
+	// The brightest is 9, 9
+	EXPECT_FLOAT_EQ(blobs.Get(0).boundsMin.x, 9);
+	EXPECT_FLOAT_EQ(blobs.Get(0).boundsMin.y, 9);
 }
 
 
@@ -292,10 +291,10 @@ TEST ( ImageProcessing, IntensityVariation )
 	ArrayList<Blob, LIST_SIZE> blobs;
 	Blob::FindBlobs<LIST_SIZE, BLOB_SIZE>(threshold, &img, &blobs);
 
-	// Top Left
-	EXPECT_FLOAT_EQ(blobs.Get(0).centroid.x, 0.75);
-	EXPECT_FLOAT_EQ(blobs.Get(0).centroid.y, 0.75);
-	// Bottom Right
-	EXPECT_FLOAT_EQ(blobs.Get(1).centroid.x, 2.75);
-	EXPECT_FLOAT_EQ(blobs.Get(1).centroid.y, 2.75);
+	// Bottom Right (more intensity)
+	EXPECT_FLOAT_EQ(blobs.Get(0).centroid.x, 2.75);
+	EXPECT_FLOAT_EQ(blobs.Get(0).centroid.y, 2.75);
+	// Top Left (Less intensity)
+	EXPECT_FLOAT_EQ(blobs.Get(1).centroid.x, 0.75);
+	EXPECT_FLOAT_EQ(blobs.Get(1).centroid.y, 0.75);
 }

@@ -31,7 +31,7 @@ namespace image_processing
  *		cout << img.GetPixel(2, 3) << endl; 				// 20.
  *
  *		const int list_size = 40;
- *		ArrayList<int, list_size> histogram(list_size);		// A brightness histogram with 20 bars.
+ *		ArrayList<uint, list_size> histogram(list_size);		// A brightness histogram with 20 bars.
  *		img.GenerateHistogram<list_size>(histogram);		// histogram[0] = 10 * 10 - 1 = 99, histogram[20/255*40 = 3] = 1.
  *
  *		Thresholding finds the bar that the aggression % of pixels is less.
@@ -195,12 +195,12 @@ public:
 		uint threshold = lround((decimal)width * (decimal)height * aggression);
 		uint current = 0;
 		uint i = 0;
-		while ( current + histogram.Get(i) < threshold && i < histogram.Size() )
+		while ( current + histogram.Get(i) < threshold && i < N )
 		{
 			current += histogram.Get(i);
 			i++;
 		}
-		return lround(255.0 * (decimal)i / (decimal)histogram.Size());
+		return lround(255.0 * (decimal)i / (decimal)N);
 	}
 
 
@@ -220,13 +220,11 @@ public:
 		for ( uint i = 0; i < histogram->Size(); i++ )
 			histogram->Get(i) = 0;
 
-		//
 		for ( uint xx = 0; xx < width; xx++ )
 			for ( uint yy = 0; yy < height; yy++ )
 			{
-				uint i = (uint)(
-					(decimal) GetPixel(xx, yy) * (decimal) histogram->Size()
-																		/ 256);
+
+				uint i = (uint)((decimal) GetPixel(xx, yy) * (decimal)(N) /256);
 				histogram->Get(i)++;
 			}
 	}
