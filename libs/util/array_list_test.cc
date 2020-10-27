@@ -208,6 +208,21 @@ TEST		( PushBack,  Int )
 	EXPECT_EQ(list.Size(), 100);
 }
 
+TEST 	( PushBackValid, Int )
+{
+	util::ArrayList<int, 5> list;
+	EXPECT_FALSE(list.PushBackValid(1, false));
+	EXPECT_EQ(list.Size(), 0);
+	EXPECT_TRUE(list.PushBackValid(2, true));
+	EXPECT_EQ(list.Get(0), 2);
+	EXPECT_TRUE(list.PushBackValid(2, true));
+	EXPECT_TRUE(list.PushBackValid(2, true));
+	EXPECT_TRUE(list.PushBackValid(2, true));
+	EXPECT_TRUE(list.PushBackValid(2, true));
+	EXPECT_FALSE(list.PushBackValid(1, true));
+	EXPECT_EQ(list.Size(), 5);
+}
+
 
 TEST		( PushBack,  String )
 {
@@ -225,6 +240,21 @@ TEST		( PushBack,  String )
 	EXPECT_TRUE(list.IsFull());
 	EXPECT_FALSE(list.IsEmpty());
 	EXPECT_EQ(list.Size(), 100);
+}
+
+TEST 	( PushBackValid, String )
+{
+	util::ArrayList<string, 5> list;
+	EXPECT_FALSE(list.PushBackValid("abc", false));
+	EXPECT_EQ(list.Size(), 0);
+	EXPECT_TRUE(list.PushBackValid("def", true));
+	EXPECT_EQ(list.Get(0)[0], 'd');
+	EXPECT_TRUE(list.PushBackValid("def", true));
+	EXPECT_TRUE(list.PushBackValid("def", true));
+	EXPECT_TRUE(list.PushBackValid("def", true));
+	EXPECT_TRUE(list.PushBackValid("def", true));
+	EXPECT_FALSE(list.PushBackValid("fed", true));
+	EXPECT_EQ(list.Size(), 5);
 }
 
 
@@ -308,10 +338,59 @@ TEST		( Operator, String )
 
 
 
+// CallAll
+void AddTen	( int* val )
+{
+	*val += 10;
+}
 
+void SwapFrontCharacters ( string* val )
+{
+	char temp = (*val)[0];
+	(*val)[0] = (*val)[1];
+	(*val)[1] = temp;
+}
 
+TEST 		( CallALL, Int )
+{
+	const int size = 10;
+	util::ArrayList<int, size> list;
+	list.PushBack(1);
+	list.PushBack(2);
+	list.PushBack(3);
+	list.PushBack(4);
+	list.PopBack();
 
+	list.CallAll(&AddTen);
 
+	EXPECT_EQ(list.Get(0), 11);
+	EXPECT_EQ(list.Get(1), 12);
+	EXPECT_EQ(list.Get(2), 13);
+	EXPECT_EQ(list.Get(3), 4);
+}
+
+TEST 		( CallALL, String )
+{
+	const int size = 10;
+
+	string e1 = "hello";
+	string e2 = "world";
+
+	util::ArrayList<string, size> list;
+	list.PushBack(e1);
+	list.PushBack(e2);
+	list.PushBack(e2);
+	list.PopBack();
+
+	list.CallAll(&SwapFrontCharacters);
+
+	EXPECT_EQ(list.Get(0)[0], 'e');
+	EXPECT_EQ(list.Get(0)[1], 'h');
+	EXPECT_EQ(list.Get(1)[0], 'o');
+	EXPECT_EQ(list.Get(1)[1], 'w');
+	EXPECT_EQ(list.Get(2)[0], 'w');
+	EXPECT_EQ(list.Get(2)[1], 'o');
+}
 
 
 
@@ -392,193 +471,73 @@ TEST		( SortList, String )
 |																	|
 \*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*/
 
-TEST ( Slot, Branch )
+TEST ( Slot, Ascending )
 {
 	// SlotFilling should always return true as it will fill.
 	// SlotFull if always sent smaller values will return false.
 	const uint size = 6;
 	util::ArrayList<float, size> input;
-	float to_slot = 5;
-	EXPECT_TRUE(input.Slot(0, size, to_slot, &SortAscending));
-	to_slot = 4;
-	EXPECT_TRUE(input.Slot(0, size, to_slot, &SortAscending));
-	to_slot = 3;
-	EXPECT_TRUE(input.Slot(0, size, to_slot, &SortAscending));
-	to_slot = 2;
-	EXPECT_TRUE(input.Slot(0, size, to_slot, &SortAscending));
+
+	bool (*in_order)(float&, float&) = &SortAscending;
+	float to_slot = 0;
+	EXPECT_TRUE(input.Slot(to_slot, in_order));
 	to_slot = 1;
-	EXPECT_TRUE(input.Slot(0, size, to_slot, &SortAscending));
-	to_slot = 0;
-	EXPECT_TRUE(input.Slot(0, size, to_slot, &SortAscending));
+	EXPECT_TRUE(input.Slot(to_slot, in_order));
+	to_slot = 2;
+	EXPECT_TRUE(input.Slot(to_slot, in_order));
+	to_slot = 3;
+	EXPECT_TRUE(input.Slot(to_slot, in_order));
+	to_slot = 4;
+	EXPECT_TRUE(input.Slot(to_slot, in_order));
+	to_slot = 5;
+	EXPECT_TRUE(input.Slot(to_slot, in_order));
 
 	EXPECT_EQ(input.Size(), size);
-	// Full
+	// Full, 0, 1, 2, 3, 4, 5
 	to_slot = -1;
-	EXPECT_FALSE(input.Slot(0, size, to_slot, &SortAscending));
+	EXPECT_TRUE(input.Slot(to_slot, in_order));//-1, 0, 1, 2, 3, 4
 	to_slot = -2;
-	EXPECT_FALSE(input.Slot(0, size, to_slot, &SortAscending));
-	to_slot = 1;	// Should Insert
-	EXPECT_TRUE(input.Slot(0, size, to_slot, &SortAscending));
-	to_slot = 10;	// Should Insert
-	EXPECT_TRUE(input.Slot(0, size, to_slot, &SortAscending));
-	to_slot = 100;	// Should Insert
-	EXPECT_TRUE(input.Slot(size - 1, size, to_slot, &SortAscending));
-	to_slot = 10;	// Should Insert
-	EXPECT_FALSE(input.Slot(size - 1, size, to_slot, &SortAscending));
+	EXPECT_TRUE(input.Slot(to_slot, in_order));//-2, -1, 0, 1, 2, 3
+	to_slot = 1;
+	EXPECT_TRUE(input.Slot(to_slot, in_order));//-2, -1, 0, 1, 1, 2
+	to_slot = 10;
+	EXPECT_FALSE(input.Slot(to_slot, in_order));//-2, -1, 0, 1, 1, 2
 }
 
-/*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*\
-|																	|
-|						---- SlotFilling ----						|
-|																	|
-\*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*/
 
-TEST ( SlotFilling, Ascending )
+TEST ( Slot, Decending )
 {
-	// In ascending it is always adding to the front.
+	// SlotFilling should always return true as it will fill.
+	// SlotFull if always sent smaller values will return false.
 	const uint size = 6;
 	util::ArrayList<float, size> input;
-	input.PushBack(0);
 
-	float to_slot = 1;
-	bool outcome = input.SlotFilling ( 1, size, to_slot, &SortAscending );
-
-	to_slot = 3;
-	outcome &= input.SlotFilling ( 1, size, to_slot, &SortAscending );
-
-	to_slot = 5;
-	outcome &= input.SlotFilling ( 1, size, to_slot, &SortAscending );
-
-	to_slot = 7;
-	outcome &= input.SlotFilling ( 1, size, to_slot, &SortAscending );
-
-	to_slot = 11;
-	outcome &= input.SlotFilling ( 1, size, to_slot, &SortAscending );
-
-	EXPECT_TRUE(outcome);
-	EXPECT_FLOAT_EQ(input.Get(0), 0);
-	EXPECT_FLOAT_EQ(input.Get(1), 1);
-	EXPECT_FLOAT_EQ(input.Get(2), 3);
-	EXPECT_FLOAT_EQ(input.Get(3), 5);
-	EXPECT_FLOAT_EQ(input.Get(4), 7);
-	EXPECT_FLOAT_EQ(input.Get(5), 11);
-	EXPECT_EQ(input.Size(), size);
-}
-
-
-TEST ( SlotFilling, Random )
-{
-	// In ascending it is always adding to the front.
-	const uint size = 5;
-	util::ArrayList<float, size> input;
-
+	bool (*in_order)(float&, float&) = &SortDecending;
 	float to_slot = 5;
-	bool outcome = input.SlotFilling ( 0, size, to_slot, &SortAscending );
-
-	to_slot = 11;
-	outcome &= input.SlotFilling ( 0, size, to_slot, &SortAscending );
-
-	to_slot = 7;
-	outcome &= input.SlotFilling ( 0, size, to_slot, &SortAscending );
-
-	to_slot = 1;
-	outcome &= input.SlotFilling ( 0, size, to_slot, &SortAscending );
-
+	EXPECT_TRUE(input.Slot(to_slot, in_order));
+	to_slot = 4;
+	EXPECT_TRUE(input.Slot(to_slot, in_order));
 	to_slot = 3;
-	outcome &= input.SlotFilling ( 0, size, to_slot, &SortAscending );
+	EXPECT_TRUE(input.Slot(to_slot, in_order));
+	to_slot = 2;
+	EXPECT_TRUE(input.Slot(to_slot, in_order));
+	to_slot = 1;
+	EXPECT_TRUE(input.Slot(to_slot, in_order));
+	to_slot = 0;
+	EXPECT_TRUE(input.Slot(to_slot, in_order));
 
-	EXPECT_TRUE(outcome);
-	EXPECT_FLOAT_EQ(input.Get(0), 1);
-	EXPECT_FLOAT_EQ(input.Get(1), 3);
-	EXPECT_FLOAT_EQ(input.Get(2), 5);
-	EXPECT_FLOAT_EQ(input.Get(3), 7);
-	EXPECT_FLOAT_EQ(input.Get(4), 11);
 	EXPECT_EQ(input.Size(), size);
-}
-
-
-
-/*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*\
-|																	|
-|						---- SlotFull ----							|
-|																	|
-\*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*/
-
-TEST ( SlotFull, Bounds )
-{
-	const uint size = 10;
-	util::ArrayList<float, size> input;
-	input.PushBack(1);	// 0
-	input.PushBack(5);	// 1 First Element
-	input.PushBack(10);	// 2
-	input.PushBack(15);	// 3
-	input.PushBack(25);	// 4
-	input.PushBack(30);	// 5
-
-	// LOWER BOUNDS
-	// Not Big Enough
-	float to_slot = 2;
-	bool outcome = input.SlotFull ( 1, input.Size(), to_slot, &SortAscending );
-	EXPECT_FALSE(outcome);
-	EXPECT_FLOAT_EQ(input.Get(0), 1);
-	EXPECT_FLOAT_EQ(input.Get(1), 5);
-	EXPECT_FLOAT_EQ(input.Get(2), 10);
-
-	// Big Enough
-	to_slot = 6;
-	outcome = input.SlotFull ( 1, input.Size(), to_slot, &SortAscending );
-	EXPECT_TRUE(outcome);
-	EXPECT_FLOAT_EQ(input.Get(0), 1);
-	EXPECT_FLOAT_EQ(input.Get(1), 6);
-	EXPECT_FLOAT_EQ(input.Get(2), 10);
-
-
-	// UPPER BOUNDS
-	// not to end
-	to_slot = 35;
-	outcome = input.SlotFull ( 1, input.Size() - 1, to_slot, &SortAscending );
-	EXPECT_TRUE(outcome);
-	EXPECT_FLOAT_EQ(input.Get(0), 1);
-	EXPECT_FLOAT_EQ(input.Get(1), 10);
-	EXPECT_FLOAT_EQ(input.Get(2), 15);
-	EXPECT_FLOAT_EQ(input.Get(3), 25);
-	EXPECT_FLOAT_EQ(input.Get(4), 35);
-	EXPECT_FLOAT_EQ(input.Get(5), 30);
-
-	// to end
-	to_slot = 55;
-	outcome = input.SlotFull ( 1, input.Size(), to_slot, &SortAscending );
-	EXPECT_TRUE(outcome);
-	EXPECT_FLOAT_EQ(input.Get(0), 1);
-	EXPECT_FLOAT_EQ(input.Get(1), 15);
-	EXPECT_FLOAT_EQ(input.Get(2), 25);
-	EXPECT_FLOAT_EQ(input.Get(3), 35);
-	EXPECT_FLOAT_EQ(input.Get(4), 30);
-	EXPECT_FLOAT_EQ(input.Get(5), 55);
-	EXPECT_EQ(input.Size(), 6);
-}
-
-
-TEST ( SlotFull, Middle )
-{
-	const uint size = 10;
-	util::ArrayList<float, size> input;
-	input.PushBack(1);	// 0
-	input.PushBack(5);	// 1 First Element
-	input.PushBack(10);	// 2
-	input.PushBack(15);	// 3
-	input.PushBack(25);	// 4
-	input.PushBack(30);	// 5
-
-	float to_slot = 13;
-	bool outcome = input.SlotFull(1, input.Size() - 2, to_slot, &SortAscending);
-	EXPECT_TRUE(outcome);
-	EXPECT_FLOAT_EQ(input.Get(0), 1);
-	EXPECT_FLOAT_EQ(input.Get(1), 10);
-	EXPECT_FLOAT_EQ(input.Get(2), 13);
-	EXPECT_FLOAT_EQ(input.Get(3), 15);
-	EXPECT_FLOAT_EQ(input.Get(4), 25);
-	EXPECT_FLOAT_EQ(input.Get(5), 30);
-	EXPECT_EQ(input.Size(), 6);
-
+	// Full, 5, 4, 3, 2, 1
+	to_slot = -1;
+	EXPECT_FALSE(input.Slot(to_slot, in_order));//5, 4, 3, 2, 1, 0
+	to_slot = -2;
+	EXPECT_FALSE(input.Slot(to_slot, in_order));//5, 4, 3, 2, 1, 0
+	to_slot = 1;
+	EXPECT_TRUE(input.Slot(to_slot, in_order));//5, 4, 3, 2, 1, 1
+	to_slot = 10;
+	EXPECT_TRUE(input.Slot(to_slot, in_order));//10, 5, 4, 3, 2, 1
+	to_slot = 100;
+	EXPECT_TRUE(input.Slot(to_slot, in_order)); // 100, 10, 5, 4, 3, 2
+	to_slot = 10;
+	EXPECT_TRUE(input.Slot(to_slot, in_order)); // 100, 10, 10, 5, 4, 3
 }
