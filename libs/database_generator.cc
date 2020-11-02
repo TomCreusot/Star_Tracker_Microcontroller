@@ -53,13 +53,13 @@ int main ( int argc, char** argv )
 /**********************************************************************
  *			Reads the database and sorts by magnitude.
  */
-		cout << "reading database file:..." << std::flush;
+		cout << "reading database file:..." << endl;
 
 		util::LinkedList<Star> stars;
 		Star::StarsFromCSV<0>(		DATABASE_FILE, CUTOFF_MAG,
 									C_RA, C_DEC, C_MAG, &stars		);
 
-		cout <<  "\tfound: " << stars.Size()  << endl;
+		cout <<  "found: " << stars.Size() << " stars." << endl;
 		cout << "sorting:..." << endl;
 		stars.Sort(star_tracker::Star::SortByMagnitude);
 
@@ -71,13 +71,11 @@ int main ( int argc, char** argv )
 		cout << "\rgenerating sets:..." << endl;
 		util::LinkedList<StarSet> sets;
 
-		star_tracker::Database database(FOV, 0, NULL);
-
 		for ( uint i = 0; i < stars.Size(); i++ )
 		{
 			util::LinkedList<Point<decimal>> combinations;
 			Star::FindCloseStars<0, 0>(i, PILOT_SETS, FOV, stars, &combinations);
-			StarSet::GenerateSets<0, 0>(combinations, 0, combinations.Size(), database.rad_per_pixel, &StarSet::EquatorialAngle, &sets);
+			StarSet::GenerateSets<0, 0>(combinations, &sets);
 			cout << "\r" << sets.Size() << std::flush;
 		}
 		cout << endl;
@@ -98,7 +96,7 @@ int main ( int argc, char** argv )
 			str += "}";										// End Array Row
 			if ( sets.Size() > 0 ) str += ",\n";			// If not last row
 			list.PushBack(str);
-			cout << "\r" << sets.Size() << " remaining" << std::flush;
+			cout << "\r" << sets.Size() << " remaining    " << std::flush;
 		}
 		cout << endl;
 		string* str = LinkedList<string>::ListToString(list);

@@ -9,3 +9,6 @@
 # Remove all html files in doc and coverage
 doc/*
 coverage/*
+
+# Remove massive database file
+libs/star_tracker/database_array.h

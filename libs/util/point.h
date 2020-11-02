@@ -118,7 +118,7 @@ public:
 	/// @brief		Returns the angle in degrees.
 	/// @return		The angle in degrees.
 	T DecDeg	( )			{	return this->y * 180 / M_PI;	}
-	/// @brief		Alias for declination from a Range of 0 to 180h instead of 0 to 2PIdeg.
+	/// @brief		Alias for declination from a Range of -90* to 90* instead of -PI* to PI*.
 	/// @param y	The value of Declination in degrees.
 	void DecDeg	( T y )		{	this->y = y * M_PI / 180;	}
 

@@ -80,8 +80,8 @@ public:
 
 	Star ( decimal ra, decimal dec, decimal mag  )
 	{
-		position.x = ra;
-		position.y = dec;
+		position.RaHour(ra);
+		position.DecDeg(dec);
 		magnitude = mag;
 	}
 
@@ -108,6 +108,12 @@ public:
 
 		string line;
 		std::vector<string> columns;
+
+		getline(strm, line);
+		Split(',', line, &columns);
+		cout << "Ensure column titles match:" << endl;
+		cout << "ra (2000)  |\t  dec (2000)  |\t  mag" << endl;
+		cout << columns[ra] << "  \t|\t  " << columns[dec] << "  \t|\t  " << columns[mag] << endl;
 
 		while ( getline(strm, line) )
 		{

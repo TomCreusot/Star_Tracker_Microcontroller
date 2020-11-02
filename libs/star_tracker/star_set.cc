@@ -18,12 +18,27 @@ StarSet::StarSet ( )
 }
 
 
-// Distance only
+
 StarSet::StarSet ( Point<decimal> pos, decimal area, decimal moment )
 {
 	this->area		= area;
-	this->moment	= moment;
+	this->moment 	= moment;
 	this->position	= pos;
+	this->pixel		= NULL;
+	this->vote		= 1;
+}
+
+
+
+StarSet::StarSet ( Point<decimal> s1, Point<decimal> s2, Point<decimal> s3 )
+{
+	decimal a = s1.RadialDistance(s2);
+	decimal b = s1.RadialDistance(s3);
+	decimal c = s2.RadialDistance(s3);
+
+	this->area   = StarSet::CalcArea(a, b, c);
+	this->moment = StarSet::CalcMoment(area, a, b, c);
+	this->position	= s1;
 	this->pixel 	= NULL;
 	this->vote 		= 1;
 }
@@ -79,34 +94,17 @@ decimal StarSet::CalcArea	( decimal a, decimal b, decimal c )
 
 decimal StarSet::CalcMoment	( decimal area, decimal a, decimal b, decimal c )
 {
-	return area * ( a * a + b * b + c * c ) / 36;
+	return area * ( a * a + b * b + c * c ) / 36.0;
 }
 
 decimal StarSet::VoteSingle (	decimal area1, decimal area2,
-								decimal moment1, decimal moment2,
-								decimal toleranceArea, decimal toleranceMoment )
+							decimal moment1, decimal moment2,
+							decimal tolerance_area, decimal tolerance_moment )
 {
-	decimal areaVote 	= 1 - fabs(area1 - area2) / toleranceArea;
-	decimal momentVote	= 1 - fabs(moment1 - moment2) / toleranceMoment;
+	decimal areaVote 	= 1 - fabs(area1 - area2) / tolerance_area;
+	decimal momentVote	= 1 - fabs(moment1 - moment2) / tolerance_moment;
 	return (areaVote + momentVote) / 2;
 }
-
-
-decimal StarSet::CartesianAngle (
-							Cartesian<decimal>& p1, Cartesian<decimal>& p2,
-							decimal rad_per_pixel )
-{
-	return p1.Distance(p2) * rad_per_pixel;
-}
-
-
-decimal StarSet::EquatorialAngle (
-							Equatorial<decimal>& p1, Equatorial<decimal>& p2,
-							decimal rad_per_pixel	)
-{
-	return p1.RadialDistance(p2);
-}
-
 
 
 

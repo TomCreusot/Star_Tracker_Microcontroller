@@ -17,6 +17,18 @@ namespace star_tracker
 {
 /**
  *	This is just to store details about a Database so it can be used for testing or to store the actual database.
+ *	@example
+ *		// Setup the database.
+ *		// This is important for getting the field of view, pixel resolution and the database to compare the stars to.
+ *		decimal imgHyp = std::hypot(img.GetWidth(), img.GetHeight());
+ *		decimal fov = star_tracker::database_array::fov;
+ *		// Constructs database
+ *	 star_tracker::Database database(fov, &star_tracker::database_array::array);
+ *
+ *		util::ArrayList<star_tracker::StarSet, MAX_MATCHES> database_angles;
+ *		database.FindElements<MAX_SETS, MAX_MATCHES>
+ *					(	triangles, TOLERANCE_AREA, TOLERANCE_MOMENT,
+ *					MAX_MATCHES_STAR, &database_angles );
  */
 
 class Database
@@ -37,21 +49,17 @@ public:
 
 
 	decimal fov;			///<	The field of view chosen for the camera and database.
-	decimal rad_per_pixel;	///<	The number of radians of fov in each pixel.
 	vector<array<decimal, kNumElements>>* database = NULL;	///< The database to read from.
 
 
 	/**
 	 * @brief Alternate Constructor
 	 * @param fov			[in]	The field of view (RADIANS) of the image.
-	 * @param rad_per_pixel	[in]	The field of view per pixel on the image.
 	 * @param database		[in]	The database of elements.
 	 */
-	Database (	decimal fov, decimal rad_per_pixel,
-				vector<array<decimal, kNumElements>>* database )
+	Database ( decimal fov, vector<array<decimal, kNumElements>>* database )
 	{
 		this->database		= database;
-		this->rad_per_pixel	= rad_per_pixel;
 		this->fov			= fov;
 	}
 
@@ -110,6 +118,31 @@ public:
 
 
 
+	static void ToArray ( StarSet& set, array<decimal, kNumElements>* a )
+	{
+		for ( uint i = 0; i < Database::kNumElements; i++ )
+		{
+			switch ( i )
+			{
+				case Database::kIndexArea:
+				(*a)[i] = set.area;
+				break;
+				case Database::kIndexMoment:
+				(*a)[i] = set.moment;
+				break;
+				case Database::kIndexRA:
+				(*a)[i] = set.position.Ra();
+				break;
+				case Database::kIndexDEC:
+				(*a)[i] = set.position.Dec();
+				break;
+			}
+		}
+	}
+
+
+
+
 
 	/**
 	 * @brief					Creates a star set from the database row.
@@ -122,7 +155,7 @@ public:
 		Point<decimal> pilot (	Get(row, kIndexRA),
 								Get(row, kIndexDEC) );
 		decimal area = 			Get(row, kIndexArea);
-		decimal moment = 		Get(row, kIndexDEC);
+		decimal moment = 		Get(row, kIndexMoment);
 		row_value->area = area;
 		row_value->moment = moment;
 		row_value->position = pilot;
@@ -144,8 +177,8 @@ public:
 
 	template<const uint NI, const uint NO>
 	void FindElements	(	ArrayList<StarSet, NI>& stars,
-									decimal t_a, decimal t_m, uint max_per_star,
-									ArrayList<StarSet, NO>* found	)
+							decimal tolerance_area, decimal tolerance_moment,
+							ArrayList<StarSet, NO>* found )
 	{
 		for ( uint ii = 0; ii < stars.Size(); ii++)
 		{
@@ -155,7 +188,10 @@ public:
 				StarSet dbSet;
 				DatabaseToStar(jj, &dbSet);
 				dbSet.vote =
-					StarSet::VoteSingle(stars.Get(ii).area, dbSet.area, stars.Get(ii).moment, dbSet.moment, t_a, t_m);
+					StarSet::VoteSingle(
+										stars.Get(ii).area, dbSet.area,
+										stars.Get(ii).moment, dbSet.moment,
+										tolerance_area, tolerance_moment );
 
 
 				if ( dbSet.vote > 0 )
@@ -163,6 +199,7 @@ public:
 					dbSet.pixel = &stars.Get(ii);
 					found->Slot(dbSet, &StarSet::SortByVoteDecending);
 				}
+				std::cout << jj << ":   "<< dbSet.position.Ra() << "  " << dbSet.position.Dec() << "  " << dbSet.vote << endl;
 			}
 		}
 	}

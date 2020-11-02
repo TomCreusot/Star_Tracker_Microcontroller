@@ -38,3 +38,10 @@ cc_test(
 	srcs = ["database_test.cc"],
 	deps = ["@gtest//:gtest_main", ":database", ":star_set", "//libs/util:array_list", "//libs/util:array_list_mock"]
 )
+
+
+cc_test(
+	name = "implementation_test",
+	srcs = ["implementation_test.cc"],
+	deps = ["@gtest//:gtest_main", ":database", ":star_set", "//libs/util:array_list", "//libs/nix:linked_list"]
+)

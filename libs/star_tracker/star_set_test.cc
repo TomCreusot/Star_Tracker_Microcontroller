@@ -39,6 +39,27 @@ TEST ( AlternateConstructor, Valid )
 
 
 
+TEST ( Constructor, Valid )
+{
+	Point<decimal> s1(1, 1);
+	Point<decimal> s2(2, 2);
+	Point<decimal> s3(1, 3);
+
+	StarSet set(s1, s2, s3);
+	double a = s1.RadialDistance(s2);
+	double b = s1.RadialDistance(s3);
+	double c = s2.RadialDistance(s3);
+	double area = StarSet::CalcArea(a, b, c);
+	double moment = StarSet::CalcMoment(area, a, b, c);
+	EXPECT_FLOAT_EQ(set.area, area);
+	EXPECT_FLOAT_EQ(set.moment, moment);
+	EXPECT_FLOAT_EQ(set.position.x, s1.x);
+	EXPECT_FLOAT_EQ(set.position.y, s1.y);
+	EXPECT_FLOAT_EQ(set.vote, 1);
+}
+
+
+
 TEST ( CopyConstructor, Valid )
 {
 	Point<decimal> pos(3, 4);
@@ -86,26 +107,15 @@ TEST ( GenerateSets, InvalidInsufficientElements )
 
 	input.PushBack(Point<decimal>(0, 0));
 	input.PushBack(Point<decimal>(0, 1));
-	input.PushBack(Point<decimal>(1, 0));
-	input.PushBack(Point<decimal>(1, 1));
-	input.PushBack(Point<decimal>(2, 2));
-	StarSet::GenerateSets<5, 100>(input, 0, 2, 0, &StarSet::CartesianAngle, &output);
-	EXPECT_EQ(input.get_list.Size(), 0);
 
-	StarSet::GenerateSets<5, 100>(input, 3, 5, 0, &StarSet::CartesianAngle, &output);
-	EXPECT_EQ(input.get_list.Size(), 0);
-
-	StarSet::GenerateSets<5, 100>(input, 2, 4, 0, &StarSet::CartesianAngle, &output);
-	EXPECT_EQ(input.get_list.Size(), 0);
-
-	StarSet::GenerateSets<5, 100>(input, 5, 1, 0, &StarSet::CartesianAngle, &output);
+	StarSet::GenerateSets<5, 100>(input, &output);
 	EXPECT_EQ(input.get_list.Size(), 0);
 }
 
 
 
 
-TEST ( GenerateSets, ValidFiveElements )
+TEST ( GenerateSets, Valid )
 {
 	ArrayListMock<Point<decimal>, 100, 100> input;
 	ArrayList<StarSet, 100> output;
@@ -114,26 +124,24 @@ TEST ( GenerateSets, ValidFiveElements )
 	input.PushBack(Point<decimal>(1, 0));
 	input.PushBack(Point<decimal>(2, 2));
 	input.PushBack(Point<decimal>(3, 3));
-	input.PushBack(Point<decimal>(4, 4));
-	input.PushBack(Point<decimal>(5, 6));
 
-	StarSet::GenerateSets<100, 100>(input, 1, 5, 0, &StarSet::CartesianAngle, &output);
+	StarSet::GenerateSets<100, 100>(input, &output);
 
-	EXPECT_EQ(input.get_list.Get(0), 1);
-	EXPECT_EQ(input.get_list.Get(1), 2);
-	EXPECT_EQ(input.get_list.Get(2), 3);
+	EXPECT_EQ(input.get_list.Get(0), 0);
+	EXPECT_EQ(input.get_list.Get(1), 1);
+	EXPECT_EQ(input.get_list.Get(2), 2);
 
-	EXPECT_EQ(input.get_list.Get(3), 1);
-	EXPECT_EQ(input.get_list.Get(4), 2);
-	EXPECT_EQ(input.get_list.Get(5), 4);
+	EXPECT_EQ(input.get_list.Get(3), 0);
+	EXPECT_EQ(input.get_list.Get(4), 1);
+	EXPECT_EQ(input.get_list.Get(5), 3);
 
-	EXPECT_EQ(input.get_list.Get(6), 1);
-	EXPECT_EQ(input.get_list.Get(7), 3);
-	EXPECT_EQ(input.get_list.Get(8), 4);
+	EXPECT_EQ(input.get_list.Get(6), 0);
+	EXPECT_EQ(input.get_list.Get(7), 2);
+	EXPECT_EQ(input.get_list.Get(8), 3);
 
-	EXPECT_EQ(input.get_list.Get(9), 2);
-	EXPECT_EQ(input.get_list.Get(10), 3);
-	EXPECT_EQ(input.get_list.Get(11), 4);
+	EXPECT_EQ(input.get_list.Get(9), 1);
+	EXPECT_EQ(input.get_list.Get(10), 2);
+	EXPECT_EQ(input.get_list.Get(11), 3);
 }
 
 
@@ -202,33 +210,6 @@ TEST ( Vote, InAccuracy )
 	EXPECT_TRUE(list.Get(0).vote > list.Get(1).vote);
 	EXPECT_TRUE(list.Get(1).vote > list.Get(2).vote);
 }
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
 
 
 
@@ -317,30 +298,6 @@ TEST ( CalcMoment, Valid )
 	decimal moment = area * ( a * a + b * b + c * c ) / 36;
 	EXPECT_FLOAT_EQ(moment, StarSet::CalcMoment(area, a, b, c));
 }
-
-
-//////////////////////////////////////////////////////////////////////////////
-//																			//
-//						------	Angle	------								//
-//																			//
-//////////////////////////////////////////////////////////////////////////////
-
-TEST ( CartesianAngle, Valid )
-{
-	Point<decimal> s1(10, 10);
-	Point<decimal> s2(0.5, 0.5);
-	decimal angle = StarSet::CartesianAngle( s1, s2, 0.5 );
-	EXPECT_FLOAT_EQ(angle, 6.717514421);
-}
-
-
-TEST ( EquatorialAngle, Valid )
-{
-	Equatorial<decimal> p1(1, 1);
-	Equatorial<decimal> p2(2, 2);
-	EXPECT_FLOAT_EQ(p1.RadialDistance(p2), StarSet::EquatorialAngle(p1, p2, 0));
-}
-
 
 
 //////////////////////////////////////////////////////////////////////////////

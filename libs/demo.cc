@@ -144,23 +144,26 @@ int main ( int argc, char** argv )
 		// The maximum number of sets of stars to use.
 		const util::uint MAX_SETS = config::max_sets;
 
-		// Setup the database.
-		// This is important for getting the field of view, pixel resolution and the database to compare the stars to.
-		decimal imgHyp = std::hypot(img.GetWidth(), img.GetHeight());
-		decimal fov = star_tracker::database_array::fov;
-		decimal rad_per_pixel = fov / imgHyp;
-		star_tracker::Database database(fov, rad_per_pixel,
-										&star_tracker::database_array::array );
-
 		// All the triangles found from the image.
 		util::ArrayList<star_tracker::StarSet, MAX_SETS> triangles;
 
 		// This allows you to get unique details about points in this part of the sky.
 		// Use this to compare with a database.
 		star_tracker::StarSet::GenerateSets<MAX_STARS, MAX_SETS>
-				(	points,
-					0, points.Size(), rad_per_pixel,
-					&star_tracker::StarSet::CartesianAngle, &triangles	);
+														( points, &triangles );
+
+
+
+	/**********************************************************************************************************
+	 * Purpose:		Setups database.
+	 * Namespace: 	star_tracker
+	 */
+
+		// Setup the database.
+		// This is important for getting the field of view, pixel resolution and the database to compare the stars to.
+		decimal fov = star_tracker::database_array::fov;
+		star_tracker::Database database(fov, &database_array::array );
+
 
 
 	/**********************************************************************************************************
@@ -176,12 +179,11 @@ int main ( int argc, char** argv )
 		// The elements will be found, these are all the elements within the threshold.
 		util::ArrayList<star_tracker::StarSet, MAX_MATCHES> database_angles;
 		database.FindElements<MAX_SETS, MAX_MATCHES>
-				(	triangles, TOLERANCE_AREA, TOLERANCE_MOMENT,
-					MAX_MATCHES_STAR, &database_angles );
+				(	triangles, TOLERANCE_AREA, TOLERANCE_MOMENT, &database_angles );
 
 		// The elements are then compared with each other.
 		// If the distance between the stars are > fov, their likelyhood drops.
-		star_tracker::StarSet::Vote<MAX_MATCHES> ( fov, &database_angles );
+		star_tracker::StarSet::Vote<MAX_MATCHES> ( &database_angles );
 
 		// They are then sorted in order of probability.
 		database_angles.Sort(star_tracker::StarSet::SortByVoteDecending);
@@ -205,8 +207,9 @@ int main ( int argc, char** argv )
 		for ( uint i = 0; i < MAX_DISPLAY && i < database_angles.Size(); i++ )
 		{
 			star_tracker::StarSet set = database_angles.Get(i);
-			cout<< "\t Opposite: " << set.position.x << ", " << set.position.y
-				<< "\t\t Odds:" << set.vote << endl;
+			cout<< "\t Opposite: " << set.position.RaHour() << "h, "
+				<< set.position.DecDeg()
+				<< "* \t\t Odds:" << set.vote << endl;
 		}
 		cout << (GetTimeStamp().count() - start_time.count())
 												<< " ms to execute." << endl;

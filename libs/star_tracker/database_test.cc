@@ -11,7 +11,7 @@ using namespace star_tracker;
 
 //////////////////////////////////////////////////////////////////////////////
 //																			//
-//					------	To Array String	------							//
+//						------	To Array	------							//
 //																			//
 //////////////////////////////////////////////////////////////////////////////
 
@@ -24,6 +24,53 @@ TEST ( ToArrayString, Valid )	// This could fail if the database structure is al
 	Database::ToArrayString(set, &str);
 	EXPECT_EQ(str, "-10.010000, 0.010000, 10.010000, 100.010000");
 }
+
+
+TEST ( ToArray, Valid )	// This could fail if the database structure is altered.
+{
+	array<decimal, Database::kNumElements> a;
+	Point<decimal> pos(10.01, 100.01);
+	StarSet set(pos, -10.01, 0.01);
+
+	Database::ToArray(set, &a);
+	EXPECT_FLOAT_EQ(a[0], -10.010000);
+	EXPECT_FLOAT_EQ(a[1], 0.010000);
+	EXPECT_FLOAT_EQ(a[2], 10.010000);
+	EXPECT_FLOAT_EQ(a[3], 100.010000);
+}
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+TEST ( DatabaseToStar, Valid )	// This could fail if the database structure is altered.
+{
+	vector<array<decimal, Database::kNumElements>> a(1);
+	a[0][Database::kIndexRA] = 1;
+	a[0][Database::kIndexDEC] = 2;
+	a[0][Database::kIndexArea] = 3;
+	a[0][Database::kIndexMoment] = 4;
+	Database db(0, &a);
+
+	StarSet set;
+	db.DatabaseToStar(0, &set);
+
+	EXPECT_FLOAT_EQ(set.position.Ra(), 1);
+	EXPECT_FLOAT_EQ(set.position.Dec(), 2);
+	EXPECT_FLOAT_EQ(set.area, 3);
+	EXPECT_FLOAT_EQ(set.moment, 4);
+}
+
+
 
 
 //////////////////////////////////////////////////////////////////////////////
@@ -58,7 +105,7 @@ TEST ( FindElements, InvalidVotes )
 TEST ( FindElements, OutsideTolerance )
 {
 	// Setup Database
-	Database database(0, 0, &sample_database);
+	Database database(0, &sample_database);
 
 	// Array List Sizes
 	const uint NI = 10, NO = 100;
@@ -67,19 +114,19 @@ TEST ( FindElements, OutsideTolerance )
 	StarSet set(Point<decimal>(0), -5.1, 0);
 	in.PushBack(set);
 
-	database.FindElements<NI, NO>(in, 0.01, 1000, 2, &out);
+	database.FindElements<NI, NO>(in, 0.01, 1000, &out);
 	EXPECT_EQ(out.Size(), 0);
 
 	set = StarSet(Point<decimal>(0), 0, 4.1);
 	in.Get(0) = set;
-	database.FindElements<NI, NO>(in, 1000, 0.01, 2, &out);
+	database.FindElements<NI, NO>(in, 1000, 0.01, &out);
 	EXPECT_EQ(out.Size(), 0);
 }
 
 TEST ( FindElements, InsideTolerance )
 {
 	// Setup Database
-	Database database(0, 0, &sample_database);
+	Database database(0, &sample_database);
 
 	// Array List Sizes
 	const uint NI = 10, NO = 100;
@@ -89,7 +136,7 @@ TEST ( FindElements, InsideTolerance )
 	in.PushBack(set);
 
 	// TEST AREA
-	database.FindElements<NI, NO>(in, 1, 1000, 2, &out);
+	database.FindElements<NI, NO>(in, 1, 1000, &out);
 	EXPECT_EQ(out.Size(), 1);
 	EXPECT_EQ(out.Get(0).area, -5);
 
@@ -97,7 +144,7 @@ TEST ( FindElements, InsideTolerance )
 	out = ArrayList<StarSet, NO>();
 	set = StarSet(Point<decimal>(0), 13, 5);
 	in.Get(0) = set;
-	database.FindElements<NI, NO>(in, 1000, 1, 1, &out);
+	database.FindElements<NI, NO>(in, 1000, 1, &out);
 	EXPECT_EQ(out.Get(0).area, 4);
 
 
@@ -107,7 +154,7 @@ TEST ( FindElements, InsideTolerance )
 TEST ( FindElements, MultipleInputs )
 {
 	// Setup Database
-	Database database(0, 0, &sample_database);
+	Database database(0, &sample_database);
 
 	// Array List Sizes
 	const uint NI = 10, NO = 100;
@@ -122,7 +169,7 @@ TEST ( FindElements, MultipleInputs )
 	in.PushBack(set3);
 	in.PushBack(set4);
 	out = ArrayList<StarSet, NO>();
-	database.FindElements<NI, NO>(in, 0.5, 0.5, 100, &out);
+	database.FindElements<NI, NO>(in, 0.5, 0.5, &out);
 
 	EXPECT_EQ(out.Size(), 4);
 	EXPECT_EQ(out.Get(0).area, -5);
@@ -135,7 +182,7 @@ TEST ( FindElements, MultipleInputs )
 TEST ( FindElements, MultipleOutputs )
 {
 	// Setup Database
-	Database database(0, 0, &sample_database);
+	Database database(0, &sample_database);
 
 	// Array List Sizes
 	const uint NI = 10, NO = 6;
@@ -146,7 +193,7 @@ TEST ( FindElements, MultipleOutputs )
 	in.PushBack(set1);
 	in.PushBack(set2);
 	out = ArrayList<StarSet, NO>();
-	database.FindElements<NI, NO>(in, 1.1, 1.1, 100, &out);
+	database.FindElements<NI, NO>(in, 1.1, 1.1, &out);
 
 	EXPECT_EQ(out.Size(), 6);
 	EXPECT_EQ(out.Get(0).area, -3);
@@ -161,7 +208,7 @@ TEST ( FindElements, MultipleOutputs )
 TEST ( FindElements, Overflow )
 {
 	// Setup Database
-	Database database(0, 0, &sample_database);
+	Database database(0, &sample_database);
 
 	// Array List Sizes
 	const uint NI = 10, NO = 4;
@@ -173,7 +220,7 @@ TEST ( FindElements, Overflow )
 	in.PushBack(set1);
 	in.PushBack(set2);
 	out = ArrayList<StarSet, NO>();
-	database.FindElements<NI, NO>(in, 100, 100, 3, &out);
+	database.FindElements<NI, NO>(in, 100, 100, &out);
 
 	EXPECT_EQ(out.Size(), 4);
 	EXPECT_EQ(out.Get(0).area, -5); // Will search set1 first.
