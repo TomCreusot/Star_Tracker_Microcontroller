@@ -82,14 +82,20 @@ int main ( int argc, char** argv )
 		// Scope, this stuff is only relevant here.
 		{
 			// Required Properties
-			const util::uint NUM_BARS 	= config::histogram_bars;
-			const util::uint THRESHOLD 	= config::threshold_tolerance;
+			const util::uint NUM_BARS 		= config::histogram_bars;
+			const util::decimal THRESHOLD 	= config::threshold_tolerance;
 
 			// It takes a number from 1-255 being the number of sample brightnesses.
 			// The larger the number, the more memory it uses but more accurate.
-			util::ArrayList<util::uint, NUM_BARS> histogram;
+			util::ArrayList<util::uint, NUM_BARS> histogram(255);
 			img.GenerateHistogram<NUM_BARS>(&histogram);
 
+			/*cout << "\n\n\n\nHISTOGRAM " << NUM_BARS << endl;
+			for ( int i = 0; i < NUM_BARS; i++ )
+			{
+				cout << histogram.Get(i) << endl;
+			}*/
+			
 			// The percentage threshold removes all values bellow a specific percentage depending on their brightness.
 			// It returns the first valid pixel brightness above 0.
 			threshold = img.PercentThreshold<NUM_BARS>(THRESHOLD, histogram);
@@ -130,6 +136,8 @@ int main ( int argc, char** argv )
 			// Inserts the points from the blobs into the array list points.
 			Blob::ToPointList(blobs, &points);
 		}
+
+		cout << "Found: " << points.Size() << " blobs" << endl;
 
 
 
@@ -215,6 +223,7 @@ int main ( int argc, char** argv )
 												<< " ms to execute." << endl;
 
 		// Draws where the blobs were detected.
+		// get.SetBMP(img);
 		get.DrawPoints<MAX_STARS>(points, 255, 0, 0);
 		get.WriteImage(IMAGE_OUT_FILE);
 	}

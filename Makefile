@@ -96,6 +96,7 @@ clean:
 	clear
 	reset
 	bazel clean
+	rm -f $(OUT_DIR)/hygdata_v3.csv
 	rm -f $(OUT_DIR)/demo
 	rm -f $(OUT_DIR)/runtime_properties_generator
 	rm -f $(OUT_DIR)/database_generator
@@ -103,3 +104,11 @@ clean:
 	rm -r -f $(DOCS_DIR)
 	rm -r -f $(LCOV_DIR)
 	rm -r -f coverage
+
+install:
+	clear
+	reset
+	wget http://www.astronexus.com/files/downloads/hygdata_v3.csv.gz
+	gzip -d hygdata_v3.csv.gz
+	mv hygdata_v3.csv $(OUT_DIR)
+	rm -f hygdata_v3.csv.gz
