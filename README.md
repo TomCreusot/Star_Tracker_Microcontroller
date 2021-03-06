@@ -40,9 +40,7 @@ The code is located in [libs](libs/), this is divided into the directories:
 It also contains [demo.cc](libs/demo.cc) which is the program in the implementation of unix showing how to implement it for a microcontroller.
 
 ## Built With
-* g++	7.4.0
-* bazel	2.0.0
-* gtest	1.10.0
+* cargo 1.51.0-nightly (783bc43c6 2021-01-20)
 
 ## Contributing
 

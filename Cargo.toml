@@ -1,0 +1,41 @@
+[package]
+name = "star_tracker"
+version = "0.1.0"
+authors = ["Tom Creusot <tom.creusot@student.curtin.edu.au>"]
+publish = false
+description = "The code for a star tracker which could be used on a microcontroller for satellites."
+repository = "https://github.com/TomCreusot/Star_Tracker_Microcontroller"
+#licence = "GNU General Public License v3.0"
+
+[lib]
+name = "star_tracker"
+path = "src/lib.rs"
+
+# [[bin]]
+# name = "main"
+# path = "src/bin/main.rs"
+
+
+[dependencies]
+# Inbuilt image reader.
+[target.'cfg(not(embedded))'.dependencies]
+image = "0.23.13"
+csv = "1.1.5"
+
+# Bench test.
+[dev-dependencies]
+criterion = "0.3"
+
+
+
+
+
+# Bench test setup
+# [[bench]]
+# name = "bench"
+# harness = false		# Disables standard tests.
+
+
+# [[bin]]
+# name = "demo"
+# path = "src/bin/demo.rs"

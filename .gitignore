@@ -2,13 +2,15 @@
 *~
 # Ignore Vim swap files.
 .*.swp
-# Ignore all bazel-* symlinks. There is no full list since this can change
-# based on the name of the directory bazel is cloned into.
-/bazel-*
+
 
 # Remove all html files in doc and coverage
-doc/*
-coverage/*
+target/*
 
-# Remove massive database file
-libs/star_tracker/database_array.h
+
+# Removes massive databases
+hygdata_v3.csv
+
+# Random Images
+#sample_in.*
+#sample_out.*
