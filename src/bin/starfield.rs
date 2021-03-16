@@ -1,7 +1,7 @@
 extern crate star_tracker;
 use star_tracker::nix::Star;
 use star_tracker::util::aliases::Decimal;
-use star_tracker::config::starfield
+//use star_tracker::config::starfield;
 
 // Input:
 // * fov
@@ -13,7 +13,7 @@ use star_tracker::config::starfield
 // * chance_noise
 //
 // * rotation (quaternion)
-
+/*
 fn main ( )
 {
 	const FOV : f32 = 0.3490658504;
@@ -24,7 +24,8 @@ fn main ( )
 	{
 		// println!("{}",e.magnitude);
 	}
-		
-	
-	
+
+
+
 }
+*/

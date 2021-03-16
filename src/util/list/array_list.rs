@@ -1,11 +1,53 @@
 //! The implementation of ArrayList.
 
 use super::{List, ArrayList};
+
+//###############################################################################################//
+//								---	ArrayList Constructor ---
+//###############################################################################################//
+
+impl <T, const N: usize> ArrayList <T, N>
+{
+	/// Constructor
+	pub fn new ( ) -> ArrayList<T, N>
+	{
+		use std::mem::{MaybeUninit};
+		ArrayList
+		{
+			array:  unsafe{MaybeUninit::uninit().assume_init()}, // Auto inits array.
+			end:    0,
+		}
+	}
+}
+
+
+
+
+
+
 //###############################################################################################//
 //								---	ArrayList Implementation ---
 //###############################################################################################//
 impl<T, const N : usize> List<T> for ArrayList<T, N> where T: Clone
 {
+	/// Finds the max number of elements that can be stored in the list.
+	/// # Example
+	/// ```
+	/// use star_tracker::util::list::{ArrayList, List};
+	/// let lst : ArrayList<u32, 10> = ArrayList::new();
+	/// assert_eq!(lst.capacity(), 10);
+	/// //unsafe
+	/// //{
+	/// //	const size : usize = lst.capacity() as const usize;
+	/// //	let lst2 : ArrayList<u32, size> = ArrayList::new();
+	/// //}
+	/// ```
+	fn capacity ( &self ) -> usize
+	{
+		return N;
+	}
+
+
 	/// Finds how many elements are in the list.
 	/// # Returns
 	/// The size.
@@ -176,7 +218,7 @@ impl<T, const N : usize> List<T> for ArrayList<T, N> where T: Clone
 			self.array[jj] = temp;
 		}
 	}
-	
+
 	/// Slots an element into the list so it is in sorted order by shifting everything right.
 	/// # Arguments
 	/// * `to_slot` - The element to add.
@@ -190,7 +232,7 @@ impl<T, const N : usize> List<T> for ArrayList<T, N> where T: Clone
 	/// use star_tracker::util::list::{ArrayList, List};
 	///	fn sort_ascending ( small : & i32, large : & i32 ) -> bool { return small < large; }
 	/// let mut input : ArrayList<i32, 6> = ArrayList::new();
-	/// 
+	///
 	/// let mut to_slot = 0;
 	/// assert!(input.slot(to_slot, sort_ascending));
 	/// to_slot = 2;
@@ -203,7 +245,7 @@ impl<T, const N : usize> List<T> for ArrayList<T, N> where T: Clone
 	/// assert!(input.slot(to_slot, sort_ascending));
 	/// to_slot = 5;
 	/// assert!(input.slot(to_slot, sort_ascending));
-	/// 
+	///
 	/// assert_eq!(input.size(), 6);
 	/// // Full, 0, 1, 2, 3, 4, 5
 	/// to_slot = -1;
@@ -214,7 +256,7 @@ impl<T, const N : usize> List<T> for ArrayList<T, N> where T: Clone
 	/// assert!(input.slot(to_slot, sort_ascending));//-2, -1, 0, 1, 1, 2
 	/// to_slot = 10;
 	/// assert!(!input.slot(to_slot, sort_ascending));//-2, -1, 0, 1, 1, 2
-	/// 
+	///
 	/// assert_eq!(input.get(0), -2);
 	/// assert_eq!(input.get(1), -1);
 	/// assert_eq!(input.get(2), 0);
@@ -239,23 +281,23 @@ impl<T, const N : usize> List<T> for ArrayList<T, N> where T: Clone
 					to_insert = to_move.clone();
 					jj+=1;
 				}
-				
+
 				if jj < N
 				{
 					self.push_back(to_insert);
 				}
-			
+
 				return true;
 			}
 		}
-		
+
 		// If there is room to add it at the end.
 		if self.size() < N
 		{
 			self.push_back(to_slot);
 			return true;
 		}
-		
+
 		// Nowhere to fit.
 		return false;
 	}
@@ -283,6 +325,18 @@ impl<T, const N : usize> List<T> for ArrayList<T, N> where T: Clone
 mod test
 {
 	use crate::util::list::{List, ArrayList};
+
+	//
+	// capacity ( ) -> const usize
+	//
+	#[test]
+	fn test_capacity ( )
+	{
+		let mut lst : ArrayList<u32, 10> = ArrayList::new();
+		assert_eq!(lst.capacity(), 10);
+	}
+
+
 
 //
 // size ( ) -> usize
@@ -491,10 +545,10 @@ mod test
 		let mut lst : ArrayList<i32, 0> = ArrayList::new();
 		lst.sort(sort_ascending);
 	}
-	
-	
-	
-	
+
+
+
+
 //
 // slot ( to_slot : T, fn ( &mut T, &mut T ) -> bool ) -> bool
 //
@@ -526,7 +580,7 @@ mod test
 		assert!(input.slot(to_slot, sort_ascending));//-2, -1, 0, 1, 1, 2
 		to_slot = 10;
 		assert!(!input.slot(to_slot, sort_ascending));//-2, -1, 0, 1, 1, 2
-		
+
 		assert_eq!(input.get(0), -2);
 		assert_eq!(input.get(1), -1);
 		assert_eq!(input.get(2), 0);
@@ -565,7 +619,7 @@ mod test
 		assert!(input.slot(to_slot, sort_descending)); // 101, 100, 5, 3, 2, 1
 		to_slot = -100;
 		assert!(!input.slot(to_slot, sort_descending)); // 101, 100, 5, 3, 2, 1
-		
+
 		assert_eq!(input.get(0), 101);
 		assert_eq!(input.get(1), 100);
 		assert_eq!(input.get(2), 5);

@@ -1,4 +1,4 @@
-//! This is the implementation for a generic linear list (i.e ArrayList, LinkedList).  
+//! This is the implementation for a generic linear list (i.e ArrayList, LinkedList).
 //! It contains operations such as:
 //! ``` ignore
 //! List
@@ -23,6 +23,10 @@ pub mod array_list;
 /// Useful for vect!, LinkedList and ArrayList.
 pub trait List<T>
 {
+	/// Finds the max number of elements that can be stored in the list.
+	/// If invalid list, returns 0.
+	fn capacity ( &self ) -> usize;
+
 	/// Finds how many elements are in the list.
 	/// # Returns
 	/// The size.
@@ -68,7 +72,7 @@ pub trait List<T>
 	/// # Arguments
 	/// * 'in_order' - A function which returns TRUE if it is in order.
 	fn sort ( &mut self, in_order: fn (& T, & T) -> bool );
-	
+
 	/// Slots an element into the list so it is in sorted order by shifting everything right.
 	/// # Arguments
 	/// * `to_slot` - The element to add.
@@ -85,9 +89,9 @@ pub trait List<T>
 //									---	ArrayList Struct ---
 //###############################################################################################//
 
-/// This is a data structure which can be implemented on the stack and store a resizing linear set of generic data types **Do not use any heap allocated objects**.  
-/// This is implemented by an array and a end point.  
-/// On creation, an empty array is created and an index is set to 0. As the array is filled, the index increments indicating the new end.  
+/// This is a data structure which can be implemented on the stack and store a resizing linear set of generic data types **Do not use any heap allocated objects**.
+/// This is implemented by an array and a end point.
+/// On creation, an empty array is created and an index is set to 0. As the array is filled, the index increments indicating the new end.
 ///
 /// # Example
 /// The following example will:
@@ -134,23 +138,4 @@ pub struct ArrayList <T, const N : usize>
 {
 	array : [T; N],
 	end : usize,
-}
-
-
-//###############################################################################################//
-//								---	ArrayList Constructor ---
-//###############################################################################################//
-
-impl <T, const N: usize> ArrayList <T, N>
-{
-	/// Constructor
-	pub fn new ( ) -> ArrayList<T, N>
-	{
-		use std::mem::{MaybeUninit};
-		ArrayList
-		{
-			array:  unsafe{MaybeUninit::uninit().assume_init()}, // Auto inits array.
-			end:    0
-		}
-	}
 }
