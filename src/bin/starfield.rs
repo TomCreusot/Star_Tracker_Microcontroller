@@ -1,6 +1,7 @@
-extern crate star_tracker;
-use star_tracker::nix::Star;
-use star_tracker::util::aliases::Decimal;
+/*
+// extern crate star_tracker;
+// use star_tracker::nix::Star;
+// use star_tracker::util::aliases::Decimal;
 //use star_tracker::config::starfield;
 
 // Input:
@@ -13,16 +14,24 @@ use star_tracker::util::aliases::Decimal;
 // * chance_noise
 //
 // * rotation (quaternion)
-/*
 fn main ( )
 {
+    const PT = Equatorial{ra: 0, dec: 0};
 	const FOV : f32 = 0.3490658504;
 	const CUT_OFF_MAG : f32 = 5.5;
+
 	println!("Reading File");
 	let mut stars : Vec<Star> = Star::stars_from_csv("hygdata_v3.csv", CUT_OFF_MAG, 7, 8, 13);
-	for e in &stars
+
+    println!("Constructing Image");
+    let img = NixImage::new();
+
+    for e in &stars
 	{
-		// println!("{}",e.magnitude);
+        if ( e.angular_distance() < PT )
+        {
+
+        }
 	}
 
 

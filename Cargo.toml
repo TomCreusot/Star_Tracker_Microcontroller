@@ -5,6 +5,7 @@ authors = ["Tom Creusot <tom.creusot@student.curtin.edu.au>"]
 publish = false
 description = "The code for a star tracker which could be used on a microcontroller for satellites."
 repository = "https://github.com/TomCreusot/Star_Tracker_Microcontroller"
+
 #licence = "GNU General Public License v3.0"
 
 [lib]
@@ -20,15 +21,32 @@ path = "src/lib.rs"
 # Inbuilt image reader.
 [target.'cfg(not(embedded))'.dependencies]
 image = "0.23.13"
+
 csv = "1.1.5"
+serde = {version = "1.0", features = ["derive"] }
+# serde = {version = "1.0.126" "1.0", features = ["derive"] }
+
+rand = "0.8.0"
+
+# Observing the database and hipacaros database.
+plotters = "0.3.1"
+
+# Downloading HYG database.
+curl = "0.4.38"
+
+
 
 # Bench test.
 [dev-dependencies]
-criterion = "0.3"
+criterion = "0.2.4"
+# criterion = "0.3.4"
 
 
 
 
+[features]
+nix = []
+# platform = []#["nix", "embedded"]
 
 # Bench test setup
 # [[bench]]
@@ -39,3 +57,9 @@ criterion = "0.3"
 # [[bin]]
 # name = "demo"
 # path = "src/bin/demo.rs"
+
+
+# [[bin]]
+# name = "spectral_test"
+# path = "src/bin/spectral_test.rs"
+# # features = ["nix"]

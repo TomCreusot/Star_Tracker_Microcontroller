@@ -1,66 +1,99 @@
 extern crate star_tracker;
+use star_tracker::config::HYG_DATABASE_PATH;
+use star_tracker::config::HYG_DATABASE_URL;
+// use star_tracker::config::DATABASE_ANGLE_TOLERANCE;
+use star_tracker::config::DATABASE_BINS_NUM;
+use star_tracker::config::DATABASE_MAGNITUDE_MAX;
+use star_tracker::config::DATABASE_FOV;
 use star_tracker::nix::Star;
-use star_tracker::util::aliases::Decimal;
+use star_tracker::nix::Io;
+use star_tracker::nix::Template;
+use star_tracker::tracking_mode::database::StarDatabaseElement;
+use star_tracker::tracking_mode::database::KVector;
 
 fn main ( )
 {
-	const FOV : f32 = 0.3490658504;
-	const CUT_OFF_MAG : f32 = 5.5;
-	println!("Reading File");
-	let mut stars : Vec<Star> = Star::stars_from_csv("hygdata_v3.csv", CUT_OFF_MAG, 7, 8, 13);
+	// Read CSV.
+	println!("Reading CSV Database        ...");
+	let mut rdr = Io::get_csv(HYG_DATABASE_PATH, HYG_DATABASE_URL);
+	let iter = rdr.deserialize();
+	
+	// Create Star List +
+	// Remove anything above the cutoff magnitude +
+	// Sort in order of magnitude.
+	println!("Filtering CSV Database      ...");
+	let mut stars : Vec<Star> = Vec::new();
+	for record in iter
+	{
+		let star : Star = record.expect("Could not decode.");
+		if star.mag < DATABASE_MAGNITUDE_MAX
+		{
+			stars.push(star);
+		}
+	}
+	println!("\t- Found {} valid stars.", stars.len());
+	
+	println!("Sorting                     ...");
+	stars.sort();
+	
+	// Create Star Database Element list.
+	println!("Generating Star Pairs       ...");
+	let mut star_pairs : Vec<StarDatabaseElement> = 
+		StarDatabaseElement::create_list ( DATABASE_FOV, &stars );
+	star_pairs.sort();
+	println!("\t- Found {} pairs.", star_pairs.len());
+	
+	// Sort Star Database Element list.
+	// Create K Vector
+	println!("Generating KVector          ...");
+	let k_vect = KVector::new(DATABASE_BINS_NUM, star_pairs[0].dist.0 as f64, star_pairs[star_pairs.len() - 1].dist.0 as f64);
+	let bins : Vec<usize> = k_vect.generate_bins(&star_pairs)
+		.expect("Not enough elements in the database.");
+	
+
+	println!("Generate Strings            ...");
+	let mut bins_str : Vec<String> = Vec::with_capacity(bins.len());
+	let mut pairs_str : Vec<String> = Vec::with_capacity(star_pairs.len());
+	let mut stars_str : Vec<String> = Vec::with_capacity(stars.len());
+	for e in &bins
+	{
+		bins_str.push(format!("{},", e).to_string());
+	}
+	for e in &star_pairs
+	{
+		pairs_str.push(format!("StarPair::<usize>({}, {}),", e.pair.0, e.pair.1).to_string());
+	}
 	for e in &stars
 	{
-		// println!("{}",e.magnitude);
-	}
-	
-	println!("Found: {} stars.", stars.len());
-	println!("Sorting By Magnitude");
-	stars.sort_unstable();
-	
-	println!("Generating Separation Histogram:");
-	let sep_hist = separation_histogram(FOV, &stars);
-	println!();
-
-	
-	println!("Creating Sets");
-	
-	
-	println!("Converting to String");
-	
-	
-	println!("Writing to File");
-}
-
-
-fn separation_histogram ( fov: Decimal, stars: &Vec<Star> )
-{
-	let mut hist = [0; 20];
-	for ii in 0..stars.len()
-	{
-		let mut cur = 0;
-		for jj in 0..stars.len()
+		let mut ra = e.pos.ra.0;
+		let mut dec = e.pos.dec.0;
+		if ra.abs() < 0.00000001
 		{
-			if ii != jj
-			{
-				let p = stars[ii].position.clone();
-				let o = stars[jj].position.clone();
-				if p.angle_distance(o) < fov / 2.0
-				{
-					cur += 1;
-				}
-			}
+			ra = 0.000000001;
 		}
-		let percent = (ii as f32 / stars.len() as f32 * 100.0) as i32;
-		if percent % 5 == 0
+		if dec.abs() < 0.00000001
 		{
-			print!("\r{}%    ", (ii as f32 / stars.len() as f32 * 100.0) as i32);
+			dec = 0.000000001;
 		}
-		hist[std::cmp::min(cur, hist.len() - 1)] += 1;
+		stars_str.push(format!("Equatorial{{ra: Radians({}), dec: Radians({})}},", ra, dec).to_string());
 	}
-	println!();
-	for i in 0..hist.len() - 1
-	{
-		println!("{}: {}", i, hist[i]);
-	}
-	println!("Over {}: {}", hist.len(), hist[hist.len() - 1]);
+	// let star_pairs_str : Vec<String> = ;
+	// Parse to Template File.
+	println!("Parsing File                ...");
+	let mut template_file = Io::read_file("src/config/template.txt");
+	let mut template = Template::new();
+	template.add_patten("FOV".to_string(), 				format!("{}", DATABASE_FOV).to_string());
+	template.add_patten("MAGNITUDE".to_string(),	 	format!("{}", DATABASE_MAGNITUDE_MAX).to_string());
+	template.add_patten("BIN_SIZE".to_string(), 		format!("{}", DATABASE_BINS_NUM).to_string());
+	template.add_patten("K_LOOKUP".to_string(), 		k_vect.to_string());
+	template.add_patten("K_VECTOR_SIZE".to_string(),	format!("{}", bins.len()).to_string());
+	template.add_patten("STAR_PAIR_SIZE".to_string(), 	format!("{}", star_pairs.len()).to_string());
+	template.add_patten("CATALOGUE_SIZE".to_string(), 	format!("{}", stars.len()).to_string());
+	template.replace_lines(&mut template_file);
+	template.replace_line_with_vec(&mut template_file, &"K_VECTOR_ELEMENTS".to_string(), &bins_str);
+	template.replace_line_with_vec(&mut template_file, &"STAR_PAIR_ELEMENTS".to_string(), &pairs_str);
+	template.replace_line_with_vec(&mut template_file, &"CATALOGUE_ELEMENTS".to_string(), &stars_str);
+	
+	Io::write_file("src/tracking_mode/database/array_database.rs", &template_file);
+	println!("DONE");
 }

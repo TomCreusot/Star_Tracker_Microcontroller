@@ -1,0 +1,35 @@
+/// This is the database for the star tracker.  
+/// It is generated from a template file in src/config/template.txt.   
+/// It was generated with a:
+/// * fov of $(FOV)
+/// * magnitude of $(MAGNITUDE)
+/// * number of bins of $(BIN_SIZE)
+
+use crate::util::units::Radians;
+use crate::util::units::Equatorial;
+use crate::tracking_mode::database::KVector;
+use crate::tracking_mode::StarPair;
+
+/// The field of view of the sensor in the current configuration.
+pub static FOV : Radians = Radians($(FOV));
+
+/// The KVector Equation
+pub static K_LOOKUP_DATABASE : KVector = $(K_LOOKUP);
+
+/// The KVector Database (Bins pointing to the general area of the star pairs).
+pub static K_VECTOR_DATABASE : [usize; $(K_VECTOR_SIZE)] =
+[
+$(K_VECTOR_ELEMENTS)
+];
+
+/// The Star Pair Database (Location of A in catalogue, Location of B in catalogue).
+pub static STAR_PAIR_DATABASE : [StarPair<usize>; $(STAR_PAIR_SIZE)] =
+[
+$(STAR_PAIR_ELEMENTS)
+];
+
+/// The Catalogue Database (Position of stars).
+pub static CATALOGUE_DATABASE : [Equatorial; $(CATALOGUE_SIZE)] = 
+[
+$(CATALOGUE_ELEMENTS)
+];

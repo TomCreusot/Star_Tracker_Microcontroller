@@ -6,10 +6,12 @@
 
 # Remove all html files in doc and coverage
 target/*
+database/*
 
 
 # Removes massive databases
 hygdata_v3.csv
+src/tracking_mode/database/array_database.rs
 
 # Random Images
 #sample_in.*

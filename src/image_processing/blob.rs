@@ -1,22 +1,24 @@
 //! Implementation of Blob.
-use crate::util::coordinates::Cartesian2D;
+use crate::util::aliases::{Decimal, UInt, Byte};
+use crate::util::units::{Pixel, PixelWeighted};
 use crate::util::list::List;
 use crate::util::list::ArrayList;
-use crate::util::aliases::{Decimal, UInt, Byte};
 use super::{Image, Blob};
+
 
 impl Blob
 {
 	/// Constructor
 	pub fn new ( ) -> Blob
 	{
-		return Blob { intensity: 0, centroid: Cartesian2D{x: 0.0, y: 0.0} };
+		return Blob { intensity: 0, centroid: PixelWeighted{x: 0.0, y: 0.0} };
 	}
 
 	/// Finds all blobs in an image.
 	/// # Generic Arguments
 	/// * `SIZE_BLOB` - The max number of pixels in a blob.
 	/// # Arguments
+	/// * `config` - The properties associated with the size requriement of the blob.
 	/// * `theshold` - The value which is the minimum intensity to satisfy being in the foreground.
 	/// * `img` - The image to read and set to black.
 	/// * `lst` - The list to append the blobs to.
@@ -24,12 +26,13 @@ impl Blob
 	/// # Example
 	/// ```
 	/// use star_tracker::image_processing::{Blob, BasicImage, Image};
+	/// use star_tracker::util::units::Pixel;
 	/// use star_tracker::util::list::{List, ArrayList};
 	/// let mut img : BasicImage<3, 3> = BasicImage::new();
-	/// img.set(0,0, 1); // 1 1 0
-	/// img.set(1,0, 1); // 1 0 0
-	/// img.set(0,1, 1); // 0 0 1
-	/// img.set(2,2, 1);
+	/// img.set(Pixel{x: 0, y: 0}, 1); // 1 1 0
+	/// img.set(Pixel{x: 1, y: 0}, 1); // 1 0 0
+	/// img.set(Pixel{x: 0, y: 1}, 1); // 0 0 1
+	/// img.set(Pixel{x: 2, y: 2}, 1);
  	///
 	/// let mut lst : ArrayList<Blob, 9> = ArrayList::new();
 	/// const MAX_BLOB_SIZE : usize = 3;
@@ -44,22 +47,26 @@ impl Blob
 	/// assert_eq!(lst.size(), 2);
 	///
 	/// // Image has been consumed.
-	/// assert_eq!(img.get(0, 0), 0);
-	/// assert_eq!(img.get(1, 0), 0);
-	/// assert_eq!(img.get(0, 1), 0);
-	/// assert_eq!(img.get(2, 2), 0);
+	/// assert_eq!(img.get(Pixel{x: 0, y: 0}), 0);
+	/// assert_eq!(img.get(Pixel{x: 1, y: 0}), 0);
+	/// assert_eq!(img.get(Pixel{x: 0, y: 1}), 0);
+	/// assert_eq!(img.get(Pixel{x: 2, y: 2}), 0);
 	/// ```
-	pub fn find_blobs < const BLOB_SIZE : usize > ( threshold : Byte, img : &mut dyn Image, lst : &mut dyn List<Blob> )
+	pub fn find_blobs <const CONFIG : usize> ( 
+												threshold: Byte, 
+												img: &mut dyn Image, 
+												lst: &mut dyn List<Blob> 
+											)
 	{
 		for y in 0..img.height ( )
 		{
 			for x in 0..img.width ( )
 			{
-				if threshold <= img.get(x, y)
+				if threshold <= img.get(Pixel{x: x, y: y})
 				{
 					lst.slot(
-					Blob::spread_grass_fire::<BLOB_SIZE>(threshold, Cartesian2D{x: x, y: y}, img),
-					Blob::sort_descending_intensity);
+						Blob::spread_grass_fire::<CONFIG>(threshold, Pixel{x: x, y: y}, img),
+						Blob::sort_descending_intensity);
 				}
 			}
 		}
@@ -70,6 +77,7 @@ impl Blob
 	/// # Generic Arguments
 	/// * `BLOB_SIZE` - The number of pixels allowed in a blob (how much memory to use finding a single blob).
 	/// # Arguments
+	/// * `config` - The config for the max blob size.
 	/// * `threshold` - The value which is the minimum intensity to satisfy being in the foreground.
 	/// * `start` - The start point where the blob should begin.
 	/// * `img` - The image to read and consume (set pixels to 0).
@@ -80,45 +88,51 @@ impl Blob
 	/// # Example
 	/// ```
 	/// use star_tracker::image_processing::{Blob, BasicImage, Image};
-	/// use star_tracker::util::{list::{List, ArrayList}, coordinates::Cartesian2D};
+	/// use star_tracker::util::{list::{List, ArrayList}, units::Pixel};
 	/// let mut img : BasicImage<2, 2> = BasicImage::new();
-	/// img.set(0,0, 1); // 1 1
-	/// img.set(1,0, 1); // 1 0
-	/// img.set(0,1, 1);
+	/// img.set(Pixel{x: 0, y: 0}, 1); // 1 1
+	/// img.set(Pixel{x: 1, y: 0}, 1); // 1 0
+	/// img.set(Pixel{x: 0, y: 1}, 1);
 	/// 
 	/// const MAX_BLOB_SIZE : usize = 3;
-	/// let start : Cartesian2D<usize> = Cartesian2D{x: 0, y: 0};
+	/// let start : Pixel = Pixel{x: 0, y: 0};
 	/// let blob = Blob::spread_grass_fire::<MAX_BLOB_SIZE>(1, start, &mut img);
 	/// assert_eq!(blob.intensity, 3);
 	///
 	/// assert!((blob.centroid.x - 0.333).abs() < 0.01);
 	/// assert!((blob.centroid.y - 0.333).abs() < 0.01);
 	/// 
-	/// assert_eq!(img.get(0, 0), 0);
-	/// assert_eq!(img.get(1, 0), 0);
-	/// assert_eq!(img.get(0, 1), 0);
+	/// assert_eq!(img.get(Pixel{x: 0, y: 0}), 0);
+	/// assert_eq!(img.get(Pixel{x: 1, y: 0}), 0);
+	/// assert_eq!(img.get(Pixel{x: 0, y: 1}), 0);
 	/// ```
-	pub fn spread_grass_fire <const BLOB_SIZE : usize> ( threshold : Byte, start : Cartesian2D<usize>, img : &mut dyn Image ) -> Blob
+	pub fn spread_grass_fire <const CONFIG : usize> ( 
+														threshold : Byte, 
+														start : Pixel, 
+														img : &mut dyn Image 
+													) -> Blob
 	{
 		let mut blob : Blob = Blob::new();
-		let mut stack : ArrayList<Cartesian2D<usize>, BLOB_SIZE> = ArrayList::new();
-		stack.push_back(start);
-
+		let mut stack : ArrayList<Pixel, CONFIG> = ArrayList::new();
+		if CONFIG > 0
+		{
+			stack.push_back(start);
+		}
 		while 0 < stack.size()
 		{
 			let cur = stack.pop_back();
-			if img.get(cur.x, cur.y) != 0 // If Reinserted in list.
+			if img.get(cur) != 0 // If Reinserted in list.
 			{
 				// Add to list
 				Blob::find_neighbours(threshold, &cur, img, &mut stack);
 
 				// Recalculate Centroid and Intensity
-				blob.centroid.x = Blob::find_centroid(blob.centroid.x, blob.intensity, cur.x as UInt, img.get(cur.x, cur.y) as UInt);
-				blob.centroid.y = Blob::find_centroid(blob.centroid.y, blob.intensity, cur.y as UInt, img.get(cur.x, cur.y) as UInt);
-				blob.intensity += img.get(cur.x, cur.y) as UInt;
+				blob.centroid.x = Blob::find_centroid(blob.centroid.x, blob.intensity, cur.x as UInt, img.get(cur) as UInt);
+				blob.centroid.y = Blob::find_centroid(blob.centroid.y, blob.intensity, cur.y as UInt, img.get(cur) as UInt);
+				blob.intensity += img.get(cur) as UInt;
 
 				// Set the pixel to black.
-				img.set(cur.x, cur.y, 0);
+				img.set(cur, 0);
 			}
 		}
 		return blob;
@@ -138,17 +152,17 @@ impl Blob
 	/// # Example
 	/// ```
 	/// use star_tracker::image_processing::{Blob, BasicImage, Image};
-	/// use star_tracker::util::coordinates::Cartesian2D;
+	/// use star_tracker::util::units::Pixel;
 	/// use star_tracker::util::list::{ArrayList, List};
 	/// let threshold = 1;
-	/// let pt : Cartesian2D<usize> = Cartesian2D{ x: 1, y: 1 };
+	/// let pt : Pixel = Pixel{ x: 1, y: 1 };
 	/// let mut img : BasicImage<3, 3> = BasicImage::new();
-	/// let mut lst : ArrayList<Cartesian2D<usize>, 4> = ArrayList::new();
+	/// let mut lst : ArrayList<Pixel, 4> = ArrayList::new();
 	/// 
-	/// img.set(1, 0, 1); // 0, 1, 0
-	/// img.set(0, 1, 1); // 1, 0, 1
-	/// img.set(1, 2, 1); // 0, 1, 0
-	/// img.set(2, 1, 1);
+	/// img.set(Pixel{x: 1, y: 0}, 1); // 0, 1, 0
+	/// img.set(Pixel{x: 0, y: 1}, 1); // 1, 0, 1
+	/// img.set(Pixel{x: 1, y: 2}, 1); // 0, 1, 0
+	/// img.set(Pixel{x: 2, y: 1}, 1);
 	/// 
 	/// Blob::find_neighbours(threshold, &pt, &img, &mut lst); // Right, Left, Up, Down
 	/// assert_eq!(lst.size(), 4); 
@@ -165,29 +179,39 @@ impl Blob
 	/// assert_eq!(lst.get(3).x, 1); // Down
 	/// assert_eq!(lst.get(3).y, 2);
 	/// ```
-	pub fn find_neighbours ( threshold : Byte, pt : &Cartesian2D<usize>, 
-		img : &dyn Image, stack: &mut dyn List<Cartesian2D<usize>> )
+	pub fn find_neighbours(threshold: Byte, pt: &Pixel, img: &dyn Image,stack:&mut dyn List<Pixel>)
 	{
 		// 4 directional
 		// Right
-		if !stack.is_full() && img.valid_pixel(pt.x + 1, pt.y) && threshold <= img.get(pt.x + 1, pt.y)
+		let mut px = Pixel{x: pt.x + 1, y: pt.y};
+		if !stack.is_full() && img.valid_pixel(px) && threshold <= img.get(px)
 		{
-			stack.push_back(Cartesian2D{x: pt.x + 1, y: pt.y});
+			stack.push_back(px);
 		}
 		// Left
-		if !stack.is_full() && 0 < pt.x && img.valid_pixel(pt.x - 1, pt.y) && threshold <= img.get(pt.x - 1, pt.y)
+		if 0 < pt.x 
 		{
-			stack.push_back(Cartesian2D{x: pt.x - 1, y: pt.y});
+			px = Pixel{x: pt.x - 1, y: pt.y};
+			if !stack.is_full() && img.valid_pixel(px) && threshold <= img.get(px)
+			{
+				stack.push_back(px);
+			}
 		}
 		// Up
-		if !stack.is_full() && 0 < pt.y && img.valid_pixel(pt.x, pt.y - 1) && threshold <= img.get(pt.x, pt.y - 1)
+		if 0 < pt.y
 		{
-			stack.push_back(Cartesian2D{x: pt.x, y: pt.y - 1});
+			px = Pixel{x: pt.x, y: pt.y - 1};
+			if !stack.is_full() && img.valid_pixel(px) && threshold <= img.get(px)
+			{
+				stack.push_back(px);
+			}
 		}
+		println!("{}...",stack.size());
 		// Down
-		if !stack.is_full() && img.valid_pixel(pt.x, pt.y + 1) && threshold <= img.get(pt.x, pt.y + 1)
+		px = Pixel{x: pt.x, y: pt.y + 1};
+		if !stack.is_full() && img.valid_pixel(px) && threshold <= img.get(px)
 		{
-			stack.push_back(Cartesian2D{x: pt.x, y: pt.y + 1});
+			stack.push_back(px);
 		}
 	}	
 
@@ -226,19 +250,19 @@ impl Blob
 	///
 	/// # Example
 	/// ```
-	/// use star_tracker::util::{aliases::Decimal, coordinates::Cartesian2D, list::{List, ArrayList}};
+	/// use star_tracker::util::{aliases::Decimal, units::PixelWeighted, list::{List, ArrayList}};
 	/// use star_tracker::image_processing::Blob;
 	/// let mut blobs : ArrayList<Blob, 3> = ArrayList::new();
-	/// blobs.push_back(Blob{intensity: 10, centroid: Cartesian2D{x: 10.0, y: 10.0}});
-	/// blobs.push_back(Blob{intensity: 5, centroid: Cartesian2D{x: 5.0, y: 5.0}});
-	/// blobs.push_back(Blob{intensity: 0, centroid: Cartesian2D{x: 0.0, y: 0.0}});
+	/// blobs.push_back(Blob{intensity: 10, centroid: PixelWeighted{x: 10.0, y: 10.0}});
+	/// blobs.push_back(Blob{intensity: 5, centroid: PixelWeighted{x: 5.0, y: 5.0}});
+	/// blobs.push_back(Blob{intensity: 0, centroid: PixelWeighted{x: 0.0, y: 0.0}});
 	/// 
-	/// let mut points : ArrayList<Cartesian2D<Decimal>, 2> = ArrayList::new();
-	/// Blob::to_cartesian_2d(&blobs, &mut points);
+	/// let mut points : ArrayList<PixelWeighted, 2> = ArrayList::new();
+	/// Blob::to_pixel_weighted(&blobs, &mut points);
 	/// assert_eq!(blobs.get(0).centroid, points.get(0));
 	/// assert_eq!(blobs.get(1).centroid, points.get(1));
 	/// ```
-	pub fn to_cartesian_2d ( blobs: &dyn List<Blob>, points: &mut dyn List<Cartesian2D<Decimal>> )
+	pub fn to_pixel_weighted ( blobs: &dyn List<Blob>, points: &mut dyn List<PixelWeighted> )
 	{
 		println!("{}", blobs.size());
 		for i in 0..blobs.size()
@@ -260,16 +284,15 @@ impl Blob
 	/// # Example
 	/// ```
 	/// use star_tracker::image_processing::Blob;
-	/// use star_tracker::util::coordinates::Cartesian2D;
-	/// let brightest = Blob{intensity: 1, centroid: Cartesian2D{x: 0.0, y: 0.0}};
-	/// let dullest = Blob{intensity: 0, centroid: Cartesian2D{x: 0.0, y: 0.0}};
+	/// use star_tracker::util::units::PixelWeighted;
+	/// let brightest = Blob{intensity: 1, centroid: PixelWeighted{x: 0.0, y: 0.0}};
+	/// let dullest = Blob{intensity: 0, centroid: PixelWeighted{x: 0.0, y: 0.0}};
 	/// assert!(Blob::sort_descending_intensity(&brightest, &dullest));
 	/// assert!(!Blob::sort_descending_intensity(&dullest, &brightest));
 	/// ```
 	pub fn sort_descending_intensity ( brighest : & Blob, dullest : & Blob ) -> bool 
 	{return dullest.intensity < brighest.intensity;}
 }
-
 
 
 
@@ -287,7 +310,7 @@ mod test
 {
 	use crate::image_processing::{Image, BasicImage, Blob};
 	use crate::util::list::{List, ArrayList};
-	use crate::util::{coordinates::Cartesian2D, aliases::Decimal};
+	use crate::util::{units::PixelWeighted, units::Pixel, aliases::Decimal};
 	
 	fn assert_close ( a: Decimal, b: Decimal )
 	{
@@ -319,10 +342,10 @@ mod test
 	fn test_find_blobs_empty ( )
 	{
 		let mut img : BasicImage<3, 3> = BasicImage::new();
-
 		let mut lst : ArrayList<Blob, 9> = ArrayList::new();
-		const MAX_BLOB_SIZE : usize = 0;
-		Blob::find_blobs::<MAX_BLOB_SIZE>(1, &mut img, &mut lst);
+		
+		const CONFIG : usize = 0;
+		Blob::find_blobs::<CONFIG>(1, &mut img, &mut lst);
 
 		assert_eq!(lst.size(), 0);
 	}
@@ -333,13 +356,14 @@ mod test
 	fn test_find_blobs_exceeds_list ( )
 	{
 		let mut img : BasicImage<3, 3> = BasicImage::new();
-		img.set(0, 0, 1); // 1, 0, 2
-		img.set(2, 0, 2); // 0, 0, 0
-		img.set(0, 2, 5); // 5, 0, 10
-		img.set(2, 2, 10);
+		img.set(Pixel{x: 0, y: 0}, 1); // 1, 0, 2
+		img.set(Pixel{x: 2, y: 0}, 2); // 0, 0, 0
+		img.set(Pixel{x: 0, y: 2}, 5); // 5, 0, 10
+		img.set(Pixel{x: 2, y: 2} , 10);
 		let mut lst : ArrayList<Blob, 2> = ArrayList::new();
-		const MAX_BLOB_SIZE : usize = 1;
-		Blob::find_blobs::<MAX_BLOB_SIZE>(1, &mut img, &mut lst);
+		
+		const CONFIG : usize = 2;
+		Blob::find_blobs::<CONFIG>(1, &mut img, &mut lst);
 
 		assert_eq!(lst.size(), 2);
 		assert_eq!(lst.get(0).intensity, 10);
@@ -352,14 +376,15 @@ mod test
 	fn test_find_blobs_diagonal ( )
 	{
 		let mut img : BasicImage<3, 3> = BasicImage::new();
-		img.set(0,0, 1); // 1 1 0
-		img.set(1,0, 1); // 1 0 0
-		img.set(0,1, 1); // 0 0 1
-		img.set(1,2, 1);
+		img.set(Pixel{x: 0, y: 0}, 1); // 1 1 0
+		img.set(Pixel{x: 1, y: 0}, 1); // 1 0 0
+		img.set(Pixel{x: 0, y: 1}, 1); // 0 0 1
+		img.set(Pixel{x: 1, y: 2}, 1);
 
 		let mut lst : ArrayList<Blob, 9> = ArrayList::new();
-		const MAX_BLOB_SIZE : usize = 3;
-		Blob::find_blobs::<MAX_BLOB_SIZE>(1, &mut img, &mut lst);
+		
+		const CONFIG : usize = 2;
+		Blob::find_blobs::<CONFIG>(1, &mut img, &mut lst);
 		assert_eq!(lst.get(0).intensity, 3);
 		assert_close(lst.get(0).centroid.x, 0.33333);
 		assert_close(lst.get(0).centroid.y, 0.33333);
@@ -370,10 +395,10 @@ mod test
 
 		assert_eq!(lst.size(), 2);
 
-		assert_eq!(img.get(0, 0), 0);
-		assert_eq!(img.get(1, 0), 0);
-		assert_eq!(img.get(0, 1), 0);
-		assert_eq!(img.get(2, 2), 0);		
+		assert_eq!(img.get(Pixel{x: 0, y: 0}), 0);
+		assert_eq!(img.get(Pixel{x: 1, y: 0}), 0);
+		assert_eq!(img.get(Pixel{x: 0, y: 1}), 0);
+		assert_eq!(img.get(Pixel{x: 2, y: 2}), 0);		
 	}
 
 
@@ -382,14 +407,15 @@ mod test
 	fn test_find_blobs_separated ( )
 	{
 		let mut img : BasicImage<3, 3> = BasicImage::new();
-		img.set(0,0, 1); // 1 1 0
-		img.set(1,0, 1); // 1 0 0
-		img.set(0,1, 1); // 0 0 1
-		img.set(2,2, 1);
+		img.set(Pixel{x: 0, y: 0}, 1); // 1 1 0
+		img.set(Pixel{x: 1, y: 0}, 1); // 1 0 0
+		img.set(Pixel{x: 0, y: 1}, 1); // 0 0 1
+		img.set(Pixel{x: 2, y: 2}, 1);
 
 		let mut lst : ArrayList<Blob, 9> = ArrayList::new();
-		const MAX_BLOB_SIZE : usize = 3;
-		Blob::find_blobs::<MAX_BLOB_SIZE>(1, &mut img, &mut lst);
+		const CONFIG : usize = 2;
+		
+		Blob::find_blobs::<CONFIG>(1, &mut img, &mut lst);
 		assert_eq!(lst.get(0).intensity, 3);
 		assert_close(lst.get(0).centroid.x, 0.33333);
 		assert_close(lst.get(0).centroid.y, 0.33333);
@@ -400,40 +426,39 @@ mod test
 
 		assert_eq!(lst.size(), 2);
 
-		assert_eq!(img.get(0, 0), 0);
-		assert_eq!(img.get(1, 0), 0);
-		assert_eq!(img.get(0, 1), 0);
-		assert_eq!(img.get(2, 2), 0);
+		assert_eq!(img.get(Pixel{x: 0, y: 0}), 0);
+		assert_eq!(img.get(Pixel{x: 1, y: 0}), 0);
+		assert_eq!(img.get(Pixel{x: 0, y: 1}), 0);
+		assert_eq!(img.get(Pixel{x: 2, y: 2}), 0);
 	}
 
 
 
 	//
-	// 	fn spread_grass_fire <const BLOB_SIZE : usize> ( threshold : Byte, start : Cartesian2D<usize>, img : &mut dyn Image ) -> Blob
+	// 	fn spread_grass_fire <const BLOB_SIZE : usize> ( threshold : Byte, start : PixelWeighted<usize>, img : &mut dyn Image ) -> Blob
 	//
 
 	#[test]
 	// Should safely end if too big.
 	fn test_spread_grass_fire_blob_too_big ( )
 	{
+		const CONFIG : usize = 3; // Will detect 4.
 		let mut img : BasicImage<3, 3> = BasicImage::new();
-		img.set(0,1, 1); // 0 1 0
-		img.set(1,0, 1); // 1 1 1
-		img.set(2,1, 1); // 0 X 0
-		img.set(1,2, 1); // <(X)
-		img.set(1,1, 1); // middle
-
-		const MAX_BLOB_SIZE : usize = 3; // Will detect 4.
-		let start : Cartesian2D<usize> = Cartesian2D{x: 1, y: 1};
-		let blob = Blob::spread_grass_fire::<MAX_BLOB_SIZE>(1, start, &mut img);
+		img.set(Pixel{x: 0, y: 1}, 1); // 0 1 0
+		img.set(Pixel{x: 1, y: 0}, 1); // 1 1 1
+		img.set(Pixel{x: 2, y: 1}, 1); // 0 X 0
+		img.set(Pixel{x: 1, y: 2}, 1); // <(X)
+		img.set(Pixel{x: 1, y: 1}, 1); // middle
+		let start : Pixel = Pixel{x: 1, y: 1};
+		let blob = Blob::spread_grass_fire::<CONFIG>(1, start, &mut img);
 		assert_eq!(blob.intensity, 4);
 		assert_eq!(blob.centroid.x, 1.0);
 		assert_eq!(blob.centroid.y, 0.75);
 
-		assert_eq!(img.get(0, 1), 0);
-		assert_eq!(img.get(1, 0), 0);
-		assert_eq!(img.get(2, 1), 0);
-		assert_eq!(img.get(1, 2), 1);
+		assert_eq!(img.get(Pixel{x: 0, y: 1}), 0);
+		assert_eq!(img.get(Pixel{x: 1, y: 0}), 0);
+		assert_eq!(img.get(Pixel{x: 2, y: 1}), 0);
+		assert_eq!(img.get(Pixel{x: 1, y: 2}), 1);
 	}
 
 
@@ -441,27 +466,27 @@ mod test
 	// Should safely end if too big.
 	fn test_spread_grass_fire ( )
 	{
+		const CONFIG : usize = 3; // Will detect 3.
 		let mut img : BasicImage<2, 2> = BasicImage::new();
-		img.set(0,0, 1); // 1 1
-		img.set(1,0, 1); // 1 0
-		img.set(0,1, 1);
+		img.set(Pixel{x: 0, y: 0}, 1); // 1 1
+		img.set(Pixel{x: 1, y: 0}, 1); // 1 0
+		img.set(Pixel{x: 0, y: 1}, 1);
 
-		const MAX_BLOB_SIZE : usize = 3;
-		let start : Cartesian2D<usize> = Cartesian2D{x: 0, y: 0};
-		let blob = Blob::spread_grass_fire::<MAX_BLOB_SIZE>(1, start, &mut img);
+		let start : Pixel = Pixel{x: 0, y: 0};
+		let blob = Blob::spread_grass_fire::<CONFIG>(1, start, &mut img);
 		assert_eq!(blob.intensity, 3);
 		assert_close(blob.centroid.x, 0.33333);
 		assert_close(blob.centroid.y, 0.33333);
 
-		assert_eq!(img.get(0, 0), 0);
-		assert_eq!(img.get(1, 0), 0);
-		assert_eq!(img.get(0, 1), 0);
+		assert_eq!(img.get(Pixel{x: 0, y: 0}), 0);
+		assert_eq!(img.get(Pixel{x: 1, y: 0}), 0);
+		assert_eq!(img.get(Pixel{x: 0, y: 1}), 0);
 	}
 
 
 	//
-	// fn find_neighbours ( threshold : Byte, pt : &Cartesian2D<usize>, 
-	//		img : &dyn Image, stack: &mut dyn List<Cartesian2D<usize>> )
+	// fn find_neighbours ( threshold : Byte, pt : &PixelWeighted<usize>, 
+	//		img : &dyn Image, stack: &mut dyn List<PixelWeighted<usize>> )
 	//
 	
 	#[test]
@@ -469,14 +494,14 @@ mod test
 	fn test_find_neighbours ( )
 	{
 		let threshold = 1;
-		let pt : Cartesian2D<usize> = Cartesian2D{ x: 1, y: 1 };
+		let pt : Pixel = Pixel{ x: 1, y: 1 };
 		let mut img : BasicImage<3, 3> = BasicImage::new();
-		let mut lst : ArrayList<Cartesian2D<usize>, 4> = ArrayList::new();
+		let mut lst : ArrayList<Pixel, 4> = ArrayList::new();
 
-		img.set(1, 0, 1); // 0, 1, 0
-		img.set(0, 1, 1); // 1, 0, 1
-		img.set(1, 2, 1); // 0, 1, 0
-		img.set(2, 1, 1);
+		img.set(Pixel{x: 1, y: 0}, 1); // 0, 1, 0
+		img.set(Pixel{x: 0, y: 1}, 1); // 1, 0, 1
+		img.set(Pixel{x: 1, y: 2}, 1); // 0, 1, 0
+		img.set(Pixel{x: 2, y: 1}, 1);
 
 		Blob::find_neighbours(threshold, &pt, &img, &mut lst); // Right, Left, Up, Down
 		assert_eq!(lst.size(), 4); 
@@ -500,9 +525,9 @@ mod test
 	fn test_find_neighbours_edge ( )
 	{
 		let threshold = 1;
-		let mut pt : Cartesian2D<usize> = Cartesian2D{ x: 0, y: 0 };
+		let mut pt : Pixel = Pixel{ x: 0, y: 0 };
 		let img : BasicImage<2, 2> = BasicImage::new();
-		let mut lst : ArrayList<Cartesian2D<usize>, 4> = ArrayList::new();
+		let mut lst : ArrayList<Pixel, 4> = ArrayList::new();
 
 		Blob::find_neighbours(threshold, &pt, &img, &mut lst);
 		pt.x = 1;
@@ -519,14 +544,14 @@ mod test
 	fn test_find_neighbours_overfill ( )
 	{
 		let threshold = 1;
-		let pt : Cartesian2D<usize> = Cartesian2D{ x: 0, y: 0 };
+		let pt : Pixel = Pixel{ x: 0, y: 0 };
 		let mut img : BasicImage<3, 3> = BasicImage::new();
-		let mut lst : ArrayList<Cartesian2D<usize>, 2> = ArrayList::new();
+		let mut lst : ArrayList<Pixel, 2> = ArrayList::new();
 
-		img.set(1, 0, 1); // 0, 1, 0
-		img.set(0, 1, 1); // 1, 0, 1
-		img.set(0, 2, 1); // 0, 1, 0
-		img.set(2, 0, 1);
+		img.set(Pixel{x: 1, y: 0}, 1); // 0, 1, 0
+		img.set(Pixel{x: 0, y: 1}, 1); // 1, 0, 1
+		img.set(Pixel{x: 0, y: 2}, 1); // 0, 1, 0
+		img.set(Pixel{x: 2, y: 0}, 1);
 
 		Blob::find_neighbours(threshold, &pt, &img, &mut lst);
 	}
@@ -558,18 +583,18 @@ mod test
 	
 	
 	//
-	// to_cartesian_2d ( blobs: &dyn List<Blob>, points: &mut dyn List<Cartesian2D<Decimal>> )
+	// to_cartesian_2d ( blobs: &dyn List<Blob>, points: &mut dyn List<PixelWeighted<Decimal>> )
 	//
 	#[test]
 	fn test_to_cartesian_2d ( )
 	{
 		let mut blobs : ArrayList<Blob, 3> = ArrayList::new();
-		blobs.push_back(Blob{intensity: 10, centroid: Cartesian2D{x: 10.0, y: 10.0}});
-		blobs.push_back(Blob{intensity: 5, centroid: Cartesian2D{x: 5.0, y: 5.0}});
-		blobs.push_back(Blob{intensity: 0, centroid: Cartesian2D{x: 0.0, y: 0.0}});
+		blobs.push_back(Blob{intensity: 10, centroid: PixelWeighted{x: 10.0, y: 10.0}});
+		blobs.push_back(Blob{intensity: 5, centroid: PixelWeighted{x: 5.0, y: 5.0}});
+		blobs.push_back(Blob{intensity: 0, centroid: PixelWeighted{x: 0.0, y: 0.0}});
 			
-		let mut points : ArrayList<Cartesian2D<Decimal>, 2> = ArrayList::new();
-		Blob::to_cartesian_2d(&blobs, &mut points);
+		let mut points : ArrayList<PixelWeighted, 2> = ArrayList::new();
+		Blob::to_pixel_weighted(&blobs, &mut points);
 		assert_eq!(blobs.get(0).centroid, points.get(0));
 		assert_eq!(blobs.get(1).centroid, points.get(1));
 	}
@@ -582,8 +607,8 @@ mod test
 	#[test]
 	fn test_sort_descending_intensity ( )
 	{
-		let brightest = Blob{intensity: 1, centroid: Cartesian2D{x: 0.0, y: 0.0}};
-		let dullest = Blob{intensity: 0, centroid: Cartesian2D{x: 0.0, y: 0.0}};
+		let brightest = Blob{intensity: 1, centroid: PixelWeighted{x: 0.0, y: 0.0}};
+		let dullest = Blob{intensity: 0, centroid: PixelWeighted{x: 0.0, y: 0.0}};
 		assert!(Blob::sort_descending_intensity(&brightest, &dullest));
 		assert!(!Blob::sort_descending_intensity(&dullest, &brightest));
 	}

@@ -332,7 +332,7 @@ mod test
 	#[test]
 	fn test_capacity ( )
 	{
-		let mut lst : ArrayList<u32, 10> = ArrayList::new();
+		let lst : ArrayList<u32, 10> = ArrayList::new();
 		assert_eq!(lst.capacity(), 10);
 	}
 
