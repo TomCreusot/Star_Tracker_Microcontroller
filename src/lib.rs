@@ -2,11 +2,15 @@
 //!
 //!
 //!
-#[cfg(feature="nix")]	extern crate curl;
-#[cfg(feature="nix")]	extern crate csv;
-#[cfg(feature="nix")]	extern crate serde;
-#[cfg(feature="nix")]	extern crate image;
-#[cfg(feature="nix")]	extern crate rand;
+extern crate curl;
+extern crate csv;
+extern crate serde;
+extern crate image;
+extern crate rand;
+extern crate mockall;
+
+
+
 
 #[allow(dead_code)]
 pub mod util;
@@ -14,13 +18,13 @@ pub mod util;
 pub mod image_processing;
 
 #[allow(dead_code)]
-#[cfg(feature="nix")]
 pub mod nix;
 
 #[allow(dead_code)]
 pub mod tracking_mode;
 
 #[allow(dead_code)]
+#[feature(associated_consts)]
 pub mod config;
 
 
