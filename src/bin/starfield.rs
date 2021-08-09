@@ -1,3 +1,7 @@
+fn main ( )
+{
+	println!("WIP");
+}
 /*
 // extern crate star_tracker;
 // use star_tracker::nix::Star;

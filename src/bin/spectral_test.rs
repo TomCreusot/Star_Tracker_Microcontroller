@@ -1,6 +1,12 @@
 extern crate star_tracker;
-use star_tracker::config::HYG_DATABASE_PATH;
-use star_tracker::config::HYG_DATABASE_URL;
+
+use star_tracker::config::NixConstsStruct;
+use star_tracker::config::NixConsts;
+use star_tracker::config::TrackingModeConstructConstsStruct;
+use star_tracker::config::TrackingModeConstructConsts;
+use star_tracker::config::TrackingModeConstsStruct;
+use star_tracker::config::TrackingModeConsts;
+
 use star_tracker::nix::Io;
 use star_tracker::nix::Star;
 
@@ -9,7 +15,7 @@ fn main (  )
 {
 	println!("\n\n\nRUNNING");
 	
-	let mut rdr = Io::get_csv ( HYG_DATABASE_PATH, HYG_DATABASE_URL );
+	let mut rdr = Io::get_csv ( NixConstsStruct::HYG_DATABASE_PATH, NixConstsStruct::HYG_DATABASE_URL );
 	let iter = rdr.deserialize();
 		
 	const NUM : usize = 11;

@@ -92,7 +92,7 @@ fn star_pair_test ( )
 {
 	println!("--- Star Pair Test ---");
 	
-	let mut num_overlap = 0;
+	/*let mut num_overlap = 0;
 	let mut reference_same = 0;
 	let mut outside_bounds = 0;
 	for ii in 0..STAR_PAIR_DATABASE.len()
@@ -116,13 +116,14 @@ fn star_pair_test ( )
 			}
 			
 		}
+		println!("{} out of {} \t ({} %)", ii, STAR_PAIR_DATABASE.len(), ii * 100 / STAR_PAIR_DATABASE.len());
 	}
-	
+	*/
 	println!("NUM PAIRS:                   {}", STAR_PAIR_DATABASE.len());
-	println!("AVERAGE REF/STAR             {}", STAR_PAIR_DATABASE.len() / CATALOGUE_DATABASE.len());
+/*	println!("AVERAGE REF/STAR             {}", STAR_PAIR_DATABASE.len() / CATALOGUE_DATABASE.len());
 	println!("COPIES:  (IDEAL 0)           {}", num_overlap);
 	println!("INVALID: (IDEAL 0)           {}", reference_same);
-	println!("INVALID POSITION: (IDEAL 0)  {}", outside_bounds);
+	println!("INVALID POSITION: (IDEAL 0)  {}", outside_bounds);*/
 	
 	
 	println!("\n\n");

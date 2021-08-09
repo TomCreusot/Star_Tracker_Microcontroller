@@ -1,4 +1,10 @@
-/*#![allow(unused_must_use)]
+fn main ( )
+{
+	println!("WIP");
+}
+
+/*
+#![allow(unused_must_use)]
 extern crate star_tracker;
 extern crate image;
 use star_tracker::image_processing::{Image, BasicImage, Blob};

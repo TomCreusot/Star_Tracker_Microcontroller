@@ -2,9 +2,8 @@
 //! Change the appropreate values to calibrate the software to your setup.
 //! Most of these values are only relevent for a microcontroller.
 //! The reason for the microcontroller variables is for memory, this can be ignored for a computer.
-
 use crate::util::aliases::Decimal;
-use crate::util::aliases::UInt;
+// use crate::util::aliases::UInt;
 use crate::util::units::Radians;
 use crate::util::units::Pixel;
 use crate::util::aliases::M_PI;
@@ -23,33 +22,36 @@ use crate::util::aliases::M_PI;
 //###############################################################################################//
 //###############################################################################################//
 
+impl NixConsts for NixConstsStruct
+{
 /// The file name for the program to read in.
-pub const INPUT_IMAGE_NAME	: &str	= "image_in.png";
+const INPUT_IMAGE_NAME	: &'static str	= "image_in.png";
 /// The file name for the program to output results to.
-pub const OUTPUT_IMAGE_NAME	: &str	= "image_out.png";
+const OUTPUT_IMAGE_NAME	: &'static str	= "image_out.png";
 
 /// The location of the hipacaros database in a CSV style setup.
 /// If the database is not already installed, it will install.
-pub const HYG_DATABASE_URL	: &str	= "https://raw.githubusercontent.com/astronexus/HYG-Database/master/hygdata_v3.csv";
+const HYG_DATABASE_URL	: &'static str	= "https://raw.githubusercontent.com/astronexus/HYG-Database/master/hygdata_v3.csv";
 
 
 /// The local path to the hipacaros csv database.
 /// If the file is not at the given path, it will be downloaded.
-pub const HYG_DATABASE_PATH	: &str	= "database/hyg.csv";
+const HYG_DATABASE_PATH	: &'static str	= "database/hyg.csv";
 
 
 /// If Declination is in degrees format
-pub const HYG_DATABASE_DEC_DEGREES				: bool = true;
+const HYG_DATABASE_DEC_DEGREES				: bool = true;
 /// If Right Ascention is in hours format
-pub const HYG_DATABASE_RA_HOURS					: bool = true;
+const HYG_DATABASE_RA_HOURS					: bool = true;
 /// The column name for apparent magnitude for the HYG Database.
-pub const HYG_DATABASE_HEADER_MAGNITUDE 		: &str = "mag";
+const HYG_DATABASE_HEADER_MAGNITUDE 		: &'static str = "mag";
 /// The column name for right ascention for the HYG Database.
-pub const HYG_DATABASE_HEADER_RIGHT_ASCENTION	: &str = "ra";
+const HYG_DATABASE_HEADER_RIGHT_ASCENTION	: &'static str = "ra";
 /// The column name for declination for the HYG Database.
-pub const HYG_DATABASE_HEADER_DECLINATION		: &str = "dec";
+const HYG_DATABASE_HEADER_DECLINATION		: &'static str = "dec";
 /// The column name for specularity for the HYG Database.
-pub const HYG_DATABASE_HEADER_SPECULARITY		: &str = "spect";
+const HYG_DATABASE_HEADER_SPECULARITY		: &'static str = "spect";
+}
 
 //###############################################################################################//
 //###############################################################################################//
@@ -62,39 +64,34 @@ pub const HYG_DATABASE_HEADER_SPECULARITY		: &str = "spect";
 //###############################################################################################//
 //###############################################################################################//
 
-//												//
-//												//
-//				CONSTRUCTING DATABASE			//
-//												//
-//												//
+impl TrackingModeConstructConsts for TrackingModeConstructConstsStruct
+{
 /// The maximum magnitude to be stored in the database.
-pub const DATABASE_MAGNITUDE_MAX		: Decimal				= 2.2;//5.5;
+const DATABASE_MAGNITUDE_MAX		: Decimal				= 1.0;//5.5;
 
 /// This value should be the maximum inaccuracy between pixels.
 /// When searching the database, the database will consider anything within this range as valid.
 /// If the value is too large, some values may not fit (max: max_database_matches) and the actual value may not be added.
 /// If the value is too small, the actual value may not be found.
-pub const DATABASE_ANGLE_TOLERANCE		: Decimal				= 0.01;
+const DATABASE_ANGLE_TOLERANCE		: Decimal				= 0.01;
 
 /// Bins / Database Size, Max: 1, Min: 0.00001.
 /// The more bins, the more memory but faster lookup times.
 /// Less bins will result in less memory requirements but multiple comparisons will need to be made.
-pub const DATABASE_BINS_NUM				: usize					= 100;
+const DATABASE_BINS_NUM				: usize					= 1000;
 
 /// The maximum field of view of the sensor.
 /// To save memory, make this smaller.
-pub const DATABASE_FOV					: Radians				= Radians(M_PI / 5.0);
+const DATABASE_FOV					: Radians				= Radians(M_PI / 10.0);//5.0);
+}
 
 
-//													//
-//													//
-//						RUNTIME						//
-//													//
-//													//
 
+impl TrackingModeConsts for TrackingModeConstsStruct
+{
 /// When searching for values in the database, memory required must be forward declared.
 /// This should be the maximum number of possible matches until it gives up.
-pub const DATABASE_MATCHES_MAX			: UInt					= 10;
+const DATABASE_MATCHES_MAX			: usize					= 10;
 
 
 /// When comparing constellation, triangles are used.
@@ -102,8 +99,8 @@ pub const DATABASE_MATCHES_MAX			: UInt					= 10;
 /// If the triangle is flipped, it is invalid.
 /// HOWEVER if a triangles area is too small (i.e. a strait line or small), any inaccuracy could cause it to be considered flipped.
 /// Use this to define the minimum specularity until the specularity is unimportant.
-pub const TRACKING_MODE_SPECULARITY_MIN	: Decimal				= 0.1;
-
+const TRACKING_MODE_SPECULARITY_MIN	: Decimal				= 0.1;
+}
 
 
 
@@ -122,10 +119,131 @@ pub const TRACKING_MODE_SPECULARITY_MIN	: Decimal				= 0.1;
 //
 //###############################################################################################//
 //###############################################################################################//
-
-/// The MAXIMUM width of the image.
-pub const IMAGE_SIZE_MAX			: Pixel					= Pixel{ x: 1920, y: 1080 };
+impl ImageProcessingConsts for ImageProcessingConstsStruct
+{
+/// The MAXIMUM width/height of the image.
+const IMAGE_SIZE_MAX			: Pixel					= Pixel{ x: 1920, y: 1080 };
 
 /// The MAXIMUM number of pixels in a star.
 /// If this is too low, it will consider a star as multiple stars.
-pub const BLOB_SIZE_MAX				: usize					= 50;
+const BLOB_SIZE_MAX				: usize					= 50;
+}
+
+
+
+
+
+
+
+
+
+
+//###############################################################################################//
+//
+//
+//
+//
+//
+// !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!! //
+//
+//										DONT TOUCH!
+//
+// !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!! //
+//
+//
+//
+//
+//
+//###############################################################################################//
+
+
+pub struct ImageProcessingConstsStruct();
+pub struct NixConstsStruct();
+pub struct TrackingModeConstructConstsStruct();
+pub struct TrackingModeConstsStruct();
+
+/// These constants are required for the image processing part of the application.
+pub trait ImageProcessingConsts
+{
+	
+	/// The MAXIMUM width/height of the image.
+	const IMAGE_SIZE_MAX			: Pixel;
+
+	/// The MAXIMUM number of pixels in a star.
+	/// If this is too low, it will consider a star as multiple stars.
+	const BLOB_SIZE_MAX				: usize;
+}
+
+
+/// When running a nix application, these are the constants that may be required.
+pub trait NixConsts
+{
+	/// The file name for the program to read in.
+	const INPUT_IMAGE_NAME	: &'static str;
+	/// The file name for the program to output results to.
+	const OUTPUT_IMAGE_NAME	: &'static str;
+
+	/// The location of the hipacaros database in a CSV style setup.
+	/// If the database is not already installed, it will install.
+	const HYG_DATABASE_URL	: &'static str;
+
+
+	/// The local path to the hipacaros csv database.
+	/// If the file is not at the given path, it will be downloaded.
+	const HYG_DATABASE_PATH	: &'static str;
+
+
+	/// If Declination is in degrees format
+	const HYG_DATABASE_DEC_DEGREES				: bool;
+	/// If Right Ascention is in hours format
+	const HYG_DATABASE_RA_HOURS					: bool;
+	/// The column name for apparent magnitude for the HYG Database.
+	const HYG_DATABASE_HEADER_MAGNITUDE 		: &'static str;
+	/// The column name for right ascention for the HYG Database.
+	const HYG_DATABASE_HEADER_RIGHT_ASCENTION	: &'static str;
+	/// The column name for declination for the HYG Database.
+	const HYG_DATABASE_HEADER_DECLINATION		: &'static str;
+	/// The column name for specularity for the HYG Database.
+	const HYG_DATABASE_HEADER_SPECULARITY		: &'static str;
+}
+
+
+/// When generating the database for the tracking mode, these are the constants required.
+pub trait TrackingModeConstructConsts
+{
+	/// The maximum magnitude to be stored in the database.
+	const DATABASE_MAGNITUDE_MAX		: Decimal;
+
+	/// This value should be the maximum inaccuracy between pixels.
+	/// When searching the database, the database will consider anything within this range as valid.
+	/// If the value is too large, some values may not fit (max: max_database_matches) and the actual value may not be added.
+	/// If the value is too small, the actual value may not be found.
+	const DATABASE_ANGLE_TOLERANCE		: Decimal;
+
+	/// Bins / Database Size, Max: 1, Min: 0.00001.
+	/// The more bins, the more memory but faster lookup times.
+	/// Less bins will result in less memory requirements but multiple comparisons will need to be made.
+	const DATABASE_BINS_NUM				: usize;
+
+	/// The maximum field of view of the sensor.
+	/// To save memory, make this smaller.
+	const DATABASE_FOV					: Radians;
+}
+
+
+
+/// When running the tracking mode reconition software, these are the constants required.
+pub trait TrackingModeConsts
+{
+	/// When searching for values in the database, memory required must be forward declared.
+	/// This should be the maximum number of possible matches until it gives up.
+	const DATABASE_MATCHES_MAX			: usize;
+
+
+	/// When comparing constellation, triangles are used.
+	/// Specularity is the test to see if the triangle is flipped.
+	/// If the triangle is flipped, it is invalid.
+	/// HOWEVER if a triangles area is too small (i.e. a strait line or small), any inaccuracy could cause it to be considered flipped.
+	/// Use this to define the minimum specularity until the specularity is unimportant.
+	const TRACKING_MODE_SPECULARITY_MIN	: Decimal;
+}

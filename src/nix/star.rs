@@ -3,12 +3,8 @@ use std::cmp::Ordering;
 use serde::de::{self, SeqAccess, MapAccess, Visitor, Deserializer};
 use serde::Deserialize;
 
-use crate::config::HYG_DATABASE_HEADER_MAGNITUDE;
-use crate::config::HYG_DATABASE_HEADER_RIGHT_ASCENTION;
-use crate::config::HYG_DATABASE_HEADER_DECLINATION;
-use crate::config::HYG_DATABASE_HEADER_SPECULARITY;
-use crate::config::HYG_DATABASE_DEC_DEGREES;
-use crate::config::HYG_DATABASE_RA_HOURS;
+use crate::config::NixConstsStruct;
+use crate::config::NixConsts;
 
 use crate::nix::Star;
 // use crate::nix::SerialStar;
@@ -238,11 +234,11 @@ impl<'de> Deserialize<'de> for Star
 				let mut dec  = dec.ok_or_else(|| de::Error::missing_field(FIELDS[2]))?;
 				let spec = spec.ok_or_else(|| de::Error::missing_field(FIELDS[3]))?;
 				
-				if HYG_DATABASE_DEC_DEGREES
+				if NixConstsStruct::HYG_DATABASE_DEC_DEGREES
 				{
 					dec = Degrees(dec).to_radians().0;
 				} 
-				if HYG_DATABASE_RA_HOURS
+				if NixConstsStruct::HYG_DATABASE_RA_HOURS
 				{
 					ra = Hours(ra).to_radians().0;
 				}
@@ -254,10 +250,10 @@ impl<'de> Deserialize<'de> for Star
 
 		const FIELDS: &'static [&'static str] = 
 			&[
-				HYG_DATABASE_HEADER_MAGNITUDE, 
-				HYG_DATABASE_HEADER_RIGHT_ASCENTION, 
-				HYG_DATABASE_HEADER_DECLINATION, 
-				HYG_DATABASE_HEADER_SPECULARITY,
+				NixConstsStruct::HYG_DATABASE_HEADER_MAGNITUDE, 
+				NixConstsStruct::HYG_DATABASE_HEADER_RIGHT_ASCENTION, 
+				NixConstsStruct::HYG_DATABASE_HEADER_DECLINATION, 
+				NixConstsStruct::HYG_DATABASE_HEADER_SPECULARITY,
 			];
 		deserializer.deserialize_struct("Star", FIELDS, DurationVisitor)
 	}
