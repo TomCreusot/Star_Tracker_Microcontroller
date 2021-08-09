@@ -73,19 +73,26 @@
 //! | 2 (*star c)   |  2  | -1  |
 //! | 3 (*star d)   |  3  |  0  |
 //! |    ...        | ... | ... |
+use super::StarPair;
 
+use crate::util::aliases::Decimal;
 use crate::util::units::Equatorial;
 use crate::util::units::Radians;
-use crate::util::aliases::Decimal;
+use crate::util::list::List;
+
+use mockall::*;
+use mockall::predicate::*;
 
 mod k_vector;
 mod star_database_element;
 pub mod array_database;
+pub mod pyramid_database;
 
 /// The database equation which points to the star pair database.
 /// 
 ///
 ///
+#[derive(Copy, Clone)]
 pub struct KVector
 {
 	/// The gradient for the k-vector bin equation.
@@ -117,19 +124,20 @@ pub struct StarDatabaseElement
 
 
 /// The compiled k-vector database, this will allow the construction of the database and the lookup of elements in the database.
-pub struct Database
+pub struct PyramidDatabase
 {	
-	fov:       Decimal,
+	fov:       Radians,
 	k_lookup:  KVector,
 	k_vector:  &'static [usize],
-	pairs:     &'static [(usize, usize)],
+	pairs:     &'static [StarPair<usize>],
 	catalogue: &'static [Equatorial],
 }
 
-impl Database
+
+#[automock]
+pub trait Database
 {
-	fn get_fov ( &self ) -> Decimal
-	{
-		return self.fov;
-	}
+	fn find_close_ref ( &self, find : Radians, found : &mut dyn List<StarPair<usize>> );
+	fn find_star ( &self, index: usize ) -> Result<Equatorial, ()>;
+	fn get_fov ( &self ) -> Radians;
 }

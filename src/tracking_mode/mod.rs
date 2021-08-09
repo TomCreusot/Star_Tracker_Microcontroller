@@ -41,29 +41,77 @@
 //! - [Pseudo Interpritation](https://arxiv.org/pdf/1808.08686.pdf#page=7)
 //! - [Good Explination](http://mtc-m21b.sid.inpe.br/col/sid.inpe.br/mtc-m21b/2017/08.10.22.44/doc/publicacao.pdf#page=105)
 
-use crate::util::units::Cartesian3D;
+use mockall::*;
+use mockall::predicate::*;
+
+use crate::tracking_mode::database::Database;
+
+// use crate::util::units::Cartesian3D;
+use crate::util::units::Equatorial;
 use crate::util::aliases::UInt;
+use crate::util::list::List;
 
 pub mod kernel_iterator;
-// pub mod star_pyramid;
+pub mod constellation;
+pub mod star_pyramid;
 pub mod star_pair;
 pub mod star_triangle;
 pub mod database;
 
+/// The return type for the star pyramid.
+/// Either there is no match or less than 3 stars	(None)
+/// There is a match but only 3 supplied stars		(Triangle)
+/// There is a match and more than 4 supplied stars	(Pyramid)
+#[derive(Debug)]
+pub enum Constellation
+{
+	Pyramid ( Match<Equatorial> ),
+	Triangle ( Match<StarTriangle<Equatorial>> ),
+	None
+}
 
-
+/// Groups the stars to identify with their corresponding element in the database.
+#[derive(Debug, Clone, Copy)]
+pub struct Match <T>
+{ 
+	/// The values to be identified.
+	pub input: T,
+	/// The values from the database.
+	pub output: T
+}
 
 /// A set of 2 stars in equatorial space, this represents a line / angle.
-#[derive(Clone, Copy)]
-pub struct StarPair<T>			( pub T, pub T );
+#[derive(Clone, Copy, PartialEq, Debug)]
+pub struct StarPair<T>		( pub T, pub T );
 
 /// A set of 3 stars in T space, this represents a triangle.
 /// For lookup in the database, it is easier to use equatorial as it requires less space.
 /// For equations, you must use cartesian3D.
+#[derive(Clone, Copy, Debug)]
 pub struct StarTriangle<T>	( pub T, pub T, pub T );
 
+
+#[automock]
+pub trait TriangleConstruct
+{
+	fn find_match_triangle (//<const PAIR_SIZE : usize> ( 
+								&self,
+								stars: &dyn List<Equatorial>, 
+								database: &dyn Database, 
+								triangles: &mut dyn List<Match<StarTriangle<usize>>>
+							);
+/*							
+	fn find_ ( 
+		&self, 
+		stars: &dyn List<Equatorial>, 
+		database: &dyn Database, 
+		triangle: &StarTriangle<Cartesian3D> 
+	) -> Match<StarPyramid>;*/
+}
+
 /// A set of 4 stars in 3D space, this represents a pyramid.
-pub struct StarPyramid		( pub Cartesian3D, pub Cartesian3D, pub Cartesian3D );
+#[derive(Clone, Copy, PartialEq, Debug)]
+pub struct StarPyramid<T>		( pub T, pub T, pub T, pub T );
 
 
 /// An iterator which reduces the chances of getting the same star twice.

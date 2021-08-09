@@ -1,8 +1,14 @@
 //! Implementation of StarTriangle
+use super::TriangleConstruct;
 use super::StarTriangle;
+use super::Match;
 // use super::StarPair;
+// use super::StarPair;
+use crate::tracking_mode::database::Database;
 use crate::util::aliases::Decimal;
 use crate::util::units::Cartesian3D;
+use crate::util::units::Equatorial;
+use crate::util::list::List;
 
 /// A specularity test.
 /// Ignore means the area was too small.
@@ -14,74 +20,73 @@ enum Specularity
 	Ignore,
 	Valid(bool)
 }
-/*
+
+impl TriangleConstruct for StarTriangle<usize>
+{
+	/// Finds every triangle from the provided stars which matches the database.
+	///
+	///
+	///
+	///
+	///
+	///
+	///
+	fn find_match_triangle /*<const PAIR_SIZE : usize>*/ ( 
+								&self,
+								stars: &dyn List<Equatorial>, 
+								database: &dyn Database, 
+								triangles: &mut dyn List<Match<StarTriangle<usize>>>
+							)
+	{
+	}
+}
+
+
+
+impl StarTriangle<usize>
+{
+	pub fn search_database ( &self, database: &dyn Database ) -> Result<StarTriangle<Equatorial>, ()>
+	{
+		let a = database.find_star(self.0);
+		let b = database.find_star(self.1);
+		let c = database.find_star(self.2);
+		
+		if a.is_err() || b.is_err() || c.is_err()
+		{
+			return Err(());
+		}
+		
+		return Ok(StarTriangle(a.unwrap(), b.unwrap(), c.unwrap()));
+	}
+
+
+	pub fn search_list ( &self, list: &dyn List<Equatorial> )->Result<StarTriangle<Equatorial>, ()>
+	{
+		if self.0 < list.size() && self.1 < list.size() && self.2 < list.size()
+		{
+			let a = list.get(self.0);
+			let b = list.get(self.1);
+			let c = list.get(self.2);
+			
+			return Ok(StarTriangle(a, b, c));
+		}
+		
+		return Err(());
+	}
+}
+
 
 impl StarTriangle<Equatorial>
 {
 
-	/// Checks if the provided triangle exists.
-	/// This is done by:
-	/// * Finding every pair in the database that matches the provided pair.
-	/// * Looping through each set of pairs until a match is found where all stars are connected (and not the same).
-	/// * Matching each star to the corresponding database star.
-	/// * Checking the specularity of the triangle is the same or small.
-	///
-	/// # Arguments
-	/// * `triangle` - The star triangle.
-	/// # Returns
-	/// An optional which is none if the triangle is invalid.
-	/// Returns the positions of the stars from the database if found.
-	fn verify_triangle ( triangle : StarTriangle ) -> Option<StarTriangle>
-	{
-		// Input StarPair, output List<StarPair> from database.
-		let a_b = database.searcj(&StarPair(a, b));
-		let b_c = database.verify_pair(&StarPair(b, c));
-		let a_c = database.verify_pair(&StarPair(a, c));
-
-		if a_b.is_none() || b_c.is_none() || a_c.is_none()
-		{
-			return None;
-		}
-
-		// a must be touching b which must be touching c.
-		// a_b could be (a, b) or (b, a), until confirmed, this is (x, y).
-		for ii in 0..a_b.unwrap().size()
-		{
-			for jj in 0..b_c.unwrap().size()
-			{
-				for kk in 0..a_c.unwrap().size()
-				{
-					// Find which star belongs to which point on the triangle.
-					// Convert StarPair to Equatorial.
-					let a = similar_both(&a_b.unwrap().get(i), &a_c.unwrap().get(i));
-					let b = similar_both(&a_b.unwrap().get(i), &b_c.unwrap().get(i));
-					let c = similar_both(&a_c.unwrap().get(i), &b_c.unwrap().get(i));
-
-					// Checks if a triangle is made.
-					if !(a.is_none() && b.is_none() && c.is_none())
-					{
-						let triangle_database = StarTriangle(a, b, c);
-						let s1 = get_specular(triangle);
-						let s2 = get_specular(triangle_database);
-
-						if ( s1 == Specularity.Ignore || s2 == Specularity.Ignore || s1 == s2 )
-						{
-							return StarTriangle(a, b, c);
-						}
-					}
-				}
-			}
-		}
-		return None;
-	}
 }
-*/
+
 
 
 
 
 impl StarTriangle<Cartesian3D>
-{
+{	
 	/// Finds the specularity of the triangle.
 	/// # Arguments
 	/// * `triangle` - The triangle.
@@ -149,18 +154,128 @@ impl StarTriangle<Cartesian3D>
 mod test
 {
 	use crate::tracking_mode::StarTriangle;
+	// use crate::tracking_mode::StarPair;
 	use crate::tracking_mode::star_triangle::Specularity;
 	// use crate::tracking_mode::star_triangle::Specularity;
-	// use crate::util::coordinates::Equatorial;
 	use crate::util::units::Cartesian3D;
+	use crate::util::units::Equatorial;
+	use crate::util::units::Radians;
 	use crate::util::aliases::Decimal;
+	use crate::tracking_mode::database::MockDatabase;
 
+/*
+	//
+	// fn find_match ( &List<Equatorial>, &Database, &mut List<StarTriangle<usize>> )
+	//
+
+	
+	#[test]
+	fn find_match_triangle_not_enough_stars ( )
+	{
+		let lst_star : Vec<Equatorial> = vec![];
+		let database = MockDatabase::new();
+		let lst_tri : Vec<StarTriangle<usize>> = Vec::new();
+		
+		const PAIR_SIZE : usize = 10;
+		
+		// Size 0
+		StarTriangle::find_match :: <PAIR_SIZE> ( &lst_star, &database, &lst_tri );
+		assert_eq!(lst_tri.len(), 0);
+		
+		// Size 1
+		lst_star.push(Equatorial{ra: Radians(0.0), dec: Radians(1.0)});
+		StarTriangle.find_match :: <PAIR_SIZE> ( &lst_star, &database, &lst_tri );
+		assert_eq!(lst_tri.len(), 0);
+
+		// Size 2
+		lst_star.push(Equatorial{ra: Radians(0.0), dec: Radians(1.0)});
+		StarTriangle.find_match :: <PAIR_SIZE> ( &lst_star, &database, &lst_tri );
+		assert_eq!(lst_tri.len(), 0);
+	}
+	
+
+
+
+*/
+
+
+
+
+
+	//
+	// fn search_database ( &self, database: &dyn Database ) -> Result<StarTriangle<Equatorial>>
+	//
+	#[test]
+	fn test_search_database_invalid ( )
+	{
+		let triangle = StarTriangle(1, 1, 1);
+		let mut database = MockDatabase::new();
+		database.expect_find_star().times(3).returning(|_| Err(()));
+		assert!(triangle.search_database(&database).is_err());
+	}
 
 	#[test]
-	fn test_verify_triangle ( )
+	fn test_search_database (  )
 	{
+		let triangle = StarTriangle(1, 2, 3);
+		let mut database = MockDatabase::new();
+		database.expect_find_star().times(3)
+			.returning(|i| Ok(Equatorial{ra: Radians(i as Decimal), dec: Radians(i as Decimal + 1.0)}));
 		
+		let wrapped = triangle.search_database(&database);
+		let triangle_eq = wrapped.expect("Returned Err()");
+		assert_eq!(triangle_eq.0.ra,  Radians(1.0));
+		assert_eq!(triangle_eq.0.dec, Radians(2.0));
+		
+		assert_eq!(triangle_eq.1.ra,  Radians(2.0));
+		assert_eq!(triangle_eq.1.dec, Radians(3.0));
+		
+		assert_eq!(triangle_eq.2.ra,  Radians(3.0));
+		assert_eq!(triangle_eq.2.dec, Radians(4.0));
 	}
+
+
+	//
+	// fn search_list ( &self, database: &dyn Database ) -> Result<StarTriangle<Equatorial>>
+	//
+	#[test]
+	fn test_search_list_invalid ( )
+	{
+		let triangle = StarTriangle(1, 2, 3);
+		let eq = Equatorial{ra: Radians(0.0), dec: Radians(0.0)};
+		let mut lst : Vec<Equatorial> = vec![];
+		
+		assert!(triangle.search_list(&lst).is_err());
+		lst.push(eq);
+		assert!(triangle.search_list(&lst).is_err());
+		lst.push(eq);
+		assert!(triangle.search_list(&lst).is_err());
+		lst.push(eq);
+		assert!(triangle.search_list(&lst).is_err());
+	}
+/*
+	#[test]
+	fn test_search_list (  )
+	{
+		let triangle = StarTriangle(1, 2, 3);
+		let mut database = MockDatabase::new();
+		database.expect_find_star().times(3)
+			.returning(|i| Ok(Equatorial{ra: Radians(i as Decimal), dec: Radians(i as Decimal + 1.0)}));
+		
+		let res = triangle.search_database(&database);
+		let triangle_eq = res.expect("Returned Err()");
+		assert_eq!(triangle_eq.0.ra,  Radians(1.0));
+		assert_eq!(triangle_eq.0.dec, Radians(2.0));
+		
+		assert_eq!(triangle_eq.1.ra,  Radians(2.0));
+		assert_eq!(triangle_eq.1.dec, Radians(3.0));
+		
+		assert_eq!(triangle_eq.2.ra,  Radians(3.0));
+		assert_eq!(triangle_eq.2.dec, Radians(4.0));
+	}
+	*/
+	
+	
 
 
 	#[test]
