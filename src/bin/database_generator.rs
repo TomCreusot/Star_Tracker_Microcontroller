@@ -3,8 +3,8 @@ use star_tracker::config::NixConstsStruct;
 use star_tracker::config::NixConsts;
 use star_tracker::config::TrackingModeConstructConstsStruct;
 use star_tracker::config::TrackingModeConstructConsts;
-use star_tracker::config::TrackingModeConstsStruct;
-use star_tracker::config::TrackingModeConsts;
+// use star_tracker::config::TrackingModeConstsStruct;
+// use star_tracker::config::TrackingModeConsts;
 // use star_tracker::config::DATABASE_ANGLE_TOLERANCE;
 use star_tracker::nix::Star;
 use star_tracker::nix::Io;
@@ -27,7 +27,7 @@ fn main ( )
 	for record in iter
 	{
 		let star : Star = record.expect("Could not decode.");
-		if star.mag < TrackingModeConstructConstsStruct::DATABASE_MAGNITUDE_MAX
+		if star.mag < TrackingModeConstructConstsStruct::MAGNITUDE_MAX
 		{
 			stars.push(star);
 		}
@@ -40,14 +40,14 @@ fn main ( )
 	// Create Star Database Element list.
 	println!("Generating Star Pairs       ...");
 	let mut star_pairs : Vec<StarDatabaseElement> = 
-		StarDatabaseElement::create_list ( TrackingModeConstructConstsStruct::DATABASE_FOV, &stars );
+		StarDatabaseElement::create_list ( TrackingModeConstructConstsStruct::FOV, &stars );
 	star_pairs.sort();
 	println!("\t- Found {} pairs.", star_pairs.len());
 	
 	// Sort Star Database Element list.
 	// Create K Vector
 	println!("Generating KVector          ...");
-	let k_vect = KVector::new(TrackingModeConstructConstsStruct::DATABASE_BINS_NUM, star_pairs[0].dist.0 as f64, star_pairs[star_pairs.len() - 1].dist.0 as f64);
+	let k_vect = KVector::new(TrackingModeConstructConstsStruct::BINS_NUM, star_pairs[0].dist.0 as f64, star_pairs[star_pairs.len() - 1].dist.0 as f64);
 	let bins : Vec<usize> = k_vect.generate_bins(&star_pairs)
 		.expect("Not enough elements in the database.");
 	
@@ -73,9 +73,9 @@ fn main ( )
 	println!("Parsing File                ...");
 	let mut template_file = Io::read_file("src/config/template.txt");
 	let mut template = Template::new();
-	template.add_patten("FOV".to_string(), 				format!("{}f32", TrackingModeConstructConstsStruct::DATABASE_FOV).to_string());
-	template.add_patten("MAGNITUDE".to_string(),	 	format!("{}f32", TrackingModeConstructConstsStruct::DATABASE_MAGNITUDE_MAX).to_string());
-	template.add_patten("BIN_SIZE".to_string(), 		format!("{}", TrackingModeConstructConstsStruct::DATABASE_BINS_NUM).to_string());
+	template.add_patten("FOV".to_string(), 				format!("{}f32", TrackingModeConstructConstsStruct::FOV).to_string());
+	template.add_patten("MAGNITUDE".to_string(),	 	format!("{}f32", TrackingModeConstructConstsStruct::MAGNITUDE_MAX).to_string());
+	template.add_patten("BIN_SIZE".to_string(), 		format!("{}", TrackingModeConstructConstsStruct::BINS_NUM).to_string());
 	template.add_patten("K_LOOKUP".to_string(), 		k_vect.to_string());
 	template.add_patten("K_VECTOR_SIZE".to_string(),	format!("{}", bins.len()).to_string());
 	template.add_patten("STAR_PAIR_SIZE".to_string(), 	format!("{}", star_pairs.len()).to_string());
