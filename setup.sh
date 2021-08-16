@@ -18,3 +18,6 @@ sudo apt-get install cmake
 
 # tiff v0.6.1
 sudo apt-get install libfontconfig libfontconfig1-dev
+
+# new resources required
+rustup default nightly
