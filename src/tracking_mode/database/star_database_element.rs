@@ -1,15 +1,13 @@
 /// Implementation for StarDatabaseElement
-use crate::util::list::List;
-// use crate::util::aliases::Decimal;
-use crate::util::units::Radians;
-// use crate::util::err::Errors;
-// use crate::util::err::Error;
-use crate::nix::Star;
+use std::cmp::Ordering;
 
 use super::StarDatabaseElement;
-// use super::Database;
 
-use std::cmp::Ordering;
+use crate::util::units::Radians;
+use crate::util::list::List;
+
+use crate::nix::Star;
+
 
 
 impl StarDatabaseElement
@@ -132,20 +130,6 @@ impl PartialOrd for StarDatabaseElement
 		}
     }
 }
-/*
-// For Generating Database
-impl fmt::Display for StarDatabaseElement
-{
-	fn fmt ( &self, format: &mut fmt::Formatter ) -> fmt::Result
-	{
-		let string = format!("({}, {})", self.pair.0, self.pair.1);
-		
-		format.write_str(&string);
-		return Ok(());
-	}
-}
-
-*/
 
 
 
@@ -164,11 +148,12 @@ mod test
 //										---	Database ---
 //###############################################################################################//
 	use tracking_mode::database::StarDatabaseElement;
-	use nix::Star;
+	
 	use util::units::Equatorial;
-	// use util::units::Cartesian3D;
 	use util::units::Degrees;
 	use util::aliases::Decimal;
+	
+	use nix::Star;
 
 	fn assert_close ( a: Decimal, b: Decimal )
 	{

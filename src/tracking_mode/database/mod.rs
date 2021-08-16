@@ -73,15 +73,18 @@
 //! | 2 (*star c)   |  2  | -1  |
 //! | 3 (*star d)   |  3  |  0  |
 //! |    ...        | ... | ... |
-use super::StarPair;
-
-use crate::util::aliases::Decimal;
-use crate::util::units::Equatorial;
-use crate::util::units::Radians;
-use crate::util::list::List;
-
+use std::ops;
 use mockall::*;
 use mockall::predicate::*;
+
+use super::StarPair;
+
+use crate::util::units::Equatorial;
+use crate::util::units::Radians;
+use crate::util::aliases::Decimal;
+use crate::util::list::List;
+
+use crate::util::err::{/*Errors, */Error};
 
 mod k_vector;
 mod star_database_element;
@@ -109,6 +112,22 @@ pub struct KVector
 	
 	/// The number of kvector elements.
 	pub num_bins      : usize,
+}
+
+
+#[automock]
+pub trait KVectorSearch
+{	
+	/// Gets the index of where the value is located in the star pair list.  
+	/// This may include the neigbouring bins as it is on the edge of the bin.  
+	/// i.e.  
+	/// If the bin tolerance is 10:    
+	/// [1: (0 to 10), 2: (10 to 20), 3: (20 to 30)],
+	/// If you enter 19, you will receive 2 and 3.
+	/// If you enter 15, you will receive 1, 2 and 3.
+	/// # Arguments
+	/// * `value` - The value of the angular interstar distance.
+	fn get_bins ( &self, value: Radians ) -> Error<ops::RangeInclusive<usize>>;
 }
 
 

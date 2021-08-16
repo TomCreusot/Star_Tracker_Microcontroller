@@ -67,22 +67,22 @@ const HYG_DATABASE_HEADER_SPECULARITY		: &'static str = "spect";
 impl TrackingModeConstructConsts for TrackingModeConstructConstsStruct
 {
 /// The maximum magnitude to be stored in the database.
-const DATABASE_MAGNITUDE_MAX		: Decimal				= 1.0;//5.5;
+const MAGNITUDE_MAX		: Decimal						= 1.0;//5.5;
 
 /// This value should be the maximum inaccuracy between pixels.
 /// When searching the database, the database will consider anything within this range as valid.
 /// If the value is too large, some values may not fit (max: max_database_matches) and the actual value may not be added.
 /// If the value is too small, the actual value may not be found.
-const DATABASE_ANGLE_TOLERANCE		: Decimal				= 0.01;
+const ANGLE_TOLERANCE		: Decimal					= 0.01;
 
 /// Bins / Database Size, Max: 1, Min: 0.00001.
 /// The more bins, the more memory but faster lookup times.
 /// Less bins will result in less memory requirements but multiple comparisons will need to be made.
-const DATABASE_BINS_NUM				: usize					= 1000;
+const BINS_NUM				: usize						= 1000;
 
 /// The maximum field of view of the sensor.
 /// To save memory, make this smaller.
-const DATABASE_FOV					: Radians				= Radians(M_PI / 10.0);//5.0);
+const FOV					: Radians					= Radians(M_PI / 10.0);//5.0);
 }
 
 
@@ -91,15 +91,17 @@ impl TrackingModeConsts for TrackingModeConstsStruct
 {
 /// When searching for values in the database, memory required must be forward declared.
 /// This should be the maximum number of possible matches until it gives up.
-const DATABASE_MATCHES_MAX			: usize					= 10;
+const PAIRS_MAX			: usize					= 10;
 
+/// The number of triangles to find from the database. 
+const TRIANGLES_MAX		: usize					= 10;
 
 /// When comparing constellation, triangles are used.
 /// Specularity is the test to see if the triangle is flipped.
 /// If the triangle is flipped, it is invalid.
 /// HOWEVER if a triangles area is too small (i.e. a strait line or small), any inaccuracy could cause it to be considered flipped.
 /// Use this to define the minimum specularity until the specularity is unimportant.
-const TRACKING_MODE_SPECULARITY_MIN	: Decimal				= 0.1;
+const SPECULARITY_MIN			: Decimal				= 0.1;
 }
 
 
@@ -165,7 +167,6 @@ pub struct TrackingModeConstsStruct();
 /// These constants are required for the image processing part of the application.
 pub trait ImageProcessingConsts
 {
-	
 	/// The MAXIMUM width/height of the image.
 	const IMAGE_SIZE_MAX			: Pixel;
 
@@ -212,22 +213,22 @@ pub trait NixConsts
 pub trait TrackingModeConstructConsts
 {
 	/// The maximum magnitude to be stored in the database.
-	const DATABASE_MAGNITUDE_MAX		: Decimal;
+	const MAGNITUDE_MAX		: Decimal						= 1.0;//5.5;
 
 	/// This value should be the maximum inaccuracy between pixels.
 	/// When searching the database, the database will consider anything within this range as valid.
 	/// If the value is too large, some values may not fit (max: max_database_matches) and the actual value may not be added.
 	/// If the value is too small, the actual value may not be found.
-	const DATABASE_ANGLE_TOLERANCE		: Decimal;
+	const ANGLE_TOLERANCE		: Decimal					= 0.01;
 
 	/// Bins / Database Size, Max: 1, Min: 0.00001.
 	/// The more bins, the more memory but faster lookup times.
 	/// Less bins will result in less memory requirements but multiple comparisons will need to be made.
-	const DATABASE_BINS_NUM				: usize;
+	const BINS_NUM				: usize						= 1000;
 
 	/// The maximum field of view of the sensor.
 	/// To save memory, make this smaller.
-	const DATABASE_FOV					: Radians;
+	const FOV					: Radians					= Radians(M_PI / 10.0);//5.0);
 }
 
 
@@ -237,13 +238,15 @@ pub trait TrackingModeConsts
 {
 	/// When searching for values in the database, memory required must be forward declared.
 	/// This should be the maximum number of possible matches until it gives up.
-	const DATABASE_MATCHES_MAX			: usize;
+	const PAIRS_MAX			: usize;
 
+	/// The number of triangles to find from the database. 
+	const TRIANGLES_MAX		: usize;
 
 	/// When comparing constellation, triangles are used.
 	/// Specularity is the test to see if the triangle is flipped.
 	/// If the triangle is flipped, it is invalid.
 	/// HOWEVER if a triangles area is too small (i.e. a strait line or small), any inaccuracy could cause it to be considered flipped.
 	/// Use this to define the minimum specularity until the specularity is unimportant.
-	const TRACKING_MODE_SPECULARITY_MIN	: Decimal;
+	const SPECULARITY_MIN			: Decimal;
 }

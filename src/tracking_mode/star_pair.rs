@@ -233,7 +233,7 @@ mod test
 	fn test_find_not_none ( )
 	{
 		let pair = StarPair(1, 1);
-		let not_a = 2;
+		// let not_a = 2;
 		assert!(pair.find_not(&1).is_none());
 	}
 	

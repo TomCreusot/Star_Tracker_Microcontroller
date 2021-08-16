@@ -2,13 +2,16 @@
 use std::ops;
 use std::fmt;
 
+use super::StarDatabaseElement;
+use super::KVectorSearch;
+use super::KVector;
+
+use crate::util::aliases::decimal_precision;
 use crate::util::aliases::Decimal;
 use crate::util::units::Radians;
 use crate::util::list::List;
-use crate::util::aliases::decimal_precision;
 use crate::util::err::{Errors, Error};
-use super::KVector;
-use super::StarDatabaseElement;
+
 
 impl KVector
 {
@@ -130,8 +133,6 @@ impl KVector
 	/// 	}
 	/// 	return vec;
 	/// }
-	///
-	///
 	/// ```
 	pub fn generate_bins ( &self, sorted_database: &Vec<StarDatabaseElement> ) -> Error<Vec<usize>>
 	{
@@ -162,6 +163,7 @@ impl KVector
 		vec.push(sorted_database.size());
 		return Ok(vec);
 	}
+}
 
 
 
@@ -176,9 +178,15 @@ impl KVector
 
 
 
-
-
-	/// Gets the index  of where the value is located in the star pair list.
+impl KVectorSearch for KVector
+{
+	/// Gets the index of where the value is located in the star pair list.  
+	/// This may include the neigbouring bins as it is on the edge of the bin.  
+	/// i.e.  
+	/// If the bin tolerance is 10:    
+	/// [1: (0 to 10), 2: (10 to 20), 3: (20 to 30)],
+	/// If you enter 19, you will receive 2 and 3.
+	/// If you enter 15, you will receive 1, 2 and 3.
 	/// # Arguments
 	/// * `value` - The value of the angular interstar distance.
 	///
@@ -196,7 +204,7 @@ impl KVector
 	/// let kvec = KVector::new(NUM_BINS, dec[0].clone() as f64, dec[4] as f64);
 	/// // Use the ranges in vec to find the elements in the star pair database.
 	/// ```
-	pub fn get_bins ( &self, value: Radians ) -> Error<ops::RangeInclusive<usize>>
+	fn get_bins ( &self, value: Radians ) -> Error<ops::RangeInclusive<usize>>
 	{
 		if value.0 < self.min_value.0
 		{
@@ -266,12 +274,13 @@ impl fmt::Display for KVector
 mod test
 {
 	use crate::tracking_mode::database::StarDatabaseElement;
+	use crate::tracking_mode::database::KVectorSearch;
 	use crate::tracking_mode::database::KVector;
 	
-	use crate::util::list::List;
 	use crate::util::aliases::decimal_precision;
 	use crate::util::aliases::Decimal;
 	use crate::util::units::Radians;
+	use crate::util::list::List;
 
 
 	#[test]

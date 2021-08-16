@@ -1,6 +1,5 @@
 //! Implementation for KernelIterator
 use super::KernelIterator;
-use crate::util::aliases::UInt;
 
 impl KernelIterator
 {
@@ -14,7 +13,7 @@ impl KernelIterator
 	/// let mut  iter = KernelIterator::new(0);
 	/// assert!(iter.i == iter.j && iter.i == iter.k);
 	/// ```
-	pub fn new ( size : UInt ) -> KernelIterator
+	pub fn new ( size : usize ) -> KernelIterator
 	{
 		return KernelIterator{size: size, dj: 1, dk: 1, di: 0, i: 0, j: 0, k: 0};
 	}

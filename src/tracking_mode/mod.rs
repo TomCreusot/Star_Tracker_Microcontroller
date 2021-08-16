@@ -41,14 +41,15 @@
 //! - [Pseudo Interpritation](https://arxiv.org/pdf/1808.08686.pdf#page=7)
 //! - [Good Explination](http://mtc-m21b.sid.inpe.br/col/sid.inpe.br/mtc-m21b/2017/08.10.22.44/doc/publicacao.pdf#page=105)
 
-use mockall::*;
 use mockall::predicate::*;
+use mockall::*;
 
 use crate::tracking_mode::database::Database;
 
-// use crate::util::units::Cartesian3D;
+use crate::config::TrackingModeConsts;
+
+use crate::util::units::Cartesian3D;
 use crate::util::units::Equatorial;
-use crate::util::aliases::UInt;
 use crate::util::list::List;
 
 pub mod kernel_iterator;
@@ -56,19 +57,15 @@ pub mod constellation;
 pub mod star_pyramid;
 pub mod star_pair;
 pub mod star_triangle;
+pub mod specularity;
 pub mod database;
 
-/// The return type for the star pyramid.
-/// Either there is no match or less than 3 stars	(None)
-/// There is a match but only 3 supplied stars		(Triangle)
-/// There is a match and more than 4 supplied stars	(Pyramid)
-#[derive(Debug)]
-pub enum Constellation
-{
-	Pyramid ( Match<Equatorial> ),
-	Triangle ( Match<StarTriangle<Equatorial>> ),
-	None
-}
+
+//###############################################################################################//
+//
+//										Structs
+//
+//###############################################################################################//
 
 /// Groups the stars to identify with their corresponding element in the database.
 #[derive(Debug, Clone, Copy)]
@@ -91,27 +88,11 @@ pub struct StarPair<T>		( pub T, pub T );
 pub struct StarTriangle<T>	( pub T, pub T, pub T );
 
 
-#[automock]
-pub trait TriangleConstruct
-{
-	fn find_match_triangle (//<const PAIR_SIZE : usize> ( 
-								&self,
-								stars: &dyn List<Equatorial>, 
-								database: &dyn Database, 
-								triangles: &mut dyn List<Match<StarTriangle<usize>>>
-							);
-/*							
-	fn find_ ( 
-		&self, 
-		stars: &dyn List<Equatorial>, 
-		database: &dyn Database, 
-		triangle: &StarTriangle<Cartesian3D> 
-	) -> Match<StarPyramid>;*/
-}
 
 /// A set of 4 stars in 3D space, this represents a pyramid.
 #[derive(Clone, Copy, PartialEq, Debug)]
 pub struct StarPyramid<T>		( pub T, pub T, pub T, pub T );
+
 
 
 /// An iterator which reduces the chances of getting the same star twice.
@@ -133,18 +114,110 @@ pub struct StarPyramid<T>		( pub T, pub T, pub T, pub T );
 pub struct KernelIterator
 {
 	/// The first star index to use.
-	pub i : UInt,
+	pub i : usize,
 	/// The second index to use.
-	pub j : UInt,
+	pub j : usize,
 	/// The third index to use.
-	pub k : UInt,
+	pub k : usize,
 
 	/// The number of elements to iterate through.
-	size  : UInt,
+	size  : usize,
 	/// 0 to (n - dj - dk - 1)
-	di : UInt,
+	di : usize,
 	/// 1 to (n - 1 - dj)
-	dj : UInt,
+	dj : usize,
 	/// 1 to (n - 2)
-	dk : UInt
+	dk : usize
 }
+
+
+
+//###############################################################################################//
+//
+//										Enums
+//
+//###############################################################################################//
+
+/// The return type for the star pyramid.
+/// Either there is no match or less than 3 stars	(None)
+/// There is a match but only 3 supplied stars		(Triangle)
+/// There is a match and more than 4 supplied stars	(Pyramid)
+#[derive(Debug)]
+pub enum Constellation
+{
+	Pyramid ( Match<StarPyramid<Equatorial>> ),
+	Triangle ( Match<StarTriangle<Equatorial>> ),
+	None
+}
+
+
+/// A specularity test.
+/// Ignore means the area was too small.
+/// Valid means that the sign is a valid way of checking specularity in the current triangle.
+#[derive(Debug)]
+#[derive(PartialEq)]
+pub enum Specularity
+{
+	Ignore,
+	Valid(bool)
+}
+
+
+
+
+//###############################################################################################//
+//
+//										Traits
+//
+//###############################################################################################//
+
+#[automock]
+pub trait PyramidConstruct <T: 'static> 
+	// where T: TrackingModeConsts, [(); T::PAIRS_MAX]: Sized
+	where T: TrackingModeConsts//, ArrayList<(), {T::PAIRS_MAX}> : Sized
+{
+	/// Finds the pilot 
+	/// # Arguments
+	/// * `stars` - The stars from the image. 
+	/// * `database` - The database to lookup.
+	/// * `input` - The star triangle from the input.
+	/// # Returns
+	/// Ok(pilot) if valid.
+	fn find_pilot (	
+				&mut self,
+				stars : &dyn List<Equatorial>, 
+				database : &dyn Database, 
+				input : StarTriangle<usize>,
+			) -> Result<Match<usize>, ()>;
+}
+
+
+
+
+#[automock]
+pub trait TriangleConstruct <T: 'static> 
+	// where T: TrackingModeConsts, [(); T::PAIRS_MAX]: Sized
+	where T: TrackingModeConsts//, ArrayList<(), {T::PAIRS_MAX}> : Sized
+{
+	/// Finds every triangle from the provided stars which matches the database.
+	/// ***DOES NOT CHECK FOR SPECULARITY!!!***
+	/// # Arguments
+	/// * `stars` - The stars in the image.
+	/// * `database` - The database to search through.
+	/// * `triangles` -  The output.
+	fn find_match_triangle (
+								&mut self,
+								stars: &dyn List<Equatorial>, 
+								database: &dyn Database, 
+								triangles: &mut dyn List<Match<StarTriangle<usize>>>
+							);
+}
+
+
+#[automock]
+pub trait SpecularityConstruct <T: 'static> where T: TrackingModeConsts
+{
+	/// Returns true if the triangle is the same orientation OR a triangle is IGNORE.
+	fn same ( &mut self, a: &StarTriangle<Cartesian3D>, b: &StarTriangle<Cartesian3D> ) -> bool;
+}
+
