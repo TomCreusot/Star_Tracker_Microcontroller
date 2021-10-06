@@ -6,6 +6,7 @@ pub mod angles;
 pub mod cartesian3d;
 pub mod quaternion;
 pub mod equatorial;
+pub mod matrix;
 use serde::Deserialize;
 
 use super::aliases::Decimal;
@@ -33,6 +34,8 @@ pub struct Hours ( pub Decimal );
 //###############################################################################################//
 //										---	Pixel ---
 //###############################################################################################//
+pub type MatrixPosition = Pixel;
+
 /// A position of a pixel.
 #[derive(Debug, Copy, Clone, PartialEq)]
 pub struct Pixel  
@@ -90,4 +93,20 @@ pub struct Quaternion
 	pub x : Decimal,
 	pub y : Decimal,
 	pub z : Decimal,
+}
+
+
+
+
+//###############################################################################################//
+//										---	Matrix ---
+//###############################################################################################//
+/// An n x m matrix.  
+/// W is the width.  
+/// H is the height.  
+#[derive(Copy, Clone)]
+pub struct Matrix <const W : usize, const H : usize>
+{
+	/// The matrix ArrayList
+	matrix : [[Decimal; W]; H],
 }
