@@ -23,7 +23,7 @@ fn main ( )
 fn size_test ( )
 {
 	println!("--- MEMORY USAGE ---");
-	
+
 	let size_k_vector_database  = size_of_val(&K_VECTOR_DATABASE);
 	let size_star_pair_database = size_of_val(&STAR_PAIR_DATABASE);
 	let size_catalogue_database = size_of_val(&CATALOGUE_DATABASE);
@@ -34,9 +34,9 @@ fn size_test ( )
 	println!("Total Size:         {} kB", size_total / 1000);
 	// println!("Size Pairs: {}", size_of(STAR_PAIR_DATABASE));
 	// println!("Size Catalogue: {}", size_of(CATALOGUE_ELEMENTS));
-	
+
 	println!("\n\n");
-		
+
 }
 
 
@@ -44,7 +44,7 @@ fn size_test ( )
 fn k_vector_bin_test ( )
 {
 	println!("--- K-Vector Bin ---");
-	
+
 	let length					= K_VECTOR_DATABASE.len();
 	let bin_length				= length - 1;
 	let mut min_populated		= K_VECTOR_DATABASE[0];
@@ -52,7 +52,7 @@ fn k_vector_bin_test ( )
 	let mut num_empty			= 0;
 	let mut weighted_populated	= 0;
 	let num_elements		= K_VECTOR_DATABASE[length - 1] - K_VECTOR_DATABASE[0];
-	
+
 	for i in 1..length
 	{
 		let separation = K_VECTOR_DATABASE[i] - K_VECTOR_DATABASE[i - 1];
@@ -75,13 +75,13 @@ fn k_vector_bin_test ( )
 	println!("MIN POPULATED:             {}", min_populated);
 	println!("MAX POPULATED:             {}", max_populated);
 	println!("% EMPTY (LOW IS BETTER):   {} %", num_empty as f32 / (length - 1) as f32 * 100.0);
-	
+
 	weighted_populated /= num_elements;
 	let off_center = bin_length as f32 / 2.0 - weighted_populated as f32;
 	let rat_off_center = off_center / bin_length as f32 * 2.0;
 	let rat_leaning = rat_off_center;
 	println!("CLUSTER (IDEAL 0%):       {} %", rat_leaning * 100.0);
-	
+
 	println!("\n\n");
 }
 
@@ -91,8 +91,8 @@ fn k_vector_bin_test ( )
 fn star_pair_test ( )
 {
 	println!("--- Star Pair Test ---");
-	
-	/*let mut num_overlap = 0;
+
+	let mut num_overlap = 0;
 	let mut reference_same = 0;
 	let mut outside_bounds = 0;
 	for ii in 0..STAR_PAIR_DATABASE.len()
@@ -106,7 +106,7 @@ fn star_pair_test ( )
 		{
 			outside_bounds += 1;
 		}
-		
+
 		for jj in ii + 1..STAR_PAIR_DATABASE.len()
 		{
 			let b = STAR_PAIR_DATABASE[jj];
@@ -114,18 +114,18 @@ fn star_pair_test ( )
 			{
 				num_overlap += 1;
 			}
-			
+
 		}
-		println!("{} out of {} \t ({} %)", ii, STAR_PAIR_DATABASE.len(), ii * 100 / STAR_PAIR_DATABASE.len());
+		// println!("{} out of {} \t ({} %)", ii, STAR_PAIR_DATABASE.len(), ii * 100 / STAR_PAIR_DATABASE.len());
 	}
-	*/
+
 	println!("NUM PAIRS:                   {}", STAR_PAIR_DATABASE.len());
-/*	println!("AVERAGE REF/STAR             {}", STAR_PAIR_DATABASE.len() / CATALOGUE_DATABASE.len());
+	println!("AVERAGE REF/STAR             {}", STAR_PAIR_DATABASE.len() / CATALOGUE_DATABASE.len());
 	println!("COPIES:  (IDEAL 0)           {}", num_overlap);
 	println!("INVALID: (IDEAL 0)           {}", reference_same);
-	println!("INVALID POSITION: (IDEAL 0)  {}", outside_bounds);*/
-	
-	
+	println!("INVALID POSITION: (IDEAL 0)  {}", outside_bounds);
+
+
 	println!("\n\n");
 }
 
@@ -135,15 +135,15 @@ fn star_pair_test ( )
 fn star_catalogue_test ( )
 {
 	println!("--- Star Catalogue Test ---");
-	
+
 	let mut outside_range_ra = 0;
 	let mut outside_range_dec = 0;
 	let mut similar_place = 0;
-	
+
 	for ii in 0..CATALOGUE_DATABASE.len()
 	{
 		let a = CATALOGUE_DATABASE[ii];
-		
+
 		if Equatorial::range_ra().end().0 <= a.ra.0 || a.ra.0 < Equatorial::range_ra().start().0
 		{
 			outside_range_ra += 1;
@@ -152,18 +152,18 @@ fn star_catalogue_test ( )
 		{
 			outside_range_dec += 1;
 		}
-		
+
 		for jj in (ii+1)..CATALOGUE_DATABASE.len()
 		{
 			let b = CATALOGUE_DATABASE[jj];
-			
+
 			if (a.ra - b.ra).0.abs() < 0.00001 && (a.dec - b.dec).0.abs() < 0.000001
 			{
 				similar_place += 1;
-			} 
+			}
 		}
 	}
-	
+
 	println!("NUM STARS:              {}", CATALOGUE_DATABASE.len());
 	println!("OUTSIDE RANGE RA:       {}", outside_range_ra);
 	println!("OUTSIDE RANGE DEC:      {}", outside_range_dec);

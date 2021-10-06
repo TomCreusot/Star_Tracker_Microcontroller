@@ -8,16 +8,16 @@ curl --proto '=https' --tlsv1.2 -sSf https://sh.rustup.rs | sh
 source $HOME/.cargo/env
 
 # cc
-sudo apt-get install build-essential
+sudo apt-get install build-essential -y
 
 # openssl-sys v0.9.65
-sudo apt-get install libssl-dev
+sudo apt-get install libssl-dev -y
 
 # freetype-sys v0.13.1
-sudo apt-get install cmake
+sudo apt-get install cmake -y
 
 # tiff v0.6.1
-sudo apt-get install libfontconfig libfontconfig1-dev
+sudo apt-get install libfontconfig libfontconfig1-dev -y
 
 # new resources required
 rustup default nightly
