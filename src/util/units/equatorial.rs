@@ -390,7 +390,7 @@ mod test
 	}
 
 	#[test]
-	fn test__evenly_distribute_within_range ( )
+	fn test_evenly_distribute_within_range ( )
 	{	// may have different angle coordinates.
 		let mut e = Equatorial{ra: Radians(0.0), dec: Radians(0.0)};
 		e.set_phi(Radians(0.0));
