@@ -64,7 +64,8 @@ where T: 'static + TrackingModeConsts, ArrayList<(), {T::PAIRS_MAX}> : Sized, Ar
 					{
 						if stars.size() == 3
 						{ // Only a triangle can be formed.
-							return Constellation::Triangle(Match{input: input, output: output});
+							return Constellation::Triangle(
+								Match{input: input, output: output, weight: 1.0});
 						}
 						else
 						{ // Pyramid can be formed.
@@ -80,7 +81,8 @@ where T: 'static + TrackingModeConsts, ArrayList<(), {T::PAIRS_MAX}> : Sized, Ar
 									let pyr_in  = StarPyramid(input.0, input.1, input.2, pil_in);
 									let pyr_out = StarPyramid(output.0, output.1, output.2, out);
 									return 
-									Constellation::Pyramid(Match{input: pyr_in, output: pyr_out});
+									Constellation::Pyramid(
+										Match{input: pyr_in, output: pyr_out, weight: 1.0});
 								}
 							}
 						}
@@ -220,7 +222,8 @@ mod test
 		// This will then be converted to the equatorial coordinates from the reference locations.
 		static TRI_IN  : StarTriangle<usize> = StarTriangle( 0, 1, 2 );
 		static TRI_OUT : StarTriangle<usize> = StarTriangle( 0, 1, 2 );
-		static MATCH_TRI : Match<StarTriangle<usize>> = Match{input: TRI_IN, output: TRI_OUT};
+		static MATCH_TRI : Match<StarTriangle<usize>> = 
+			Match{input: TRI_IN, output: TRI_OUT, weight: 1.0};
 		
 		mock_t.expect_find_match_triangle().times(1).returning(|_, _, out| out.push_back(MATCH_TRI));
 		mock_s.expect_same().times(1).returning(|_, _| return true); // The triangles are the correct orientation.
@@ -270,7 +273,8 @@ mod test
 		// This will then be converted to the equatorial coordinates from the reference locations.
 		static TRI_IN  : StarTriangle<usize> = StarTriangle( 0, 1, 2 );
 		static TRI_OUT : StarTriangle<usize> = StarTriangle( 0, 1, 2 );
-		static MATCH_TRI : Match<StarTriangle<usize>> = Match{input: TRI_IN, output: TRI_OUT};
+		static MATCH_TRI : Match<StarTriangle<usize>> = 
+			Match{input: TRI_IN, output: TRI_OUT, weight: 1.0};
 		
 		mock_t.expect_find_match_triangle().times(1).returning(|_,_,out| out.push_back(MATCH_TRI));
 		mock_s.expect_same().times(1).returning(|_, _| return false); // The triangles are the correct orientation.
@@ -344,7 +348,8 @@ mod test
 		// This will then be converted to the equatorial coordinates from the reference locations.
 		static TRI_IN  : StarTriangle<usize> = StarTriangle( 0, 1, 2 );
 		static TRI_OUT : StarTriangle<usize> = StarTriangle( 0, 1, 2 );
-		static MATCH_TRI : Match<StarTriangle<usize>> = Match{input: TRI_IN, output: TRI_OUT};
+		static MATCH_TRI : Match<StarTriangle<usize>> = 
+			Match{input: TRI_IN, output: TRI_OUT, weight: 1.0};
 		
 		mock_t.expect_find_match_triangle().times(1).returning(|_,_,out| out.push_back(MATCH_TRI));
 		mock_s.expect_same().times(1).returning(|_, _| return false); // The triangles are the correct orientation.
@@ -385,7 +390,8 @@ mod test
 		// This will then be converted to the equatorial coordinates from the reference locations.
 		static TRI_IN  : StarTriangle<usize> = StarTriangle( 0, 1, 2 );
 		static TRI_OUT : StarTriangle<usize> = StarTriangle( 0, 1, 2 );
-		static MATCH_TRI : Match<StarTriangle<usize>> = Match{input: TRI_IN, output: TRI_OUT};
+		static MATCH_TRI : Match<StarTriangle<usize>> = 
+			Match{input: TRI_IN, output: TRI_OUT, weight: 1.0};
 		
 		mock_t.expect_find_match_triangle().times(1).returning(|_,_,out| out.push_back(MATCH_TRI));
 		mock_s.expect_same().times(1).returning(|_,_| return true); // The triangles are the correct orientation.
@@ -397,7 +403,9 @@ mod test
 			Equatorial{ra: Radians(0.2), dec: Radians(0.3)}];
 		mock_d.expect_find_star().times(4).returning(|i| Ok(STAR_OUT[i]));
 		
-		mock_p.expect_find_pilot().times(1).returning(|_, _, _|return Ok(Match{input:3, output:3}));
+		mock_p.expect_find_pilot()
+			.times(1)
+			.returning(|_, _, _|return Ok(Match{input:3, output:3, weight: 1.0}));
 		
 		let pyr = &Constellation::new::<MockConfigBig>(&stars, &mock_d, &mut mock_t, &mut mock_p, &mut mock_s);
 		if let Constellation::Pyramid(p) = pyr
@@ -447,7 +455,8 @@ mod test
 		// This will then be converted to the equatorial coordinates from the reference locations.
 		static TRI_IN  : StarTriangle<usize> = StarTriangle( 0, 1, 2 );
 		static TRI_OUT : StarTriangle<usize> = StarTriangle( 0, 1, 2 );
-		static MATCH_TRI : Match<StarTriangle<usize>> = Match{input: TRI_IN, output: TRI_OUT};
+		static MATCH_TRI : Match<StarTriangle<usize>> = 
+			Match{input: TRI_IN, output: TRI_OUT, weight: 1.0};
 		
 		mock_t.expect_find_match_triangle().times(1).returning(|_,_,out| {out.push_back(MATCH_TRI); out.push_back(MATCH_TRI);});
 		
@@ -462,7 +471,9 @@ mod test
 			Equatorial{ra: Radians(0.2), dec: Radians(0.3)}];
 		mock_d.expect_find_star().times(7).returning(|i| Ok(STAR_OUT[i]));
 		
-		mock_p.expect_find_pilot().times(1).returning(|_, _, _|return Ok(Match{input:3, output:3}));
+		mock_p.expect_find_pilot()
+			.times(1)
+			.returning(|_, _, _|return Ok(Match{input:3, output:3, weight: 1.0}));
 		
 		let pyr = &Constellation::new::<MockConfigBig>(&stars, &mock_d, &mut mock_t, &mut mock_p, &mut mock_s);
 		if let Constellation::Pyramid(p) = pyr
@@ -509,7 +520,8 @@ mod test
 		// This will then be converted to the equatorial coordinates from the reference locations.
 		static TRI_IN  : StarTriangle<usize> = StarTriangle( 0, 1, 2 );
 		static TRI_OUT : StarTriangle<usize> = StarTriangle( 0, 1, 2 );
-		static MATCH_TRI : Match<StarTriangle<usize>> = Match{input: TRI_IN, output: TRI_OUT};
+		static MATCH_TRI : Match<StarTriangle<usize>> = 
+			Match{input: TRI_IN, output: TRI_OUT, weight: 1.0};
 		
 		mock_t.expect_find_match_triangle()
 			.times(1)
@@ -525,7 +537,7 @@ mod test
 			Equatorial{ra: Radians(0.2), dec: Radians(0.3)}];
 		mock_d.expect_find_star().times(7).returning(|i| Ok(STAR_OUT[i]));
 		
-		let pyramid = [Err(()), Ok(Match{input:3, output:3})];
+		let pyramid = [Err(()), Ok(Match{input:3, output:3, weight: 1.0})];
 		let mut i = 0;
 		mock_p.expect_find_pilot()
 			.times(2)

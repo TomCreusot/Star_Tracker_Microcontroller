@@ -77,7 +77,7 @@ impl <T: 'static> TriangleConstruct <T> for StarTriangle<usize>
 									same_ab.unwrap(), 
 									same_ac.unwrap(), 
 									same_bc.unwrap());
-								let found = Match{input: input, output: output};
+								let found = Match{input: input, output: output, weight: 1.0};
 								triangles.push_back(found);
 							}
 						}

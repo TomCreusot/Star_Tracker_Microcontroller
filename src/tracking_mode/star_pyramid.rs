@@ -60,7 +60,7 @@ impl <T: 'static> PyramidConstruct <T>  for StarPyramid<usize>
 					assert!(sides_a.size() == 1, 
 						"Database is not unique enough, found multiple pyramid matches");
 					let pilot = sides_a.get(0).find_not(&0).expect("Invalid Pilot");
-					return Ok(Match{input: i, output: pilot});
+					return Ok(Match{input: i, output: pilot, weight: 1.0});
 				}		
 			}
 		}

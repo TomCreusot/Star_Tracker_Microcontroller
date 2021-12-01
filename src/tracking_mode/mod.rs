@@ -48,6 +48,7 @@ use crate::tracking_mode::database::Database;
 
 use crate::config::TrackingModeConsts;
 
+use crate::util::aliases::Decimal;
 use crate::util::units::Cartesian3D;
 use crate::util::units::Equatorial;
 use crate::util::list::List;
@@ -74,7 +75,9 @@ pub struct Match <T>
 	/// The values to be identified.
 	pub input: T,
 	/// The values from the database.
-	pub output: T
+	pub output: T,
+	/// The likelyhood of accuracy (futher from the center should have a lower accuracy).
+	pub weight: Decimal,
 }
 
 /// A set of 2 stars in equatorial space, this represents a line / angle.
