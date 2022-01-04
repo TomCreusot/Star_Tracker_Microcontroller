@@ -2,6 +2,7 @@
 use crate::util::aliases::{Decimal, UInt, Byte};
 use crate::util::units::{Pixel, PixelWeighted};
 use crate::util::list::List;
+use crate::util::list::ListIterator;
 use crate::util::list::ArrayList;
 use super::{Image, Blob};
 
@@ -116,7 +117,10 @@ impl Blob
 		let mut stack : ArrayList<Pixel, CONFIG> = ArrayList::new();
 		if CONFIG > 0
 		{
-			stack.push_back(start);
+			if stack.push_back(start).is_err()
+			{
+				println!("ERROR: Stack has 0 capacity");
+			}
 		}
 		while 0 < stack.size()
 		{
@@ -127,8 +131,10 @@ impl Blob
 				Blob::find_neighbours(threshold, &cur, img, &mut stack);
 
 				// Recalculate Centroid and Intensity
-				blob.centroid.x = Blob::find_centroid(blob.centroid.x, blob.intensity, cur.x as UInt, img.get(cur) as UInt);
-				blob.centroid.y = Blob::find_centroid(blob.centroid.y, blob.intensity, cur.y as UInt, img.get(cur) as UInt);
+				blob.centroid.x = Blob::find_centroid(
+					blob.centroid.x, blob.intensity, cur.x as UInt, img.get(cur) as UInt);
+				blob.centroid.y = Blob::find_centroid(
+					blob.centroid.y, blob.intensity, cur.y as UInt, img.get(cur) as UInt);
 				blob.intensity += img.get(cur) as UInt;
 
 				// Set the pixel to black.
@@ -184,34 +190,45 @@ impl Blob
 		// 4 directional
 		// Right
 		let mut px = Pixel{x: pt.x + 1, y: pt.y};
-		if !stack.is_full() && img.valid_pixel(px) && threshold <= img.get(px)
+		if img.valid_pixel(px) && threshold <= img.get(px)
 		{
-			stack.push_back(px);
+			if stack.push_back(px).is_err()
+			{
+				return; // stack is full.
+			}
 		}
 		// Left
 		if 0 < pt.x 
 		{
 			px = Pixel{x: pt.x - 1, y: pt.y};
-			if !stack.is_full() && img.valid_pixel(px) && threshold <= img.get(px)
+			if img.valid_pixel(px) && threshold <= img.get(px)
 			{
-				stack.push_back(px);
+				if stack.push_back(px).is_err()
+				{
+					return; // stack is full.
+				}
 			}
 		}
 		// Up
 		if 0 < pt.y
 		{
 			px = Pixel{x: pt.x, y: pt.y - 1};
-			if !stack.is_full() && img.valid_pixel(px) && threshold <= img.get(px)
+			if img.valid_pixel(px) && threshold <= img.get(px)
 			{
-				stack.push_back(px);
+				if stack.push_back(px).is_err()
+				{
+					return; // stack is full.
+				}
 			}
 		}
-		println!("{}...",stack.size());
 		// Down
 		px = Pixel{x: pt.x, y: pt.y + 1};
-		if !stack.is_full() && img.valid_pixel(px) && threshold <= img.get(px)
+		if img.valid_pixel(px) && threshold <= img.get(px)
 		{
-			stack.push_back(px);
+			if stack.push_back(px).is_err()
+			{
+				return; // stack is full.
+			}
 		}
 	}	
 
@@ -264,11 +281,14 @@ impl Blob
 	/// ```
 	pub fn to_pixel_weighted ( blobs: &dyn List<Blob>, points: &mut dyn List<PixelWeighted> )
 	{
-		println!("{}", blobs.size());
-		for i in 0..blobs.size()
+		let iterator : ListIterator<Blob> = ListIterator::new(blobs);
+		
+		for iter in iterator
 		{
-			if points.is_full() { break; }
-			points.push_back(blobs.get(i).centroid);
+			if points.push_back(iter.centroid).is_err()
+			{
+				return; // points is full;
+			}
 		}
 	}
 
@@ -306,6 +326,7 @@ impl Blob
 //###############################################################################################//
 
 #[cfg(test)]
+#[allow(unused_must_use)]
 mod test
 {
 	use crate::image_processing::{Image, BasicImage, Blob};

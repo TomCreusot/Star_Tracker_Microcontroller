@@ -2,9 +2,11 @@
 //!
 //!
 //!
-#![feature(const_generics)]
-#![feature(const_evaluatable_checked)]
+#![feature(const_generics)]					// Allows constant values in generics.
+#![feature(const_evaluatable_checked)]		// Allows generic struct variables.
+#![feature(associated_type_defaults)]		// Allows list to implement iterator.
 
+// #![allow(unused_must_use)]
 
 extern crate curl;
 extern crate csv;
@@ -20,6 +22,8 @@ extern crate mockall;
 pub mod util;
 #[allow(dead_code)]
 pub mod image_processing;
+#[allow(dead_code)]
+pub mod attitude_determination;
 
 #[allow(dead_code)]
 pub mod nix;

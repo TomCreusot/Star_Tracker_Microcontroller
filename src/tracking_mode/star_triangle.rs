@@ -13,6 +13,9 @@ use crate::util::units::Equatorial;
 use crate::util::list::ArrayList;
 use crate::util::list::List;
 
+use crate::util::err::Errors;
+use crate::util::err::Error;
+
 
 
 use crate::config::TrackingModeConsts;
@@ -78,7 +81,8 @@ impl <T: 'static> TriangleConstruct <T> for StarTriangle<usize>
 									same_ac.unwrap(), 
 									same_bc.unwrap());
 								let found = Match{input: input, output: output, weight: 1.0};
-								triangles.push_back(found);
+								triangles.push_back(found)
+									.expect("array: Triangles, was just found to not be full.");
 							}
 						}
 					}
@@ -98,7 +102,7 @@ impl StarTriangle<usize>
 	/// * `database` - The database to reference.
 	/// # Returns
 	/// Err(()) if element cannot be found, database triangle if can be found.
-	pub fn search_database ( &self, database: &dyn Database )->Result<StarTriangle<Equatorial>, ()>
+	pub fn search_database ( &self, database: &dyn Database ) -> Error<StarTriangle<Equatorial>>
 	{
 		let a = database.find_star(self.0);
 		let b = database.find_star(self.1);
@@ -106,7 +110,7 @@ impl StarTriangle<usize>
 		
 		if a.is_err() || b.is_err() || c.is_err()
 		{
-			return Err(());
+			return Err(Errors::NoMatch);
 		}
 		
 		return Ok(StarTriangle(a.unwrap(), b.unwrap(), c.unwrap()));
@@ -118,7 +122,7 @@ impl StarTriangle<usize>
 	/// * `list` - The list to lookup.
 	/// # Returns
 	/// Err(()) if the element cannot be found, list triangle if can be found.
-	pub fn search_list ( &self, list: &dyn List<Equatorial> )->Result<StarTriangle<Equatorial>, ()>
+	pub fn search_list ( &self, list: &dyn List<Equatorial> ) -> Error<StarTriangle<Equatorial>>
 	{
 		if self.0 < list.size() && self.1 < list.size() && self.2 < list.size()
 		{
@@ -129,7 +133,7 @@ impl StarTriangle<usize>
 			return Ok(StarTriangle(a, b, c));
 		}
 		
-		return Err(());
+		return Err(Errors::NoMatch);
 	}
 }
 
@@ -166,6 +170,7 @@ impl StarTriangle<Equatorial>
 
 
 #[cfg(test)]
+#[allow(unused_must_use)]
 mod test
 {
 	use crate::tracking_mode::TriangleConstruct;
@@ -179,6 +184,7 @@ mod test
 	use crate::util::aliases::Decimal;
 	use crate::util::list::ArrayList;
 	use crate::util::list::List;
+	use crate::util::err::Errors;
 
 	use crate::config::TrackingModeConsts;
 
@@ -371,7 +377,7 @@ mod test
 
 
 	//
-	// fn search_database ( &self, database: &dyn Database ) -> Result<StarTriangle<Equatorial>>
+	// fn search_database ( &self, database: &dyn Database ) -> Error<StarTriangle<Equatorial>>
 	//
 	
 	#[test]
@@ -379,7 +385,7 @@ mod test
 	{
 		let triangle = StarTriangle(1, 1, 1);
 		let mut database = MockDatabase::new();
-		database.expect_find_star().times(3).returning(|_| Err(()));
+		database.expect_find_star().times(3).returning(|_| Err(Errors::OutOfBounds));
 		assert!(triangle.search_database(&database).is_err());
 	}
 
@@ -405,7 +411,7 @@ mod test
 
 
 	//
-	// fn search_list ( &self, database: &dyn Database ) -> Result<StarTriangle<Equatorial>>
+	// fn search_list ( &self, database: &dyn Database ) -> Error<StarTriangle<Equatorial>>
 	//
 	#[test]
 	fn test_search_list_invalid ( )

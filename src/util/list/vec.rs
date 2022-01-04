@@ -1,11 +1,25 @@
-use super::{List};
+use super::List;
+use util::err::{Errors, Error};
+
+
+
+//###############################################################################################//
+//								---	ListIterator Implementation ---
+//###############################################################################################//
+/*impl<'a, T> IntoIterator for &'a dyn List<T> where T: Clone {
+    type Item = T;
+    type IntoIter = ListIterator<'a, T>;
+
+}*/
+
+
 
 impl <T> List <T> for Vec <T> where T: Clone
-{
+{	
     /// Finds the max number of elements that can be stored in the list.
     fn capacity ( &self ) -> usize
     {
-        return (isize::MAX - 1) as usize;
+        return 1000;//(isize::max_value() - 1) as usize;
     }
 
     /// Finds how many elements are in the list.
@@ -50,18 +64,27 @@ impl <T> List <T> for Vec <T> where T: Clone
     /// # Arguments
     ///	* 'index' - The index of the element to receive.
     /// * 'value' - The value to assign.
-    fn set ( &mut self, index : usize, value : T )
+    fn set ( &mut self, index : usize, value : T ) -> Error<()>
     {
-        assert!(index < self.len(), "Out of bounds");
-        self[index] = value;
+		if index < self.size()
+		{
+			self[index] = value;
+			return Ok(());
+		}
+		return Err(Errors::OutOfBounds);
     }
 
     /// Adds an element to the end of the list.
     /// # Arguments
     /// * 'value' - the value to add to the end.
-    fn push_back ( &mut self, value : T )
+    fn push_back ( &mut self, value : T ) -> Error<()>
     {
-        self.push(value);
+		if self.size() < (self as &dyn List<T>).capacity()
+		{
+			self.push(value);
+			return Ok(());
+		}
+		return Err(Errors::InvalidSize);
     }
 
 
@@ -86,10 +109,10 @@ impl <T> List <T> for Vec <T> where T: Clone
             let mut temp : T = self.get(jj).clone();
             while jj > 0 && in_order(&mut temp, &mut self.get(jj - 1))
             {
-                self.set(jj, self.get(jj - 1));
+                self.set(jj, self.get(jj - 1)).expect("This should be within the bounds.");
                 jj -= 1;
             }
-            self.set(jj, temp);
+            self.set(jj, temp).expect("This should be within the bounds.");
         }
     }
 
@@ -114,16 +137,16 @@ impl <T> List <T> for Vec <T> where T: Clone
 				while jj < self.size()
 				{
 					to_move = self.get(jj);
-					self.set(jj, to_insert);
+					self.set(jj, to_insert).expect("This should be within the bounds.");
 					to_insert = to_move.clone();
 					jj+=1;
 				}
 
-				self.push_back(to_insert);
+				self.push_back(to_insert).expect("Vec should not run out of space.");
 				return true;
 			}
 		}
-		self.push_back(to_slot);
+		self.push_back(to_slot).expect("Vec should not run out of space.");
         return true;
     }
 }
@@ -152,6 +175,7 @@ impl <T> List <T> for Vec <T> where T: Clone
 //###############################################################################################//
 
 #[cfg(test)]
+#[allow(unused_must_use)]
 mod test
 {
 	use crate::util::list::{List};
@@ -213,7 +237,7 @@ mod test
 	fn test_get_read ( )
 	{
 		let mut lst : Vec<u32> = Vec::new();
-		lst.push_back(0);
+		println!("{:?}", lst.push_back(0));
 		lst.push_back(1);
 		let mut first = lst.get(0);
 		let second = lst.get(1);
@@ -251,11 +275,10 @@ mod test
 	}
 
 	#[test]
-	#[should_panic = "Out of bounds"]
 	fn test_set_not_enough_elements ( )
 	{
 		let mut lst : Vec<u32> = Vec::new();
-		lst.set(0, 0);
+		assert!(lst.set(0, 0).is_err());
 	}
 
 

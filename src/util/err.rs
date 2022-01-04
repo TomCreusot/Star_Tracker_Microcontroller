@@ -16,7 +16,7 @@ pub type Error<T> = Result<T, Errors>;
 ///
 /// ## Invalid Value
 /// The value is not useful in the given circumstance.
-#[derive(Debug,Clone,PartialEq)]
+#[derive(Debug,Copy,Clone,PartialEq)]
 pub enum Errors
 {
 	OutOfBounds,
@@ -24,6 +24,7 @@ pub enum Errors
 	InvalidValue,
 	OutOfBoundsX,
 	OutOfBoundsY,
+	NoMatch,
 }
 
 /*

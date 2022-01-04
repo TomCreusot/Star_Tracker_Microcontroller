@@ -8,6 +8,8 @@ use crate::tracking_mode::StarPair;
 use crate::util::units::Equatorial;
 use crate::util::units::Radians;
 use crate::util::list::List;
+use crate::util::err::Errors;
+use crate::util::err::Error;
 
 
 
@@ -55,17 +57,17 @@ impl Database for PyramidDatabase
 			{
 				if !found.is_full() 
 				{
-					found.push_back(self.pairs[mid + i]);
+					found.push_back(self.pairs[mid + i]).expect("found should not be full.");
 				}
 				if !found.is_full() && i != 0
 				{
-					found.push_back(self.pairs[mid - i]);
+					found.push_back(self.pairs[mid - i]).expect("found should not be full.");
 				}
 			}
 			// If the list is even, the final value will not be included. 
 			if !found.is_full() && length % 2 != 0
 			{
-				found.push_back(self.pairs[upper_bounds - 1]);
+				found.push_back(self.pairs[upper_bounds - 1]).expect("found should not be full.");
 			}
 		}
 	}
@@ -78,13 +80,13 @@ impl Database for PyramidDatabase
 	/// * `index` - The index of the star in the catalogue database.
 	/// # Returns
 	/// The actual position (usualy J2000).
-	fn find_star ( &self, index: usize ) -> Result<Equatorial, ()>
+	fn find_star ( &self, index: usize ) -> Error<Equatorial>
 	{
 		if index < self.catalogue.len()
 		{
 			return Ok(self.catalogue[index]);
 		}
-		return Err(());
+		return Err(Errors::OutOfBounds);
 	}	
 	
 	/// Returns the field of view of the database compiled.
@@ -106,6 +108,7 @@ impl Database for PyramidDatabase
 
 
 #[cfg(test)]
+#[allow(unused_must_use)]
 mod test
 {
 	use crate::tracking_mode::StarPair;

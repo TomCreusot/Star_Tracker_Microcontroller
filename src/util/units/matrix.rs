@@ -6,8 +6,6 @@ use super::Matrix;
 
 use std::fmt;
 use std::ops::Mul;
-use std::ops::Add;
-use std::ops::Sub;
 use std::ops::Div;
 
 impl <const ROW : usize, const COLUMN : usize> Matrix <ROW, COLUMN>
@@ -50,27 +48,15 @@ impl <const ROW : usize, const COLUMN : usize> Matrix <ROW, COLUMN>
 	/// use star_tracker::util::units::Matrix;
 	/// use star_tracker::util::units::MatPos;
 	/// let mut mat3x4 : Matrix<3, 4> = Matrix::new();
-	/// assert!(mat3x4.set(MatPos{row: 1, col: 2}, 3.12).is_ok());
-	/// assert!(mat3x4.set(MatPos{row: 2, col: 3}, 5.23).is_ok());
-	/// assert_eq!(mat3x4.set(MatPos{row: 4, col: 0}, 3.12), Err(Errors::OutOfBoundsY));
-	/// assert_eq!(mat3x4.set(MatPos{row: 0, col: 5}, 5.23), Err(Errors::OutOfBoundsX));
-	/// assert_eq!(mat3x4.get(MatPos{row: 1, col: 2}).expect(""), 3.12);
-	/// assert_eq!(mat3x4.get(MatPos{row: 2, col: 3}).expect(""), 5.23);
-	/// assert_eq!(mat3x4.get(MatPos{row: 0, col: 0}).expect(""), 0.0);
-	/// assert_eq!(mat3x4.get(MatPos{row: 4, col: 0}), Err(Errors::OutOfBoundsY));
-	/// assert_eq!(mat3x4.get(MatPos{row: 0, col: 5}), Err(Errors::OutOfBoundsX));
+	/// mat3x4.set(MatPos{row: 1, col: 2}, 3.12);
+	/// mat3x4.set(MatPos{row: 2, col: 3}, 5.23);
+	/// assert_eq!(mat3x4.get(MatPos{row: 1, col: 2}), 3.12);
+	/// assert_eq!(mat3x4.get(MatPos{row: 2, col: 3}), 5.23);
+	/// assert_eq!(mat3x4.get(MatPos{row: 0, col: 0}), 0.0);
 	/// ```
-	pub fn get ( &self, pos: MatPos ) -> Error<Decimal>
+	pub fn get ( &self, pos: MatPos ) -> Decimal
 	{
-		if pos.col >= self.width()
-		{
-			return Err(Errors::OutOfBoundsX);
-		}
-		if pos.row >= self.height()
-		{
-			return Err(Errors::OutOfBoundsY);
-		}
-		return Ok(self.get_fast(pos));
+		return self.matrix[pos.row][pos.col];
 	}
 
 	/// Returns the value at the given index.
@@ -80,26 +66,15 @@ impl <const ROW : usize, const COLUMN : usize> Matrix <ROW, COLUMN>
 	/// use star_tracker::util::units::Matrix;
 	/// use star_tracker::util::units::MatPos;
 	/// let mut mat3x4 : Matrix<3, 4> = Matrix::new();
-	/// assert!(mat3x4.set(MatPos{row: 1, col: 2}, 3.12).is_ok());
-	/// assert!(mat3x4.set(MatPos{row: 2, col: 3}, 5.23).is_ok());
-	/// assert_eq!(mat3x4.set(MatPos{row: 4, col: 0}, 3.12), Err(Errors::OutOfBoundsY));
-	/// assert_eq!(mat3x4.set(MatPos{row: 0, col: 5}, 5.23), Err(Errors::OutOfBoundsX));
-	/// assert_eq!(mat3x4.get(MatPos{row: 1, col: 2}).expect(""), 3.12);
-	/// assert_eq!(mat3x4.get(MatPos{row: 2, col: 3}).expect(""), 5.23);
-	/// assert_eq!(mat3x4.get(MatPos{row: 0, col: 0}).expect(""), 0.0);
+	/// mat3x4.set(MatPos{row: 1, col: 2}, 3.12);
+	/// mat3x4.set(MatPos{row: 2, col: 3}, 5.23);
+	/// assert_eq!(mat3x4.get(MatPos{row: 1, col: 2}), 3.12);
+	/// assert_eq!(mat3x4.get(MatPos{row: 2, col: 3}), 5.23);
+	/// assert_eq!(mat3x4.get(MatPos{row: 0, col: 0}), 0.0);
 	/// ```
-	pub fn set ( &mut self, pos: MatPos, value: Decimal ) -> Error<()>
+	pub fn set ( &mut self, pos: MatPos, value: Decimal )
 	{
-		if pos.col >= self.width()
-		{
-			return Err(Errors::OutOfBoundsX);
-		}
-		if pos.row >= self.height()
-		{
-			return Err(Errors::OutOfBoundsY);
-		}
-		self.set_fast(pos, value);
-		return Ok(());
+		self.matrix[pos.row][pos.col] = value;
 	}
 
 
@@ -134,24 +109,68 @@ impl <const ROW : usize, const COLUMN : usize> Matrix <ROW, COLUMN>
 			{
 				let s_pos = MatPos{row: y, col: x};
 				let t_pos = MatPos{row: x, col: y};
-				trans.set_fast(t_pos, self.get_fast(s_pos));
+				trans.set(t_pos, self.get(s_pos));
 			}
 		}
 		return trans;
 	}
-
-
-
-	/// Unchecked accessor of matrix, does not check for bounds.
-	fn get_fast ( &self, pos: MatPos ) -> Decimal
+	
+	
+	
+	
+	
+	
+	
+	
+	/// Inserts the matrix into the specified location on this matrix.
+	/// 
+	/// # Example	
+	/// ```
+	/// use star_tracker::util::units::Matrix;
+	/// use star_tracker::util::units::MatPos;
+	/// let mut mat4x4 : Matrix<4,4> = Matrix::new();
+	/// let mut insert : Matrix<3,2> = Matrix::new();
+	///
+	/// insert.set(MatPos{row: 0, col: 0}, 1.0);
+	/// insert.set(MatPos{row: 0, col: 1}, 2.0);
+	/// insert.set(MatPos{row: 1, col: 0}, 3.0);
+	/// insert.set(MatPos{row: 1, col: 1}, 4.0);
+	/// insert.set(MatPos{row: 2, col: 0}, 5.0);
+	/// insert.set(MatPos{row: 2, col: 1}, 6.0);
+	///
+	/// mat4x4.insert(MatPos{row: 1, col: 1}, &insert);
+	///
+	/// assert_eq!(mat4x4.get(MatPos{row: 0, col: 0}), 0.0); // first element is 1,1
+	/// assert_eq!(mat4x4.get(MatPos{row: 1, col: 1}), 1.0);
+	/// assert_eq!(mat4x4.get(MatPos{row: 1, col: 2}), 2.0);
+	/// assert_eq!(mat4x4.get(MatPos{row: 2, col: 1}), 3.0);
+	/// assert_eq!(mat4x4.get(MatPos{row: 2, col: 2}), 4.0);
+	/// assert_eq!(mat4x4.get(MatPos{row: 3, col: 1}), 5.0);
+	/// assert_eq!(mat4x4.get(MatPos{row: 3, col: 2}), 6.0);
+	/// ```
+	pub fn insert 
+		<const C_2: usize, const R_2: usize> 
+		( &mut self, pos: MatPos, other: &Matrix<C_2, R_2> ) -> Error<()>
 	{
-		return self.matrix[pos.row][pos.col];
-	}
-
-	/// Unchecked accessor of matrix, does not check for bounds.
-	fn set_fast ( &mut self, pos: MatPos, value: Decimal )
-	{
-		return self.matrix[pos.row][pos.col] = value;
+		if self.height() < other.height() + pos.row
+		{
+			return Err(Errors::OutOfBoundsY);
+		}
+		if self.width() < other.width() + pos.col
+		{
+			return Err(Errors::OutOfBoundsX);
+		}
+		
+		for x in 0..other.width()
+		{
+			for y in 0..other.height()
+			{
+				let set_pos = MatPos{row: pos.row + y, col: pos.col + x};
+				self.set(set_pos, other.get(MatPos{row: y, col: x}));
+			}
+		}
+		
+		return Ok(());
 	}
 }
 
@@ -182,7 +201,7 @@ impl <const S: usize> Matrix<S, S>
 		let mut sum = 0.0;
 		for i in 0..self.width()
 		{
-			sum += self.get_fast(MatPos{row: i, col: i});
+			sum += self.get(MatPos{row: i, col: i});
 		}
 		return sum;
 	}
@@ -206,7 +225,7 @@ impl <const ROW: usize, const COLUMN: usize> fmt::Display for Matrix<ROW, COLUMN
 			write!(f, "|")?;
 			for xx in 0..self.width()
 			{
-				let val = self.get_fast(MatPos{col: xx, row: yy});
+				let val = self.get(MatPos{col: xx, row: yy});
 				write!(f, "{}", val)?;
 				if xx < self.width() - 1
 				{
@@ -247,16 +266,15 @@ impl <const M: usize, const N: usize, const P: usize> Mul<Matrix<N, P>> for Matr
 				for i in 0..N		// IN matrix (lhs x, rhs y)
 				{
 					output +=
-						self.get_fast(MatPos{row: y, col: i}) *
-						 rhs.get_fast(MatPos{row: i, col: x});
+						self.get(MatPos{row: y, col: i}) *
+						 rhs.get(MatPos{row: i, col: x});
 				}
-				mat.set_fast(MatPos{row: y, col: x}, output);
+				mat.set(MatPos{row: y, col: x}, output);
 			}
 		}
 		return mat;
 	}
 }
-
 
 //###############################################################################################//
 //							---	Multiply/Divide Scalar ---
@@ -273,7 +291,7 @@ impl <const ROW: usize, const COLUMN: usize> Mul<Decimal> for Matrix<ROW, COLUMN
 			for yy in 0..ROW
 			{
 				let pos = MatPos{col: xx, row: yy};
-				mat.set_fast(pos, self.get_fast(pos) * rhs);
+				mat.set(pos, self.get(pos) * rhs);
 			}
 		}
 		return mat;
@@ -298,7 +316,7 @@ impl <const ROW: usize, const COLUMN: usize> Div <Decimal> for Matrix<ROW, COLUM
 			for yy in 0..ROW
 			{
 				let pos = MatPos{col: xx, row: yy};
-				mat.set_fast(pos, self.get_fast(pos) / rhs);
+				mat.set(pos, self.get(pos) / rhs);
 			}
 		}
 		return mat;
@@ -319,7 +337,7 @@ impl<const ROW: usize, const COLUMN: usize> PartialEq for Matrix<ROW, COLUMN> {
 			for yy in 0..ROW
 			{
 				let pos = MatPos{col: xx, row: yy};
-				eq &= (self.get_fast(pos) - other.get_fast(pos)).abs() < 0.00001;
+				eq &= (self.get(pos) - other.get(pos)).abs() < 0.00001;
 			}
 		}
 
@@ -377,19 +395,17 @@ mod test
 		let mut mat3x4 : Matrix<3, 4> = Matrix::new();
 		mat3x4.matrix[1][2] = 3.12;
 		mat3x4.matrix[2][3] = 5.23;
-		assert_eq!(mat3x4.get(MatPos{row: 1, col: 2}).expect(""), 3.12);
-		assert_eq!(mat3x4.get(MatPos{row: 2, col: 3}).expect(""), 5.23);
-		assert_eq!(mat3x4.get(MatPos{row: 0, col: 0}).expect(""), 0.0);
+		assert_eq!(mat3x4.get(MatPos{row: 1, col: 2}), 3.12);
+		assert_eq!(mat3x4.get(MatPos{row: 2, col: 3}), 5.23);
+		assert_eq!(mat3x4.get(MatPos{row: 0, col: 0}), 0.0);
 	}
 
 	#[test]
 	fn test_set ( )
 	{
 		let mut mat3x4 : Matrix<3, 4> = Matrix::new();
-		assert!(mat3x4.set(MatPos{row: 1, col: 2}, 3.12).is_ok());
-		assert!(mat3x4.set(MatPos{row: 2, col: 3}, 5.23).is_ok());
-		assert_eq!(mat3x4.set(MatPos{row: 4, col: 0}, 3.12), Err(Errors::OutOfBoundsY));
-		assert_eq!(mat3x4.set(MatPos{row: 0, col: 5}, 5.23), Err(Errors::OutOfBoundsX));
+		mat3x4.set(MatPos{row: 1, col: 2}, 3.12);
+		mat3x4.set(MatPos{row: 2, col: 3}, 5.23);
 		assert_eq!(mat3x4.matrix[1][2], 3.12);
 		assert_eq!(mat3x4.matrix[2][3], 5.23);
 	}
@@ -423,7 +439,7 @@ mod test
 		{
 			for y in 0..mat4x4.height()
 			{
-				mat4x4.set_fast(MatPos{row: x, col: y}, x as Decimal * 10.0 + y as Decimal);
+				mat4x4.set(MatPos{row: x, col: y}, x as Decimal * 10.0 + y as Decimal);
 			}
 		}
 
@@ -449,7 +465,7 @@ mod test
 		{
 			for y in 0..mat3x4.height()
 			{
-				mat3x4.set_fast(MatPos{col: x, row: y}, x as Decimal * 10.0 + y as Decimal);
+				mat3x4.set(MatPos{col: x, row: y}, x as Decimal * 10.0 + y as Decimal);
 			}
 		}
 		println!("BEFORE");
@@ -473,38 +489,63 @@ mod test
 
 
 
-	//
-	// fn get_fast ( &self, pos: MatPos ) -> Decimal
-	//
 
+	//
+	// fn insert <C_2, R_2> ( &self, pos MatPos, Matrix<C_2, R_2> )
+	//
+	
 	#[test]
-	fn test_get_fast ( )
+	fn test_insert_valid ( )
 	{
-		let mut mat3x4 : Matrix<3, 4> = Matrix::new();
-		mat3x4.matrix[1][2] = 3.12;
-		mat3x4.matrix[2][3] = 5.23;
-		let pos_1 = MatPos{row: 1, col: 2};
-		let pos_2 = MatPos{row: 2, col: 3};
-		let pos_3 = MatPos{row: 0, col: 0};
-		assert_eq!(mat3x4.get_fast(pos_1), mat3x4.get(pos_1).expect(""));
-		assert_eq!(mat3x4.get_fast(pos_2), mat3x4.get(pos_2).expect(""));
-		assert_eq!(mat3x4.get_fast(pos_3), mat3x4.get(pos_3).expect(""));
+		let mut mat4x4 : Matrix<4,4> = Matrix::new();
+		let mut insert : Matrix<3,2> = Matrix::new();
+		
+		insert.set(MatPos{row: 0, col: 0}, 1.0);
+		insert.set(MatPos{row: 0, col: 1}, 2.0);
+		insert.set(MatPos{row: 1, col: 0}, 3.0);
+		insert.set(MatPos{row: 1, col: 1}, 4.0);
+		insert.set(MatPos{row: 2, col: 0}, 5.0);
+		insert.set(MatPos{row: 2, col: 1}, 6.0);
+		
+		mat4x4.insert(MatPos{row: 1, col: 2}, &insert).ok();
+		
+		
+		assert_eq!(mat4x4.get(MatPos{row: 0, col: 0}), 0.0); // first element is 1,2
+		assert_eq!(mat4x4.get(MatPos{row: 1, col: 2}), 1.0);
+		assert_eq!(mat4x4.get(MatPos{row: 1, col: 3}), 2.0);
+		assert_eq!(mat4x4.get(MatPos{row: 2, col: 2}), 3.0);
+		assert_eq!(mat4x4.get(MatPos{row: 2, col: 3}), 4.0);
+		assert_eq!(mat4x4.get(MatPos{row: 3, col: 2}), 5.0);
+		assert_eq!(mat4x4.get(MatPos{row: 3, col: 3}), 6.0);
 	}
 
-	//
-	// fn set_fast ( &self, pos: MatPos, value: Decimal ) -> void
-	//
 
 	#[test]
-	fn test_set_fast ( )
+	fn test_insert_invalid_y ( )
 	{
-		let mut mat3x4 : Matrix<3, 4> = Matrix::new();
-		mat3x4.set_fast(MatPos{row: 1, col: 2}, 3.12);
-		mat3x4.set_fast(MatPos{row: 2, col: 3}, 5.23);
-		assert_eq!(mat3x4.matrix[1][2], 3.12);
-		assert_eq!(mat3x4.matrix[2][3], 5.23);
+		let mut mat4x4 : Matrix<4,4> = Matrix::new();
+		let i_3 : Matrix<3,2> = Matrix::new();
+		let i_4 : Matrix<4,2> = Matrix::new();
+		let i_5 : Matrix<5,2> = Matrix::new();
+
+		assert_eq!(mat4x4.insert(MatPos{row: 2, col: 2}, &i_3), Err(Errors::OutOfBoundsY));
+		assert_eq!(mat4x4.insert(MatPos{row: 1, col: 2}, &i_4), Err(Errors::OutOfBoundsY));
+		assert_eq!(mat4x4.insert(MatPos{row: 0, col: 2}, &i_5), Err(Errors::OutOfBoundsY));
 	}
 
+
+	#[test]
+	fn test_insert_invalid_x ( )
+	{
+		let mut mat4x4 : Matrix<4,4> = Matrix::new();
+		let i_3 : Matrix<1,3> = Matrix::new();
+		let i_4 : Matrix<1,4> = Matrix::new();
+		let i_5 : Matrix<1,5> = Matrix::new();
+
+		assert_eq!(mat4x4.insert(MatPos{row: 0, col: 2}, &i_3), Err(Errors::OutOfBoundsX));
+		assert_eq!(mat4x4.insert(MatPos{row: 0, col: 1}, &i_4), Err(Errors::OutOfBoundsX));
+		assert_eq!(mat4x4.insert(MatPos{row: 0, col: 0}, &i_5), Err(Errors::OutOfBoundsX));
+	}
 
 
 	//
@@ -526,7 +567,7 @@ mod test
 		{
 			for y in 0..mat4x4.height()
 			{
-				mat4x4.set_fast(MatPos{row: x, col: y}, (x+1) as Decimal * 10.0 +(y+1) as Decimal);
+				mat4x4.set(MatPos{row: x, col: y}, (x+1) as Decimal * 10.0 +(y+1) as Decimal);
 			}
 		}
 		assert_eq!(mat4x4.trace(), 11.0 + 22.0 + 33.0 + 44.0);
@@ -552,21 +593,21 @@ mod test
 		{
 			for y in 0..3
 			{
-				mat3x3_1.set(MatPos{col: x, row: y}, (x + y * 3) as Decimal).expect("");
-				mat3x3_2.set(MatPos{col: x, row: y}, (x + y * 3 + 9) as Decimal).expect("");
+				mat3x3_1.set(MatPos{col: x, row: y}, (x + y * 3) as Decimal);
+				mat3x3_2.set(MatPos{col: x, row: y}, (x + y * 3 + 9) as Decimal);
 			}
 		}
 		let output : Matrix<3,3> = mat3x3_1 * mat3x3_2;
 
-		assert_eq!(output.get_fast(MatPos{col:0, row:0}), 42.0);
-		assert_eq!(output.get_fast(MatPos{col:1, row:0}), 45.0);
-		assert_eq!(output.get_fast(MatPos{col:2, row:0}), 48.0);
-		assert_eq!(output.get_fast(MatPos{col:0, row:1}), 150.0);
-		assert_eq!(output.get_fast(MatPos{col:1, row:1}), 162.0);
-		assert_eq!(output.get_fast(MatPos{col:2, row:1}), 174.0);
-		assert_eq!(output.get_fast(MatPos{col:0, row:2}), 258.0);
-		assert_eq!(output.get_fast(MatPos{col:1, row:2}), 279.0);
-		assert_eq!(output.get_fast(MatPos{col:2, row:2}), 300.0);
+		assert_eq!(output.get(MatPos{col:0, row:0}), 42.0);
+		assert_eq!(output.get(MatPos{col:1, row:0}), 45.0);
+		assert_eq!(output.get(MatPos{col:2, row:0}), 48.0);
+		assert_eq!(output.get(MatPos{col:0, row:1}), 150.0);
+		assert_eq!(output.get(MatPos{col:1, row:1}), 162.0);
+		assert_eq!(output.get(MatPos{col:2, row:1}), 174.0);
+		assert_eq!(output.get(MatPos{col:0, row:2}), 258.0);
+		assert_eq!(output.get(MatPos{col:1, row:2}), 279.0);
+		assert_eq!(output.get(MatPos{col:2, row:2}), 300.0);
 	}
 
 
@@ -580,32 +621,32 @@ mod test
 
 		for ii in 0..3
 		{
-			mat1x3.set(MatPos{row: 0,  col: ii}, ii as Decimal).expect("");
-			mat3x1.set(MatPos{row: ii, col: 0},  ii as Decimal + 3.0).expect("");
+			mat1x3.set(MatPos{row: 0,  col: ii}, ii as Decimal);
+			mat3x1.set(MatPos{row: ii, col: 0},  ii as Decimal + 3.0);
 
 			for jj in 0..2
 			{
-				mat3x2.set(MatPos{row: ii, col: jj}, (ii * 2 + jj + 3) as Decimal).expect("");
+				mat3x2.set(MatPos{row: ii, col: jj}, (ii * 2 + jj + 3) as Decimal);
 			}
 		}
 		let output_1 : Matrix<1,1> = mat1x3 * mat3x1;
 		let output_2 : Matrix<1,2> = mat1x3 * mat3x2;
 		let output_3 : Matrix<3,3> = mat3x1 * mat1x3;
 
-		assert_eq!(output_1.get_fast(MatPos{col:0, row:0}), 14.0);
+		assert_eq!(output_1.get(MatPos{col:0, row:0}), 14.0);
 
-		assert_eq!(output_2.get_fast(MatPos{col:0, row:0}), 19.0);
-		assert_eq!(output_2.get_fast(MatPos{col:1, row:0}), 22.0);
+		assert_eq!(output_2.get(MatPos{col:0, row:0}), 19.0);
+		assert_eq!(output_2.get(MatPos{col:1, row:0}), 22.0);
 		
-		assert_eq!(output_3.get_fast(MatPos{col:0, row:0}), 0.0);
-		assert_eq!(output_3.get_fast(MatPos{col:1, row:0}), 3.0);
-		assert_eq!(output_3.get_fast(MatPos{col:2, row:0}), 6.0);
-		assert_eq!(output_3.get_fast(MatPos{col:0, row:1}), 0.0);
-		assert_eq!(output_3.get_fast(MatPos{col:1, row:1}), 4.0);
-		assert_eq!(output_3.get_fast(MatPos{col:2, row:1}), 8.0);
-		assert_eq!(output_3.get_fast(MatPos{col:0, row:2}), 0.0);
-		assert_eq!(output_3.get_fast(MatPos{col:1, row:2}), 5.0);
-		assert_eq!(output_3.get_fast(MatPos{col:2, row:2}), 10.0);
+		assert_eq!(output_3.get(MatPos{col:0, row:0}), 0.0);
+		assert_eq!(output_3.get(MatPos{col:1, row:0}), 3.0);
+		assert_eq!(output_3.get(MatPos{col:2, row:0}), 6.0);
+		assert_eq!(output_3.get(MatPos{col:0, row:1}), 0.0);
+		assert_eq!(output_3.get(MatPos{col:1, row:1}), 4.0);
+		assert_eq!(output_3.get(MatPos{col:2, row:1}), 8.0);
+		assert_eq!(output_3.get(MatPos{col:0, row:2}), 0.0);
+		assert_eq!(output_3.get(MatPos{col:1, row:2}), 5.0);
+		assert_eq!(output_3.get(MatPos{col:2, row:2}), 10.0);
 	}
 
 

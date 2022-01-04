@@ -12,6 +12,7 @@ use crate::tracking_mode::database::Database;
 use crate::util::units::Equatorial;
 use crate::util::list::List;
 use crate::util::list::ArrayList;
+use crate::util::list::ListIterator;
 
 use crate::config::TrackingModeConsts;
 
@@ -33,7 +34,8 @@ fn new <T: TrackingModeConsts> (
 									gen_pyr  : &mut dyn PyramidConstruct<T>,
 									gen_spec : &mut dyn SpecularityConstruct<T>
 								) -> Constellation
-where T: 'static + TrackingModeConsts, ArrayList<(), {T::PAIRS_MAX}> : Sized, ArrayList<(), {T::TRIANGLES_MAX}> : Sized
+	where T: 'static + TrackingModeConsts, ArrayList<(), {T::PAIRS_MAX}> : Sized, 
+	ArrayList<(), {T::TRIANGLES_MAX}> : Sized
 // where T: TrackingModeConsts, [(); T::PAIRS_MAX]: Sized
 {
 	// Not enough stars, instant fail.
@@ -44,34 +46,43 @@ where T: 'static + TrackingModeConsts, ArrayList<(), {T::PAIRS_MAX}> : Sized, Ar
 	// Enough to make a triangle constellation.
 	else if stars.size() >= 3
 	{
-		// Attempt to find stars.
-		let mut triangles: ArrayList<Match<StarTriangle<usize>>, {T::TRIANGLES_MAX}> = ArrayList::new();
+		// ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~	 Attempt to find stars matches.	~~~~~~~~~~~~~~~~~~~~
+		let mut triangles: 
+			ArrayList<Match<StarTriangle<usize>>,{T::TRIANGLES_MAX}> = ArrayList::new();
 		gen_tri.find_match_triangle ( stars, database, &mut triangles );
-		if triangles.size() > 0
+
+		// ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~	 Loops through all matches.		~~~~~~~~~~~~~~~~~~~~
+		let iterator: ListIterator<Match<StarTriangle<usize>>> = ListIterator::new(&triangles);
+		for iter in iterator
 		{
-			for i in 0..triangles.size()
+			let input = iter.output.search_list(stars);
+			let output = iter.input.search_database(database);
+			
+			// ~~~~~~~~~~~~~~~~~~~~~~~~~	 A valid match was found.		~~~~~~~~~~~~~~~~~~~~
+			if input.is_ok() && output.is_ok()
 			{
-				let input = triangles.get(i).output.search_list(stars);
-				let output = triangles.get(i).input.search_database(database);
+				let input = input.unwrap();
+				let output = output.unwrap();
 				
-				if input.is_ok() && output.is_ok()
+				// ~~~~~~~~~~~~~~~~~~~~~	 The speculariy in/out match	~~~~~~~~~~~~~~~~~~~~
+				if gen_spec.same(&input.to_cartesian3(), &output.to_cartesian3())
 				{
-					let input = input.unwrap();
-					let output = output.unwrap();
+					// ~~~~~~~~~~~~~~~~~	Only a triangle can be formed.	~~~~~~~~~~~~~~~~~~~~
+					if stars.size() == 3
+					{ 
+						return Constellation::Triangle(
+							Match{input: input, output: output, weight: 1.0});
+					}
 					
-					println!("YEP {}", i);
-					if gen_spec.same(&input.to_cartesian3(), &output.to_cartesian3())
-					{
-						if stars.size() == 3
-						{ // Only a triangle can be formed.
-							return Constellation::Triangle(
-								Match{input: input, output: output, weight: 1.0});
-						}
-						else
-						{ // Pyramid can be formed.
-							
-							let result = gen_pyr.find_pilot(stars, database, triangles.get(i).input);
-							if let Ok(found) = result
+					// ~~~~~~~~~~~~~~~~~	Pyramid can be formed.			~~~~~~~~~~~~~~~~~~~~
+					else if 3 < stars.size()
+					{ 
+						let result = gen_pyr.find_pilot(stars, database, iter.input);
+						// ~~~~~~~~~~~~~	A match is found.				~~~~~~~~~~~~~~~~~~~~
+						if let Ok(found) = result
+						{
+							// ~~~~~~~~~	Get the star from the database.	~~~~~~~~~~~~~~~~~~~~
+							if found.input < stars.size()
 							{
 								let pil_in = stars.get(found.input);
 								let pil_out = database.find_star(found.output);
@@ -80,14 +91,12 @@ where T: 'static + TrackingModeConsts, ArrayList<(), {T::PAIRS_MAX}> : Sized, Ar
 								{
 									let pyr_in  = StarPyramid(input.0, input.1, input.2, pil_in);
 									let pyr_out = StarPyramid(output.0, output.1, output.2, out);
-									return 
-									Constellation::Pyramid(
+									return Constellation::Pyramid(
 										Match{input: pyr_in, output: pyr_out, weight: 1.0});
 								}
 							}
 						}
 					}
-
 				}
 			}
 		}
@@ -108,6 +117,7 @@ where T: 'static + TrackingModeConsts, ArrayList<(), {T::PAIRS_MAX}> : Sized, Ar
 
 
 #[cfg(test)]
+#[allow(unused_must_use)]
 mod test
 {
 	use std::mem;
@@ -123,6 +133,7 @@ mod test
 	use crate::util::units::Equatorial;
 	use crate::util::units::Radians;
 	use crate::util::aliases::Decimal;
+	use crate::util::err::Errors;
 
 	use crate::config::TrackingModeConsts;
 	
@@ -225,7 +236,7 @@ mod test
 		static MATCH_TRI : Match<StarTriangle<usize>> = 
 			Match{input: TRI_IN, output: TRI_OUT, weight: 1.0};
 		
-		mock_t.expect_find_match_triangle().times(1).returning(|_, _, out| out.push_back(MATCH_TRI));
+		mock_t.expect_find_match_triangle().times(1).returning(|_, _, out| out.push_back(MATCH_TRI).expect(""));
 		mock_s.expect_same().times(1).returning(|_, _| return true); // The triangles are the correct orientation.
 		
 		// mock_g.expect_find_match_triangle().times(1)
@@ -276,7 +287,7 @@ mod test
 		static MATCH_TRI : Match<StarTriangle<usize>> = 
 			Match{input: TRI_IN, output: TRI_OUT, weight: 1.0};
 		
-		mock_t.expect_find_match_triangle().times(1).returning(|_,_,out| out.push_back(MATCH_TRI));
+		mock_t.expect_find_match_triangle().times(1).returning(|_,_,out| out.push_back(MATCH_TRI).expect(""));
 		mock_s.expect_same().times(1).returning(|_, _| return false); // The triangles are the correct orientation.
 		
 		// mock_g.expect_find_match_triangle().times(1)
@@ -351,7 +362,7 @@ mod test
 		static MATCH_TRI : Match<StarTriangle<usize>> = 
 			Match{input: TRI_IN, output: TRI_OUT, weight: 1.0};
 		
-		mock_t.expect_find_match_triangle().times(1).returning(|_,_,out| out.push_back(MATCH_TRI));
+		mock_t.expect_find_match_triangle().times(1).returning(|_,_,out| out.push_back(MATCH_TRI).expect(""));
 		mock_s.expect_same().times(1).returning(|_, _| return false); // The triangles are the correct orientation.
 		// The output for converting the TRI_OUT to equatorial (searching database).
 		static STAR_OUT : [Equatorial ; 3] =
@@ -393,7 +404,7 @@ mod test
 		static MATCH_TRI : Match<StarTriangle<usize>> = 
 			Match{input: TRI_IN, output: TRI_OUT, weight: 1.0};
 		
-		mock_t.expect_find_match_triangle().times(1).returning(|_,_,out| out.push_back(MATCH_TRI));
+		mock_t.expect_find_match_triangle().times(1).returning(|_,_,out| out.push_back(MATCH_TRI).expect(""));
 		mock_s.expect_same().times(1).returning(|_,_| return true); // The triangles are the correct orientation.
 		// The output for converting the TRI_OUT to equatorial (searching database).
 		static STAR_OUT : [Equatorial ; 4] =
@@ -537,11 +548,11 @@ mod test
 			Equatorial{ra: Radians(0.2), dec: Radians(0.3)}];
 		mock_d.expect_find_star().times(7).returning(|i| Ok(STAR_OUT[i]));
 		
-		let pyramid = [Err(()), Ok(Match{input:3, output:3, weight: 1.0})];
+		let pyramid = [Err(Errors::NoMatch), Ok(Match{input:3, output:3, weight: 1.0})];
 		let mut i = 0;
 		mock_p.expect_find_pilot()
 			.times(2)
-			.returning(move |_, _, _| {i+=1; return pyramid[i - 1];});
+			.returning(move |_, _, _| {i+=1; return pyramid[i - 1]});
 		
 		let pyr = &Constellation::new::<MockConfigBig>(&stars, &mock_d, &mut mock_t, &mut mock_p, &mut mock_s);
 		if let Constellation::Pyramid(p) = pyr

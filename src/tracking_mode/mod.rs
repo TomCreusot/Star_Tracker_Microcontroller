@@ -52,6 +52,7 @@ use crate::util::aliases::Decimal;
 use crate::util::units::Cartesian3D;
 use crate::util::units::Equatorial;
 use crate::util::list::List;
+use crate::util::err::Error;
 
 pub mod kernel_iterator;
 pub mod constellation;
@@ -191,7 +192,7 @@ pub trait PyramidConstruct <T: 'static>
 				stars : &dyn List<Equatorial>, 
 				database : &dyn Database, 
 				input : StarTriangle<usize>,
-			) -> Result<Match<usize>, ()>;
+			) -> Error<Match<usize>>;
 }
 
 

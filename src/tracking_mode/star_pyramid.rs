@@ -12,7 +12,8 @@ use crate::config::TrackingModeConsts;
 use crate::util::units::Equatorial;
 use crate::util::list::ArrayList;
 use crate::util::list::List;
-
+use crate::util::err::Errors;
+use crate::util::err::Error;
 
 
 impl <T: 'static> PyramidConstruct <T>  for StarPyramid<usize>
@@ -31,7 +32,7 @@ impl <T: 'static> PyramidConstruct <T>  for StarPyramid<usize>
 				stars : &dyn List<Equatorial>, 
 				database : &dyn Database, 
 				input : StarTriangle<usize>,
-			) -> Result<Match<usize>, ()>
+			) -> Error<Match<usize>>
 	{
 		for i in 0..stars.size()
 		{
@@ -64,7 +65,7 @@ impl <T: 'static> PyramidConstruct <T>  for StarPyramid<usize>
 				}		
 			}
 		}
-		return Err(());
+		return Err(Errors::NoMatch);
 	}
 }
 
@@ -84,6 +85,7 @@ impl <T: 'static> PyramidConstruct <T>  for StarPyramid<usize>
 
 
 #[cfg(test)]
+#[allow(unused_must_use)]
 mod test
 {
 	use crate::tracking_mode::PyramidConstruct;
@@ -115,7 +117,7 @@ mod test
 
 
 	//
-	// fn search_database ( &self, database: &dyn Database ) -> Result<StarTriangle<Equatorial>>
+	// fn search_database ( &self, database: &dyn Database ) -> Error<StarTriangle<Equatorial>>
 	//
 	#[test]
 	// If the stars list has less than 4 stars, it is invalid.

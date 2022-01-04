@@ -12,17 +12,22 @@
 //! 	sort      ( ) -> ()                              // Sorts the list.
 //! ```
 
+pub mod list_iterator;
 pub mod array_list;
 pub mod vec;
+
+
+use util::err::Error;
+use util::err::Errors;
 
 //###############################################################################################//
 //									---	List Trait ---
 //###############################################################################################//
 
 /// Any collection which can be expressed as a linear list.
-/// Useful for vect!, LinkedList and ArrayList.
+/// Useful for Vec, LinkedList and ArrayList.
 pub trait List<T>
-{
+{		
 	/// Finds the max number of elements that can be stored in the list.
 	/// If invalid list, returns 0.
 	fn capacity ( &self ) -> usize;
@@ -56,12 +61,12 @@ pub trait List<T>
 	/// # Arguments
 	///	* 'index' - The index of the element to receive.
 	/// * 'value' - The value to assign.
-	fn set ( &mut self, index : usize, value : T );
+	fn set ( &mut self, index : usize, value : T ) -> Error<()>;
 
 	/// Adds an element to the end of the list.
 	/// # Arguments
 	/// * 'value' - the value to add to the end.
-	fn push_back ( &mut self, value : T );
+	fn push_back ( &mut self, value : T ) -> Error<()>;
 
 	/// Removes an element from the end of the list.
 	/// # Returns
@@ -109,17 +114,17 @@ pub trait List<T>
 	/// assert_eq!(list.len(), 1);
 	/// assert_eq!(list[0], 2);
 	/// 
-	/// assert_eq!((&mut list as &mut dyn List<usize>).pop(1), Err(()));
+	/// assert!((&mut list as &mut dyn List<usize>).pop(1).is_err());
 	/// assert_eq!(list.len(), 1);
 	/// assert_eq!(list[0], 2);
 	/// 
 	/// assert_eq!((&mut list as &mut dyn List<usize>).pop(0), Ok(2));
 	/// assert_eq!(list.len(), 0);
 	/// 
-	/// assert_eq!((&mut list as &mut dyn List<usize>).pop(0), Err(()));
+	/// assert!((&mut list as &mut dyn List<usize>).pop(0).is_err());
 	/// assert_eq!(list.len(), 0);
 	/// ```
-	fn pop ( &mut self, index : usize ) -> Result<T, ()>
+	fn pop ( &mut self, index : usize ) -> Error<T>
 	{
 		if index < self.size()
 		{
@@ -127,13 +132,17 @@ pub trait List<T>
 			let mut ii = index;
 			while ii < self.size() - 1
 			{
-				self.set(ii, self.get(ii + 1));
+				let result = self.set(ii, self.get(ii + 1));
+				if result.is_err()
+				{
+					return Err(Errors::InvalidSize);
+				}
 				ii += 1;
 			}
 			self.pop_back();
 			return Ok(value);
 		}
-		return Err(());
+		return Err(Errors::InvalidSize);
 	}
 	
 	
@@ -174,7 +183,10 @@ pub trait List<T>
 			{
 				if compare(&self.get(ii), &list_b.get(jj)) && !out.is_full()
 				{
-					out.push_back(self.get(ii));
+					if out.push_back(self.get(ii)).is_err()
+					{
+						return; // No more room, new elements will not fit.
+					}
 				}
 			}
 		}
@@ -283,6 +295,15 @@ pub struct ArrayList <T, const N : usize>
 	end : usize,
 }
 
+/// An iterator for a List trait.
+#[derive(Copy)]
+#[derive(Clone)]
+pub struct ListIterator <'a, T>
+{
+	list		: &'a dyn List <T>,
+	index		: usize,
+}
+
 
 
 
@@ -296,6 +317,7 @@ pub struct ArrayList <T, const N : usize>
 
 
 #[cfg(test)]
+#[allow(unused_must_use)]
 mod test
 {
 	use crate::util::list::List;
@@ -322,14 +344,14 @@ mod test
 		assert_eq!(list.len(), 1);
 		assert_eq!(list[0], 2);
 		
-		assert_eq!((&mut list as &mut dyn List<usize>).pop(1), Err(()));
+		assert!((&mut list as &mut dyn List<usize>).pop(1).is_err());
 		assert_eq!(list.len(), 1);
 		assert_eq!(list[0], 2);
 		
 		assert_eq!((&mut list as &mut dyn List<usize>).pop(0), Ok(2));
 		assert_eq!(list.len(), 0);
 	
-		assert_eq!((&mut list as &mut dyn List<usize>).pop(0), Err(()));
+		assert!((&mut list as &mut dyn List<usize>).pop(0).is_err());
 		assert_eq!(list.len(), 0);
 	}
 
@@ -357,14 +379,14 @@ mod test
 		assert_eq!(list.size(), 1);
 		assert_eq!(list.get(0), 2);
 		
-		assert_eq!(list.pop(1), Err(()));
+		assert!(list.pop(1).is_err());
 		assert_eq!(list.size(), 1);
 		assert_eq!(list.get(0), 2);
 		
 		assert_eq!(list.pop(0), Ok(2));
 		assert_eq!(list.size(), 0);
 	
-		assert_eq!(list.pop(0), Err(()));
+		assert!(list.pop(0).is_err());
 		assert_eq!(list.size(), 0);
 	}
 	

@@ -39,7 +39,6 @@ impl <const WIDTH : usize, const HEIGHT : usize> Image for BasicImage <WIDTH, HE
 	/// ```
 	fn get ( &self, pixel : Pixel ) -> Byte
 	{
-		assert!((pixel.x < self.width() && pixel.y < self.height()), "Out of bounds");
 		return self.img[pixel.y][pixel.x].clone();
 	}
 
@@ -58,7 +57,6 @@ impl <const WIDTH : usize, const HEIGHT : usize> Image for BasicImage <WIDTH, HE
 	/// ```
 	fn set ( &mut self, pixel: Pixel, value: Byte )
 	{
-		assert!((pixel.x < self.width() && pixel.y < self.height()), "Out of bounds");
 		self.img[pixel.y][pixel.x] = value;
 	}
 
@@ -148,7 +146,7 @@ mod test
 
 
 	#[test]
-	#[should_panic = "Out of bounds"]
+	#[should_panic]
 	fn test_get_out_of_bounds ( )
 	{
 		let img : BasicImage<10, 10> = BasicImage::new();
@@ -172,7 +170,7 @@ mod test
 	}
 
 	#[test]
-	#[should_panic = "Out of bounds"]
+	#[should_panic]
 	fn test_set_out_of_bounds ( )
 	{
 		let mut img : BasicImage<10, 10> = BasicImage::new();

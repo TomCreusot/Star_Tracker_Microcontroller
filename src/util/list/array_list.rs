@@ -1,6 +1,7 @@
 //! The implementation of ArrayList.
 
 use super::{List, ArrayList};
+use util::err::{Error, Errors};
 
 //###############################################################################################//
 //								---	ArrayList Constructor ---
@@ -22,6 +23,22 @@ impl <T, const N: usize> ArrayList <T, N>
 
 
 
+//###############################################################################################//
+//								---	ListIterator Implementation ---
+//###############################################################################################//
+/*impl<'a, T, const N : usize> IntoIterator for &'a ArrayList<T, N> where T: Clone {
+    type Item = T;
+    type IntoIter = ListIterator<'a, T>;
+
+	/// Creates an iterator for arraylist.
+    fn into_iter(self) -> Self::IntoIter {
+        ListIterator {
+            list: self,
+            index: 0,
+        }
+    }
+}*/
+
 
 
 
@@ -30,6 +47,7 @@ impl <T, const N: usize> ArrayList <T, N>
 //###############################################################################################//
 impl<T, const N : usize> List<T> for ArrayList<T, N> where T: Clone
 {
+
 	/// Finds the max number of elements that can be stored in the list.
 	/// # Example
 	/// ```
@@ -139,11 +157,15 @@ impl<T, const N : usize> List<T> for ArrayList<T, N> where T: Clone
 	/// assert_eq!(10, lst.get(0));
 	/// assert_eq!(5, lst.get(1));
 	/// ```
-	fn set ( &mut self, index : usize, value : T )
-	{
-		assert!(index < self.end, "Out of bounds");
-		self.array[index] = value;
-	}
+	fn set ( &mut self, index : usize, value : T ) -> Error<()>
+    {
+		if self.size() <= index
+		{
+			return Err(Errors::OutOfBounds);
+		}
+        self.array[index] = value;
+		return Ok(());
+    }
 
 
 	/// Adds an element to the end of the list.
@@ -160,11 +182,15 @@ impl<T, const N : usize> List<T> for ArrayList<T, N> where T: Clone
 	/// assert_eq!(lst.get(1), 1);
 	/// assert!(lst.is_full());
 	/// ```
-	fn push_back ( &mut self, value : T )
+	fn push_back ( &mut self, value : T ) -> Error<()>
 	{
-		assert!(!self.is_full(), "List is full");
+		if self.capacity() <= self.size()
+		{
+			return Err(Errors::InvalidSize);
+		}
 		self.array[self.end] = value.clone();
 		self.end += 1;
+		return Ok(());
 	}
 
 	/// Removes an element from the end of the list.
@@ -277,14 +303,14 @@ impl<T, const N : usize> List<T> for ArrayList<T, N> where T: Clone
 				while jj < self.size()
 				{
 					to_move = self.get(jj);
-					self.set(jj, to_insert);
+					self.set(jj, to_insert).expect("Why cannot this be set?");
 					to_insert = to_move.clone();
 					jj+=1;
 				}
 
 				if jj < N
 				{
-					self.push_back(to_insert);
+					self.push_back(to_insert).expect("There should be more room.");
 				}
 
 				return true;
@@ -294,7 +320,7 @@ impl<T, const N : usize> List<T> for ArrayList<T, N> where T: Clone
 		// If there is room to add it at the end.
 		if self.size() < N
 		{
-			self.push_back(to_slot);
+			self.push_back(to_slot).expect("There should be more room.");
 			return true;
 		}
 
@@ -319,6 +345,7 @@ impl<T, const N : usize> List<T> for ArrayList<T, N> where T: Clone
 //###############################################################################################//
 
 #[cfg(test)]
+#[allow(unused_must_use)]
 mod test
 {
 	use crate::util::list::{List, ArrayList};
@@ -442,19 +469,17 @@ mod test
 	}
 
 	#[test]
-	#[should_panic = "Out of bounds"]
 	fn test_set_not_enough_elements ( )
 	{
 		let mut lst : ArrayList<u32, 1> = ArrayList::new();
-		lst.set(0, 0);
+		assert!(lst.set(0, 0).is_err());
 	}
 
 	#[test]
-	#[should_panic = "Out of bounds"]
 	fn test_set_out_of_bounds ( )
 	{
 		let mut lst : ArrayList<u32, 0> = ArrayList::new();
-		lst.set(0, 0);
+		assert!(lst.set(0, 0).is_err());
 	}
 
 

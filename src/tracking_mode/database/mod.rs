@@ -157,6 +157,6 @@ pub struct PyramidDatabase
 pub trait Database
 {
 	fn find_close_ref ( &self, find : Radians, found : &mut dyn List<StarPair<usize>> );
-	fn find_star ( &self, index: usize ) -> Result<Equatorial, ()>;
+	fn find_star ( &self, index: usize ) -> Error<Equatorial>;
 	fn get_fov ( &self ) -> Radians;
 }
