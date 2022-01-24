@@ -42,6 +42,11 @@ It also contains [demo.cc](src/demo.cc) which is the program in the implementati
 
 ## Built With
 * cargo 1.51.0-nightly (783bc43c6 2021-01-20)
+To implement this method, use command:  
+```
+rustup defualt nightly-2021-08-20-x86_64-unknown-linux-gnu
+```
+Any version between 2021-03-20 and 2021-08-31 should work.
 
 ## Contributing
 
