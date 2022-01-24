@@ -207,8 +207,8 @@ pub struct BasicImage <const WIDTH : usize, const HEIGHT : usize>
 /// const BLOB_SIZE : usize = 100; // Should be bigger than the size of a blob.
 /// Blob::find_blobs::<BLOB_SIZE>(1, &mut img, &mut lst);// Consumes pixels and finds blobs.
 /// assert_eq!(lst.get(0).intensity, 3);
-/// assert_eq!(lst.get(0).centroid.x, 0.33333333333);
-/// assert_eq!(lst.get(0).centroid.y, 0.33333333333);
+/// assert_eq!(lst.get(0).centroid.x, 0.333333333333333333333);
+/// assert_eq!(lst.get(0).centroid.y, 0.333333333333333333333);
 ///
 /// assert_eq!(lst.get(1).intensity, 1);
 /// assert_eq!(lst.get(1).centroid.x, 2.0);

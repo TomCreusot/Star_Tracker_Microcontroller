@@ -207,8 +207,8 @@ struct LinearRange
 impl LinearRange
 {
 	// Returns the next value in the sequence
-	fn get ( &self, iteration: usize ) -> f32
+	fn get ( &self, iteration: usize ) -> Decimal
 	{
-		iteration as f32 * (self.max - self.min) / self.num as f32
+		iteration as Decimal * (self.max - self.min) / self.num as Decimal
 	}
 }

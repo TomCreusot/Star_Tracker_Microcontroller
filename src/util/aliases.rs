@@ -7,7 +7,8 @@
 
 
 /// All decimal numbers will use this precision.
-pub type Decimal = f32;
+// pub type Decimal = f32;
+pub type Decimal = f64;
 
 
 /// Returns the machine precision of Decimal (For K-Vector equation).
@@ -19,8 +20,8 @@ pub fn decimal_precision ( ) -> f64
 }
 
 
-use std::f32::consts::PI;
-// use std::f64::consts::PI;
+// use std::f32::consts::PI;
+use std::f64::consts::PI;
 /// PI to the correct precision.
 pub const M_PI : Decimal = PI;
 

@@ -39,7 +39,7 @@ impl StarDatabaseElement
 	/// lst.push(Star{pos: Equatorial{ ra: v90, dec: v45 },  mag: 0.0, spec: "".to_string()});	// 3 45* Equator
 	/// lst.push(Star{pos: Equatorial{ ra: v0, dec: v0 },    mag: 0.0, spec: "".to_string()});	// 4 Equator
 	/// 
-	/// let mut fov = Degrees(45.0).to_radians();
+	/// let mut fov = Degrees(45.000001).to_radians();
 	/// let mut out = StarDatabaseElement::create_list(fov, &lst);
 	/// assert_eq!(out.len(), 3);
 	/// assert_eq!(out[0].pair.0, 0);
@@ -204,7 +204,7 @@ mod test
 		out = StarDatabaseElement::create_list(fov, &lst);
 		assert_eq!(out.len(), 1);
 		
-	 	fov = Degrees(45.0).to_radians();
+	 	fov = Degrees(45.000000000001).to_radians();
 		out = StarDatabaseElement::create_list(fov, &lst);
 		assert_eq!(out.len(), 3);
 		assert_eq!(out[0].pair.0, 0);

@@ -2,6 +2,8 @@ extern crate star_tracker;
 
 use star_tracker::config::NixConstsStruct;
 use star_tracker::config::NixConsts;
+
+use star_tracker::util::aliases::Decimal;
 // use star_tracker::config::TrackingModeConstructConstsStruct;
 // use star_tracker::config::TrackingModeConstructConsts;
 // use star_tracker::config::TrackingModeConstsStruct;
@@ -19,13 +21,13 @@ fn main (  )
 	let iter = rdr.deserialize();
 		
 	const NUM : usize = 11;
-	const MAX : f32 = 10.0;
-	const MIN : f32 = -1.0; // Sun is the only thing brighter
-	let mut thresholds : [f32; NUM] = [0.0; NUM];
+	const MAX : Decimal = 10.0;
+	const MIN : Decimal = -1.0; // Sun is the only thing brighter
+	let mut thresholds : [Decimal; NUM] = [0.0; NUM];
 
 	for i in 0..NUM
 	{
-		thresholds[i] = MIN + i as f32 * (MAX - MIN) / NUM as f32;
+		thresholds[i] = MIN + i as Decimal * (MAX - MIN) / NUM as Decimal;
 	}
 	
 	let mut vals = [SpectStruct::new(); NUM];
@@ -129,7 +131,7 @@ impl Spect
 	}*/
 	
 	/// The main wavelength of the spectral class.
-	fn wavelength ( &self ) -> f32
+	fn wavelength ( &self ) -> Decimal
 	{
 		match self
 		{
@@ -160,18 +162,18 @@ impl SpectStruct
 	}
 	
 	/// If each star is given a number, the weighted mean.
-	fn mean ( &self ) -> f32
+	fn mean ( &self ) -> Decimal
 	{
 		return 
 		( 
-			self.o as f32 * Spect::O.wavelength() + 
-			self.b as f32 * Spect::B.wavelength() + 
-			self.a as f32 * Spect::A.wavelength() + 
-			self.f as f32 * Spect::F.wavelength() + 
-			self.g as f32 * Spect::G.wavelength() +
-			self.k as f32 * Spect::K.wavelength() +
-			self.m as f32 * Spect::M.wavelength() 
-		) / self.num() as f32;
+			self.o as Decimal * Spect::O.wavelength() + 
+			self.b as Decimal * Spect::B.wavelength() + 
+			self.a as Decimal * Spect::A.wavelength() + 
+			self.f as Decimal * Spect::F.wavelength() + 
+			self.g as Decimal * Spect::G.wavelength() +
+			self.k as Decimal * Spect::K.wavelength() +
+			self.m as Decimal * Spect::M.wavelength() 
+		) / self.num() as Decimal;
 	}
 	
 	/// Increment the spectral class.

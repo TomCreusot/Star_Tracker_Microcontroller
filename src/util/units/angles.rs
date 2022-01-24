@@ -79,7 +79,7 @@ impl Hours
 #[cfg(test)]
 mod test
 {
-	use util::aliases::{M_PI};
+	use util::aliases::{M_PI, Decimal};
 	use util::units::{Radians, Degrees, Hours};
 
 	#[test]
@@ -124,13 +124,13 @@ mod test
 	#[test]
 	fn test_sin ( )
 	{
-		assert_eq!(0.1_f32.sin(),   Radians(0.1).sin());
-		assert_eq!(0.4_f32.sin(),   Radians(0.4).sin());
-		assert_eq!(100.0_f32.sin(), Radians(100.0).sin());
+		assert_eq!((0.1 as Decimal).sin(),   Radians(0.1).sin());
+		assert_eq!((0.4 as Decimal).sin(),   Radians(0.4).sin());
+		assert_eq!((100.0 as Decimal).sin(), Radians(100.0).sin());
 		
-		assert_eq!(0.1_f32.sin(),   Degrees(0.1).sin());
-		assert_eq!(0.4_f32.sin(),   Degrees(0.4).sin());
-		assert_eq!(100.0_f32.sin(), Degrees(100.0).sin());
+		assert_eq!((0.1 as Decimal).sin(),   Degrees(0.1).sin());
+		assert_eq!((0.4 as Decimal).sin(),   Degrees(0.4).sin());
+		assert_eq!((100.0 as Decimal).sin(), Degrees(100.0).sin());
 		
 	}
 	
@@ -138,13 +138,13 @@ mod test
 	#[test]
 	fn test_cos ( )
 	{
-		assert_eq!(0.1_f32.cos(),   Radians(0.1).cos());
-		assert_eq!(0.4_f32.cos(),   Radians(0.4).cos());
-		assert_eq!(100.0_f32.cos(), Radians(100.0).cos());
+		assert_eq!((0.1 as Decimal).cos(),   Radians(0.1).cos());
+		assert_eq!((0.4 as Decimal).cos(),   Radians(0.4).cos());
+		assert_eq!((100.0 as Decimal).cos(), Radians(100.0).cos());
 	
-		assert_eq!(0.1_f32.cos(),   Degrees(0.1).cos());
-		assert_eq!(0.4_f32.cos(),   Degrees(0.4).cos());
-		assert_eq!(100.0_f32.cos(), Degrees(100.0).cos());
+		assert_eq!((0.1 as Decimal).cos(),   Degrees(0.1).cos());
+		assert_eq!((0.4 as Decimal).cos(),   Degrees(0.4).cos());
+		assert_eq!((100.0 as Decimal).cos(), Degrees(100.0).cos());
 	}
 	
 	

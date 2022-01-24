@@ -39,8 +39,8 @@ impl Blob
 	/// const MAX_BLOB_SIZE : usize = 3;
 	/// Blob::find_blobs::<MAX_BLOB_SIZE>(1, &mut img, &mut lst);
 	/// assert_eq!(lst.get(0).intensity, 3);
-	/// assert_eq!(lst.get(0).centroid.x, 0.3333333333);
-	/// assert_eq!(lst.get(0).centroid.y, 0.3333333333);
+	/// assert_eq!(lst.get(0).centroid.x, 0.333333333333333333333);
+	/// assert_eq!(lst.get(0).centroid.y, 0.333333333333333333333);
 	///
 	/// assert_eq!(lst.get(1).intensity, 1);
 	/// assert_eq!(lst.get(1).centroid.x, 2.0);

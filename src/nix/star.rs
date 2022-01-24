@@ -8,6 +8,7 @@ use crate::config::NixConsts;
 
 use crate::nix::Star;
 // use crate::nix::SerialStar;
+use crate::util::aliases::Decimal;
 use crate::util::units::Equatorial;
 use crate::util::units::Radians;
 use crate::util::units::Degrees;
@@ -205,15 +206,15 @@ impl<'de> Deserialize<'de> for Star
 							{
 								Field::Ra =>
 								{
-									ra = Some(next.expect("RA NOT FILLED").parse::<f32>().expect("RA"));
+									ra = Some(next.expect("RA NOT FILLED").parse::<Decimal>().expect("RA"));
 								}
 								Field::Dec =>
 								{
-									dec = Some(next.expect("DEC NOT FILLED").parse::<f32>().expect("DEC"));
+									dec = Some(next.expect("DEC NOT FILLED").parse::<Decimal>().expect("DEC"));
 								}
 								Field::Mag =>
 								{
-									mag = Some(next.expect("MAG NOT FILLED").parse::<f32>().expect("MAG"));
+									mag = Some(next.expect("MAG NOT FILLED").parse::<Decimal>().expect("MAG"));
 								}
 								Field::Spect =>
 								{

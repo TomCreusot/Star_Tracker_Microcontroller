@@ -73,8 +73,8 @@ fn main ( )
 	println!("Parsing File                ...");
 	let mut template_file = Io::read_file("src/config/template.txt");
 	let mut template = Template::new();
-	template.add_patten("FOV".to_string(), 				format!("{}f32", TrackingModeConstructConstsStruct::FOV).to_string());
-	template.add_patten("MAGNITUDE".to_string(),	 	format!("{}f32", TrackingModeConstructConstsStruct::MAGNITUDE_MAX).to_string());
+	template.add_patten("FOV".to_string(), 				format!("{}", TrackingModeConstructConstsStruct::FOV).to_string());
+	template.add_patten("MAGNITUDE".to_string(),	 	format!("{}", TrackingModeConstructConstsStruct::MAGNITUDE_MAX).to_string());
 	template.add_patten("BIN_SIZE".to_string(), 		format!("{}", TrackingModeConstructConstsStruct::BINS_NUM).to_string());
 	template.add_patten("K_LOOKUP".to_string(), 		k_vect.to_string());
 	template.add_patten("K_VECTOR_SIZE".to_string(),	format!("{}", bins.len()).to_string());
