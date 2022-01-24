@@ -1,12 +1,13 @@
 //! Implementation for matrix.
 use crate::util::aliases::Decimal;
 use crate::util::units::MatPos;
-use crate::util::err::{Error, Errors};
+// use crate::util::err::{Error, Errors};
 use super::Matrix;
 
 use std::fmt;
 use std::ops::Mul;
 use std::ops::Div;
+use std::ops::Add;
 
 impl <const ROW : usize, const COLUMN : usize> Matrix <ROW, COLUMN>
 {
@@ -150,17 +151,8 @@ impl <const ROW : usize, const COLUMN : usize> Matrix <ROW, COLUMN>
 	/// ```
 	pub fn insert 
 		<const C_2: usize, const R_2: usize> 
-		( &mut self, pos: MatPos, other: &Matrix<C_2, R_2> ) -> Error<()>
+		( &mut self, pos: MatPos, other: &Matrix<C_2, R_2> )
 	{
-		if self.height() < other.height() + pos.row
-		{
-			return Err(Errors::OutOfBoundsY);
-		}
-		if self.width() < other.width() + pos.col
-		{
-			return Err(Errors::OutOfBoundsX);
-		}
-		
 		for x in 0..other.width()
 		{
 			for y in 0..other.height()
@@ -170,14 +162,25 @@ impl <const ROW : usize, const COLUMN : usize> Matrix <ROW, COLUMN>
 			}
 		}
 		
-		return Ok(());
+		// return Ok(());
 	}
 }
-
 
 // Square Matrices
 impl <const S: usize> Matrix<S, S>
 {
+	/// Contructs an identity matrix.
+	pub fn identity ( ) -> Matrix<S, S>
+	{
+		let mut mat : Matrix<S, S> = Matrix::new();
+		for i in 0..S
+		{
+			mat.set(MatPos{row: i, col: i}, 1.0);
+		}
+		return mat;
+	}
+	
+	
 	/// Finds the trace of the matrix (sum of diagonal).
 	/// Must be a square matrix.
 	///
@@ -205,14 +208,258 @@ impl <const S: usize> Matrix<S, S>
 		}
 		return sum;
 	}
-
-
+	
+	
 }
 
 
 
 
+impl Matrix <1, 1>
+{
+	/// Converts the current value to a matrix.
+	/// # Example
+	/// ```
+	/// use star_tracker::util::units::Matrix;
+	/// use star_tracker::util::units::MatPos;
+	/// let mat1x1 : Matrix<1,1> = Matrix::from_decimal(100.0);
+	/// assert_eq!(mat1x1.get(MatPos{row: 0, col: 0}), 100.0);
+	/// ```
+	pub fn from_decimal ( val : Decimal ) -> Matrix<1,1>
+	{
+		let mut mat : Matrix<1, 1> = Matrix::new();
+		mat.set(MatPos{row: 0, col: 0}, val);
+		return mat;
+	}
+	
+	/// Converts the current value to a decimal.
+	/// # Example
+	/// ```
+	/// use star_tracker::util::units::Matrix;
+	/// use star_tracker::util::units::MatPos;
+	/// let mut mat1x1 : Matrix<1,1> = Matrix::new();
+	/// mat1x1.set(MatPos{row: 0, col: 0}, 100.0);
+	/// assert_eq!(mat1x1.to_decimal(), 100.0);
+	/// ```
+	pub fn to_decimal ( &self ) -> Decimal
+	{
+		return self.get(MatPos{row: 0, col: 0});
+	}
+	
+	
+	/// Returns the single element.
+	///
+	/// # Example
+	/// ```
+	/// use star_tracker::util::units::Matrix;
+	/// use star_tracker::util::units::MatPos;
+	/// let mut mat1x1 : Matrix<1,1> = Matrix::new();
+	/// mat1x1.set(MatPos{row: 0, col: 0}, 10.0);
+	/// assert_eq!(mat1x1.determinate(), 10.0);
+	/// ```
+	pub fn determinate ( &self ) -> Decimal
+	{
+		return self.get(MatPos{row: 0, col: 0});
+	}
+}
 
+impl Matrix <2, 2>
+{
+	/// Recursively finds the determinate.
+	///
+	/// # Example
+	/// ```
+	/// use star_tracker::util::units::Matrix;
+	/// use star_tracker::util::units::MatPos;
+	/// let mut mat2x2 : Matrix<2,2> = Matrix::new();
+	/// mat2x2.set(MatPos{row: 0, col: 0}, 2.0);
+	/// mat2x2.set(MatPos{row: 1, col: 0}, 3.0);
+	/// mat2x2.set(MatPos{row: 0, col: 1}, 4.0);
+	/// mat2x2.set(MatPos{row: 1, col: 1}, 5.0);
+	/// assert_eq!(mat2x2.determinate(), 2.0 * 5.0 - 3.0 * 4.0);
+	/// assert_eq!(mat2x2.determinate(), -2.0);
+	///```
+	pub fn determinate ( &self ) -> Decimal
+	{
+		return 	self.get(MatPos{row: 0, col: 0}) * self.get(MatPos{row: 1, col: 1}) - 
+				self.get(MatPos{row: 1, col: 0}) * self.get(MatPos{row: 0, col: 1});
+	}
+}
+
+impl Matrix <3, 3>
+{
+	/// Recursively finds the determinate.
+	///
+	/// # Example
+	/// ```
+	/// use star_tracker::util::units::Matrix;
+	/// use star_tracker::util::units::MatPos;
+	///	let mut mat3x3 : Matrix<3,3> = Matrix::new();
+	/// mat3x3.set(MatPos{row: 0, col: 0}, 5.0);
+	/// mat3x3.set(MatPos{row: 0, col: 1}, 4.0);
+	/// mat3x3.set(MatPos{row: 0, col: 2}, 3.0);
+	/// mat3x3.set(MatPos{row: 1, col: 0}, 8.0);
+	/// mat3x3.set(MatPos{row: 1, col: 1}, 9.0);
+	/// mat3x3.set(MatPos{row: 1, col: 2}, 10.0);
+	/// mat3x3.set(MatPos{row: 2, col: 0}, 100.0);
+	/// mat3x3.set(MatPos{row: 2, col: 1}, 2.0);
+	/// mat3x3.set(MatPos{row: 2, col: 2}, 6.0);
+	/// assert_eq!(mat3x3.determinate(), 1326.0);
+	/// ```
+	pub fn determinate ( &self ) -> Decimal
+	{
+		let mut det = 0.0;
+		for i in 0..3
+		{
+			let multiplier = self.get(MatPos{row: 0, col: i});
+			let mut sub_mat : Matrix<2,2> = Matrix::new();
+			for col in 0..3
+			{
+				let sub_col = if col <= i { col } else { col - 1 };
+				if col != i
+				{
+					sub_mat.set(MatPos{row: 0, col: sub_col}, self.get(MatPos{row: 1, col: col}));
+					sub_mat.set(MatPos{row: 1, col: sub_col}, self.get(MatPos{row: 2, col: col}));
+				}
+			}
+			if i % 2 == 0
+			{
+				det += multiplier * sub_mat.determinate();
+			}
+			else
+			{
+				det -= multiplier * sub_mat.determinate();
+			}
+		}
+		return det;
+	}
+	
+	
+	
+	/// Finds the adjoint matrix.
+	/// The adjoint matrix replaces each cell with the determinate from looking at that cell.
+	///
+	/// # Example
+	/// ```
+	/// use star_tracker::util::units::Matrix;
+	/// use star_tracker::util::units::MatPos;
+	///	let mut mat3x3 : Matrix<3,3> = Matrix::new();
+	/// mat3x3.set(MatPos{row: 0, col: 0}, 5.0);
+	/// mat3x3.set(MatPos{row: 0, col: 1}, 4.0);
+	/// mat3x3.set(MatPos{row: 0, col: 2}, 3.0);
+	/// mat3x3.set(MatPos{row: 1, col: 0}, 8.0);
+	/// mat3x3.set(MatPos{row: 1, col: 1}, 9.0);
+	/// mat3x3.set(MatPos{row: 1, col: 2}, 10.0);
+	/// mat3x3.set(MatPos{row: 2, col: 0}, 100.0);
+	/// mat3x3.set(MatPos{row: 2, col: 1}, 2.0);
+	/// mat3x3.set(MatPos{row: 2, col: 2}, 6.0);
+	/// 
+	/// let mut res : Matrix<3,3> = Matrix::new();
+	/// res.set(MatPos{row: 0, col: 0}, 34.0);
+	/// res.set(MatPos{row: 0, col: 1}, 952.0);
+	/// res.set(MatPos{row: 0, col: 2}, -884.0);
+	/// res.set(MatPos{row: 1, col: 0}, -18.0);
+	/// res.set(MatPos{row: 1, col: 1}, -270.0);
+	/// res.set(MatPos{row: 1, col: 2}, 390.0);
+	/// res.set(MatPos{row: 2, col: 0}, 13.0);
+	/// res.set(MatPos{row: 2, col: 1}, -26.0);
+	/// res.set(MatPos{row: 2, col: 2}, 13.0);
+	/// 
+	/// assert_eq!(res, mat3x3.adjoint());
+	///
+	pub fn adjoint ( &self ) -> Matrix<3,3>
+	{
+		let mut adj : Matrix<3,3> = Matrix::new();
+		for r in 0..3
+		{
+			for c in 0..3
+			{
+				let mut sub_mat : Matrix<2,2> = Matrix::new();
+				
+				// create matrix
+				for row in 0..3
+				{
+					for col in 0..3
+					{
+						if row != r && c != col
+						{
+							let sub_row = if row < r { row } else { row - 1 };
+							let sub_col = if col < c { col } else { col - 1 };
+							
+							sub_mat.set(MatPos{row: sub_row, col: sub_col}, 
+									self.get(MatPos{row: row, col: col}));
+						}
+					}
+				}
+				let val = if (r+c) % 2 == 0 { sub_mat.determinate() }else{ -sub_mat.determinate() };
+				adj.set(MatPos{row: r, col: c}, val);
+			}
+		}
+		return adj;
+	}
+}
+
+impl Matrix <4, 4>
+{
+	/// Recursively finds the determinate.
+	///
+	/// # Example
+	/// ```
+	/// use star_tracker::util::units::Matrix;
+	/// use star_tracker::util::units::MatPos;
+	/// let mut mat4x4 : Matrix<4,4> = Matrix::new();
+	/// 
+	/// mat4x4.set(MatPos{row: 0, col: 0}, 5.0);
+	/// mat4x4.set(MatPos{row: 0, col: 1}, 10.0);
+	/// mat4x4.set(MatPos{row: 0, col: 2}, 50.0);
+	/// mat4x4.set(MatPos{row: 0, col: 3}, 2.0);
+	/// 
+	/// mat4x4.set(MatPos{row: 1, col: 0}, 8.0);
+	/// mat4x4.set(MatPos{row: 1, col: 1}, 20.0);
+	/// mat4x4.set(MatPos{row: 1, col: 2}, 60.0);
+	/// mat4x4.set(MatPos{row: 1, col: 3}, 11.0);
+	/// 
+	/// mat4x4.set(MatPos{row: 2, col: 0}, 100.0);
+	/// mat4x4.set(MatPos{row: 2, col: 1}, 30.0);
+	/// mat4x4.set(MatPos{row: 2, col: 2}, 70.0);
+	/// mat4x4.set(MatPos{row: 2, col: 3}, 103.0);
+	/// 
+	/// mat4x4.set(MatPos{row: 3, col: 0}, 50.0);
+	/// mat4x4.set(MatPos{row: 3, col: 1}, 40.0);
+	/// mat4x4.set(MatPos{row: 3, col: 2}, 80.0);
+	/// mat4x4.set(MatPos{row: 3, col: 3}, 53.0);
+	/// 
+	/// assert_eq!(mat4x4.determinate(), 340800.0);
+	/// ```
+	pub fn determinate ( &self ) -> Decimal
+	{
+		let mut det = 0.0;
+		for i in 0..4
+		{
+			let multiplier = self.get(MatPos{row: 0, col: i});
+			let mut sub_mat : Matrix<3,3> = Matrix::new();
+			for col in 0..4
+			{
+				let sub_col = if col <= i { col } else { col - 1 };
+				if col != i
+				{
+					sub_mat.set(MatPos{row: 0, col: sub_col}, self.get(MatPos{row: 1, col: col}));
+					sub_mat.set(MatPos{row: 1, col: sub_col}, self.get(MatPos{row: 2, col: col}));
+					sub_mat.set(MatPos{row: 2, col: sub_col}, self.get(MatPos{row: 3, col: col}));
+				}
+			}
+			if i % 2 == 0
+			{
+				det += multiplier * sub_mat.determinate();
+			}
+			else
+			{
+				det -= multiplier * sub_mat.determinate();
+			}
+		}
+		return det;
+	}
+}
 
 
 
@@ -220,20 +467,21 @@ impl <const S: usize> Matrix<S, S>
 impl <const ROW: usize, const COLUMN: usize> fmt::Display for Matrix<ROW, COLUMN> {
     fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result
 	{
+		write!(f, "\n")?;
 		for yy in 0..self.height()
 		{
-			write!(f, "|")?;
+			write!(f, "|\t")?;
 			for xx in 0..self.width()
 			{
 				let val = self.get(MatPos{col: xx, row: yy});
 				write!(f, "{}", val)?;
 				if xx < self.width() - 1
 				{
-					write!(f, ", ")?;
+					write!(f, ",\t")?;
 				}
 
 			}
-			write!(f, "|")?;
+			write!(f, "\t|")?;
 			write!(f, "\n")?;
 		}
 		return Ok(());
@@ -275,6 +523,27 @@ impl <const M: usize, const N: usize, const P: usize> Mul<Matrix<N, P>> for Matr
 		return mat;
 	}
 }
+
+
+impl <const ROW: usize, const COLUMN: usize> Add<Matrix<ROW, COLUMN>> for Matrix<ROW, COLUMN>
+{
+	type Output = Matrix<ROW, COLUMN>;
+	fn add ( self, rhs: Matrix<ROW, COLUMN> ) -> Matrix<ROW, COLUMN>
+	{
+		let mut mat : Matrix<ROW, COLUMN> = Matrix::new();
+		for row in 0..ROW
+		{
+			for col in 0..COLUMN
+			{
+				let val = self.get(MatPos{row: row, col: col}) + rhs.get(MatPos{row:row, col:col});
+				mat.set(MatPos{row: row, col: col}, val);
+			}
+		}
+		return mat;
+	}
+	
+}
+
 
 //###############################################################################################//
 //							---	Multiply/Divide Scalar ---
@@ -364,7 +633,7 @@ mod test
 	use util::aliases::Decimal;
 	use util::units::Matrix;
 	use util::units::MatPos;
-	use util::err::Errors;
+	// use util::err::Errors;
 
 	#[test]
 	fn test_new ( )
@@ -507,7 +776,7 @@ mod test
 		insert.set(MatPos{row: 2, col: 0}, 5.0);
 		insert.set(MatPos{row: 2, col: 1}, 6.0);
 		
-		mat4x4.insert(MatPos{row: 1, col: 2}, &insert).ok();
+		mat4x4.insert(MatPos{row: 1, col: 2}, &insert);//.ok();
 		
 		
 		assert_eq!(mat4x4.get(MatPos{row: 0, col: 0}), 0.0); // first element is 1,2
@@ -520,33 +789,53 @@ mod test
 	}
 
 
+	// #[test]
+	// fn test_insert_invalid_y ( )
+	// {
+	// 	let mut mat4x4 : Matrix<4,4> = Matrix::new();
+	// 	let i_3 : Matrix<3,2> = Matrix::new();
+	// 	let i_4 : Matrix<4,2> = Matrix::new();
+	// 	let i_5 : Matrix<5,2> = Matrix::new();
+	// 
+	// 	assert_eq!(mat4x4.insert(MatPos{row: 2, col: 2}, &i_3), Err(Errors::OutOfBoundsY));
+	// 	assert_eq!(mat4x4.insert(MatPos{row: 1, col: 2}, &i_4), Err(Errors::OutOfBoundsY));
+	// 	assert_eq!(mat4x4.insert(MatPos{row: 0, col: 2}, &i_5), Err(Errors::OutOfBoundsY));
+	// }
+	// 
+	// 
+	// #[test]
+	// fn test_insert_invalid_x ( )
+	// {
+	// 	let mut mat4x4 : Matrix<4,4> = Matrix::new();
+	// 	let i_3 : Matrix<1,3> = Matrix::new();
+	// 	let i_4 : Matrix<1,4> = Matrix::new();
+	// 	let i_5 : Matrix<1,5> = Matrix::new();
+	// 
+	// 	assert_eq!(mat4x4.insert(MatPos{row: 0, col: 2}, &i_3), Err(Errors::OutOfBoundsX));
+	// 	assert_eq!(mat4x4.insert(MatPos{row: 0, col: 1}, &i_4), Err(Errors::OutOfBoundsX));
+	// 	assert_eq!(mat4x4.insert(MatPos{row: 0, col: 0}, &i_5), Err(Errors::OutOfBoundsX));
+	// }
+
+
+	//
+	// fn identity (  ) -> Matrix<S, S>
+	//
+
 	#[test]
-	fn test_insert_invalid_y ( )
+	fn test_identity ( )
 	{
-		let mut mat4x4 : Matrix<4,4> = Matrix::new();
-		let i_3 : Matrix<3,2> = Matrix::new();
-		let i_4 : Matrix<4,2> = Matrix::new();
-		let i_5 : Matrix<5,2> = Matrix::new();
-
-		assert_eq!(mat4x4.insert(MatPos{row: 2, col: 2}, &i_3), Err(Errors::OutOfBoundsY));
-		assert_eq!(mat4x4.insert(MatPos{row: 1, col: 2}, &i_4), Err(Errors::OutOfBoundsY));
-		assert_eq!(mat4x4.insert(MatPos{row: 0, col: 2}, &i_5), Err(Errors::OutOfBoundsY));
+		let _mat_0 : Matrix<0, 0> = Matrix::identity();
+		let mat_1 : Matrix<1, 1> = Matrix::identity();
+		let mat_2 : Matrix<2, 2> = Matrix::identity();
+		
+		assert_eq!(mat_1.get(MatPos{row: 0, col: 0}), 1.0);
+		
+		assert_eq!(mat_2.get(MatPos{row: 0, col: 0}), 1.0);
+		assert_eq!(mat_2.get(MatPos{row: 1, col: 0}), 0.0);
+		assert_eq!(mat_2.get(MatPos{row: 0, col: 1}), 0.0);
+		assert_eq!(mat_2.get(MatPos{row: 1, col: 1}), 1.0);
 	}
-
-
-	#[test]
-	fn test_insert_invalid_x ( )
-	{
-		let mut mat4x4 : Matrix<4,4> = Matrix::new();
-		let i_3 : Matrix<1,3> = Matrix::new();
-		let i_4 : Matrix<1,4> = Matrix::new();
-		let i_5 : Matrix<1,5> = Matrix::new();
-
-		assert_eq!(mat4x4.insert(MatPos{row: 0, col: 2}, &i_3), Err(Errors::OutOfBoundsX));
-		assert_eq!(mat4x4.insert(MatPos{row: 0, col: 1}, &i_4), Err(Errors::OutOfBoundsX));
-		assert_eq!(mat4x4.insert(MatPos{row: 0, col: 0}, &i_5), Err(Errors::OutOfBoundsX));
-	}
-
+	
 
 	//
 	// fn trace ( &self ) -> Decimal
@@ -573,6 +862,139 @@ mod test
 		assert_eq!(mat4x4.trace(), 11.0 + 22.0 + 33.0 + 44.0);
 	}
 
+
+	///
+	/// fn from_decimal ( Decimal ) -> Matrix<1,1>
+	/// 
+
+	#[test]
+	fn test_from_decimal_1x1 ( )
+	{
+		let mat1x1 : Matrix<1,1> = Matrix::from_decimal(100.0);
+		assert_eq!(mat1x1.get(MatPos{row: 0, col: 0}), 100.0);
+	}
+	
+	
+	
+	//
+	// fn to_decimal ( &self ) -> Decimal
+	//
+	#[test]
+	fn test_to_decimal_1x1 ( )
+	{
+		let mut mat1x1 : Matrix<1,1> = Matrix::new();
+		mat1x1.set(MatPos{row: 0, col: 0}, 100.0);
+		assert_eq!(mat1x1.to_decimal(), 100.0);
+	}
+
+	//
+	// fn determinate ( &self ) -> Decimal
+	// For:
+	// <1,1>
+	// <2,2>
+	// <3,3>
+	// <4,4>
+
+	#[test]
+	fn test_determinate_1x1 ( )
+	{
+		let mut mat1x1 : Matrix<1,1> = Matrix::new();
+		mat1x1.set(MatPos{row: 0, col: 0}, 23.3);
+		assert_eq!(mat1x1.determinate(), 23.3);
+	}
+	
+	#[test]
+	fn test_determinate_2x2 ( )
+	{
+		let mut mat2x2 : Matrix<2,2> = Matrix::new();
+		mat2x2.set(MatPos{row: 0, col: 0}, 2.0);
+		mat2x2.set(MatPos{row: 1, col: 0}, 3.0);
+		mat2x2.set(MatPos{row: 0, col: 1}, 4.0);
+		mat2x2.set(MatPos{row: 1, col: 1}, 5.0);
+		assert_eq!(mat2x2.determinate(), 2.0 * 5.0 - 3.0 * 4.0);
+		assert_eq!(mat2x2.determinate(), -2.0);
+	}
+
+	#[test]
+	fn test_determinate_3x3 ( )
+	{
+		let mut mat3x3 : Matrix<3,3> = Matrix::new();
+		mat3x3.set(MatPos{row: 0, col: 0}, 5.0);
+		mat3x3.set(MatPos{row: 0, col: 1}, 4.0);
+		mat3x3.set(MatPos{row: 0, col: 2}, 3.0);
+		mat3x3.set(MatPos{row: 1, col: 0}, 8.0);
+		mat3x3.set(MatPos{row: 1, col: 1}, 9.0);
+		mat3x3.set(MatPos{row: 1, col: 2}, 10.0);
+		mat3x3.set(MatPos{row: 2, col: 0}, 100.0);
+		mat3x3.set(MatPos{row: 2, col: 1}, 2.0);
+		mat3x3.set(MatPos{row: 2, col: 2}, 6.0);
+		assert_eq!(mat3x3.determinate(), 1326.0);
+	}
+
+
+	#[test]
+	fn test_determinate_4x4 ( )
+	{
+		let mut mat4x4 : Matrix<4,4> = Matrix::new();
+		
+		mat4x4.set(MatPos{row: 0, col: 0}, 5.0);
+		mat4x4.set(MatPos{row: 0, col: 1}, 10.0);
+		mat4x4.set(MatPos{row: 0, col: 2}, 50.0);
+		mat4x4.set(MatPos{row: 0, col: 3}, 2.0);
+		
+		mat4x4.set(MatPos{row: 1, col: 0}, 8.0);
+		mat4x4.set(MatPos{row: 1, col: 1}, 20.0);
+		mat4x4.set(MatPos{row: 1, col: 2}, 60.0);
+		mat4x4.set(MatPos{row: 1, col: 3}, 11.0);
+		
+		mat4x4.set(MatPos{row: 2, col: 0}, 100.0);
+		mat4x4.set(MatPos{row: 2, col: 1}, 30.0);
+		mat4x4.set(MatPos{row: 2, col: 2}, 70.0);
+		mat4x4.set(MatPos{row: 2, col: 3}, 103.0);
+		
+		mat4x4.set(MatPos{row: 3, col: 0}, 50.0);
+		mat4x4.set(MatPos{row: 3, col: 1}, 40.0);
+		mat4x4.set(MatPos{row: 3, col: 2}, 80.0);
+		mat4x4.set(MatPos{row: 3, col: 3}, 53.0);
+		
+		assert_eq!(mat4x4.determinate(), 340800.0);
+	}
+
+
+	//
+	// fn adjoint ( &self ) -> Decimal
+	// For:
+	// <3,3>
+
+
+	#[test]
+	fn test_adjoint ( )
+	{
+		let mut mat3x3 : Matrix<3,3> = Matrix::new();
+		mat3x3.set(MatPos{row: 0, col: 0}, 5.0);
+		mat3x3.set(MatPos{row: 0, col: 1}, 4.0);
+		mat3x3.set(MatPos{row: 0, col: 2}, 3.0);
+		mat3x3.set(MatPos{row: 1, col: 0}, 8.0);
+		mat3x3.set(MatPos{row: 1, col: 1}, 9.0);
+		mat3x3.set(MatPos{row: 1, col: 2}, 10.0);
+		mat3x3.set(MatPos{row: 2, col: 0}, 100.0);
+		mat3x3.set(MatPos{row: 2, col: 1}, 2.0);
+		mat3x3.set(MatPos{row: 2, col: 2}, 6.0);
+		
+		let mut res : Matrix<3,3> = Matrix::new();
+		res.set(MatPos{row: 0, col: 0}, 34.0);
+		res.set(MatPos{row: 0, col: 1}, 952.0);
+		res.set(MatPos{row: 0, col: 2}, -884.0);
+		res.set(MatPos{row: 1, col: 0}, -18.0);
+		res.set(MatPos{row: 1, col: 1}, -270.0);
+		res.set(MatPos{row: 1, col: 2}, 390.0);
+		res.set(MatPos{row: 2, col: 0}, 13.0);
+		res.set(MatPos{row: 2, col: 1}, -26.0);
+		res.set(MatPos{row: 2, col: 2}, 13.0);
+		
+		
+		assert_eq!(res, mat3x3.adjoint());
+	}
 
 
 
@@ -652,7 +1074,34 @@ mod test
 
 
 
-
+	#[test]
+	fn test_add_mat ( )
+	{
+		let mut mat_a : Matrix<3, 2> = Matrix::new();
+		let mut mat_b : Matrix<3, 2> = Matrix::new();
+		
+		mat_a.set(MatPos{row: 0, col: 0}, 1.0);
+		mat_a.set(MatPos{row: 1, col: 0}, 2.0);
+		mat_a.set(MatPos{row: 2, col: 0}, 3.0);
+		mat_a.set(MatPos{row: 0, col: 1}, 4.0);
+		mat_a.set(MatPos{row: 1, col: 1}, 5.0);
+		mat_a.set(MatPos{row: 2, col: 1}, 6.0);
+		
+		mat_b.set(MatPos{row: 0, col: 0}, 0.1);
+		mat_b.set(MatPos{row: 1, col: 0}, 0.2);
+		mat_b.set(MatPos{row: 2, col: 0}, 0.3);
+		mat_b.set(MatPos{row: 0, col: 1}, 0.4);
+		mat_b.set(MatPos{row: 1, col: 1}, 0.5);
+		mat_b.set(MatPos{row: 2, col: 1}, 0.6);
+	
+		let mat_c = mat_a + mat_b;
+		assert_eq!(mat_c.get(MatPos{row: 0, col: 0}), 1.1);
+		assert_eq!(mat_c.get(MatPos{row: 1, col: 0}), 2.2);
+		assert_eq!(mat_c.get(MatPos{row: 2, col: 0}), 3.3);
+		assert_eq!(mat_c.get(MatPos{row: 0, col: 1}), 4.4);
+		assert_eq!(mat_c.get(MatPos{row: 1, col: 1}), 5.5);
+		assert_eq!(mat_c.get(MatPos{row: 2, col: 1}), 6.6);
+	}
 
 
 

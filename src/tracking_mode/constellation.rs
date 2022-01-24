@@ -16,7 +16,6 @@ use crate::util::list::ListIterator;
 
 use crate::config::TrackingModeConsts;
 
-
 impl Constellation
 {
 /// Creates unique sets of TrackingMode's from the location of the stars on an equatorial plane.
@@ -34,7 +33,8 @@ fn new <T: TrackingModeConsts> (
 									gen_pyr  : &mut dyn PyramidConstruct<T>,
 									gen_spec : &mut dyn SpecularityConstruct<T>
 								) -> Constellation
-	where T: 'static + TrackingModeConsts, ArrayList<(), {T::PAIRS_MAX}> : Sized, 
+	where T: 'static + TrackingModeConsts, 
+	ArrayList<(), {T::PAIRS_MAX}> : Sized, 
 	ArrayList<(), {T::TRIANGLES_MAX}> : Sized
 // where T: TrackingModeConsts, [(); T::PAIRS_MAX]: Sized
 {

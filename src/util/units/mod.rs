@@ -6,7 +6,9 @@ pub mod angles;
 pub mod cartesian3d;
 pub mod quaternion;
 pub mod equatorial;
+pub mod crp;
 pub mod matrix;
+pub mod angle_axis;
 use serde::Deserialize;
 
 use super::aliases::Decimal;
@@ -81,6 +83,19 @@ pub struct Equatorial
 
 
 //###############################################################################################//
+//										--- Angle Axis ---
+//###############################################################################################//
+/// An axis describing the pivot point and an angle specifying how much to rotate around.
+/// This has a singularity at an angle of 0 and 180 degrees.
+#[derive(Copy, Clone)]
+pub struct AngleAxis
+{
+	pub angle : Radians,
+	pub axis  : Cartesian3D,
+}
+
+
+//###############################################################################################//
 //										---	Quaternion ---
 //###############################################################################################//
 /// Represents a 3D rotation without singularity.
@@ -95,6 +110,25 @@ pub struct Quaternion
 }
 
 
+//###############################################################################################//
+//										---	classical rodrigues parameters ---
+//###############################################################################################//
+/// A CRP is an old method of describing a rotation.  
+/// It is considered as a sphere cut in half on a plane.  
+/// The top of a hemisphere is projecting onto the plane where the point is.  
+/// There is a singularity if the point to project is at the projection point as it cannot be projected on the plane (infinity).  
+/// There is not much information on this.  
+#[derive(Debug, Copy, Clone)]
+pub struct CRP
+{
+	pub x : Decimal,
+	pub y : Decimal,
+	pub z : Decimal,
+}
+
+
+
+
 
 
 //###############################################################################################//
@@ -104,7 +138,7 @@ pub struct Quaternion
 /// W is the width.
 /// H is the height.
 #[derive(Copy, Clone)]
-pub struct Matrix <const ROW : usize, const COLUMN : usize>//<const 'a, size : MatSize<'a>>//<const W : usize, const H : usize>
+pub struct Matrix <const ROW : usize, const COLUMN : usize>
 {
 	/// The matrix ArrayList
 	matrix : [[Decimal; COLUMN]; ROW],

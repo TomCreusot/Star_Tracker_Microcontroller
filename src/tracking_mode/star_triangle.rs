@@ -21,6 +21,7 @@ use crate::util::err::Error;
 use crate::config::TrackingModeConsts;
 
 impl <T: 'static> TriangleConstruct <T> for StarTriangle<usize>
+	// where T: TrackingModeConsts
 	// where T: TrackingModeConsts, [(); T::PAIRS_MAX]: Sized
 	where T: TrackingModeConsts, ArrayList<(), {T::PAIRS_MAX}> : Sized
 {
@@ -347,7 +348,7 @@ mod test
 		database.expect_find_close_ref()
 			.times(3)
 			.returning(move |_, found| {
-				for e in ALL[db_idx] {found.push_back(e);} db_idx+=1;
+				for e in ALL[db_idx].iter() {found.push_back(*e);} db_idx+=1;
 			})
 			.withf(|find, _| find.0 < 0.001);
 		TriangleConstruct::<MockConfigBig>::

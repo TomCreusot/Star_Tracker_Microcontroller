@@ -4,7 +4,9 @@ use std::ops::Mul;
 use std::ops::Add;
 use std::ops::Sub;
 use std::ops::Div;
-use super::{Degrees, Radians, Quaternion, Cartesian3D, Hours, Equatorial, super::aliases::Decimal};
+use super::{
+	Degrees, Radians, Hours,
+	Quaternion, Cartesian3D, Equatorial, AngleAxis, super::aliases::Decimal};
 
 //###############################################################################################//
 //										---	Degrees ---
@@ -94,12 +96,25 @@ impl PartialEq for Equatorial {
 
 
 	
+
 //###############################################################################################//
-//									---	Quaternion ---
+//									---	Hours ---
 //###############################################################################################//	
 
 impl PartialEq for Hours {
 	fn eq ( &self, other: &Self ) -> bool { return (self.0 - other.0).abs() < 0.00001; }
+}
+
+
+//###############################################################################################//
+//									---	angle_axis ---
+//###############################################################################################//	
+
+impl PartialEq for AngleAxis {
+	fn eq ( &self, other: &Self ) -> bool 
+	{ 
+		return self.angle == other.angle && self.axis == other.axis; 
+	}
 }
 
 	

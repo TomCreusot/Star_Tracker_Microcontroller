@@ -1,7 +1,7 @@
 //! Implementation for KernelIterator
 use super::StarPair;
 
-impl <T> StarPair <T> where T : PartialEq + Copy
+impl <T> StarPair <T> where T : PartialEq + Copy + std::fmt::Debug
 {
 	/// Finds the element which is unique to both pairs.
 	/// If multiple similarities, returns the first found.

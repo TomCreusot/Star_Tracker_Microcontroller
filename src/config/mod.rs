@@ -2,12 +2,12 @@
 //! Change the appropreate values to calibrate the software to your setup.
 //! Most of these values are only relevent for a microcontroller.
 //! The reason for the microcontroller variables is for memory, this can be ignored for a computer.
+//! The following methodology is implemented by associated consts
 use crate::util::aliases::Decimal;
 // use crate::util::aliases::UInt;
 use crate::util::units::Radians;
 use crate::util::units::Pixel;
 use crate::util::aliases::M_PI;
-
 
 
 
@@ -56,6 +56,29 @@ const HYG_DATABASE_HEADER_SPECULARITY		: &'static str = "spect";
 //###############################################################################################//
 //###############################################################################################//
 //
+//									Attitude Determination
+// ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+// - QUEST.
+//
+//
+//###############################################################################################//
+//###############################################################################################//
+
+impl AttitudeDeterminationConsts for AttitudeDeterminationConstsStruct
+{
+/// For quest algorithm, to find the correct attitude, the neuton raphson method is used.  
+/// This method will loop and slowely decrease the gap between the current and previous prediction.
+/// Acheiving perfect precision comparing the 2 values will take up computation power.
+/// By specifying a precision, the computational requirements are lowered.
+const LAMBDA_PRECISION		:	Decimal		= 0.00001;
+	
+}
+
+
+
+//###############################################################################################//
+//###############################################################################################//
+//
 //										Tracking Mode
 // ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 // - Pyramid tracking method.
@@ -67,7 +90,7 @@ const HYG_DATABASE_HEADER_SPECULARITY		: &'static str = "spect";
 impl TrackingModeConstructConsts for TrackingModeConstructConstsStruct
 {
 /// The maximum magnitude to be stored in the database.
-const MAGNITUDE_MAX		: Decimal						= 1.0;//5.5;
+const MAGNITUDE_MAX			: Decimal					= 1.0;//5.5;
 
 /// This value should be the maximum inaccuracy between pixels.
 /// When searching the database, the database will consider anything within this range as valid.
@@ -157,12 +180,14 @@ const BLOB_SIZE_MAX				: usize					= 50;
 //
 //
 //###############################################################################################//
-
+// This method uses associated constants
 
 pub struct ImageProcessingConstsStruct();
 pub struct NixConstsStruct();
 pub struct TrackingModeConstructConstsStruct();
 pub struct TrackingModeConstsStruct();
+pub struct AttitudeDeterminationConstsStruct();
+
 
 /// These constants are required for the image processing part of the application.
 pub trait ImageProcessingConsts
@@ -249,4 +274,16 @@ pub trait TrackingModeConsts
 	/// HOWEVER if a triangles area is too small (i.e. a strait line or small), any inaccuracy could cause it to be considered flipped.
 	/// Use this to define the minimum specularity until the specularity is unimportant.
 	const SPECULARITY_MIN			: Decimal;
+}
+
+
+/// When performing attitude determination
+pub trait AttitudeDeterminationConsts
+{
+/// For quest algorithm, to find the correct attitude, the neuton raphson method is used.  
+/// This method will loop and slowely decrease the gap between the current and previous prediction.
+/// Acheiving perfect precision comparing the 2 values will take up computation power.
+/// By specifying a precision, the computational requirements are lowered.
+const LAMBDA_PRECISION		:	Decimal;
+	
 }

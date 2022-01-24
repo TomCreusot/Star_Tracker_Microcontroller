@@ -1,9 +1,41 @@
 //! The implementation of Cartesian3D.
 use crate::util::aliases::Decimal;
-use super::{Equatorial, Cartesian3D, Radians};
+use crate::util::aliases::M_PI;
+use super::{Equatorial, Cartesian3D, Radians, Matrix, MatPos};
 
 impl Cartesian3D
 {
+	/// Finds the magnitude of the vector.
+	/// # Example
+	/// ```
+	/// use star_tracker::util::units::Cartesian3D;
+	/// let c = Cartesian3D{x: 10.3, y: 23.1, z: 12.3};
+	/// assert!((c.magnitude() - 28.124544440).abs() < 0.00001);
+	/// ```
+	pub fn magnitude ( &self ) -> Decimal
+	{
+		return (self.x.powf(2.0) + self.y.powf(2.0) + self.z.powf(2.0)).sqrt();
+	}
+	
+	
+	/// Normalizes the vector so the magnitude is 1.
+	/// # Example
+	/// ```
+	/// use star_tracker::util::units::Cartesian3D;
+	/// let mut c = Cartesian3D{x: 10.3, y: 23.1, z: 12.3};
+	/// let c_out = Cartesian3D{x: 0.366228, y: 0.8213466, z: 0.43734};
+	/// c.normalize();
+	/// assert_eq!(c, c_out);
+	/// ```
+	pub fn normalize ( &mut self )
+	{
+		let magnitude  = self.magnitude();
+		self.x /= magnitude;
+		self.y /= magnitude;
+		self.z /= magnitude;
+	}
+	
+	
 	/// Finds the cross product between self and the input object.
 	/// # Arguments
 	/// * `other` - The other cartesian3d.
@@ -49,6 +81,46 @@ impl Cartesian3D
 
 
 
+	/// Finds the angle between the 2 points on a sphere.
+	/// # Example
+	/// ```
+	/// use star_tracker::util::units::{Cartesian3D, Degrees};
+	/// let mut car1 = Cartesian3D { x: 0.0, y: 1.0, z: 0.0 };
+	/// let mut car2 = Cartesian3D { x: 1.0, y: 0.0, z: 0.0 };
+	/// assert_eq!(car1.angle_distance(car2), Degrees(90.0).to_radians());
+	/// ```
+	pub fn angle_distance ( &self, oth: Cartesian3D ) -> Radians
+	{
+		let dot = self.dot(&oth);
+		let mag_cur = (self.x.powf(2.0) + self.y.powf(2.0) + self.z.powf(2.0)).sqrt();
+		let mag_oth = (oth.x.powf(2.0) + oth.y.powf(2.0) + oth.z.powf(2.0)).sqrt();
+		return Radians((dot / (mag_cur * mag_oth)).acos());
+	}
+
+
+
+	/// Converts the coordinates into a matrix form [x, y, z].
+	/// # Example
+	/// ```
+	/// use star_tracker::util::units::Cartesian3D;
+	/// use star_tracker::util::units::Matrix;
+	/// use star_tracker::util::units::MatPos;
+	/// let c = Cartesian3D {x: 1.0, y: 2.0, z: 3.0};
+	/// let m : Matrix<1,3> = c.to_matrix();
+	/// assert_eq!(c.x, m.get(MatPos{row: 0, col: 0}));
+	/// assert_eq!(c.y, m.get(MatPos{row: 0, col: 1}));
+	/// assert_eq!(c.z, m.get(MatPos{row: 0, col: 2}));
+	/// ```
+	pub fn to_matrix ( &self ) -> Matrix<1,3>
+	{
+		let mut mat : Matrix<1,3> = Matrix::new();
+		mat.set(MatPos{row: 0, col: 0}, self.x);
+		mat.set(MatPos{row: 0, col: 1}, self.y);
+		mat.set(MatPos{row: 0, col: 2}, self.z);
+		return mat;
+	}
+
+
 
 	/// Converts cartesian3D to equatorial coordinates.
 	/// # Arguments
@@ -73,8 +145,6 @@ impl Cartesian3D
 	/// ```
 	pub fn to_equatorial ( &self ) -> Equatorial
 	{
-		use std::f32::consts::PI;
-
 		// ra = atan(y/x)
 		// dec = acos(z / sqrt(x^2 + y ^2 + z^2)) = atan(sqrt(x^2 + y^2) / z)
 		let mut ra = 0.0;
@@ -87,7 +157,7 @@ impl Cartesian3D
 		{
 			if self.x == 0.0 || self.y == 0.0
 			{
-				dec = (PI / 2.0).copysign(self.z);
+				dec = (M_PI / 2.0).copysign(self.z);
 			}
 			else
 			{
@@ -113,14 +183,38 @@ impl Cartesian3D
 #[cfg(test)]
 mod test
 {
-	use std::f32::consts::PI;
 	use util::units::Cartesian3D;
+	use util::units::Matrix;
+	use util::units::MatPos;
 	use util::units::Radians;
+	use util::units::Degrees;
+	use util::aliases::M_PI;
 //###############################################################################################//
 //										---	Equatorial ---
 //###############################################################################################//
 
-
+	//
+	// magnitude ( &self ) -> Decimal
+	//
+	#[test]
+	fn test_magnitude ( )
+	{
+		let c = Cartesian3D{x: 10.3, y: 23.1, z: 12.3};
+		assert!((c.magnitude() - 28.1245463).abs() < 0.00001);
+	}
+	
+	
+	//
+	// normalize ( &self )
+	//
+	#[test]
+	fn test_normalize ( )
+	{
+		let mut c = Cartesian3D{x: 10.3, y: 23.1, z: 12.3};
+		let c_out = Cartesian3D{x: 0.366228, y: 0.8213466, z: 0.43734};
+		c.normalize();
+		assert_eq!(c, c_out);
+	}
 
 	//
 	// cross ( &Cartesian3D ) -> Cartesian3D
@@ -195,6 +289,54 @@ mod test
 	}
 
 
+
+
+
+
+
+
+
+	//
+	// angular_distance ( Cartesian3D ) -> Radians
+	//
+
+	#[test]
+	fn test_angle_distance ( )
+	{
+		let car1 = Cartesian3D { x: 0.0, y: 1.0, z: 0.0 };
+		let mut car2 = Cartesian3D { x: 1.0, y: 0.0, z: 0.0 };
+		assert_eq!(car1.angle_distance(car2), Degrees(90.0).to_radians());
+		car2.x = 0.0;
+		car2.y = 1.0;
+		assert_eq!(car1.angle_distance(car2), Degrees(0.0).to_radians());
+		car2.x = 0.0;
+		car2.y = -1.0;
+		assert_eq!(car1.angle_distance(car2), Degrees(180.0).to_radians());
+	}
+
+
+
+
+
+
+
+
+
+
+	//
+	// to_matrix ( &self ) -> Matrix<1,3>
+	//
+
+	#[test]
+	fn test_to_matrix ( )
+	{
+		let c = Cartesian3D {x: 1.0, y: 2.0, z: 3.0};
+		let m : Matrix<1,3> = c.to_matrix();
+		assert_eq!(c.x, m.get(MatPos{row: 0, col: 0}));
+		assert_eq!(c.y, m.get(MatPos{row: 0, col: 1}));
+		assert_eq!(c.z, m.get(MatPos{row: 0, col: 2}));
+	}
+	
 	//
 	//  to_equatorial ( ) -> Equatorial
 	//
@@ -203,8 +345,8 @@ mod test
 	{
 		let mut c = Cartesian3D { x: 0.5, y: 0.5, z: -0.7071067812 };
 		let mut e = c.to_equatorial();
-		assert_eq!(e.ra,  Radians(PI / 4.0));
-		assert_eq!(e.dec, Radians(-PI / 4.0));
+		assert_eq!(e.ra,  Radians(M_PI / 4.0));
+		assert_eq!(e.dec, Radians(-M_PI / 4.0));
 
 		c = Cartesian3D { x: 3.0, y: 4.0, z: 5.0 };
 		e = c.to_equatorial();
@@ -218,7 +360,7 @@ mod test
 	{
 		let c = Cartesian3D { x: 0.5, y: 0.5, z: 0.0 };
 		let e = c.to_equatorial();
-		assert_eq!(e.ra,  Radians(PI / 4.0));
+		assert_eq!(e.ra,  Radians(M_PI / 4.0));
 		assert_eq!(e.dec, Radians(0.0));
 	}
 
@@ -228,11 +370,11 @@ mod test
 		let mut c = Cartesian3D { x: 0.0, y: 0.0, z: 10000.0 };
 		let mut e = c.to_equatorial();
 		assert_eq!(e.ra,  Radians(0.0));
-		assert_eq!(e.dec, Radians(PI / 2.0));
+		assert_eq!(e.dec, Radians(M_PI / 2.0));
 		c = Cartesian3D { x: 0.0, y: 0.0, z: -10000.0 };
 		 e = c.to_equatorial();
 		assert_eq!(e.ra,  Radians(0.0));
-		assert_eq!(e.dec, Radians(-PI / 2.0));
+		assert_eq!(e.dec, Radians(-M_PI / 2.0));
 	}
 
 

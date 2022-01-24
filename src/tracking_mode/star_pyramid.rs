@@ -17,7 +17,8 @@ use crate::util::err::Error;
 
 
 impl <T: 'static> PyramidConstruct <T>  for StarPyramid<usize>
-		// where T: TrackingModeConsts, [(); T::PAIRS_MAX]: Sized
+		// where T: TrackingModeConsts,
+		// [(); T::PAIRS_MAX] : Sized
 		where T: TrackingModeConsts, ArrayList<(), {T::PAIRS_MAX}> : Sized
 {
 	/// Finds the pilot 
