@@ -332,10 +332,11 @@ mod test
 	use crate::image_processing::{Image, BasicImage, Blob};
 	use crate::util::list::{List, ArrayList};
 	use crate::util::{units::PixelWeighted, units::Pixel, aliases::Decimal};
+	use util::test::DECIMAL_PRECISION_TEST;
 	
 	fn assert_close ( a: Decimal, b: Decimal )
 	{
-		if (a - b).abs() > 0.00001
+		if (a - b).abs() > DECIMAL_PRECISION_TEST
 		{
 			panic!("\n\nassert_close failed: \n\tleft: `{}`\n\tright: `{}`\n\n", a, b);
 		}

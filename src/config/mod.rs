@@ -4,6 +4,7 @@
 //! The reason for the microcontroller variables is for memory, this can be ignored for a computer.
 //! The following methodology is implemented by associated consts
 use crate::util::aliases::Decimal;
+use crate::util::aliases::DECIMAL_PRECISION;
 // use crate::util::aliases::UInt;
 use crate::util::units::Radians;
 use crate::util::units::Pixel;
@@ -70,7 +71,7 @@ impl AttitudeDeterminationConsts for AttitudeDeterminationConstsStruct
 /// This method will loop and slowely decrease the gap between the current and previous prediction.
 /// Acheiving perfect precision comparing the 2 values will take up computation power.
 /// By specifying a precision, the computational requirements are lowered.
-const LAMBDA_PRECISION		:	Decimal		= 0.00001;
+const LAMBDA_PRECISION		:	Decimal		= DECIMAL_PRECISION;
 	
 }
 

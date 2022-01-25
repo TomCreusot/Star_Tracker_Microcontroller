@@ -18,17 +18,17 @@ use super::aliases::Decimal;
 //										---	Angles ---
 //###############################################################################################//
 /// An angle in degrees.
-#[derive(Debug, Copy, Clone)]//, PartialEq)]
+#[derive(Debug, Copy, Clone, PartialOrd)]//, PartialEq)]
 pub struct Degrees ( pub Decimal );
 
 /// An angle in radians.
-#[derive(Debug, Copy, Clone)]//, PartialEq)]
+#[derive(Debug, Copy, Clone, PartialOrd)]//, PartialEq)]
 #[derive(Deserialize)]
 pub struct Radians ( pub Decimal );
 
 
 /// An angle in 24 hours.
-#[derive(Debug, Copy, Clone)]//, PartialEq)]
+#[derive(Debug, Copy, Clone, PartialOrd)]//, PartialEq)]
 pub struct Hours ( pub Decimal );
 
 

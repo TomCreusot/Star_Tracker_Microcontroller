@@ -8,6 +8,7 @@ use crate::config::NixConsts;
 
 use crate::nix::Star;
 // use crate::nix::SerialStar;
+use crate::util::test::TestEqual;
 use crate::util::aliases::Decimal;
 use crate::util::units::Equatorial;
 use crate::util::units::Radians;
@@ -44,27 +45,16 @@ impl Ord for Star
 }
 
 impl Eq for Star {}
-// {
-// 	fn eq ( &self, other: &self ) -> bool
-// 	{
-// 		return 
-// 		((self.magnitude - other.magnitude).abs() < 0.00001 ) &&
-// 		((self.position.ra.0 - other.position.ra.0).abs() < 0.00001 ) &&
-// 		((self.position.dec.0 - other.position.dec.0).abs() < 0.00001 ) &&
-// 		((self.spec - other.spec).abs() < 0.00001 );
-// 	}
-// }
-
 
 impl PartialEq for Star
 {
 	fn eq ( &self, other: &Self ) -> bool
 	{
 		return 
-		((self.mag - other.mag).abs() < 0.00001 ) &&
-		((self.pos.ra.0 - other.pos.ra.0).abs() < 0.00001 ) &&
-		((self.pos.dec.0 - other.pos.dec.0).abs() < 0.00001 ) &&
-		(self.spec == other.spec );
+		self.mag.test_equal(&other.mag) &&
+		self.pos.ra.test_equal(&other.pos.ra) &&
+		self.pos.dec.test_equal(&other.pos.dec) &&
+		self.spec == other.spec;
 	}
 }
 

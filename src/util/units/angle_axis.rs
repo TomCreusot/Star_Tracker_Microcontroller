@@ -1,12 +1,15 @@
 use super::AngleAxis;
 use super::Quaternion;
-use super::Cartesian3D;
-use super::Radians;
+
+use util::test::TestEqual;
+use util::aliases::DECIMAL_PRECISION;
 use std::fmt;
+
+
 
 impl AngleAxis
 {
-	/// Constructs an angle axis from a quaterion.
+	/// Constructs a quaternion from this angle axis.
 	/// # Example
 	/// ```
 	/// use star_tracker::util::aliases::M_PI;
@@ -15,21 +18,20 @@ impl AngleAxis
 	///	let angle = Radians(M_PI / 3.1);
 	///	axis.normalize();
 	///	let angle_axis : AngleAxis = AngleAxis{angle: angle, axis: axis};
-	///	assert_eq!(angle_axis, AngleAxis::new(&Quaternion::new(angle_axis)));
+	///	assert_eq!(angle_axis, angle_axis.to_quaternion().to_angle_axis());
 	/// ```
-	pub fn new ( quad: &Quaternion ) -> AngleAxis
+	pub fn to_quaternion ( &self ) -> Quaternion
 	{
-		let angle = Radians(2.0 * quad.w.acos()); 
-		let axis = Cartesian3D
-		{
-			x: quad.x / (1.0-quad.w*quad.w).sqrt(),
-			y: quad.y / (1.0-quad.w*quad.w).sqrt(),
-			z: quad.z / (1.0-quad.w*quad.w).sqrt(),
+		assert!(self.axis.magnitude().test_close(&1.0, DECIMAL_PRECISION), "Not unit vector");
+		return Quaternion {
+			w: (self.angle / 2.0).0.cos(),
+			x: (self.angle / 2.0).0.sin() * self.axis.x,
+			y: (self.angle / 2.0).sin() * self.axis.y,
+			z: (self.angle / 2.0).sin() * self.axis.z,
 		};
-		return AngleAxis { angle: angle, axis: axis };
 	}
 
-
+/*
 	/// Outputs a number which allows you to compare the similarity between 2 angle axis rotations.  
 	/// This is done by generating a point adjacent to the 2 axis.  
 	/// The vector is rotated by each rotation and the angular distance is found.  
@@ -50,8 +52,8 @@ impl AngleAxis
 		let mut pt = self.axis.cross(&other.axis);
 		// let mut pt = Cartesian3D{x: 0.0, y: 0.0, z: 1.0};
 		pt.normalize();
-		let rotation_1 = Quaternion::new(*self);
-		let rotation_2 = Quaternion::new(other);
+		let rotation_1 = *self.to_quaternion();
+		let rotation_2 = other.to_quaternion();
 		
 		let out_1 = rotation_1.rotate_point(pt);
 		let out_2 = rotation_2.rotate_point(pt);
@@ -59,7 +61,7 @@ impl AngleAxis
 		let angle = out_1.angle_distance(out_2);
 		return angle;
 	}
-
+*/
 }
 
 
@@ -94,19 +96,38 @@ impl fmt::Debug for AngleAxis {
 mod test
 {	
 	use util::aliases::{M_PI};
-	use util::units::{Quaternion, Cartesian3D, Radians, AngleAxis, Degrees};
+	use util::units::{Cartesian3D, Radians, AngleAxis};
+	
+	
+	
+	//
+	//  to_quaternion ( &self ) -> Quaternion
+	//
+	#[test]
+	fn test_to_quaternion ( )
+	{
+		let angle = Radians(M_PI / 2.0);
+		let axis = Cartesian3D{x: 1.0, y: 0.0, z: 0.0};
+		let angle_axis = AngleAxis{angle:angle, axis: axis};
+		let q = angle_axis.to_quaternion();
+		assert_eq!(q.w, (angle / 2.0).cos());
+		assert_eq!(q.x, (angle / 2.0).sin() * axis.x);
+		assert_eq!(q.y, 0.0);
+		assert_eq!(q.z, 0.0);
+	}
 
 	#[test]
-	pub fn test_new ( )
+	#[should_panic = "Not unit vector"]
+	#[allow(unused_variables)]
+	fn test_to_quaternion_panic ( )
 	{
-		let mut axis : Cartesian3D = Cartesian3D{x: 1.0, y: 2.0, z: 3.0};
-		let angle = Radians(M_PI / 3.1);
-		axis.normalize();
-		let angle_axis : AngleAxis = AngleAxis{angle: angle, axis: axis};
-		assert_eq!(angle_axis, AngleAxis::new(&Quaternion::new(angle_axis)));
+		let angle = Radians(M_PI);
+		let axis = Cartesian3D{x: 1.0, y: 1.0, z: 1.0};
+		let angle_axis = AngleAxis{angle:angle, axis: axis};
+		let q = angle_axis.to_quaternion();
 	}
 	
-	
+	/*
 	
 	#[test]
 	pub fn test_compare_angle ( )
@@ -131,5 +152,5 @@ mod test
 			prev = curr;
 		}
 	}
-
+*/
 }

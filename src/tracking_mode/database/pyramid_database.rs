@@ -117,43 +117,20 @@ mod test
 	use crate::util::units::Equatorial;
 	use crate::util::units::Radians;
 	use crate::util::list::ArrayList;
+	use crate::util::test::TestEqual;
 	
-
-
-	// fn sample_database ( ) -> Database
-	// {
-	// 	return Database
-	// 	{
-	// 		fov: 0.0, // Ignore
-	// 		k_lookup: KVector::new( ),
-	// 
-	// 	}
-	// }
-/*
-	#[test]
-	fn test_new ( )
-	{
-		let database = PyramidDatabase::new();
-		assert!( (database.fov - array_database::FOV).0.abs() < 0.000001 );
-		assert_eq!(database.k_lookup as *const _, array_database::K_LOOKUP_DATABASE as *const _); 
-		assert_eq!(database.k_vector as *const _, array_database::K_VECTOR_DATABASE as *const _);
-		assert_eq!(database.pairs as *const _, array_database::STAR_PAIR_DATABASE as *const _); 
-		assert_eq!(database.catalogue as *const _, array_database::CATALOGUE_DATABASE as *const _);
-	}
-*/	
-	//	static DEFAULT_K_VEC_STRUCT : MockKVectorSearch = MockKVectorSearch::new();	
-		static DEFAULT_K_VEC : [usize;5]          = [0, 2, 4, 6, 8];
-		static DEFAULT_PAIRS: [StarPair<usize>; 8] = [
-			StarPair(0, 1), // (0, 2) 
-			StarPair(1, 2), // (0, 2)
-			StarPair(2, 3), // (2, 4)
-			StarPair(3, 4), // (2, 4)
-			StarPair(4, 5), // (4, 6)
-			StarPair(5, 6), // (4, 6)
-			StarPair(6, 7), // (6, 8)
-			StarPair(7, 8), // (6, 8)
-		];
-		static DEFAULT_CATALOGUE : [Equatorial;0] = [];	
+	static DEFAULT_K_VEC : [usize;5]          = [0, 2, 4, 6, 8];
+	static DEFAULT_PAIRS: [StarPair<usize>; 8] = [
+		StarPair(0, 1), // (0, 2) 
+		StarPair(1, 2), // (0, 2)
+		StarPair(2, 3), // (2, 4)
+		StarPair(3, 4), // (2, 4)
+		StarPair(4, 5), // (4, 6)
+		StarPair(5, 6), // (4, 6)
+		StarPair(6, 7), // (6, 8)
+		StarPair(7, 8), // (6, 8)
+	];
+	static DEFAULT_CATALOGUE : [Equatorial;0] = [];	
 	
 	
 	fn create_database ( ) -> PyramidDatabase
@@ -262,8 +239,8 @@ mod test
 			pairs: &PAIRS, 
 			catalogue: &CATALOGUE
 		};
-		assert!(database.find_star(0).expect("SHOULD BE OK").ra.0 - 0.89999 < 0.001);
-		assert!(database.find_star(0).expect("SHOULD BE OK").dec.0 - 0.09999 < 0.001);
+		assert!(database.find_star(0).expect("SHOULD BE OK").ra.0.test_equal(&0.89999));
+		assert!(database.find_star(0).expect("SHOULD BE OK").dec.0.test_equal(&0.09999));
 		
 		assert!(database.find_star(1).is_err());
 		assert!(database.find_star(1).is_err());
@@ -291,7 +268,7 @@ mod test
 			pairs: &PAIRS, 
 			catalogue: &CATALOGUE
 		};
-		assert!(database.get_fov().0 - 0.29999 < 0.001);
+		assert!(database.get_fov().test_equal(&Radians(0.29999)));
 	}
 
 }

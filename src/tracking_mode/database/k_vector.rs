@@ -6,7 +6,8 @@ use super::StarDatabaseElement;
 use super::KVectorSearch;
 use super::KVector;
 
-use crate::util::aliases::decimal_precision;
+use crate::util::test::DECIMAL_PRECISION_TEST;
+use crate::util::aliases::DECIMAL_PRECISION;
 use crate::util::aliases::Decimal;
 use crate::util::units::Radians;
 use crate::util::list::List;
@@ -27,9 +28,10 @@ impl KVector
 	/// ```
 	/// use star_tracker::tracking_mode::database::KVector;
 	/// use star_tracker::tracking_mode::database::StarDatabaseElement;
+	/// use star_tracker::util::test::DECIMAL_PRECISION_TEST;
+	/// use star_tracker::util::test::TestEqual;
 	/// use star_tracker::tracking_mode::StarPair;
 	/// use star_tracker::util::aliases::Decimal;
-	/// use star_tracker::util::aliases::decimal_precision;
 	/// use star_tracker::util::units::Equatorial;
 	/// use star_tracker::util::units::Radians;
 	///
@@ -38,11 +40,11 @@ impl KVector
 	/// let num_bins = 2;
 	/// let k_vector = KVector::new(num_bins, element_min, element_max);
 	/// 
-	/// let machine_epsilon = decimal_precision();
+	/// let machine_epsilon = DECIMAL_PRECISION_TEST;
 	/// let gradient = (element_max - element_min + machine_epsilon * 2.0) / (num_bins as f64);
 	/// let intercept = element_min - machine_epsilon;
-	/// // assert!((k_vector.gradient - gradient as Decimal).abs() < 0.0001);
-	/// // assert!((k_vector.intercept - intercept as Decimal).abs() < 0.0001);
+	/// // assert!(k_vector.gradient.test_equal(&(gradient as Decimal)));
+	/// // assert!(k_vector.intercept.test_equal(&(intercept as Decimal)));
 	/// // assert_eq!(k_vector.min_value, Radians(element_min as Decimal));
 	/// // assert_eq!(k_vector.max_value, Radians(element_max as Decimal));
 	/// 
@@ -50,19 +52,21 @@ impl KVector
 	/// 
 	/// 
 	/// assert!(y < element_min);						// Must be smaller than min value.
-	/// assert!(element_min - y < 0.00001);				// Must be close to the min value.
+	/// assert!(element_min - y < DECIMAL_PRECISION_TEST);	// Must be close to the min value.
 	/// 
 	/// y = gradient * 1.0 + intercept;					// This is the middle bounds.
 	/// assert!(element_min < y && y < element_max);	// Value must be greater than the smallest element.
-	/// assert!((y - (element_max + element_min) / 2.0).abs() < 0.00001);	// Must be in the center between the bounds.
+	///
+	/// // Must be in the center between the bounds.
+	/// assert!((y - (element_max + element_min) / 2.0).abs() < DECIMAL_PRECISION_TEST);
 	/// 
 	/// y = gradient * 2.0 + intercept;					// This is the upper bounds.
 	/// assert!(element_max < y);						// Must include all values.
-	/// assert!(y - element_max < 0.00001);				// Must be close to the max value.
+	/// assert!(y - element_max < DECIMAL_PRECISION_TEST);	// Must be close to the max value.
 	/// ```
 	pub fn new ( num_bins: usize, min_value: f64, max_value: f64 ) -> KVector
 	{
-		let e = decimal_precision();
+		let e = DECIMAL_PRECISION;
 		let grad : f64 = (max_value - min_value + 2.0 * e) / (num_bins as f64);
 		let int  : f64 = min_value - e;
 	
@@ -193,7 +197,6 @@ impl KVectorSearch for KVector
 	/// # Example
 	/// ```
 	/// use star_tracker::util::units::Radians;
-	/// use star_tracker::util::aliases::decimal_precision;
 	/// use star_tracker::util::aliases::Decimal;
 	/// use star_tracker::tracking_mode::database::KVector;
 	/// //           0    1    2    3    4  
@@ -214,7 +217,7 @@ impl KVectorSearch for KVector
 		{
 			return Err(Errors::InvalidValue);
 		}
-		let tolerance = self.gradient / 2.0 + decimal_precision() as Decimal;
+		let tolerance = self.gradient / 2.0 + DECIMAL_PRECISION as Decimal;
 		
 		let mut high = (value.0 - self.intercept + tolerance) / self.gradient;
 		let mut low =  (value.0 - self.intercept - tolerance) / self.gradient;
@@ -240,18 +243,12 @@ impl fmt::Display for KVector
 {
 	fn fmt ( &self, format: &mut fmt::Formatter ) -> fmt::Result
 	{
-		let mut min = self.min_value.0;
-		let mut max = self.max_value.0;
-		if min.abs() < 0.0000001
-		{
-			min = 0.00000001;
-		}
-		if max.abs() < 0.0000001
-		{
-			max = 0.00000001;
-		}
+		let mut min = self.min_value;
+		let mut max = self.max_value;
+		if min < Radians(DECIMAL_PRECISION_TEST) { min = Radians(DECIMAL_PRECISION_TEST); }
+		if max < Radians(DECIMAL_PRECISION_TEST) { max = Radians(DECIMAL_PRECISION_TEST); }
 		let string = format!(
-		"KVector{{gradient: {}, intercept: {}, min_value: Radians({}), max_value: Radians({}), num_bins: {}}}", 
+		"KVector{{gradient: {}, intercept: {}, min_value: {}, max_value: {}, num_bins: {}}}", 
 		self.gradient, self.intercept, min, max, self.num_bins);
 		
 		format.write_str(&string)?;
@@ -277,8 +274,9 @@ mod test
 	use crate::tracking_mode::database::KVectorSearch;
 	use crate::tracking_mode::database::KVector;
 	
-	use crate::util::aliases::decimal_precision;
+	use crate::util::aliases::DECIMAL_PRECISION;
 	use crate::util::aliases::Decimal;
+	use crate::util::test::TestEqual;
 	use crate::util::units::Radians;
 	use crate::util::list::List;
 
@@ -291,11 +289,11 @@ mod test
 		let num_bins = 2;
 		let k_vector = KVector::new(num_bins, element_min, element_max);
 		
-		let machine_epsilon = decimal_precision();
+		let machine_epsilon = DECIMAL_PRECISION;
 		let gradient = (element_max - element_min + machine_epsilon * 2.0) / (num_bins as f64);
 		let intercept = element_min - machine_epsilon;
-		assert!((k_vector.gradient - gradient as Decimal).abs() < 0.0001);
-		assert!((k_vector.intercept - intercept as Decimal).abs() < 0.0001);
+		assert!(k_vector.gradient.test_equal(&(gradient as Decimal)));
+		assert!(k_vector.intercept.test_equal(&(intercept as Decimal)));
 		assert_eq!(k_vector.num_bins, num_bins);
 		assert_eq!(k_vector.min_value, Radians(element_min as Decimal));
 		assert_eq!(k_vector.max_value, Radians(element_max as Decimal));
@@ -304,15 +302,15 @@ mod test
 		
 		
 		assert!(y < element_min);						// Must be smaller than min value.
-		assert!(element_min - y < 0.00001);				// Must be close to the min value.
+		assert!(element_min.test_equal(&y));				// Must be close to the min value.
 		
 		y = gradient * 1.0 + intercept;					// This is the middle bounds.
 		assert!(element_min < y && y < element_max);	// Value must be greater than the smallest element.
-		assert!((y - (element_max + element_min) / 2.0).abs() < 0.00001);	// Must be in the center between the bounds.
+		assert!(y.test_equal(&((element_max + element_min) / 2.0)));// Must be in the center between the bounds.
 
 		y = gradient * 2.0 + intercept;					// This is the upper bounds.
 		assert!(element_max < y);						// Must include all values.
-		assert!(y - element_max < 0.00001);				// Must be close to the max value.
+		assert!(y.test_equal(&element_max));			// Must be close to the max value.
 		
 	}
 
@@ -325,15 +323,15 @@ mod test
 		let num_bins = 2;
 		let k_vector = KVector::new(num_bins, element_min, element_max);
 		
-		let machine_epsilon = decimal_precision();
+		let machine_epsilon = DECIMAL_PRECISION;
 		let gradient = (element_max - element_min + machine_epsilon * 2.0) / (num_bins as f64);
 		let intercept = element_min - machine_epsilon;
-		assert!((k_vector.gradient - gradient as Decimal).abs() < 0.0001);
-		assert!((k_vector.intercept - intercept as Decimal).abs() < 0.0001);
+		assert!(k_vector.gradient.test_equal(&(gradient as Decimal)));
+		assert!(k_vector.intercept.test_equal(&(intercept as Decimal)));
 		
 		let mut y = gradient * 0.0 + intercept;
 		assert!(y < element_min);
-		assert!(element_min - y < 0.00001);
+		assert!(element_min.test_equal(&y));
 		
 		let mut min_diff = 10000.0;
 		let mut max_diff = -10000.0;
@@ -352,13 +350,13 @@ mod test
 				max_diff = new_y - y;
 			}
 			y = new_y;
-			assert!( max_diff - min_diff < 0.000001 );
+			assert!( max_diff.test_equal(&min_diff) );
 		}
 	
 		y = gradient * (num_bins as f64) + intercept;
 		println!("{}", y);
 		assert!(element_max < y);						// Must include all values.
-		assert!(y - element_max < 0.00001);				// Must be close to the max value.
+		assert!(y.test_equal(&element_max));			// Must be close to the max value.
 	}
 
 
@@ -562,7 +560,7 @@ mod test
 		// 8.0+:   4 ..= 4 (Out of bounds)
 		
 		// Multiplied decimal_precision by 3 as the number is so small that adding to it modifies the value.
-		let t = kvec.gradient / 2.0 - decimal_precision() as Decimal * 3.0;
+		let t = kvec.gradient / 2.0 - DECIMAL_PRECISION as Decimal * 3.0;
 		
 		assert_eq!((0 ..= 1), kvec.get_bins ( Radians(4.00000) ).expect("Should pass")); // 4.0
 		assert_eq!((0 ..= 1), kvec.get_bins ( Radians(4.0 + t) ).expect("Should pass")); // 4.0+

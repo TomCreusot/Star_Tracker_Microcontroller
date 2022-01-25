@@ -9,8 +9,9 @@ impl Cartesian3D
 	/// # Example
 	/// ```
 	/// use star_tracker::util::units::Cartesian3D;
+	/// use star_tracker::util::test::TestEqual;
 	/// let c = Cartesian3D{x: 10.3, y: 23.1, z: 12.3};
-	/// assert!((c.magnitude() - 28.124544440).abs() < 0.00001);
+	/// assert!(c.magnitude().test_equal(&28.124544440));
 	/// ```
 	pub fn magnitude ( &self ) -> Decimal
 	{
@@ -22,10 +23,11 @@ impl Cartesian3D
 	/// # Example
 	/// ```
 	/// use star_tracker::util::units::Cartesian3D;
+	/// use star_tracker::util::test::TestEqual;
 	/// let mut c = Cartesian3D{x: 10.3, y: 23.1, z: 12.3};
 	/// let c_out = Cartesian3D{x: 0.366228, y: 0.8213466, z: 0.43734};
 	/// c.normalize();
-	/// assert_eq!(c, c_out);
+	/// assert!(c.test_equal(&c_out));
 	/// ```
 	pub fn normalize ( &mut self )
 	{
@@ -189,6 +191,8 @@ mod test
 	use util::units::Radians;
 	use util::units::Degrees;
 	use util::aliases::M_PI;
+	use util::test::TestEqual;
+	
 //###############################################################################################//
 //										---	Equatorial ---
 //###############################################################################################//
@@ -200,7 +204,7 @@ mod test
 	fn test_magnitude ( )
 	{
 		let c = Cartesian3D{x: 10.3, y: 23.1, z: 12.3};
-		assert!((c.magnitude() - 28.1245463).abs() < 0.00001);
+		assert!(c.magnitude().test_equal(&28.1245463));
 	}
 	
 	
@@ -213,7 +217,7 @@ mod test
 		let mut c = Cartesian3D{x: 10.3, y: 23.1, z: 12.3};
 		let c_out = Cartesian3D{x: 0.366228, y: 0.8213466, z: 0.43734};
 		c.normalize();
-		assert_eq!(c, c_out);
+		assert!(c.test_equal(&c_out));
 	}
 
 	//

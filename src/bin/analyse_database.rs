@@ -1,13 +1,11 @@
 extern crate star_tracker;
 use std::mem::size_of_val;
+use star_tracker::util::test::TestEqual;
 use star_tracker::tracking_mode::database::array_database::K_VECTOR_DATABASE;
 use star_tracker::tracking_mode::database::array_database::STAR_PAIR_DATABASE;
 use star_tracker::tracking_mode::database::array_database::CATALOGUE_DATABASE;
 
-// use star_tracker::tracking_mode::StarPair;
-
 use star_tracker::util::units::Equatorial;
-// use star_tracker::util::units::Radians;
 
 fn main ( )
 {
@@ -157,7 +155,8 @@ fn star_catalogue_test ( )
 		{
 			let b = CATALOGUE_DATABASE[jj];
 
-			if (a.ra - b.ra).0.abs() < 0.00001 && (a.dec - b.dec).0.abs() < 0.000001
+			if a.test_equal(&b)//(a.ra - b.ra).0.abs() < DECIMAL_PRECISION_TEST && 
+				//   (a.dec - b.dec).0.abs() < DECIMAL_PRECISION_TEST
 			{
 				similar_place += 1;
 			}

@@ -110,12 +110,13 @@ mod test
 	use util::units::Matrix;
 	
 	use util::list::List;
+	use util::test::TestEqual;
 	use util::list::ArrayList;
 	
 	
 	fn assert_close ( a : Decimal, b : Decimal )
 	{
-		if (a - b).abs() > 0.0001
+		if a.test_equal(&b)
 		{
 			assert_eq!(a, b);
 		}
@@ -150,11 +151,16 @@ mod test
 	fn test_find_b ( )
 	{
 		let mut pos : ArrayList<Match<Cartesian3D>, 5> = ArrayList::new();
-		pos.push_back(Match{input: Cartesian3D{x: 10.0, y: 11.0, z: 12.0}, output: Cartesian3D{x: 1.0, y: 2.0, z: 3.0}, weight: 0.1});
-		pos.push_back(Match{input: Cartesian3D{x: 13.0, y: 14.0, z: 15.0}, output: Cartesian3D{x: 4.0, y: 5.0, z: 6.0}, weight: 0.2});
-		pos.push_back(Match{input: Cartesian3D{x: 16.0, y: 17.0, z: 18.0}, output: Cartesian3D{x: 7.0, y: 8.0, z: 9.0}, weight: 0.3});
-		pos.push_back(Match{input: Cartesian3D{x: 19.0, y: 20.0, z: 21.0}, output: Cartesian3D{x: 10.0, y: 11.0, z: 12.0}, weight: 0.4});
-		pos.push_back(Match{input: Cartesian3D{x: 22.0, y: 23.0, z: 24.0}, output: Cartesian3D{x: 13.0, y: 14.0, z: 15.0}, weight: 0.5});
+		pos.push_back(Match{input: Cartesian3D{x: 10.0, y: 11.0, z: 12.0}, 
+							output: Cartesian3D{x: 1.0, y: 2.0, z: 3.0}, weight: 0.1});
+		pos.push_back(Match{input: Cartesian3D{x: 13.0, y: 14.0, z: 15.0}, 
+							output: Cartesian3D{x: 4.0, y: 5.0, z: 6.0}, weight: 0.2});
+		pos.push_back(Match{input: Cartesian3D{x: 16.0, y: 17.0, z: 18.0}, 
+							output: Cartesian3D{x: 7.0, y: 8.0, z: 9.0}, weight: 0.3});
+		pos.push_back(Match{input: Cartesian3D{x: 19.0, y: 20.0, z: 21.0}, 
+							output: Cartesian3D{x: 10.0, y: 11.0, z: 12.0}, weight: 0.4});
+		pos.push_back(Match{input: Cartesian3D{x: 22.0, y: 23.0, z: 24.0}, 
+							output: Cartesian3D{x: 13.0, y: 14.0, z: 15.0}, weight: 0.5});
 		
 		let b : Matrix<3,3> = Wahba::find_b(&pos);
 		assert_close(b.get(MatPos{row: 0, col: 0}), 264.0);

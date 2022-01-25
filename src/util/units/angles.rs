@@ -4,11 +4,17 @@ use crate::util::aliases::{M_PI, Decimal};
 use super::{Degrees, Radians, Hours};
 impl Degrees
 {
-	/// Converts to radians.
+	/// Converts to Radians.
  	pub fn to_radians ( &self ) -> Radians
  	{
  		return Radians(self.0 * M_PI / 180.0);
  	}
+	
+	/// Converts to Hours.
+	pub fn to_hours ( &self ) -> Hours
+	{
+		return Hours(self.0 * 24.0 / 360.0 );
+	}
 	
 	/// Accessor for sin.
 	pub fn sin ( &self ) -> Decimal
@@ -63,6 +69,13 @@ impl Hours
 	{
 		return Radians ( self.0 * M_PI / 12.0 );
 	}
+	
+	
+	/// Converts to Degrees.
+	pub fn to_degrees ( &self ) -> Degrees
+	{
+		return Degrees ( self.0 * 360.0 / 24.0 );
+	}
 }
 
 
@@ -96,6 +109,7 @@ mod test
 		assert_eq!(Hours(12.0).to_radians(),  Radians(M_PI));
 		assert_eq!(Hours(18.0).to_radians(),  Radians(M_PI * 6.0 / 4.0));
 		assert_eq!(Hours(24.0).to_radians(),  Radians(M_PI * 2.0));
+		
 	}
 
 	#[test]
@@ -106,6 +120,13 @@ mod test
 		assert_eq!(Degrees(90.0),  Radians(M_PI / 2.0).to_degrees());
 		assert_eq!(Degrees(180.0), Radians(M_PI).to_degrees());
 		assert_eq!(Degrees(360.0), Radians(M_PI * 2.0).to_degrees());
+		assert_eq!(Degrees(0.0),   Radians(0.0).to_degrees());
+		
+		
+		assert_eq!(Hours(3.0).to_degrees(),  Radians(M_PI / 4.0).to_degrees());
+		assert_eq!(Hours(6.0).to_degrees(), Radians(M_PI / 2.0).to_degrees());
+		assert_eq!(Hours(12.0).to_degrees(), Radians(M_PI).to_degrees());
+		assert_eq!(Hours(24.0).to_degrees(), Radians(M_PI * 2.0).to_degrees());
 	}
 	
 	
@@ -117,6 +138,12 @@ mod test
 		assert_eq!(Hours(12.0),  Radians(M_PI).to_hours());
 		assert_eq!(Hours(18.0),  Radians(M_PI * 6.0 / 4.0).to_hours());
 		assert_eq!(Hours(24.0),  Radians(M_PI * 2.0).to_hours());
+		
+		assert_eq!(Degrees(0.0).to_hours(),   Radians(0.0).to_hours());
+		assert_eq!(Degrees(90.0).to_hours(),  Radians(M_PI / 2.0).to_hours());
+		assert_eq!(Degrees(180.0).to_hours(),  Radians(M_PI).to_hours());
+		assert_eq!(Degrees(270.0).to_hours(),  Radians(M_PI * 6.0 / 4.0).to_hours());
+		assert_eq!(Degrees(360.0).to_hours(),  Radians(M_PI * 2.0).to_hours());
 	}
 	
 	

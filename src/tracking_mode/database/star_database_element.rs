@@ -5,6 +5,7 @@ use super::StarDatabaseElement;
 
 use crate::util::units::Radians;
 use crate::util::list::List;
+use crate::util::aliases::DECIMAL_PRECISION;
 
 use crate::nix::Star;
 
@@ -107,7 +108,7 @@ impl PartialEq for StarDatabaseElement
 	fn eq ( &self, other: &Self ) -> bool
 	{
 		return 
-		((self.dist - other.dist).0.abs() < 0.00001 ) &&
+		((self.dist - other.dist).abs() < DECIMAL_PRECISION ) &&
 		((self.pair.0 == other.pair.0 && self.pair.1 == other.pair.1) ||
 		(self.pair.0 == other.pair.1 && self.pair.1 == other.pair.0));
 	}
@@ -151,17 +152,8 @@ mod test
 	
 	use util::units::Equatorial;
 	use util::units::Degrees;
-	use util::aliases::Decimal;
 	
 	use nix::Star;
-
-	fn assert_close ( a: Decimal, b: Decimal )
-	{
-		if (a - b).abs() > 0.00001
-		{
-			panic!("\n\nassert_close failed: \n\tleft: `{}`\n\tright: `{}`\n\n", a, b);
-		}
-	}
 
 
 	fn construct_vec_star ( ) -> Vec<Star>

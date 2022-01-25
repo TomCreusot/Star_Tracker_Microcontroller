@@ -12,12 +12,21 @@ pub type Decimal = f64;
 
 
 /// Returns the machine precision of Decimal (For K-Vector equation).
-pub fn decimal_precision ( ) -> f64
-{
+// pub fn decimal_precision ( ) -> Decimal
+// {
 	// Multiply by a few digits as adding a number may remove this.
-	return 1.19E-07 * 3.0; // f32
+	// return 1.19E-07 * 3.0; // f32
 	// return 2.22E-16; // f64
-}
+// }
+
+// pub fn decimal_precision_test() -> Decimal
+// {
+	// return decimal_precision() * 10.0;
+// }
+
+/// The machine precision of Decimal.
+pub const DECIMAL_PRECISION : 		Decimal = 1.19E-07 * 3.0; // f32
+//pub const DECIMAL_PRECISION : 		Decimal = 2.22E-16; // f64
 
 
 // use std::f32::consts::PI;

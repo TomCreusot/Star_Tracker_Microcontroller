@@ -9,3 +9,4 @@ pub mod list;
 pub mod units;
 pub mod aliases;
 pub mod err;
+pub mod test;
