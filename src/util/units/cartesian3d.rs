@@ -11,7 +11,7 @@ impl Cartesian3D
 	/// use star_tracker::util::units::Cartesian3D;
 	/// use star_tracker::util::test::TestEqual;
 	/// let c = Cartesian3D{x: 10.3, y: 23.1, z: 12.3};
-	/// assert!(c.magnitude().test_equal(&28.124544440));
+	/// assert!(c.magnitude().test_close(&28.124544440, 0.00001));
 	/// ```
 	pub fn magnitude ( &self ) -> Decimal
 	{
@@ -27,7 +27,7 @@ impl Cartesian3D
 	/// let mut c = Cartesian3D{x: 10.3, y: 23.1, z: 12.3};
 	/// let c_out = Cartesian3D{x: 0.366228, y: 0.8213466, z: 0.43734};
 	/// c.normalize();
-	/// assert!(c.test_equal(&c_out));
+	/// assert!(c.test_close(&c_out, 0.0001));
 	/// ```
 	pub fn normalize ( &mut self )
 	{
@@ -135,15 +135,16 @@ impl Cartesian3D
 	/// use star_tracker::util::aliases::M_PI;
 	/// use star_tracker::util::units::{Equatorial, Cartesian3D, Radians};
 	/// use star_tracker::util::aliases::Decimal;
+	/// use star_tracker::util::test::TestEqual;
 	/// let mut c = Cartesian3D { x: 0.5, y: 0.5, z: -0.7071067812 };
 	/// let mut e = c.to_equatorial();
-	/// assert_eq!(e.ra, Radians(M_PI / 4.0));
-	/// assert_eq!(e.dec, Radians(-M_PI / 4.0));
+	/// let mut compare = Equatorial{ra: Radians(M_PI / 4.0), dec: Radians(-M_PI / 4.0)};
+	/// assert!(compare.test_close(&e, 0.0000001));
 	///
 	/// c = Cartesian3D { x: 3.0, y: 4.0, z: 5.0 };
 	/// e = c.to_equatorial();
-	/// assert_eq!(e.ra, Radians(0.927295218));
-	/// assert_eq!(e.dec, Radians(0.78539816));
+	/// compare = Equatorial{ra: Radians(0.927295218), dec: Radians(0.78539816)};
+	/// assert!(compare.test_close(&e, 0.0000001));
 	/// ```
 	pub fn to_equatorial ( &self ) -> Equatorial
 	{
@@ -188,6 +189,7 @@ mod test
 	use util::units::Cartesian3D;
 	use util::units::Matrix;
 	use util::units::MatPos;
+	use util::units::Equatorial;
 	use util::units::Radians;
 	use util::units::Degrees;
 	use util::aliases::M_PI;
@@ -204,7 +206,7 @@ mod test
 	fn test_magnitude ( )
 	{
 		let c = Cartesian3D{x: 10.3, y: 23.1, z: 12.3};
-		assert!(c.magnitude().test_equal(&28.1245463));
+		assert!(c.magnitude().test_close(&28.1245463, 0.0001));
 	}
 	
 	
@@ -217,7 +219,7 @@ mod test
 		let mut c = Cartesian3D{x: 10.3, y: 23.1, z: 12.3};
 		let c_out = Cartesian3D{x: 0.366228, y: 0.8213466, z: 0.43734};
 		c.normalize();
-		assert!(c.test_equal(&c_out));
+		assert!(c.test_close(&c_out, 0.00001));
 	}
 
 	//
@@ -349,15 +351,13 @@ mod test
 	{
 		let mut c = Cartesian3D { x: 0.5, y: 0.5, z: -0.7071067812 };
 		let mut e = c.to_equatorial();
-		assert_eq!(e.ra,  Radians(M_PI / 4.0));
-		assert_eq!(e.dec, Radians(-M_PI / 4.0));
-
+		let mut compare = Equatorial{ra: Radians(M_PI / 4.0), dec: Radians(-M_PI / 4.0)};
+		assert!(e.test_close(&compare, 0.000001));
 		c = Cartesian3D { x: 3.0, y: 4.0, z: 5.0 };
 		e = c.to_equatorial();
-		assert_eq!(e.ra,  Radians(0.927295218));
-		assert_eq!(e.dec, Radians(0.78539816));
+		compare = Equatorial{ra: Radians(0.927295218), dec: Radians(0.78539816)};
+		assert!(e.test_close(&compare, 0.000001));
 	}
-
 
 	#[test]
 	fn test_to_equatorial_z_zero ( )
@@ -387,11 +387,11 @@ mod test
 	{
 		let mut c = Cartesian3D { x: 0.1, y: 0.1, z: 10000.0 };
 		let mut e = c.to_equatorial();
-		assert_eq!(e.ra,  Radians(0.785398163));
-		assert_eq!(e.dec, Radians(0.000014142136));
+		let mut compare =Equatorial{ra: Radians(0.7853981633974483), dec: Radians(0.000014142136)};
+		assert!(e.test_close(&compare, 0.00001));
 		c = Cartesian3D { x: 0.1, y: 0.1, z: -10000.0 };
 		e = c.to_equatorial();
-		assert_eq!(e.ra,   Radians(0.785398163));
-		assert_eq!(e.dec,  Radians(-0.000014142136));
+		compare = Equatorial{ra: Radians(0.785398163), dec: Radians(-0.000014142136)};
+		assert!(e.test_close(&compare, 0.00001));
 }
 }

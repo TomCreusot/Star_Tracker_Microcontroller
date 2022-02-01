@@ -408,8 +408,8 @@ mod test
 		const CONFIG : usize = 2;
 		Blob::find_blobs::<CONFIG>(1, &mut img, &mut lst);
 		assert_eq!(lst.get(0).intensity, 3);
-		assert_close(lst.get(0).centroid.x, 0.33333);
-		assert_close(lst.get(0).centroid.y, 0.33333);
+		assert_close(lst.get(0).centroid.x, 1.0/3.0);
+		assert_close(lst.get(0).centroid.y, 1.0/3.0);
 
 		assert_eq!(lst.get(1).intensity, 1);
 		assert_eq!(lst.get(1).centroid.x, 1.0);
@@ -439,8 +439,8 @@ mod test
 		
 		Blob::find_blobs::<CONFIG>(1, &mut img, &mut lst);
 		assert_eq!(lst.get(0).intensity, 3);
-		assert_close(lst.get(0).centroid.x, 0.33333);
-		assert_close(lst.get(0).centroid.y, 0.33333);
+		assert_close(lst.get(0).centroid.x, 1.0/3.0);
+		assert_close(lst.get(0).centroid.y, 1.0/3.0);
 
 		assert_eq!(lst.get(1).intensity, 1);
 		assert_eq!(lst.get(1).centroid.x, 2.0);
@@ -497,8 +497,8 @@ mod test
 		let start : Pixel = Pixel{x: 0, y: 0};
 		let blob = Blob::spread_grass_fire::<CONFIG>(1, start, &mut img);
 		assert_eq!(blob.intensity, 3);
-		assert_close(blob.centroid.x, 0.33333);
-		assert_close(blob.centroid.y, 0.33333);
+		assert_close(blob.centroid.x, 1.0/3.0);
+		assert_close(blob.centroid.y, 1.0/3.0);
 
 		assert_eq!(img.get(Pixel{x: 0, y: 0}), 0);
 		assert_eq!(img.get(Pixel{x: 1, y: 0}), 0);

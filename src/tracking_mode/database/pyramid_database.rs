@@ -239,8 +239,8 @@ mod test
 			pairs: &PAIRS, 
 			catalogue: &CATALOGUE
 		};
-		assert!(database.find_star(0).expect("SHOULD BE OK").ra.0.test_equal(&0.89999));
-		assert!(database.find_star(0).expect("SHOULD BE OK").dec.0.test_equal(&0.09999));
+		assert!(database.find_star(0).expect("SHOULD BE OK").ra.0.test_close(&0.89999, 0.0001));
+		assert!(database.find_star(0).expect("SHOULD BE OK").dec.0.test_close(&0.09999, 0.0001));
 		
 		assert!(database.find_star(1).is_err());
 		assert!(database.find_star(1).is_err());
@@ -268,7 +268,7 @@ mod test
 			pairs: &PAIRS, 
 			catalogue: &CATALOGUE
 		};
-		assert!(database.get_fov().test_equal(&Radians(0.29999)));
+		assert!(database.get_fov().test_close(&Radians(0.29999), 0.0001));
 	}
 
 }

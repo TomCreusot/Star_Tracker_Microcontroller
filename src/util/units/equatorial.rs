@@ -123,6 +123,34 @@ impl Equatorial
 	/// # Arguments
 	/// * `points` - The array to apply points to.
 	/// # Example
+	/// ```
+	/// use star_tracker::util::aliases::M_PI;
+	/// use star_tracker::util::units::{Radians, Equatorial};
+	/// use star_tracker::util::aliases::Decimal;
+	/// const N : usize = 100;
+	/// let variance = 0.1;
+	/// let mut eq : [Equatorial; N] = [Equatorial{ra: Radians(0.0), dec: Radians(0.0)}; N];
+	/// Equatorial::evenly_distribute(&mut eq);
+	/// 
+	/// let mut compare : Option<Decimal> = None;
+	/// for e in eq.iter()
+	/// {
+	/// 	let mut current = 0.0;
+	/// 	for ee in eq.iter()
+	/// 	{
+	/// 		current += ee.angle_distance(*e).0;
+	/// 	}
+	/// 
+	/// 	if compare == None
+	/// 	{
+	/// 		compare = Some(current);
+	/// 	}
+	/// 	else if variance < (current - compare.unwrap()).abs()
+	/// 	{
+	/// 		panic!("Variance too high: {}", current - compare.unwrap());
+	/// 	}
+	/// }
+	/// ```
 	pub fn evenly_distribute ( points : &mut [Equatorial] )
 	{
 		let golden_ratio = (1.0 + (5.0 as Decimal).powf(0.5)) / 2.0;

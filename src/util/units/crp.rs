@@ -44,7 +44,7 @@ mod test
 	use util::units::Quaternion;
 	use super::Matrix;
 	use super::MatPos;
-	
+	use util::test::TestEqual;
 	// Test values generated through matlab.
 	
 	#[test]
@@ -67,10 +67,10 @@ mod test
 		let b : CRP = CRP{x: 0.0000931523, y: 0.000000111, z: -0.000085496};
 		
 		let mut compare = Quaternion{w: 0.999999973, x: -0.0000947935, y: 0.000189587, z: -0.0000947935};
-		assert_eq!(a.to_quaternion(1.0), compare);
+		assert!(a.to_quaternion(1.0).test_close(&compare, 0.000001));
 		
 		compare = Quaternion{w: 0.999999992, x: 0.0000931523, y: 0.000000111, z: -0.000085496};
-		assert_eq!(b.to_quaternion(1.0), compare);
+		assert!(b.to_quaternion(1.0).test_close(&compare, 0.000001));
 	}
 
 }

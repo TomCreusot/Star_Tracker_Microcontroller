@@ -37,9 +37,9 @@ fn main (  )
 	const FOV_RANGE : LinearRange		= LinearRange{min: 0.0 * M_PI / 180.0, max: 50.0 * M_PI / 180.0, num: 50};
 	
 	let mut smallest_num_stars : Vec<Vec<u32>> = vec![vec![0; MAGNITUDE_RANGE.num]; FOV_RANGE.num];
-	let mut percent_above_3 : Vec<Vec<f32>> = vec![vec![0.0; MAGNITUDE_RANGE.num]; FOV_RANGE.num];
-	let mut percent_above_4 : Vec<Vec<f32>> = vec![vec![0.0; MAGNITUDE_RANGE.num]; FOV_RANGE.num];
-	let mut percent_above_5 : Vec<Vec<f32>> = vec![vec![0.0; MAGNITUDE_RANGE.num]; FOV_RANGE.num];
+	let mut percent_above_3 : Vec<Vec<Decimal>> = vec![vec![0.0; MAGNITUDE_RANGE.num]; FOV_RANGE.num];
+	let mut percent_above_4 : Vec<Vec<Decimal>> = vec![vec![0.0; MAGNITUDE_RANGE.num]; FOV_RANGE.num];
+	let mut percent_above_5 : Vec<Vec<Decimal>> = vec![vec![0.0; MAGNITUDE_RANGE.num]; FOV_RANGE.num];
 	
 	
 	
@@ -139,7 +139,7 @@ fn find_least_stars ( num_stars: &mut Vec<Vec<u32>>, magnitude_idx: usize, fov_r
 }
 
 
-fn find_percent_stars ( percent: &mut Vec<Vec<f32>>, magnitude_idx: usize, fov_range : LinearRange, points: &[Equatorial], stars: &Vec<Equatorial>, num_above: usize )
+fn find_percent_stars ( percent: &mut Vec<Vec<Decimal>>, magnitude_idx: usize, fov_range : LinearRange, points: &[Equatorial], stars: &Vec<Equatorial>, num_above: usize )
 {
 	for f in 0..fov_range.num
 	{
@@ -160,7 +160,7 @@ fn find_percent_stars ( percent: &mut Vec<Vec<f32>>, magnitude_idx: usize, fov_r
 				paired_count += 1;
 			}
 		}
-		percent[f][magnitude_idx] = paired_count as f32 / points.len() as f32 * 100.0;
+		percent[f][magnitude_idx] = paired_count as Decimal / points.len() as Decimal * 100.0;
 	}	
 }
 

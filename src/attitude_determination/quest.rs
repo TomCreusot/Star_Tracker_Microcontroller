@@ -48,6 +48,8 @@ impl AttitudeDetermination for Quest
 		// This would be:
 		// ``` lambda_n = det[lambda_n-1 * I_4x4 - K] / d/dx(det[lambda_n-1 * I_4x4 - K]) ```
 		// Luckly there is a simpler solution with the polynomial.
+		
+		let mut i = 0;
 		while T::LAMBDA_PRECISION <= (lambda - last_lambda).abs()
 		{
 			last_lambda = lambda;
@@ -55,6 +57,12 @@ impl AttitudeDetermination for Quest
 			let f = lambda.powf(4.0) - (a + b)*lambda.powf(2.0) - c * lambda + (a*b + c*sigma - d);
 			let f_prime = 4.0*lambda.powf(3.0) - 2.0 * (a + b) * lambda - c;
 			lambda = lambda - f/f_prime;
+			
+			if i == 10
+			{
+				panic!("Too many loops in quest algorithm, reduce the precision of lambda.");
+			}
+			i += 1;
 		}
 		
 		

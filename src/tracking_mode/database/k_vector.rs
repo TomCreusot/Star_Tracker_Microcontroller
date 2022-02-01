@@ -41,7 +41,7 @@ impl KVector
 	/// let k_vector = KVector::new(num_bins, element_min, element_max);
 	/// 
 	/// let machine_epsilon = DECIMAL_PRECISION_TEST;
-	/// let gradient = (element_max - element_min + machine_epsilon * 2.0) / (num_bins as f64);
+	/// let gradient = (element_max - element_min + machine_epsilon * 2.0) / (num_bins as Decimal);
 	/// let intercept = element_min - machine_epsilon;
 	/// // assert!(k_vector.gradient.test_equal(&(gradient as Decimal)));
 	/// // assert!(k_vector.intercept.test_equal(&(intercept as Decimal)));
@@ -52,23 +52,23 @@ impl KVector
 	/// 
 	/// 
 	/// assert!(y < element_min);						// Must be smaller than min value.
-	/// assert!(element_min - y < DECIMAL_PRECISION_TEST);	// Must be close to the min value.
+	/// assert!(element_min - y < 0.05);				// Must be close to the min value.
 	/// 
 	/// y = gradient * 1.0 + intercept;					// This is the middle bounds.
 	/// assert!(element_min < y && y < element_max);	// Value must be greater than the smallest element.
 	///
 	/// // Must be in the center between the bounds.
-	/// assert!((y - (element_max + element_min) / 2.0).abs() < DECIMAL_PRECISION_TEST);
+	/// assert!((y - (element_max + element_min) / 2.0).abs() < 0.0001);
 	/// 
 	/// y = gradient * 2.0 + intercept;					// This is the upper bounds.
-	/// assert!(element_max < y);						// Must include all values.
-	/// assert!(y - element_max < DECIMAL_PRECISION_TEST);	// Must be close to the max value.
+	/// assert!(element_max <= y);						// Must include all values.
+	/// assert!(y - element_max < 0.05);				// Must be close to the max value.
 	/// ```
-	pub fn new ( num_bins: usize, min_value: f64, max_value: f64 ) -> KVector
+	pub fn new ( num_bins: usize, min_value: Decimal, max_value: Decimal ) -> KVector
 	{
 		let e = DECIMAL_PRECISION;
-		let grad : f64 = (max_value - min_value + 2.0 * e) / (num_bins as f64);
-		let int  : f64 = min_value - e;
+		let grad : Decimal = (max_value - min_value + 2.0 * e) / (num_bins as Decimal);
+		let int  : Decimal = min_value - e;
 	
 		return KVector {
 			gradient:  			grad as Decimal, 
@@ -97,7 +97,7 @@ impl KVector
 	///	let lst = convert_dec_to_star_database_element(dec.clone());
 	///
 	/// const NUM_BINS : usize = 5;		
-	/// let mut kvec = KVector::new(NUM_BINS, dec[0] as f64, dec[14] as f64);
+	/// let mut kvec = KVector::new(NUM_BINS, dec[0] as Decimal, dec[14] as Decimal);
 	/// let mut vec = kvec.generate_bins(&lst).expect("Should not fail");
 	/// 
 	/// assert_eq!(vec.len(), NUM_BINS + 1);
@@ -204,7 +204,7 @@ impl KVectorSearch for KVector
 	/// // let lst = convert_dec_to_star_database_element(dec.clone());
 	/// const NUM_BINS : usize = 4;
 	/// 
-	/// let kvec = KVector::new(NUM_BINS, dec[0].clone() as f64, dec[4] as f64);
+	/// let kvec = KVector::new(NUM_BINS, dec[0].clone() as Decimal, dec[4] as Decimal);
 	/// // Use the ranges in vec to find the elements in the star pair database.
 	/// ```
 	fn get_bins ( &self, value: Radians ) -> Error<ops::RangeInclusive<usize>>
@@ -248,7 +248,7 @@ impl fmt::Display for KVector
 		if min < Radians(DECIMAL_PRECISION_TEST) { min = Radians(DECIMAL_PRECISION_TEST); }
 		if max < Radians(DECIMAL_PRECISION_TEST) { max = Radians(DECIMAL_PRECISION_TEST); }
 		let string = format!(
-		"KVector{{gradient: {}, intercept: {}, min_value: {}, max_value: {}, num_bins: {}}}", 
+		"KVector{{gradient: {}, intercept: {}, min_value: {:?}, max_value: {:?}, num_bins: {}}}", 
 		self.gradient, self.intercept, min, max, self.num_bins);
 		
 		format.write_str(&string)?;
@@ -290,7 +290,7 @@ mod test
 		let k_vector = KVector::new(num_bins, element_min, element_max);
 		
 		let machine_epsilon = DECIMAL_PRECISION;
-		let gradient = (element_max - element_min + machine_epsilon * 2.0) / (num_bins as f64);
+		let gradient = (element_max - element_min + machine_epsilon * 2.0) / (num_bins as Decimal);
 		let intercept = element_min - machine_epsilon;
 		assert!(k_vector.gradient.test_equal(&(gradient as Decimal)));
 		assert!(k_vector.intercept.test_equal(&(intercept as Decimal)));
@@ -309,7 +309,7 @@ mod test
 		assert!(y.test_equal(&((element_max + element_min) / 2.0)));// Must be in the center between the bounds.
 
 		y = gradient * 2.0 + intercept;					// This is the upper bounds.
-		assert!(element_max < y);						// Must include all values.
+		assert!(element_max <= y);						// Must include all values.
 		assert!(y.test_equal(&element_max));			// Must be close to the max value.
 		
 	}
@@ -324,7 +324,7 @@ mod test
 		let k_vector = KVector::new(num_bins, element_min, element_max);
 		
 		let machine_epsilon = DECIMAL_PRECISION;
-		let gradient = (element_max - element_min + machine_epsilon * 2.0) / (num_bins as f64);
+		let gradient = (element_max - element_min + machine_epsilon * 2.0) / (num_bins as Decimal);
 		let intercept = element_min - machine_epsilon;
 		assert!(k_vector.gradient.test_equal(&(gradient as Decimal)));
 		assert!(k_vector.intercept.test_equal(&(intercept as Decimal)));
@@ -339,7 +339,7 @@ mod test
 		// Test consistant intival
 		for i in 1..(num_bins as u32 - 1)
 		{
-			let new_y = gradient * i as f64 + intercept;
+			let new_y = gradient * i as Decimal + intercept;
 			
 			if new_y - y < min_diff
 			{
@@ -353,10 +353,10 @@ mod test
 			assert!( max_diff.test_equal(&min_diff) );
 		}
 	
-		y = gradient * (num_bins as f64) + intercept;
-		println!("{}", y);
-		assert!(element_max < y);						// Must include all values.
-		assert!(y.test_equal(&element_max));			// Must be close to the max value.
+		y = gradient * (num_bins as Decimal) + intercept;
+		println!("{}  {}", y, element_max);
+		assert!(element_max <= y);						// Must include all values.
+		assert!(y.test_close(&element_max, 0.0001));	// Must be close to the max value.
 	}
 
 
@@ -407,7 +407,7 @@ mod test
 		const NUM_BINS_1 : usize = 1;
 		const NUM_BINS_2 : usize = 5;
 		
-		let mut kvec = KVector::new(NUM_BINS_1, dec[0] as f64, dec[14] as f64);
+		let mut kvec = KVector::new(NUM_BINS_1, dec[0] as Decimal, dec[14] as Decimal);
 		let mut vec : Vec<usize> = kvec.generate_bins(&lst.clone()).expect("Should not fail");
 		
 		assert_eq!(vec.size(), NUM_BINS_1 + 1);
@@ -415,7 +415,7 @@ mod test
 		assert_eq!(vec.get(1), 15);			// Exclusive
 		
 		
-		kvec = KVector::new(NUM_BINS_2, dec[0] as f64, dec[14] as f64);
+		kvec = KVector::new(NUM_BINS_2, dec[0] as Decimal, dec[14] as Decimal);
 		vec = kvec.generate_bins(&lst).expect("Should not fail");
 		
 		assert_eq!(vec.size(), NUM_BINS_2 + 1);
@@ -452,7 +452,7 @@ mod test
 		let lst = convert_dec_to_star_database_element(dec.clone());
 		const NUM_BINS : usize = 15;
 		
-		let kvec = KVector::new(NUM_BINS, dec[0].clone() as f64, dec[14] as f64);
+		let kvec = KVector::new(NUM_BINS, dec[0].clone() as Decimal, dec[14] as Decimal);
 		let vec : Vec<usize> = kvec.generate_bins(&lst).expect("Should not fail");
 		
 		assert_eq!(vec.size(), NUM_BINS + 1);
@@ -535,7 +535,7 @@ mod test
 		// let lst = convert_dec_to_star_database_element(dec.clone());
 		const NUM_BINS : usize = 4;
 		
-		let kvec = KVector::new(NUM_BINS, dec[0].clone() as f64, dec[4] as f64);
+		let kvec = KVector::new(NUM_BINS, dec[0].clone() as Decimal, dec[4] as Decimal);
 		// let vec : Vec<usize> = kvec.generate_bins(lst);
 		
 		
