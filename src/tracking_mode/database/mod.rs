@@ -10,8 +10,8 @@
 //! * `q` - Intercept
 //! * `y` - The input variable (angular distance).
 //! ### Prepossessing
-//! This is the process of creating the k-vector, this is only required once.  
-//! **Symbols**  
+//! This is the process of creating the k-vector, this is only required once.
+//! **Symbols**
 //! * `D_max` - The maximum value of an element in the database.
 //! * `D_min` - The minimum value of an element in the database.
 //! * `n` - The number of elements in the database.
@@ -21,17 +21,17 @@
 //!   * `f32 = 1.19e-07`
 //!   * `f64 = 2.22e-16`
 //!
-//! **Finding Gradient**   
+//! **Finding Gradient**
 //! `m = ( D_max - D_min + 2 d e ) / ( N - 1 )`
 //!
-//! **Finding Intercept**  
+//! **Finding Intercept**
 //! `q = D_min - d e`
 //!
 //! ### Searching
-//! By inputting 2 equations, the bounds of the element can be found.  
-//! `k_a = floor(y - q) / m + 1`  
-//! `k_b = ceil(y - q) / m`  
-//! i is within k_a and k_b.  
+//! By inputting 2 equations, the bounds of the element can be found.
+//! `k_a = floor(y - q) / m + 1`
+//! `k_b = ceil(y - q) / m`
+//! i is within k_a and k_b.
 //!
 //!
 //!
@@ -92,7 +92,7 @@ pub mod array_database;
 pub mod pyramid_database;
 
 /// The database equation which points to the star pair database.
-/// 
+///
 ///
 ///
 #[derive(Copy, Clone)]
@@ -103,13 +103,13 @@ pub struct KVector
 	pub gradient      : Decimal,
 	/// The y intercept for the k-vector bin equation.
 	pub intercept     : Decimal,
-	
+
 	/// The smallest value in the database.
 	pub min_value      : Radians,
-	
+
 	/// The largest value in the database.
 	pub max_value      : Radians,
-	
+
 	/// The number of kvector elements.
 	pub num_bins      : usize,
 }
@@ -117,11 +117,11 @@ pub struct KVector
 
 #[automock]
 pub trait KVectorSearch
-{	
-	/// Gets the index of where the value is located in the star pair list.  
-	/// This may include the neigbouring bins as it is on the edge of the bin.  
-	/// i.e.  
-	/// If the bin tolerance is 10:    
+{
+	/// Gets the index of where the value is located in the star pair list.
+	/// This may include the neigbouring bins as it is on the edge of the bin.
+	/// i.e.
+	/// If the bin tolerance is 10:
 	/// [1: (0 to 10), 2: (10 to 20), 3: (20 to 30)],
 	/// If you enter 19, you will receive 2 and 3.
 	/// If you enter 15, you will receive 1, 2 and 3.
@@ -144,7 +144,7 @@ pub struct StarDatabaseElement
 
 /// The compiled k-vector database, this will allow the construction of the database and the lookup of elements in the database.
 pub struct PyramidDatabase
-{	
+{
 	fov:       Radians,
 	k_lookup:  KVector,
 	k_vector:  &'static [usize],

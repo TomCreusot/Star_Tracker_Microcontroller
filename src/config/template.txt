@@ -1,5 +1,5 @@
-/// This is the database for the star tracker.  
-/// It is generated from a template file in src/config/template.txt.   
+/// This is the database for the star tracker.
+/// It is generated from a template file in src/config/template.txt.
 /// It was generated with a:
 /// * fov of $(FOV)
 /// * magnitude of $(MAGNITUDE)
@@ -8,7 +8,25 @@
 use crate::util::units::Radians;
 use crate::util::units::Equatorial;
 use crate::tracking_mode::database::KVector;
+use crate::tracking_mode::database::PyramidDatabase;
 use crate::tracking_mode::StarPair;
+
+// This is here instead of pyramid_database.rs to fix dependancy issues.
+impl PyramidDatabase
+{
+	/// Constructs a new pyramid database using the pregenerated databases (run database_generator).
+	fn new ( ) -> Self
+	{
+		return Self
+		{
+			fov: 		FOV,
+			k_lookup:	K_LOOKUP_DATABASE,
+			k_vector:	&K_VECTOR_DATABASE,
+			pairs:		&STAR_PAIR_DATABASE,
+			catalogue:	&CATALOGUE_DATABASE,
+		};
+}
+}
 
 /// The field of view of the sensor in the current configuration.
 pub static FOV : Radians = Radians($(FOV));
@@ -29,7 +47,7 @@ $(STAR_PAIR_ELEMENTS)
 ];
 
 /// The Catalogue Database (Position of stars).
-pub static CATALOGUE_DATABASE : [Equatorial; $(CATALOGUE_SIZE)] = 
+pub static CATALOGUE_DATABASE : [Equatorial; $(CATALOGUE_SIZE)] =
 [
 $(CATALOGUE_ELEMENTS)
 ];
