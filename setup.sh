@@ -21,3 +21,6 @@ sudo apt-get install libfontconfig libfontconfig1-dev -y
 
 # new resources required
 rustup default nightly-2021-08-20-x86_64-unknown-linux-gnu
+
+# Creates database
+cargo build --bin database_generator
