@@ -86,7 +86,7 @@ pub struct Quest( );
 //###############################################################################################//
 //###############################################################################################//
 
-// 
+//
 #[cfg(test)]
 mod test
 {
@@ -95,23 +95,23 @@ mod test
 	use attitude_determination::Quest;
 
 	use util::units::Cartesian3D;
-	use util::units::Quaternion;
+	// use util::units::Quaternion;
 	use util::units::AngleAxis;
 	use util::units::Radians;
 	use util::units::Degrees;
 	use util::aliases::Decimal;
 	use util::aliases::DECIMAL_PRECISION;
 	use util::test::TestEqual;
-	
+
 	use util::list::ArrayList;
 	use util::list::List;
-	
+
 	use tracking_mode::Match;
 
 	use rand::prelude::*;
-	
-	
-	
+
+
+
 
 
 	pub struct ConstQuest ( );
@@ -119,9 +119,9 @@ mod test
 	{
 		const LAMBDA_PRECISION : Decimal = DECIMAL_PRECISION * 100000.0;
 	}
-	
-	
-	fn random_coordinates <const N : usize> ( 
+
+
+	fn random_coordinates <const N : usize> (
 			rotation : AngleAxis, variation : AngleAxis, var_weight : Decimal
 		) -> ArrayList<Match<Cartesian3D>, N>
 	{
@@ -129,10 +129,10 @@ mod test
 		let mut coords : ArrayList<Match<Cartesian3D>, N> = ArrayList::new();
 		while !coords.is_full()
 		{
-			let mut input = Cartesian3D 
+			let mut input = Cartesian3D
 			{ x: rng.gen::<Decimal>(), y: rng.gen::<Decimal>(), z: rng.gen::<Decimal>() };
 			input.normalize();
-			
+
 			let angle = rotation.angle + Radians(rng.gen::<Decimal>() - 0.5) * variation.angle;
 			let mut axis = rotation.axis;
 			axis.x += variation.axis.x * (rng.gen::<Decimal>() - 0.5);
@@ -142,27 +142,27 @@ mod test
 			let output = (AngleAxis{angle: angle, axis: axis}.to_quaternion()).rotate_point(input);
 			let weight = var_weight + rng.gen::<Decimal>();
 			let element : Match<Cartesian3D> = Match{input: input, output: output, weight: weight};
-			
+
 			coords.push_back(element).expect("HELLO");
 		}
 		return coords;
 	}
-	
-	
+
+
 /*
 	#[test]
 	fn test_quest_matlab ( )
 	{
 		let mut input : ArrayList<Match<Cartesian3D>, 10> = ArrayList::new();
-		input.push_back(Match{input: Cartesian3D{x: 1.0, y: 0.0, z: 0.3}, 
+		input.push_back(Match{input: Cartesian3D{x: 1.0, y: 0.0, z: 0.3},
 						output: Cartesian3D{x: 0.1, y: 1.0, z: 1.0}, weight: 1.0}).expect("HUH");
-		input.push_back(Match{input: Cartesian3D{x: 1.0, y: 0.4, z: 0.0}, 
+		input.push_back(Match{input: Cartesian3D{x: 1.0, y: 0.4, z: 0.0},
 						output: Cartesian3D{x: 0.5, y: 1.0, z: 1.0}, weight: 1.0}).expect("HUH");
-		input.push_back(Match{input: Cartesian3D{x: 1.0, y: 0.3, z: 0.0}, 
+		input.push_back(Match{input: Cartesian3D{x: 1.0, y: 0.3, z: 0.0},
 						output: Cartesian3D{x: 0.3, y: 1.0, z: 1.0}, weight: 1.0}).expect("HUH");
-		input.push_back(Match{input: Cartesian3D{x: 1.0, y: 0.5, z: 0.0}, 
+		input.push_back(Match{input: Cartesian3D{x: 1.0, y: 0.5, z: 0.0},
 						output: Cartesian3D{x: 0.2, y: 1.0, z: 1.0}, weight: 1.0}).expect("HUH");
-		
+
 		for i in 0..input.size()
 		{
 			let mut m = input.get(i);
@@ -170,22 +170,22 @@ mod test
 			m.output.normalize();
 			input.set(i, m).expect("HUH");
 		}
-		
+
 		let output_q  = Quest::estimate::<ConstQuest>(&input);
 		let mut output_aa = output_q.to_angle_axis();
 
 		output_aa.axis.normalize();
-		
+
 		let expected_q = Quaternion{
-			w: 0.547549945381170, 
-			x: -0.461042818527695, 
-			y: -0.689219735118163, 
+			w: 0.547549945381170,
+			x: -0.461042818527695,
+			y: -0.689219735118163,
 			z: -0.112270804400634};
-		
+
 		println!("{:?} \t\t\t {:?}", output_q, expected_q);
 		println!("{:?} \n{:?}", output_aa, expected_q.to_angle_axis());
 		println!("{:?}", output_aa.axis.angle_distance(expected_q.to_angle_axis().axis).to_degrees());
-				
+
 		assert!(output_q.test_equal(&expected_q));
 	}
 */
@@ -196,14 +196,14 @@ mod test
 		let angle = Degrees(90.0).to_radians();
 		let axis = Cartesian3D{x: 1.0, y: 0.0, z: 0.0};
 		let mut angle_axis = AngleAxis{angle: angle, axis: axis};
-		
+
 		let angle_var = Degrees(0.0).to_radians();
 		let axis_var = Cartesian3D{x: 0.0, y: 0.0, z: 0.0};
 		let angle_axis_var = AngleAxis{angle: angle_var, axis: axis_var};
-		
+
 		let input = random_coordinates::<100>(angle_axis, angle_axis_var, 0.0);
-		
-		
+
+
 		let rotation = Quest::estimate::<ConstQuest>(&input);
 		angle_axis.angle = -angle_axis.angle;
 		assert!(rotation.test_equal(&angle_axis.to_quaternion()));
@@ -216,17 +216,17 @@ mod test
 		let angle = Degrees(90.0).to_radians();
 		let axis = Cartesian3D{x: 1.0, y: 0.0, z: 0.0};
 		let angle_axis = AngleAxis{angle: angle, axis: axis};
-		
+
 		let angle_var = Degrees(0.0).to_radians();
 		let axis_var = Cartesian3D{x: 0.0, y: 0.0, z: 0.0};
 		let angle_axis_var = AngleAxis{angle: angle_var, axis: axis_var};
-		
+
 		let input = random_coordinates::<100>(angle_axis, angle_axis_var, 1000.0);
-		
-		
+
+
 		let rotation = Quest::estimate::<ConstQuest>(&input);
 		let ang_out = rotation.to_angle_axis();
-		
+
 		println!("{:?}", ang_out);
 		assert!(rotation.dot(angle_axis.to_quaternion()).abs() < 0.01);
 	}
@@ -238,17 +238,17 @@ mod test
 		let angle = Degrees(90.0).to_radians();
 		let axis = Cartesian3D{x: 1.0, y: 0.0, z: 0.0};
 		let angle_axis = AngleAxis{angle: angle, axis: axis};
-		
+
 		let angle_var = Degrees(0.0).to_radians();
 		let axis_var = Cartesian3D{x: 0.1, y: 0.1, z: 0.1};
 		let angle_axis_var = AngleAxis{angle: angle_var, axis: axis_var};
-		
+
 		let input = random_coordinates::<100>(angle_axis, angle_axis_var, 0.0);
-		
-		
+
+
 		let rotation = Quest::estimate::<ConstQuest>(&input);
 		let ang_out = rotation.to_angle_axis();
-		
+
 		println!("{:?}", ang_out);
 		// Rotation opposite provided angle axis.
 		println!("{}", rotation.dot(angle_axis.to_quaternion()).abs());
@@ -263,17 +263,17 @@ mod test
 		let angle = Degrees(90.0).to_radians();
 		let axis = Cartesian3D{x: 1.0, y: 0.0, z: 0.0};
 		let angle_axis = AngleAxis{angle: angle, axis: axis};
-		
+
 		let angle_var = Degrees(10.0).to_radians();
 		let axis_var = Cartesian3D{x: 0.0, y: 0.0, z: 0.0};
 		let angle_axis_var = AngleAxis{angle: angle_var, axis: axis_var};
-		
+
 		let input = random_coordinates::<100>(angle_axis, angle_axis_var, 0.0);
-		
-		
+
+
 		let rotation = Quest::estimate::<ConstQuest>(&input);
 		let ang_out = rotation.to_angle_axis();
-		
+
 		println!("{:?}", ang_out);
 		// Rotation opposite provided angle axis.
 		println!("{}", rotation.dot(angle_axis.to_quaternion()).abs());
@@ -287,21 +287,21 @@ mod test
 		let angle = Degrees(90.0).to_radians();
 		let axis = Cartesian3D{x: 1.0, y: 0.0, z: 0.0};
 		let angle_axis = AngleAxis{angle: angle, axis: axis};
-		
+
 		let angle_var = Degrees(10.0).to_radians();
 		let axis_var = Cartesian3D{x: 0.1, y: 0.1, z: 0.1};
 		let angle_axis_var = AngleAxis{angle: angle_var, axis: axis_var};
-		
+
 		let input = random_coordinates::<100>(angle_axis, angle_axis_var, 1000.0);
-		
-		
+
+
 		let rotation = Quest::estimate::<ConstQuest>(&input);
 		let ang_out = rotation.to_angle_axis();
-		
+
 		println!("{:?}", ang_out);
 		// Rotation opposite provided angle axis.
 		println!("{}", rotation.dot(angle_axis.to_quaternion()).abs());
-		assert!(rotation.dot(angle_axis.to_quaternion()).abs() < 0.01);	
+		assert!(rotation.dot(angle_axis.to_quaternion()).abs() < 0.01);
 	}
 
 
