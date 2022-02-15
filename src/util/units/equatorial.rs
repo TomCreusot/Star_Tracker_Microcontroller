@@ -63,12 +63,13 @@ impl Equatorial
 	{
 		let cur = self.to_cartesian3();
 		let oth = other.to_cartesian3();
-	
-		let dot = cur.dot(&oth);
-		let mag_cur = (cur.x.powf(2.0) + cur.y.powf(2.0) + cur.z.powf(2.0)).sqrt();
-		let mag_oth = (oth.x.powf(2.0) + oth.y.powf(2.0) + oth.z.powf(2.0)).sqrt();
-	
-		return Radians((dot / (mag_cur * mag_oth)).acos());
+		return cur.angle_distance(oth);
+		// 
+		// let dot = cur.dot(&oth);
+		// let mag_cur = (cur.x.powf(2.0) + cur.y.powf(2.0) + cur.z.powf(2.0)).sqrt();
+		// let mag_oth = (oth.x.powf(2.0) + oth.y.powf(2.0) + oth.z.powf(2.0)).sqrt();
+		// 
+		// return Radians((dot / (mag_cur * mag_oth)).acos());
 	}
 
 	/// Finds the distance between the 2 points on a unit sphere.
@@ -111,7 +112,7 @@ impl Equatorial
 		return Cartesian3D {
 			x: self.ra.cos() * self.get_phi().sin(),
 			y: self.ra.sin() * self.get_phi().sin(),
-			z: self.get_phi().cos()
+			z: -self.get_phi().cos()
 		};
 	}
 	
@@ -191,9 +192,12 @@ mod test
 //										---	Equatorial ---
 //###############################################################################################//
 
-	use util::units::{Equatorial, Radians};
+	use rand::prelude::*;	
+
+	use util::units::{Equatorial, Cartesian3D, Radians};
 	use util::aliases::Decimal;
 	use util::aliases::M_PI;
+	use util::test::TestEqual;
 
 
 	fn assert_close ( a: Decimal, b: Decimal ) -> bool
@@ -395,6 +399,26 @@ mod test
 		assert_close(cart.x, 0.0);
 		assert_close(cart.y, 0.0);
 		assert_close(cart.z, 1.0);
+	}
+	
+	
+	#[test]
+	fn test_to_cartesian_3_random ( )
+	{
+		let mut rng = rand::thread_rng();
+		for _i in 0..100
+		{
+			let mut c = 
+			Cartesian3D{
+				x: rng.gen::<Decimal>() - 0.5,
+				y: rng.gen::<Decimal>() - 0.5,
+				z: rng.gen::<Decimal>() - 0.5,
+			};
+			c.normalize();
+			let e = c.to_equatorial();
+			
+			assert!(e.test_close(&c.to_equatorial(), 0.0001));
+		}
 	}
 	
 	

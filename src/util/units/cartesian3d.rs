@@ -15,6 +15,8 @@ impl Cartesian3D
 	/// ```
 	pub fn magnitude ( &self ) -> Decimal
 	{
+		assert!(self.x != 0.0 || self.y != 0.0 || self.z != 0.0, 
+			"Cannot find the magnitude of a zero vector.");
 		return (self.x.powf(2.0) + self.y.powf(2.0) + self.z.powf(2.0)).sqrt();
 	}
 	
@@ -94,9 +96,18 @@ impl Cartesian3D
 	pub fn angle_distance ( &self, oth: Cartesian3D ) -> Radians
 	{
 		let dot = self.dot(&oth);
-		let mag_cur = (self.x.powf(2.0) + self.y.powf(2.0) + self.z.powf(2.0)).sqrt();
-		let mag_oth = (oth.x.powf(2.0) + oth.y.powf(2.0) + oth.z.powf(2.0)).sqrt();
-		return Radians((dot / (mag_cur * mag_oth)).acos());
+		
+		let mag_cur = self.magnitude();
+		let mag_oth = oth.magnitude();
+		
+		assert!(0.0 < (mag_cur * mag_oth).abs());
+		let mut cos = dot / (mag_cur * mag_oth);
+		if 1.0 < cos  // floating point errors can get slightly above.
+		{
+			cos = 1.0;
+		}
+		
+		return Radians(cos.acos());
 	}
 
 
@@ -153,22 +164,15 @@ impl Cartesian3D
 		let mut ra = 0.0;
 		if self.x != 0.0
 		{
-			ra = (self.y / self.x).atan();
+			ra = (self.y).atan2(self.x);
+			ra = (ra + M_PI * 2.0) % (M_PI * 2.0);
 		}
-		let mut dec = 0.0;
-		if self.z != 0.0
-		{
-			if self.x == 0.0 || self.y == 0.0
-			{
-				dec = (M_PI / 2.0).copysign(self.z);
-			}
-			else
-			{
-				dec = ((self.x.powf(2.0) + self.y.powf(2.0)).sqrt() / self.z).atan();
-			}
-		}
-		// eq.set_phi(dec);
-		let eq = Equatorial{ra: Radians(ra), dec: Radians(dec) };
+
+		let phi =(self.z / (self.x.powf(2.0) + self.y.powf(2.0) + self.z.powf(2.0)).sqrt()).acos();
+		
+		let mut eq = Equatorial{ra: Radians(ra), dec: Radians(0.0)};
+		eq.set_phi(Radians(phi));
+		eq.dec = -eq.dec;
 		return eq;
 	}
 }
@@ -186,14 +190,18 @@ impl Cartesian3D
 #[cfg(test)]
 mod test
 {
+	use rand::prelude::*;
+	
 	use util::units::Cartesian3D;
 	use util::units::Matrix;
 	use util::units::MatPos;
 	use util::units::Equatorial;
 	use util::units::Radians;
 	use util::units::Degrees;
+	use util::units::Decimal;
 	use util::aliases::M_PI;
 	use util::test::TestEqual;
+	
 	
 //###############################################################################################//
 //										---	Equatorial ---
@@ -359,14 +367,14 @@ mod test
 		assert!(e.test_close(&compare, 0.000001));
 	}
 
-	#[test]
-	fn test_to_equatorial_z_zero ( )
-	{
-		let c = Cartesian3D { x: 0.5, y: 0.5, z: 0.0 };
-		let e = c.to_equatorial();
-		assert_eq!(e.ra,  Radians(M_PI / 4.0));
-		assert_eq!(e.dec, Radians(0.0));
-	}
+	// #[test]
+	// fn test_to_equatorial_z_zero ( )
+	// {
+	// 	let c = Cartesian3D { x: 0.5, y: 0.5, z: 0.0 };
+	// 	let e = c.to_equatorial();
+	// 	assert_eq!(e.ra,  Radians(M_PI / 4.0));
+	// 	assert_eq!(e.dec, Radians(0.0));
+	// }
 
 	#[test]
 	fn test_to_equatorial_z_full ( )
@@ -387,11 +395,41 @@ mod test
 	{
 		let mut c = Cartesian3D { x: 0.1, y: 0.1, z: 10000.0 };
 		let mut e = c.to_equatorial();
-		let mut compare =Equatorial{ra: Radians(0.7853981633974483), dec: Radians(0.000014142136)};
-		assert!(e.test_close(&compare, 0.00001));
+		let mut compare = Equatorial{ra: Radians(0.7853), dec: Radians(M_PI / 2.0)};
+		assert!(e.test_close(&compare, 0.001));
 		c = Cartesian3D { x: 0.1, y: 0.1, z: -10000.0 };
 		e = c.to_equatorial();
-		compare = Equatorial{ra: Radians(0.785398163), dec: Radians(-0.000014142136)};
-		assert!(e.test_close(&compare, 0.00001));
-}
+		compare = Equatorial{ra: Radians(0.7853), dec: -Radians(M_PI / 2.0)};
+		assert!(e.test_close(&compare, 0.001));
+	}
+	
+	
+	#[test]
+	fn test_to_equatorial_random ( )
+	{
+		// let mut c = Cartesian3D { x: -1.0, y: 0.1, z: -1.0 };
+		// for i in 0..20
+		// {
+		// 	// c.z += 0.1;
+		// 	c.x += 0.1;
+		// 	println!("{:?} \t\t {:?}", c, c.to_equatorial());
+		// }
+		// let mut e = Equatorial { ra: Radians(0.0), dec: Radians(0.0)};//-M_PI / 2.0) };
+		// for i in 0..20
+		// {
+		// 	e.ra.0 += M_PI / 10.0;
+		// 	println!("{:?} \t\t {:?}", e, e.to_cartesian3());
+		// }
+		// panic!("");
+		let mut rng = rand::thread_rng();
+		for _i in 0..100
+		{
+			let e = Equatorial{
+				ra:  Radians(rng.gen::<Decimal>() * M_PI * 2.0), 
+				dec: Radians(rng.gen::<Decimal>() * M_PI - M_PI / 2.0)};
+			
+			let c = e.to_cartesian3();
+			assert!(e.angle_distance(c.to_equatorial()) < Radians(0.00001));
+		}
+	}
 }
