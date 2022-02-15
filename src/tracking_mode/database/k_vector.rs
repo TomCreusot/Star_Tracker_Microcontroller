@@ -1,5 +1,5 @@
 //! Implementation for KVector
-use std::ops;
+use std::ops::RangeInclusive;
 use std::fmt;
 
 use super::StarDatabaseElement;
@@ -67,7 +67,7 @@ impl KVector
 	pub fn new ( num_bins: usize, min_value: Decimal, max_value: Decimal ) -> KVector
 	{
 		let e = DECIMAL_PRECISION;
-		let grad : Decimal = (max_value - min_value + 2.0 * e) / (num_bins as Decimal);
+		let grad : Decimal = (max_value - min_value + 2.0 * e) / (num_bins as Decimal - 1.0);
 		let int  : Decimal = min_value - e;
 	
 		return KVector {
@@ -147,7 +147,7 @@ impl KVector
 		
 		let mut vec = Vec::with_capacity(self.num_bins);
 		
-		for ii in 0..self.num_bins
+		for ii in 0..self.num_bins - 1
 		{
 			// The value must be greater than or equal min and smaller than max.
 			// let min_value = self.gradient * ii as Decimal + self.intercept;
@@ -164,7 +164,7 @@ impl KVector
 			}
 			vec.push(jj);
 		}
-		vec.push(sorted_database.size());
+		vec.push(sorted_database.size() - 1);
 		return Ok(vec);
 	}
 }
@@ -207,7 +207,7 @@ impl KVectorSearch for KVector
 	/// let kvec = KVector::new(NUM_BINS, dec[0].clone() as Decimal, dec[4] as Decimal);
 	/// // Use the ranges in vec to find the elements in the star pair database.
 	/// ```
-	fn get_bins ( &self, value: Radians ) -> Error<ops::RangeInclusive<usize>>
+	fn get_bins ( &self, value: Radians, angle_tolerance: Radians ) -> Error<RangeInclusive<usize>>
 	{
 		if value.0 < self.min_value.0
 		{
@@ -217,17 +217,17 @@ impl KVectorSearch for KVector
 		{
 			return Err(Errors::InvalidValue);
 		}
-		let tolerance = self.gradient / 2.0 + DECIMAL_PRECISION as Decimal;
 		
+		let tolerance = self.gradient / 2.0 + DECIMAL_PRECISION as Decimal + angle_tolerance.0;
 		let mut high = (value.0 - self.intercept + tolerance) / self.gradient;
 		let mut low =  (value.0 - self.intercept - tolerance) / self.gradient;
 		
 		low = low.floor();
 		high = high.ceil();
 		
-		if high > self.num_bins as Decimal
+		if high > self.num_bins as Decimal - 1.0
 		{
-			high = self.num_bins as Decimal
+			high = self.num_bins as Decimal - 1.0
 		}
 		return Ok(low as usize ..= high as usize);
 	}
@@ -274,12 +274,28 @@ mod test
 	use crate::tracking_mode::database::KVectorSearch;
 	use crate::tracking_mode::database::KVector;
 	
+	use crate::tracking_mode::StarPair;
+	
 	use crate::util::aliases::DECIMAL_PRECISION;
 	use crate::util::aliases::Decimal;
 	use crate::util::test::TestEqual;
 	use crate::util::units::Radians;
 	use crate::util::list::List;
 
+
+
+
+
+//###############################################################################################//
+//
+//										new
+//
+// fn new ( 
+// 			num_bins: usize, 
+//			min_value: Decimal, 
+//			max_value: Decimal ) -> K_Vector
+//
+//###############################################################################################//
 
 	#[test]
 	fn test_new_two_elements ( )
@@ -302,7 +318,7 @@ mod test
 		
 		
 		assert!(y < element_min);						// Must be smaller than min value.
-		assert!(element_min.test_equal(&y));				// Must be close to the min value.
+		assert!(element_min.test_equal(&y));			// Must be close to the min value.
 		
 		y = gradient * 1.0 + intercept;					// This is the middle bounds.
 		assert!(element_min < y && y < element_max);	// Value must be greater than the smallest element.
@@ -354,11 +370,26 @@ mod test
 		}
 	
 		y = gradient * (num_bins as Decimal) + intercept;
-		println!("{}  {}", y, element_max);
 		assert!(element_max <= y);						// Must include all values.
 		assert!(y.test_close(&element_max, 0.0001));	// Must be close to the max value.
 	}
+	
+	
+	
+	
 
+
+
+
+
+//###############################################################################################//
+//
+//										Generate Bins
+//
+// fn generate_bins ( &self, sorted_database: &Vec<StarDatabaseElement> ) -> Error<Vec<usize>>
+//
+//
+//###############################################################################################//
 
 
 
@@ -368,7 +399,7 @@ mod test
 		
 		for i in 0..val.size()
 		{
-			let pair = (0, 0);
+			let pair = StarPair(0, 0);
 			vec.push(StarDatabaseElement{pair: pair.clone(), dist: Radians(val[i])});
 		}
 		return vec;
@@ -506,24 +537,86 @@ mod test
 
 
 
+//###############################################################################################//
+//
+//										Get Bins
+//
+// fn get_bins ( find: Radians ) -> Error<ops::RangeInclusive>
+//
+//###############################################################################################//
 
-
-
-	
-	//
-	// fn get_bins ( Radians ) -> usize
-	//
-	
 	#[test]
 	fn test_get_bins_failure ( )
 	{
 		let kvec = KVector::new(10, 1.0, 10.0);
-		kvec.get_bins ( Radians(0.999999) ).expect_err("Should fail.");
-		kvec.get_bins ( Radians(10.111111) ).expect_err("Should fail.");
+		kvec.get_bins ( Radians(0.999999),  Radians(0.0) ).expect_err("Should fail.");
+		kvec.get_bins ( Radians(10.111111), Radians(0.0) ).expect_err("Should fail.");
+				
+		kvec.get_bins ( Radians(1.0000001),  Radians(0.0)).expect("Should pass.");
+		kvec.get_bins ( Radians(9.99999999), Radians(0.0)).expect("Should pass.");
 		
-		kvec.get_bins ( Radians(1.0000001) ).expect("Should pass.");
-		kvec.get_bins ( Radians(9.99999999) ).expect("Should pass.");
+	}
+	
+	
+	#[test]
+	fn test_get_bins_tolerance ( )
+	{
+		//             0    1    2    3    4  
+		let dec = vec![4.0, 5.0, 6.0, 7.0, 8.0];
+		// let lst = convert_dec_to_star_database_element(dec.clone());
+		const NUM_BINS : usize = 4;
 		
+		let kvec = KVector::new(NUM_BINS, dec[0].clone() as Decimal, dec[4] as Decimal);
+		// let vec : Vec<usize> = kvec.generate_bins(lst);
+		
+		
+		// Ranges will be in steps of the index above/bellow the tolerance / 2 + machine_precision
+		// These steps will then be offset from the nearest integer by ~0.5.
+		//
+		// inclusive .. exclusive
+		// 4.0-:   0 ..= 0 (Out of bounds)
+		// 4.0 :   0 ..= 1
+		// 4.0+:   0 ..= 1
+		// 5.0-:   0 ..= 2
+		// 5.0 :   0 ..= 2
+		// 5.0+:   1 ..= 2
+		// 6.0-:   1 ..= 3
+		// 6.0 :   1 ..= 3
+		// 6.0+:   2 ..= 3
+		// 7.0-:   2 ..= 4
+		// 7.0 :   2 ..= 4
+		// 7.0+:   3 ..= 4
+		// 8.0-:   3 ..= 4
+		// 8.0 :   3 ..= 4
+		// 8.0+:   4 ..= 4 (Out of bounds)
+		
+		// Multiplied decimal_precision by 3 as the number is so small that adding to it modifies the value.
+		// let e = kvec.gradient / 2.0 - DECIMAL_PRECISION as Decimal * 3.0;
+		let t_s  = Radians(0.0);
+		let t_m  = Radians(0.4999999);
+		let t_l  = Radians(0.5000001);
+		let t_xl = Radians(0.9999999);
+		let t_sl = Radians(1.0000001);
+		
+		// Should not crash due to low value.
+		assert_eq!((0 ..= 1), kvec.get_bins ( Radians(4.0), t_s).expect("Should pass"));
+		assert_eq!((0 ..= 1), kvec.get_bins ( Radians(4.0), t_m).expect("Should pass"));
+		assert_eq!((0 ..= 2), kvec.get_bins ( Radians(4.0), t_l).expect("Should pass"));
+		assert_eq!((0 ..= 2), kvec.get_bins ( Radians(4.0), t_xl).expect("Should pass"));
+		assert_eq!((0 ..= 2), kvec.get_bins ( Radians(4.0), t_sl).expect("Should pass"));
+		
+		// Should not crash due to large value.
+		assert_eq!((3 ..= 4), kvec.get_bins ( Radians(8.0), t_s).expect("Should pass"));
+		assert_eq!((3 ..= 4), kvec.get_bins ( Radians(8.0), t_m).expect("Should pass"));
+		assert_eq!((2 ..= 4), kvec.get_bins ( Radians(8.0), t_l).expect("Should pass"));
+		assert_eq!((2 ..= 4), kvec.get_bins ( Radians(8.0), t_xl).expect("Should pass"));
+		assert_eq!((2 ..= 4), kvec.get_bins ( Radians(8.0), t_sl).expect("Should pass"));
+	
+		
+		assert_eq!((1 ..= 3), kvec.get_bins ( Radians(6.0), t_s).expect("Should pass"));
+		assert_eq!((1 ..= 3), kvec.get_bins ( Radians(6.0), t_m).expect("Should pass"));
+		assert_eq!((0 ..= 4), kvec.get_bins ( Radians(6.0), t_l).expect("Should pass"));
+	
 	}
 	
 	
@@ -560,24 +653,26 @@ mod test
 		// 8.0+:   4 ..= 4 (Out of bounds)
 		
 		// Multiplied decimal_precision by 3 as the number is so small that adding to it modifies the value.
-		let t = kvec.gradient / 2.0 - DECIMAL_PRECISION as Decimal * 3.0;
+		let e = kvec.gradient / 2.0 - DECIMAL_PRECISION as Decimal * 3.0;
+		let t = Radians(0.0);
 		
-		assert_eq!((0 ..= 1), kvec.get_bins ( Radians(4.00000) ).expect("Should pass")); // 4.0
-		assert_eq!((0 ..= 1), kvec.get_bins ( Radians(4.0 + t) ).expect("Should pass")); // 4.0+
+		assert_eq!((0 ..= 1), kvec.get_bins ( Radians(4.00000), t).expect("Should pass")); // 4.0
+		assert_eq!((0 ..= 1), kvec.get_bins ( Radians(4.0 + e), t).expect("Should pass")); // 4.0+
 		
-		assert_eq!((0 ..= 2), kvec.get_bins ( Radians(5.0 - t) ).expect("Should pass")); // 5.0-
-		assert_eq!((0 ..= 2), kvec.get_bins ( Radians(5.00000) ).expect("Should pass")); // 5.0
-		assert_eq!((0 ..= 2), kvec.get_bins ( Radians(5.0 + t) ).expect("Should pass")); // 5.0+
+		assert_eq!((0 ..= 2), kvec.get_bins ( Radians(5.0 - e), t).expect("Should pass")); // 5.0-
+		assert_eq!((0 ..= 2), kvec.get_bins ( Radians(5.00000), t).expect("Should pass")); // 5.0
+		assert_eq!((0 ..= 2), kvec.get_bins ( Radians(5.0 + e), t).expect("Should pass")); // 5.0+
 
-		assert_eq!((1 ..= 3), kvec.get_bins ( Radians(6.0 - t) ).expect("Should pass")); // 6.0-
-		assert_eq!((1 ..= 3), kvec.get_bins ( Radians(6.00000) ).expect("Should pass")); // 6.0
-		assert_eq!((1 ..= 3), kvec.get_bins ( Radians(6.0 + t) ).expect("Should pass")); // 6.0+
+		assert_eq!((1 ..= 3), kvec.get_bins ( Radians(6.0 - e), t).expect("Should pass")); // 6.0-
+		assert_eq!((1 ..= 3), kvec.get_bins ( Radians(6.00000), t).expect("Should pass")); // 6.0
+		assert_eq!((1 ..= 3), kvec.get_bins ( Radians(6.0 + e), t).expect("Should pass")); // 6.0+
 
-		assert_eq!((2 ..= 4), kvec.get_bins ( Radians(7.0 - t) ).expect("Should pass")); // 7.0-
-		assert_eq!((2 ..= 4), kvec.get_bins ( Radians(7.00000) ).expect("Should pass")); // 7.0
-		assert_eq!((2 ..= 4), kvec.get_bins ( Radians(7.0 + t) ).expect("Should pass")); // 7.0+
+		assert_eq!((2 ..= 4), kvec.get_bins ( Radians(7.0 - e), t).expect("Should pass")); // 7.0-
+		assert_eq!((2 ..= 4), kvec.get_bins ( Radians(7.00000), t).expect("Should pass")); // 7.0
+		assert_eq!((2 ..= 4), kvec.get_bins ( Radians(7.0 + e), t).expect("Should pass")); // 7.0+
 
-		assert_eq!((3 ..= 4), kvec.get_bins ( Radians(8.0 - t) ).expect("Should pass")); // 8.0-
-		assert_eq!((3 ..= 4), kvec.get_bins ( Radians(8.00000) ).expect("Should pass")); // 8.0
-	}	
+		assert_eq!((3 ..= 4), kvec.get_bins ( Radians(8.0 - e), t).expect("Should pass")); // 8.0-
+		assert_eq!((3 ..= 4), kvec.get_bins ( Radians(8.00000), t).expect("Should pass")); // 8.0
+	}
+	
 }

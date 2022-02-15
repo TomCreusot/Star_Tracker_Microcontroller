@@ -52,9 +52,9 @@ impl <T: 'static> TriangleConstruct <T> for StarTriangle<usize>
 			let mut matches_b : ArrayList<StarPair<usize>, {T::PAIRS_MAX}> = ArrayList::new();
 			let mut matches_c : ArrayList<StarPair<usize>, {T::PAIRS_MAX}> = ArrayList::new();
 			
-			database.find_close_ref(side_a, &mut matches_a);
-			database.find_close_ref(side_b, &mut matches_b);
-			database.find_close_ref(side_c, &mut matches_c);
+			database.find_close_ref(side_a, T::ANGLE_TOLERANCE, &mut matches_a);
+			database.find_close_ref(side_b, T::ANGLE_TOLERANCE, &mut matches_b);
+			database.find_close_ref(side_c, T::ANGLE_TOLERANCE, &mut matches_c);
 			
 			// If each side has found a match, search every possibility
 			if matches_a.size() > 0 && matches_b.size() > 0 && matches_c.size() > 0
@@ -66,16 +66,33 @@ impl <T: 'static> TriangleConstruct <T> for StarTriangle<usize>
 						for kk in 0..matches_c.size()
 						{
 							// (i, j) and (i, k)  (i)
-							let same_ab=StarPair::find_same(&matches_a.get(ii),&matches_b.get(jj));
+							let same_ab=StarPair::find_same(matches_a.get(ii),matches_b.get(jj));
 							// (i, j) and (j, k)  (j)
-							let same_ac=StarPair::find_same(&matches_a.get(ii),&matches_c.get(kk));
+							let same_ac=StarPair::find_same(matches_a.get(ii),matches_c.get(kk));
 							// (i, k) and (j, k)  (k)
-							let same_bc=StarPair::find_same(&matches_b.get(jj),&matches_c.get(kk));
+							let same_bc=StarPair::find_same(matches_b.get(jj),matches_c.get(kk));
 							
 							// A triangle can be formed.
 							if same_ab.is_some() && same_ac.is_some() && 
 								same_bc.is_some( ) && !triangles.is_full()
 							{
+								// //
+								// use util::units::Degrees;
+								// let angles_in : StarTriangle<Degrees> = StarTriangle
+								// (
+								// 	stars.get(iter.i).angle_distance(stars.get(iter.j)).to_degrees(),
+								// 	stars.get(iter.j).angle_distance(stars.get(iter.k)).to_degrees(),
+								// 	stars.get(iter.k).angle_distance(stars.get(iter.i)).to_degrees(),
+								// );
+								// let angles_out : StarTriangle<Degrees> = StarTriangle
+								// (
+								// 	database.find_star(same_ab.unwrap()).expect("").angle_distance(database.find_star(same_ac.unwrap()).expect("")).to_degrees(),
+								// 	database.find_star(same_ac.unwrap()).expect("").angle_distance(database.find_star(same_bc.unwrap()).expect("")).to_degrees(),
+								// 	database.find_star(same_bc.unwrap()).expect("").angle_distance(database.find_star(same_ab.unwrap()).expect("")).to_degrees(),
+								// );
+								// println!("Distances: {:?}, {:?}", angles_in, angles_out);
+								// //
+								
 								let input  = StarTriangle(iter.i, iter.j, iter.k);
 								let output = StarTriangle(
 									same_ab.unwrap(), 
@@ -136,6 +153,26 @@ impl StarTriangle<usize>
 		
 		return Err(Errors::NoMatch);
 	}
+	
+	
+	
+	/// Finds if the triangle contains the particular star.
+	/// # Arguments
+	/// * `star` - The star index to be matched to self.
+	/// # Returns
+	/// True if the triangle contains the star.
+	///
+	/// ```
+	/// use star_tracker::tracking_mode::StarTriangle;
+	///	let triangle = StarTriangle(0, 1, 2);
+	/// assert!(triangle.has(0));
+	/// assert!(triangle.has(1));
+	/// assert!(triangle.has(2));
+	/// ```
+	pub fn has ( &self, star: usize ) -> bool
+	{
+		return self.0 == star || self.1 == star || self.2 == star;
+	} 
 }
 
 
@@ -429,6 +466,30 @@ mod test
 		lst.push(eq);
 		assert!(triangle.search_list(&lst).is_err());
 	}
+
+
+
+
+	//
+	// fn has ( &self, star: usize ) -> bool
+	//
+	#[test]
+	fn test_has_true ( )
+	{
+		let triangle = StarTriangle(0, 1, 2);
+		assert!(triangle.has(0));
+		assert!(triangle.has(1));
+		assert!(triangle.has(2));
+	}
+	
+	#[test]
+	fn test_has_false ( )
+	{
+		let triangle = StarTriangle(1, 2, 3);
+		assert!(!triangle.has(0));
+		assert!(!triangle.has(4));
+	}
+
 
 
 	//

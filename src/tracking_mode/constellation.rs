@@ -7,17 +7,37 @@ use super::Constellation;
 use super::StarTriangle;
 use super::StarPyramid;
 use super::Match;
+use super::Specularity;
 use crate::tracking_mode::database::Database;
 
 use crate::util::units::Equatorial;
 use crate::util::list::List;
 use crate::util::list::ArrayList;
 use crate::util::list::ListIterator;
+use crate::util::err::Error;
 
 use crate::config::TrackingModeConsts;
 
 impl Constellation
 {
+/// Wrapper to simplify the imports.
+/// Essentialy new()
+pub fn find_constellation <T: TrackingModeConsts> ( 
+	stars : &dyn List<Equatorial>, database : &dyn Database ) -> Constellation
+	
+	where T: 'static + TrackingModeConsts, 
+	ArrayList<(), {T::PAIRS_MAX}> : Sized, 
+	ArrayList<(), {T::TRIANGLES_MAX}> : Sized
+{
+	let mut gen_tri : StarTriangle<usize> = StarTriangle(0, 0, 0);
+	let mut gen_pyr : StarPyramid<usize> = StarPyramid(0, 0, 0, 0);
+	let mut gen_spec = Specularity::Ignore;
+	
+	
+	return Constellation::new::<T>(stars, database, &mut gen_tri, &mut gen_pyr, &mut gen_spec);
+}
+
+
 /// Creates unique sets of TrackingMode's from the location of the stars on an equatorial plane.
 /// These are then compared with the database and the accurate sets from the database will be returned.
 /// # Arguments
@@ -25,8 +45,7 @@ impl Constellation
 ///
 /// # Returns
 /// The triangle of the image and the triangle of the database.
-
-fn new <T: TrackingModeConsts> ( 
+pub fn new <T: TrackingModeConsts> ( 
 									stars    : &dyn List<Equatorial>, 
 									database : &dyn Database, 
 									gen_tri  : &mut dyn TriangleConstruct<T>,
@@ -55,9 +74,8 @@ fn new <T: TrackingModeConsts> (
 		let iterator: ListIterator<Match<StarTriangle<usize>>> = ListIterator::new(&triangles);
 		for iter in iterator
 		{
-			let input = iter.output.search_list(stars);
-			let output = iter.input.search_database(database);
-			
+			let input : Error<StarTriangle<Equatorial>> = iter.input.search_list(stars);
+			let output : Error<StarTriangle<Equatorial>> = iter.output.search_database(database);
 			// ~~~~~~~~~~~~~~~~~~~~~~~~~	 A valid match was found.		~~~~~~~~~~~~~~~~~~~~
 			if input.is_ok() && output.is_ok()
 			{
@@ -77,7 +95,7 @@ fn new <T: TrackingModeConsts> (
 					// ~~~~~~~~~~~~~~~~~	Pyramid can be formed.			~~~~~~~~~~~~~~~~~~~~
 					else if 3 < stars.size()
 					{ 
-						let result = gen_pyr.find_pilot(stars, database, iter.input);
+						let result = gen_pyr.find_pilot(stars, database, iter.input, iter.output);
 						// ~~~~~~~~~~~~~	A match is found.				~~~~~~~~~~~~~~~~~~~~
 						if let Ok(found) = result
 						{
@@ -416,7 +434,7 @@ mod test
 		
 		mock_p.expect_find_pilot()
 			.times(1)
-			.returning(|_, _, _|return Ok(Match{input:3, output:3, weight: 1.0}));
+			.returning(|_, _, _, _|return Ok(Match{input:3, output:3, weight: 1.0}));
 		
 		let pyr = &Constellation::new::<MockConfigBig>(&stars, &mock_d, &mut mock_t, &mut mock_p, &mut mock_s);
 		if let Constellation::Pyramid(p) = pyr
@@ -484,7 +502,7 @@ mod test
 		
 		mock_p.expect_find_pilot()
 			.times(1)
-			.returning(|_, _, _|return Ok(Match{input:3, output:3, weight: 1.0}));
+			.returning(|_, _, _, _|return Ok(Match{input:3, output:3, weight: 1.0}));
 		
 		let pyr = &Constellation::new::<MockConfigBig>(&stars, &mock_d, &mut mock_t, &mut mock_p, &mut mock_s);
 		if let Constellation::Pyramid(p) = pyr
@@ -552,7 +570,7 @@ mod test
 		let mut i = 0;
 		mock_p.expect_find_pilot()
 			.times(2)
-			.returning(move |_, _, _| {i+=1; return pyramid[i - 1]});
+			.returning(move |_, _, _, _| {i+=1; return pyramid[i - 1]});
 		
 		let pyr = &Constellation::new::<MockConfigBig>(&stars, &mock_d, &mut mock_t, &mut mock_p, &mut mock_s);
 		if let Constellation::Pyramid(p) = pyr

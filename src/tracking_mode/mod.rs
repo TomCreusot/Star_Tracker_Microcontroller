@@ -70,7 +70,7 @@ pub mod database;
 //###############################################################################################//
 
 /// Groups the stars to identify with their corresponding element in the database.
-#[derive(Debug, Clone, Copy)]
+#[derive(Debug, Clone, Copy, PartialEq)]
 pub struct Match <T>
 { 
 	/// The values to be identified.
@@ -192,7 +192,34 @@ pub trait PyramidConstruct <T: 'static>
 				stars : &dyn List<Equatorial>, 
 				database : &dyn Database, 
 				input : StarTriangle<usize>,
+				output : StarTriangle<usize>,
 			) -> Error<Match<usize>>;
+			
+			
+	
+}
+
+
+#[automock]
+/// This is backend code for StarPyramid to help with mocking.
+/// Dont use.
+pub trait PyramidConstructBackEnd
+{
+	/// INTERNAL FUNCTION!!! (This is just here so it can be used as a mock in tests)		
+	/// Finds the index of the pilot and confirms it as valid.
+	/// # Arguments
+	/// * `output` - The confirmed triangle of the database.
+	/// * `pair_a` - The found stars matching the distance from output.0 to pilot.
+	/// * `pair_b` - The found stars matching the distance from output.1 to pilot.
+	/// * `pair_c` - The found stars matching the distance from output.2 to pilot.
+	/// # Returns
+	/// The database catalogue index to the pilot or none if pilot could not be confirmed.
+	fn confirm_pilot ( 
+		&mut self,
+		output: StarTriangle<usize>, 
+		pair_a: &mut dyn List<StarPair<usize>>, 
+		pair_b: &dyn List<StarPair<usize>>, 
+		pair_c: &dyn List<StarPair<usize>> ) -> Option<usize>;
 }
 
 

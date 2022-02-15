@@ -1,4 +1,7 @@
 /// Implementation for Database
+use std::ops::RangeInclusive;
+use std::ops::Range;
+
 use super::PyramidDatabase;
 use super::Database;
 // use crate::tracking_mode::database::array_database::*;
@@ -10,6 +13,8 @@ use crate::util::units::Radians;
 use crate::util::list::List;
 use crate::util::err::Errors;
 use crate::util::err::Error;
+// use crate::util::aliases::DECIMAL_PRECISION;
+
 
 // The new function is located in template.txt and array_database.
 // To use new, ```use crate::tracking_mode::database::array_database;```
@@ -23,43 +28,27 @@ impl Database for PyramidDatabase
 	/// # Arguments
 	/// * `find` - The angular separation between the found stars to find in the database.
 	/// * `found` - The closest matches to the provided `find`.
-	fn find_close_ref ( &self, find : Radians, found : &mut dyn List<StarPair<usize>> )
+	
+	fn find_close_ref ( &self, find : Radians, tolerance: Radians, 
+														found : &mut dyn List<StarPair<usize>> )
 	{
-		// Error<ops::RangeInclusive<usize>>
-		let k_range_wrapped = self.k_lookup.get_bins(find);
-
-		// If the element is within the range.
-		if let Ok(k_range) = k_range_wrapped
+		let range_k_vec_wrapped = self.k_lookup.get_bins(find, tolerance);
+		if range_k_vec_wrapped.is_ok()
 		{
-			// Subing the range into the kvector bins outputs the location of the upper and lower bounds of the star pairs database.
-			// The middle point is the most likely to be the angle specified.
-			let lower_bounds : usize = self.k_vector[k_range.start().clone()];
-			let upper_bounds : usize = self.k_vector[k_range.end().clone()];
-			let length = upper_bounds - lower_bounds;
-			let mid = (upper_bounds + lower_bounds) / 2;
-			// Half the length as starting from the center and observing both sides
-			for i in 0..length / 2 + 1
+			let range_k_vec = range_k_vec_wrapped.unwrap();
+			let mut range=self.k_vector[*range_k_vec.start()]..self.k_vector[*range_k_vec.end()]+1;
+			range = self.trim_range(find, tolerance, range);
+			
+			for i in range
 			{
 				if !found.is_full()
 				{
-					found.push_back(self.pairs[mid + i]).expect("found should not be full.");
+					found.push_back(self.pairs[i]).expect("?");
 				}
-				if !found.is_full() && i != 0
-				{
-					found.push_back(self.pairs[mid - i]).expect("found should not be full.");
-				}
-			}
-			// If the list is even, the final value will not be included.
-			if !found.is_full() && length % 2 != 0
-			{
-				found.push_back(self.pairs[upper_bounds - 1]).expect("found should not be full.");
 			}
 		}
 	}
-
-
-
-
+	
 	/// Finds the star with the provided index from the star pair database.
 	/// # Arguments
 	/// * `index` - The index of the star in the catalogue database.
@@ -78,6 +67,44 @@ impl Database for PyramidDatabase
 	fn get_fov ( &self ) -> Radians
 	{
 		return self.fov;
+	}
+}
+		
+
+impl PyramidDatabase		
+{
+	/// 
+	///
+	///
+	fn trim_range ( &self, find: Radians, tolerance: Radians, range: Range<usize> )	-> Range<usize>
+	{
+		let mut start = range.start;
+		let mut end = range.end;
+		
+		// lower bounds
+		while tolerance.0 < (find - self.angle_distance(self.pairs[start])).abs() && start < end -1
+		{
+			start += 1;
+		}
+		// upper bounds
+		while tolerance.0 < (self.angle_distance(self.pairs[end - 1]) - find).abs() && start < end
+		{
+			end -= 1;
+		}
+		
+		return Range{start: start, end: end};
+	}
+	
+	
+	
+	/// Finds the angular distance between a star pair referencing the catalogue.
+	/// # Arguments
+	/// * `pair` - The pair to find the distance from.
+	/// # Returns
+	/// The angular distance between the pair.
+	pub fn angle_distance ( &self, pair: StarPair<usize> ) -> Radians
+	{
+		return self.catalogue[pair.0].angle_distance(self.catalogue[pair.1]);
 	}
 }
 

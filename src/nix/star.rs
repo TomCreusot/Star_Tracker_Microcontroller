@@ -15,6 +15,8 @@ use crate::util::units::Radians;
 use crate::util::units::Degrees;
 use crate::util::units::Hours;
 
+use crate::util::list::List;
+
 impl Star
 {
 	// Default Constructor
@@ -22,7 +24,22 @@ impl Star
 //	{
 //		return Self{mag: 0.0, pos: Equatorial{ra: Radians(0.0), dec: Radians(0.0), spec: ""}};
 //	}
+
+
+	pub fn to_equatorial ( list: &dyn List<Star> ) -> Vec<Equatorial>
+	{
+		let mut val : Vec<Equatorial> = Vec::new();
+		for i in 0..list.size()
+		{
+			val.push_back(list.get(i).pos).expect("Could not push back");
+		}
+		return val;
+	}
+
 }
+
+
+
 
 impl Ord for Star
 {

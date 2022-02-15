@@ -105,10 +105,10 @@ pub struct KVector
 	pub intercept     : Decimal,
 
 	/// The smallest value in the database.
-	pub min_value      : Radians,
+	pub min_value     : Radians,
 
 	/// The largest value in the database.
-	pub max_value      : Radians,
+	pub max_value     : Radians,
 
 	/// The number of kvector elements.
 	pub num_bins      : usize,
@@ -127,7 +127,7 @@ pub trait KVectorSearch
 	/// If you enter 15, you will receive 1, 2 and 3.
 	/// # Arguments
 	/// * `value` - The value of the angular interstar distance.
-	fn get_bins ( &self, value: Radians ) -> Error<ops::RangeInclusive<usize>>;
+	fn get_bins ( &self, value: Radians, tolerance: Radians ) -> Error<ops::RangeInclusive<usize>>;
 }
 
 
@@ -136,7 +136,7 @@ pub trait KVectorSearch
 pub struct StarDatabaseElement
 {
 	/// The location of the stars (does not matter what order they are in).
-	pub pair : (usize, usize),
+	pub pair : StarPair<usize>,
 	/// The angular separation between the stars.
 	pub dist : Radians,
 }
@@ -145,18 +145,19 @@ pub struct StarDatabaseElement
 /// The compiled k-vector database, this will allow the construction of the database and the lookup of elements in the database.
 pub struct PyramidDatabase
 {
-	fov:       Radians,
-	k_lookup:  KVector,
-	k_vector:  &'static [usize],
-	pairs:     &'static [StarPair<usize>],
-	catalogue: &'static [Equatorial],
+	pub fov:       Radians,
+	pub k_lookup:  KVector,
+	pub k_vector:  &'static [usize],
+	pub pairs:     &'static [StarPair<usize>],
+	pub catalogue: &'static [Equatorial],
 }
 
 
 #[automock]
 pub trait Database
 {
-	fn find_close_ref ( &self, find : Radians, found : &mut dyn List<StarPair<usize>> );
+	fn find_close_ref ( &self, find : Radians, tolerance: Radians, 
+														found : &mut dyn List<StarPair<usize>> );
 	fn find_star ( &self, index: usize ) -> Error<Equatorial>;
 	fn get_fov ( &self ) -> Radians;
 }

@@ -46,6 +46,7 @@ criterion = "0.2.4"
 
 [features]
 nix = []
+test_integration = []
 # platform = []#["nix", "embedded"]
 
 # Bench test setup

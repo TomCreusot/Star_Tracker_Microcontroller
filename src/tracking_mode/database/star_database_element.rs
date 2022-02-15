@@ -1,6 +1,8 @@
 /// Implementation for StarDatabaseElement
 use std::cmp::Ordering;
 
+use crate::tracking_mode::StarPair;
+
 use super::StarDatabaseElement;
 
 use crate::util::units::Radians;
@@ -68,11 +70,27 @@ impl StarDatabaseElement
 					let existed = false;
 					if !existed
 					{
-						vec.push(StarDatabaseElement{dist: dist, pair: (ii, jj)});
+						vec.push(StarDatabaseElement{dist: dist, pair: StarPair(ii, jj)});
 					}
 				}
 			}
-			println!("{} of {}", ii + 1, stars.size());
+		}
+		return vec;
+	}
+	
+	
+	
+	/// Converts the list to star pairs.
+	/// # Arguments
+	/// * `stars` - The stars to be converted. 
+	/// # Returns
+	/// The star pair inside the object in a list form.
+	pub fn to_star_pairs ( stars: &dyn List<StarDatabaseElement> ) -> Vec<StarPair<usize>>
+	{
+		let mut vec : Vec<StarPair<usize>> = Vec::with_capacity(stars.size());
+		for i in 0..stars.size()
+		{
+			vec.push_back(stars.get(i).pair).expect("This should work.");
 		}
 		return vec;
 	}
@@ -85,11 +103,11 @@ impl Ord for StarDatabaseElement
 	/// Allows ordering with distnitude.
 	fn cmp(&self, other: &Self) -> Ordering
 	{
-		if self.dist.0 > other.dist.0 + 0.01
+		if self.dist.0 > other.dist.0
 		{
 			return Ordering::Greater;
 		}
-		else if other.dist.0 > other.dist.0 + 0.01
+		else if other.dist.0 > other.dist.0
 		{
 			return Ordering::Less;
 		}
@@ -117,11 +135,11 @@ impl PartialEq for StarDatabaseElement
 impl PartialOrd for StarDatabaseElement
 {
 	fn partial_cmp(&self, other: &Self) -> Option<Ordering> {
-        if self.dist.0 > other.dist.0 + 0.01
+        if self.dist.0 > other.dist.0// - DECIMAL_PRECISION
 		{
 			return Some(Ordering::Greater);
 		}
-		else if other.dist.0 > other.dist.0 + 0.01
+		else if other.dist.0 > other.dist.0// + DECIMAL_PRECISION
 		{
 			return Some(Ordering::Less);
 		}
@@ -149,9 +167,13 @@ mod test
 //										---	Database ---
 //###############################################################################################//
 	use tracking_mode::database::StarDatabaseElement;
+	use tracking_mode::StarPair;
 	
 	use util::units::Equatorial;
+	use util::units::Radians;
 	use util::units::Degrees;
+	
+	use util::list::List;
 	
 	use nix::Star;
 
@@ -295,6 +317,29 @@ mod test
 		assert_eq!(out[9].pair.0, 3);	// 45*		EQ
 		assert_eq!(out[9].pair.1, 4);
 	}
-
+	
+	
+	
+	
+	
+	
+	
+	
+	
+	#[test]
+	fn test_to_star_pairs ( )
+	{
+		let mut vec : Vec<StarDatabaseElement> = Vec::new();
+		vec.push_back(StarDatabaseElement{pair: StarPair(1, 0), dist: Radians(10.0)}).expect("");
+		vec.push_back(StarDatabaseElement{pair: StarPair(0, 2), dist: Radians(20.0)}).expect("");
+		vec.push_back(StarDatabaseElement{pair: StarPair(3, 0), dist: Radians(30.0)}).expect("");
+		vec.push_back(StarDatabaseElement{pair: StarPair(0, 4), dist: Radians(40.0)}).expect("");
+		
+		let out = StarDatabaseElement::to_star_pairs(&vec);
+		assert_eq!(out.get(0), StarPair(1, 0));
+		assert_eq!(out.get(1), StarPair(0, 2));
+		assert_eq!(out.get(2), StarPair(3, 0));
+		assert_eq!(out.get(3), StarPair(0, 4));
+	}
 
 }

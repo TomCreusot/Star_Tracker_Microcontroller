@@ -7,6 +7,7 @@
 
 use crate::util::units::Radians;
 use crate::util::units::Equatorial;
+use crate::util::aliases::Decimal;
 use crate::tracking_mode::database::KVector;
 use crate::tracking_mode::database::PyramidDatabase;
 use crate::tracking_mode::StarPair;
@@ -15,7 +16,7 @@ use crate::tracking_mode::StarPair;
 impl PyramidDatabase
 {
 	/// Constructs a new pyramid database using the pregenerated databases (run database_generator).
-	fn new ( ) -> Self
+	pub fn new ( ) -> Self
 	{
 		return Self
 		{
@@ -30,6 +31,10 @@ impl PyramidDatabase
 
 /// The field of view of the sensor in the current configuration.
 pub static FOV : Radians = Radians($(FOV));
+
+
+/// The maximum magnitude viewable by the sensor in the current configuration.
+pub static MAGNITUDE : Decimal = $(MAGNITUDE);
 
 /// The KVector Equation
 pub static K_LOOKUP_DATABASE : KVector = $(K_LOOKUP);

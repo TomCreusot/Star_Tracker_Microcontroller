@@ -3,10 +3,13 @@
 //! Most of these values are only relevent for a microcontroller.
 //! The reason for the microcontroller variables is for memory, this can be ignored for a computer.
 //! The following methodology is implemented by associated consts
+
+#![allow(unused_imports)]
 use crate::util::aliases::Decimal;
 use crate::util::aliases::DECIMAL_PRECISION;
 // use crate::util::aliases::UInt;
 use crate::util::units::Radians;
+// use crate::util::units::Degrees;
 use crate::util::units::Pixel;
 use crate::util::aliases::M_PI;
 
@@ -71,7 +74,7 @@ impl AttitudeDeterminationConsts for AttitudeDeterminationConstsStruct
 /// This method will loop and slowely decrease the gap between the current and previous prediction.
 /// Acheiving perfect precision comparing the 2 values will take up computation power.
 /// By specifying a precision, the computational requirements are lowered.
-const LAMBDA_PRECISION		:	Decimal		= DECIMAL_PRECISION;
+const LAMBDA_PRECISION		:	Decimal		= 0.1;//DECIMAL_PRECISION * 10000000.0;//100000.0;
 	
 }
 
@@ -91,22 +94,20 @@ const LAMBDA_PRECISION		:	Decimal		= DECIMAL_PRECISION;
 impl TrackingModeConstructConsts for TrackingModeConstructConstsStruct
 {
 /// The maximum magnitude to be stored in the database.
-const MAGNITUDE_MAX			: Decimal					= 1.0;//5.5;
+const MAGNITUDE_MAX			: Decimal					= 3.66;
 
-/// This value should be the maximum inaccuracy between pixels.
-/// When searching the database, the database will consider anything within this range as valid.
-/// If the value is too large, some values may not fit (max: max_database_matches) and the actual value may not be added.
-/// If the value is too small, the actual value may not be found.
-const ANGLE_TOLERANCE		: Decimal					= 0.01;
 
-/// Bins / Database Size, Max: 1, Min: 0.00001.
-/// The more bins, the more memory but faster lookup times.
-/// Less bins will result in less memory requirements but multiple comparisons will need to be made.
-const BINS_NUM				: usize						= 1000;
+
+/// The bins are a lookup table.
+/// If there is not enough bins, there is a massive performance hit.
+/// If there is too many bins, there is no speed benifit and it takes up memory.
+/// Test this with multiple sizes to get the best for the database.
+const BINS_NUM				: usize						= 4000;
 
 /// The maximum field of view of the sensor.
 /// To save memory, make this smaller.
-const FOV					: Radians					= Radians(M_PI / 10.0);//5.0);
+const FOV					: Radians					= Radians(25.0 / 180.0 * M_PI);
+// const FOV					: Radians					= Radians(0.17453292519); // 10 degrees
 }
 
 
@@ -115,17 +116,23 @@ impl TrackingModeConsts for TrackingModeConstsStruct
 {
 /// When searching for values in the database, memory required must be forward declared.
 /// This should be the maximum number of possible matches until it gives up.
-const PAIRS_MAX			: usize					= 10;
+const PAIRS_MAX			: usize					= 1000;
 
 /// The number of triangles to find from the database. 
-const TRIANGLES_MAX		: usize					= 10;
+const TRIANGLES_MAX		: usize					= 1000;
 
 /// When comparing constellation, triangles are used.
 /// Specularity is the test to see if the triangle is flipped.
 /// If the triangle is flipped, it is invalid.
 /// HOWEVER if a triangles area is too small (i.e. a strait line or small), any inaccuracy could cause it to be considered flipped.
 /// Use this to define the minimum specularity until the specularity is unimportant.
-const SPECULARITY_MIN			: Decimal				= 0.1;
+const SPECULARITY_MIN		: Decimal			= 0.0001;
+
+/// This value should be the maximum inaccuracy between pixels.
+/// When searching the database, the database will consider anything within this range as valid.
+/// If the value is too large, some values may not fit (max: max_database_matches) and the actual value may not be added.
+/// If the value is too small, the actual value may not be found.
+const ANGLE_TOLERANCE		: Radians			= Radians(0.0001);
 }
 
 
@@ -241,11 +248,6 @@ pub trait TrackingModeConstructConsts
 	/// The maximum magnitude to be stored in the database.
 	const MAGNITUDE_MAX		: Decimal						= 1.0;//5.5;
 
-	/// This value should be the maximum inaccuracy between pixels.
-	/// When searching the database, the database will consider anything within this range as valid.
-	/// If the value is too large, some values may not fit (max: max_database_matches) and the actual value may not be added.
-	/// If the value is too small, the actual value may not be found.
-	const ANGLE_TOLERANCE		: Decimal					= 0.01;
 
 	/// Bins / Database Size, Max: 1, Min: 0.00001.
 	/// The more bins, the more memory but faster lookup times.
@@ -274,7 +276,13 @@ pub trait TrackingModeConsts
 	/// If the triangle is flipped, it is invalid.
 	/// HOWEVER if a triangles area is too small (i.e. a strait line or small), any inaccuracy could cause it to be considered flipped.
 	/// Use this to define the minimum specularity until the specularity is unimportant.
-	const SPECULARITY_MIN			: Decimal;
+	const SPECULARITY_MIN	: Decimal;
+	
+	/// This value should be the maximum inaccuracy between pixels.
+	/// When searching the database, the database will consider anything within this range as valid.
+	/// If the value is too large, some values may not fit (max: max_database_matches) and the actual value may not be added.
+	/// If the value is too small, the actual value may not be found.
+	const ANGLE_TOLERANCE	: Radians;
 }
 
 
