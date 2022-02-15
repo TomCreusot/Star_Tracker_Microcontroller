@@ -19,7 +19,7 @@ impl <T> List <T> for Vec <T> where T: Clone
     /// Finds the max number of elements that can be stored in the list.
     fn capacity ( &self ) -> usize
     {
-        return 1000;//(isize::max_value() - 1) as usize;
+        return usize::max_value();//Vec::capacity(&self);//(isize::max_value() - 1) as usize;
     }
 
     /// Finds how many elements are in the list.
