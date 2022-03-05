@@ -51,7 +51,9 @@ use crate::config::TrackingModeConsts;
 use crate::util::aliases::Decimal;
 use crate::util::units::Cartesian3D;
 use crate::util::units::Equatorial;
+use crate::util::units::Radians;
 use crate::util::list::List;
+use crate::util::list::ArrayList;
 use crate::util::err::Error;
 
 pub mod kernel_iterator;
@@ -59,6 +61,7 @@ pub mod constellation;
 pub mod star_pyramid;
 pub mod star_pair;
 pub mod star_triangle;
+pub mod star_triangle_iterator;
 pub mod specularity;
 pub mod database;
 
@@ -88,8 +91,44 @@ pub struct StarPair<T>		( pub T, pub T );
 /// A set of 3 stars in T space, this represents a triangle.
 /// For lookup in the database, it is easier to use equatorial as it requires less space.
 /// For equations, you must use cartesian3D.
-#[derive(Clone, Copy, Debug)]
+#[derive(Clone, Copy, Debug, PartialEq)]
 pub struct StarTriangle<T>	( pub T, pub T, pub T );
+
+
+
+
+/// By finding every potential StarTriangle before testing their valid is bad for performance.
+/// At 3 stars, there is one triangle.
+/// At 4 stars, there is 4 triangles.
+/// At 5 stars, there is 10... (exponential).
+/// By only checking one at a time, it is likely that only 1 triangle needs to be generated.
+pub struct StarTriangleIterator <const N_MAX_MATCHES: usize>
+{
+	/// The iterator for comparing star pairs.
+	/// Ideal as does not priorities the first star pair found.
+	kernel: KernelIterator,
+	
+	/// The values searched by the kernel.
+	input:  StarTriangle<usize>,
+	
+	/// All found elements from the database when searched by the star pairs constructing input.
+	pair_a: ArrayList<StarPair<usize>, {N_MAX_MATCHES}>,
+	/// All found elements from the database when searched by the star pairs constructing input.
+	pair_b: ArrayList<StarPair<usize>, {N_MAX_MATCHES}>,
+	/// All found elements from the database when searched by the star pairs constructing input.
+	pair_c: ArrayList<StarPair<usize>, {N_MAX_MATCHES}>,
+	
+	/// The index sequence has begun.
+	indexing: bool,
+	/// The current search index of pair_a.
+	index_a: usize,
+	/// The current search index of pair_b.
+	index_b: usize,
+	/// The current search index of pair_c.
+	index_c: usize,
+	
+	angle_tolerance: Radians,
+}
 
 
 
@@ -146,7 +185,7 @@ pub struct KernelIterator
 /// Either there is no match or less than 3 stars	(None)
 /// There is a match but only 3 supplied stars		(Triangle)
 /// There is a match and more than 4 supplied stars	(Pyramid)
-#[derive(Debug)]
+#[derive(Debug, PartialEq)]
 pub enum Constellation
 {
 	Pyramid ( Match<StarPyramid<Equatorial>> ),
@@ -226,22 +265,23 @@ pub trait PyramidConstructBackEnd
 
 
 #[automock]
-pub trait TriangleConstruct <T: 'static> 
-	// where T: TrackingModeConsts, [(); T::PAIRS_MAX]: Sized
-	where T: TrackingModeConsts//, ArrayList<(), {T::PAIRS_MAX}> : Sized
-{
-	/// Finds every triangle from the provided stars which matches the database.
-	/// ***DOES NOT CHECK FOR SPECULARITY!!!***
+pub trait TriangleConstruct
+{	
+	/// Call this to get the next StarTriangle observed/database pair.
 	/// # Arguments
-	/// * `stars` - The stars in the image.
-	/// * `database` - The database to search through.
-	/// * `triangles` -  The output.
-	fn find_match_triangle (
-								&mut self,
-								stars: &dyn List<Equatorial>, 
-								database: &dyn Database, 
-								triangles: &mut dyn List<Match<StarTriangle<usize>>>
-							);
+	/// * `stars` - The observed stars in the image.
+	/// * `database` - The database of stars to search through.
+	/// # Returns
+	/// * None if there is no more available star triangles with the given parameters.
+	/// * Some(Match{input: observed star triangle, output: database match}) if possible.
+	fn next ( &mut self, stars: &dyn List<Equatorial>, database: &dyn Database
+														) -> Option<Match<StarTriangle<usize>>>;
+			
+	/// Prepares the StarTriangleIterator for iterating.
+	/// # Arguments
+	/// * `angle_tolerance` - When searching the database, the tolerance to use.
+	/// * `stars` - The observed stars.											
+	fn begin ( &mut self, angle_tolerance: Radians, stars: &dyn List<Equatorial> );
 }
 
 

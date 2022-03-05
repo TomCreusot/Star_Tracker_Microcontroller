@@ -96,6 +96,25 @@ impl <T> List <T> for Vec <T> where T: Clone
         assert!(!self.is_empty(), "List is empty");
         return self.pop().unwrap();
     }
+	
+	
+	/// Sets the counter to 0 so all elements will be override and the list is essentialy cleared.
+	/// # Example
+	/// ``` 
+	/// use star_tracker::util::list::List;
+	/// let mut lst : Vec<u32> = Vec::new();
+	/// lst.push_back(2);
+	/// lst.push_back(1);
+	/// lst.clear();
+	/// assert_eq!(0, lst.size());
+	/// lst.push_back(10);
+	/// assert_eq!(1, lst.size());
+	/// assert_eq!(10, lst.get(0));
+	/// ```
+	fn clear ( &mut self )
+	{
+		self.clear();
+	}
 
     /// Sorts the list
     /// # Arguments
@@ -318,6 +337,26 @@ mod test
 		let mut lst : Vec<u32> = Vec::new();
 		lst.pop_back();
 	}
+
+
+	//
+	// clear ( &mut self )
+	//
+	
+	#[test]
+	// Clear should set list to 0 and override any values when pushback occures.
+	fn test_clear ( )
+	{
+		let mut lst : Vec<u32> = Vec::new();
+		lst.push_back(2);
+		lst.push_back(1);
+		lst.clear();
+		assert_eq!(0, lst.size());
+		lst.push_back(10);
+		assert_eq!(1, lst.size());
+		assert_eq!(10, lst.get(0));
+	}
+
 
 
 //

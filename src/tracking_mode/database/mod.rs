@@ -73,7 +73,8 @@
 //! | 2 (*star c)   |  2  | -1  |
 //! | 3 (*star d)   |  3  |  0  |
 //! |    ...        | ... | ... |
-use std::ops;
+use std::ops::Range;
+// use std::ops::RangeInclusive;
 use mockall::*;
 use mockall::predicate::*;
 
@@ -127,7 +128,7 @@ pub trait KVectorSearch
 	/// If you enter 15, you will receive 1, 2 and 3.
 	/// # Arguments
 	/// * `value` - The value of the angular interstar distance.
-	fn get_bins ( &self, value: Radians, tolerance: Radians ) -> Error<ops::RangeInclusive<usize>>;
+	fn get_bins ( &self, value: Radians, tolerance: Radians ) -> Error<Range<usize>>;
 }
 
 
@@ -159,5 +160,5 @@ pub trait Database
 	fn find_close_ref ( &self, find : Radians, tolerance: Radians, 
 														found : &mut dyn List<StarPair<usize>> );
 	fn find_star ( &self, index: usize ) -> Error<Equatorial>;
-	fn get_fov ( &self ) -> Radians;
+	fn trim_range ( &self, find: Radians, tolerance: Radians, range: Range<usize> )-> Range<usize>;
 }

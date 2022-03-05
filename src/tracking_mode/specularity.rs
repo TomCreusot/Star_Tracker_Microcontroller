@@ -247,6 +247,4 @@ mod test
 		assert!(SpecularityConstruct::<MockConfig>::same(&mut substitute, &st1, &st2));
 		assert!(SpecularityConstruct::<MockConfig>::same(&mut substitute, &st2, &st1));
 	}
-	
-	
 }

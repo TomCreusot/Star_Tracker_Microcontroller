@@ -15,6 +15,7 @@ database/*
 # Removes massive databases
 hygdata_v3.csv
 src/tracking_mode/database/array_database.rs
+src/integration_tests/images/*
 
 # Random Images
 #sample_in.*

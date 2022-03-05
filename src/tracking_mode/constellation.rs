@@ -1,5 +1,4 @@
 //! Implementation of Constellation.
-// use crate::util::units::Cartesian3D;
 use super::SpecularityConstruct;
 use super::TriangleConstruct;
 use super::PyramidConstruct;
@@ -7,113 +6,75 @@ use super::Constellation;
 use super::StarTriangle;
 use super::StarPyramid;
 use super::Match;
-use super::Specularity;
 use crate::tracking_mode::database::Database;
+// use crate::tracking_mode::StarTriangleIterator;
 
 use crate::util::units::Equatorial;
 use crate::util::list::List;
 use crate::util::list::ArrayList;
-use crate::util::list::ListIterator;
 use crate::util::err::Error;
 
 use crate::config::TrackingModeConsts;
 
 impl Constellation
 {
-/// Wrapper to simplify the imports.
-/// Essentialy new()
-pub fn find_constellation <T: TrackingModeConsts> ( 
-	stars : &dyn List<Equatorial>, database : &dyn Database ) -> Constellation
-	
-	where T: 'static + TrackingModeConsts, 
-	ArrayList<(), {T::PAIRS_MAX}> : Sized, 
-	ArrayList<(), {T::TRIANGLES_MAX}> : Sized
-{
-	let mut gen_tri : StarTriangle<usize> = StarTriangle(0, 0, 0);
-	let mut gen_pyr : StarPyramid<usize> = StarPyramid(0, 0, 0, 0);
-	let mut gen_spec = Specularity::Ignore;
-	
-	
-	return Constellation::new::<T>(stars, database, &mut gen_tri, &mut gen_pyr, &mut gen_spec);
-}
 
-
-/// Creates unique sets of TrackingMode's from the location of the stars on an equatorial plane.
-/// These are then compared with the database and the accurate sets from the database will be returned.
+/// Finds a StarPyramid or StarTriangle if possible.
+///
 /// # Arguments
-/// * `stars` - The list of stars in order of magnitude (descending).
+/// * `stars`    - The observed (image) stars.
+/// * `database` - The database storing reference
+/// * `gen_tri`  - An object for generating a StarTrangle.
+/// * `gen_pyr`  - An object for generating a Pyramid.
+/// * `gen_spec` - An object for checking Specularity.
 ///
 /// # Returns
-/// The triangle of the image and the triangle of the database.
-pub fn new <T: TrackingModeConsts> ( 
-									stars    : &dyn List<Equatorial>, 
-									database : &dyn Database, 
-									gen_tri  : &mut dyn TriangleConstruct<T>,
-									gen_pyr  : &mut dyn PyramidConstruct<T>,
-									gen_spec : &mut dyn SpecularityConstruct<T>
-								) -> Constellation
-	where T: 'static + TrackingModeConsts, 
-	ArrayList<(), {T::PAIRS_MAX}> : Sized, 
-	ArrayList<(), {T::TRIANGLES_MAX}> : Sized
-// where T: TrackingModeConsts, [(); T::PAIRS_MAX]: Sized
+/// If a star pyramid can be formed: Match{input: Observed Stars, output: Corresponding Database}.
+/// None if a star pyramid and star triangle cannot be formed.
+///
+/// NOT IMPLEMENTED (in the case of a star triangle, it is not as accurate, left out)
+/// If a star triangle can be formed: Match{input: Observed Stars, output: Corresponding Database}.
+pub fn find	<T: TrackingModeConsts> ( 
+										stars    : &dyn List<Equatorial>, 
+										database : &dyn Database, 
+										gen_tri  : &mut dyn TriangleConstruct,
+										gen_pyr  : &mut dyn PyramidConstruct<T>,
+										gen_spec : &mut dyn SpecularityConstruct<T>
+									) -> Constellation
+		where T: 'static + TrackingModeConsts, 
+		ArrayList<(), {T::PAIRS_MAX}> : Sized, 
 {
-	// Not enough stars, instant fail.
-	if stars.size() < 3
+	gen_tri.begin(T::ANGLE_TOLERANCE, stars);
+	
+	while let Some(iter) = gen_tri.next(stars, database)
 	{
-		return Constellation::None;
-	}
-	// Enough to make a triangle constellation.
-	else if stars.size() >= 3
-	{
-		// ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~	 Attempt to find stars matches.	~~~~~~~~~~~~~~~~~~~~
-		let mut triangles: 
-			ArrayList<Match<StarTriangle<usize>>,{T::TRIANGLES_MAX}> = ArrayList::new();
-		gen_tri.find_match_triangle ( stars, database, &mut triangles );
+		let input : Error<StarTriangle<Equatorial>> = iter.input.search_list(stars);
+		let output : Error<StarTriangle<Equatorial>> = iter.output.search_database(database);
 
-		// ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~	 Loops through all matches.		~~~~~~~~~~~~~~~~~~~~
-		let iterator: ListIterator<Match<StarTriangle<usize>>> = ListIterator::new(&triangles);
-		for iter in iterator
+
+		// ~~~~~~~~~~~~~~~~~~~~~~~~~	 A valid match was found.		~~~~~~~~~~~~~~~~~~~~
+		if input.is_ok() && output.is_ok()
 		{
-			let input : Error<StarTriangle<Equatorial>> = iter.input.search_list(stars);
-			let output : Error<StarTriangle<Equatorial>> = iter.output.search_database(database);
-			// ~~~~~~~~~~~~~~~~~~~~~~~~~	 A valid match was found.		~~~~~~~~~~~~~~~~~~~~
-			if input.is_ok() && output.is_ok()
+			let input = input.unwrap();
+			let output = output.unwrap();
+			
+			// ~~~~~~~~~~~~~~~~~~~~~	 The speculariy in/out match	~~~~~~~~~~~~~~~~~~~~
+			if gen_spec.same(&input.to_cartesian3(), &output.to_cartesian3())
 			{
-				let input = input.unwrap();
-				let output = output.unwrap();
-				
-				// ~~~~~~~~~~~~~~~~~~~~~	 The speculariy in/out match	~~~~~~~~~~~~~~~~~~~~
-				if gen_spec.same(&input.to_cartesian3(), &output.to_cartesian3())
+				let result = gen_pyr.find_pilot(stars, database, iter.input, iter.output);
+				// ~~~~~~~~~~~~~	A match is found.				~~~~~~~~~~~~~~~~~~~~
+				if let Ok(found) = result
 				{
-					// ~~~~~~~~~~~~~~~~~	Only a triangle can be formed.	~~~~~~~~~~~~~~~~~~~~
-					if stars.size() == 3
-					{ 
-						return Constellation::Triangle(
-							Match{input: input, output: output, weight: 1.0});
-					}
+					// ~~~~~~~~~	Get the star from the database.	~~~~~~~~~~~~~~~~~~~~
+					let pil_in = stars.get(found.input);
+					let pil_out = database.find_star(found.output);
 					
-					// ~~~~~~~~~~~~~~~~~	Pyramid can be formed.			~~~~~~~~~~~~~~~~~~~~
-					else if 3 < stars.size()
-					{ 
-						let result = gen_pyr.find_pilot(stars, database, iter.input, iter.output);
-						// ~~~~~~~~~~~~~	A match is found.				~~~~~~~~~~~~~~~~~~~~
-						if let Ok(found) = result
-						{
-							// ~~~~~~~~~	Get the star from the database.	~~~~~~~~~~~~~~~~~~~~
-							if found.input < stars.size()
-							{
-								let pil_in = stars.get(found.input);
-								let pil_out = database.find_star(found.output);
-								
-								if let Ok(out) = pil_out
-								{
-									let pyr_in  = StarPyramid(input.0, input.1, input.2, pil_in);
-									let pyr_out = StarPyramid(output.0, output.1, output.2, out);
-									return Constellation::Pyramid(
-										Match{input: pyr_in, output: pyr_out, weight: 1.0});
-								}
-							}
-						}
+					if let Ok(out) = pil_out
+					{
+						let pyr_in  = StarPyramid(input.0, input.1, input.2, pil_in);
+						let pyr_out = StarPyramid(output.0, output.1, output.2, out);
+						return Constellation::Pyramid(
+							Match{input: pyr_in, output: pyr_out, weight: 1.0});
 					}
 				}
 			}
@@ -121,7 +82,6 @@ pub fn new <T: TrackingModeConsts> (
 	}
 	return Constellation::None;
 }
-
 }
 
 
@@ -138,10 +98,9 @@ pub fn new <T: TrackingModeConsts> (
 #[allow(unused_must_use)]
 mod test
 {
-	use std::mem;
-
 	use super::Constellation;
 	use super::StarTriangle;
+	use super::StarPyramid;
 	use super::Match;
 	use crate::tracking_mode::MockSpecularityConstruct;
 	use crate::tracking_mode::database::MockDatabase;
@@ -164,6 +123,7 @@ mod test
 		const PAIRS_MAX       : usize = 10;
 		const TRIANGLES_MAX   : usize = 10;
 		const SPECULARITY_MIN : Decimal = 300.0;
+		const ANGLE_TOLERANCE : Radians = Radians(0.0);
 	}	
 	
 	
@@ -181,413 +141,335 @@ mod test
 	}
 	
 
-	
-	// use super::StarTriangle;
-	
+//###############################################################################################//
+//
+//										find
+//
+// pub fn find	<T: TrackingModeConsts> ( 
+// 										stars    : &dyn List<Equatorial>, 
+// 										database : &dyn Database, 
+// 										gen_tri  : &mut dyn TriangleConstruct,
+// 										gen_pyr  : &mut dyn PyramidConstruct<T>,
+// 										gen_spec : &mut dyn SpecularityConstruct<T>
+// 									) -> Constellation
+// 		where T: 'static + TrackingModeConsts, 
+// 		ArrayList<(), {T::PAIRS_MAX}> : Sized, 
+//
+//###############################################################################################//
+
 	#[test]
-	// If there is less than 3 stars input, None should be returned.
-	fn test_new_invalid_number_stars ( )
+	// If there is no triangles, None should be returned.
+	fn test_find_no_triangles ( )
 	{
 		let a = Equatorial{ra: Radians(0.0), dec: Radians(0.0)};
-		let mut stars : Vec<Equatorial> = vec![];
+		let stars : Vec<Equatorial> = vec![a, a];
+		let mock_d = MockDatabase::new();
 		let mut mock_t = MockTriangleConstruct::new();
 		let mut mock_p = MockPyramidConstruct::new();
 		let mut mock_s = MockSpecularityConstruct::new();
-		let mock_d = MockDatabase::new();
 		
-		let mut tri=Constellation::new::<MockConfigBig>(&stars, &mock_d, &mut mock_t, &mut mock_p, &mut mock_s);
-		assert_eq! ( mem::discriminant(&tri),  mem::discriminant(&Constellation::None) );
+		mock_t.expect_begin()
+			.times(1)
+			.withf(|angle,stars| (*angle - MockConfigBig::ANGLE_TOLERANCE).abs() < 0.001 
+				&& stars.size() == 2)
+			.returning(|_, _| return);
 		
-		stars = vec![a];
-		tri=Constellation::new::<MockConfigBig>(&stars, &mock_d, &mut mock_t, &mut mock_p, &mut mock_s);
-		assert_eq! ( mem::discriminant(&tri), mem::discriminant(&Constellation::None) );
+		mock_t.expect_next().times(1).returning(|_, _| return None);
 		
-		stars = vec![a, a];
-		tri=Constellation::new::<MockConfigBig>(&stars, &mock_d, &mut mock_t, &mut mock_p, &mut mock_s);
-		assert_eq! ( mem::discriminant(&tri), mem::discriminant(&Constellation::None) );
-	}
+		
+		let result = Constellation::find::<MockConfigBig> (
+					&stars, &mock_d, &mut mock_t, &mut mock_p, &mut mock_s); 
 	
+		assert_eq!(Constellation::None, result);
+	
+	}
+
 
 
 
 	#[test]
-	// If there is 3 stars and a triangle cannot be formed, None should be returned.
-	fn test_new_invalid_3_stars ( )
+	// If there is triangles but for some reason, the database or observed stars are invalid.
+	// It should not fail, it should continue until all triangle are exausted, then return None.
+	fn test_find_error_match_triangles ( )
 	{
 		let a = Equatorial{ra: Radians(0.0), dec: Radians(0.0)};
-		let stars : Vec<Equatorial> = vec![a, a, a];
-		let mut mock_t = MockTriangleConstruct::new();
-		let mut mock_p = MockPyramidConstruct::new();
-		let mut mock_s = MockSpecularityConstruct::new();
-		let mock_d = MockDatabase::new();
-		mock_t.expect_find_match_triangle().times(1).returning(|_, _, _| ());
-		
-		let tri = Constellation::new::<MockConfigBig>(&stars, &mock_d, &mut mock_t, &mut mock_p, &mut mock_s);
-		assert_eq! ( mem::discriminant(&tri), mem::discriminant(&Constellation::None) );
-					 
-		// assert_eq!(mock_t.calls, 1);
-	}
-
-
-
-	#[test]
-	// If there is 3 stars and a triangle can be formed, a triangle should be returned.
-	fn test_new_valid_3_stars ( )
-	{
-		let mut mock_t = MockTriangleConstruct::new();
-		let mut mock_p = MockPyramidConstruct::new();
+		let stars : Vec<Equatorial> = vec![a, a];
 		let mut mock_d = MockDatabase::new();
-		let mut mock_s = MockSpecularityConstruct::new();
-		
-		
-		// These are points from the image referenced by TRI_IN
-		let a = Equatorial{ra: Radians(1.0), dec: Radians(0.1)};
-		let b = Equatorial{ra: Radians(2.0), dec: Radians(0.2)};
-		let c = Equatorial{ra: Radians(3.0), dec: Radians(0.3)};
-		let stars : Vec<Equatorial> = vec![a, b, c];
-		
-		// The software function will call find_match_triangle;
-		// It will return the triangle from the image (TRI_IN) with the matched database triangle (TRI_OUT).
-		// This will then be converted to the equatorial coordinates from the reference locations.
-		static TRI_IN  : StarTriangle<usize> = StarTriangle( 0, 1, 2 );
-		static TRI_OUT : StarTriangle<usize> = StarTriangle( 0, 1, 2 );
-		static MATCH_TRI : Match<StarTriangle<usize>> = 
-			Match{input: TRI_IN, output: TRI_OUT, weight: 1.0};
-		
-		mock_t.expect_find_match_triangle().times(1).returning(|_, _, out| out.push_back(MATCH_TRI).expect(""));
-		mock_s.expect_same().times(1).returning(|_, _| return true); // The triangles are the correct orientation.
-		
-		// mock_g.expect_find_match_triangle().times(1)
-		// 		.returning(|_, _, triangles| (*triangles).push_back(MATCH_TRI));
-		
-		// The output for converting the TRI_OUT to equatorial (searching database).
-		static STAR_OUT : [Equatorial ; 3] =
-			[Equatorial{ra: Radians(111.2), dec: Radians(222.3)},
-			Equatorial{ra: Radians(11.2), dec: Radians(22.3)},
-			Equatorial{ra: Radians(1.2), dec: Radians(2.3)}];
-		mock_d.expect_find_star().times(3).returning(|i| Ok(STAR_OUT[i]));
-		
-		let tri = &Constellation::new::<MockConfigBig>(&stars, &mock_d, &mut mock_t, &mut mock_p, &mut mock_s);
-		if let Constellation::Triangle(t) = tri
-		{
-			compare_triangle_eq(t.input, StarTriangle(stars[0], stars[1], stars[2]));
-			compare_triangle_eq(t.output, StarTriangle(STAR_OUT[0], STAR_OUT[1], STAR_OUT[2]));
-			// assert_eq!(mock_t.calls, 1);
-		}
-		else
-		{
-			panic!("Invalid Triangle: {:?}", tri);
-		}
-	}
-
-
-	#[test]
-	// If there is 3 stars and a triangle can be formed, but the triangle is flipped, a triangle should not be returned.
-	fn test_new_invalid_specular_3_stars ( )
-	{
 		let mut mock_t = MockTriangleConstruct::new();
 		let mut mock_p = MockPyramidConstruct::new();
-		let mut mock_d = MockDatabase::new();
 		let mut mock_s = MockSpecularityConstruct::new();
 		
+		mock_t.expect_begin().returning(|_, _| return);
 		
-		// These are points from the image referenced by TRI_IN
-		let a = Equatorial{ra: Radians(1.0), dec: Radians(0.1)};
-		let b = Equatorial{ra: Radians(2.0), dec: Radians(0.2)};
-		let c = Equatorial{ra: Radians(3.0), dec: Radians(0.3)};
-		let stars : Vec<Equatorial> = vec![a, b, c];
-		
-		// The software function will call find_match_triangle;
-		// It will return the triangle from the image (TRI_IN) with the matched database triangle (TRI_OUT).
-		// This will then be converted to the equatorial coordinates from the reference locations.
-		static TRI_IN  : StarTriangle<usize> = StarTriangle( 0, 1, 2 );
-		static TRI_OUT : StarTriangle<usize> = StarTriangle( 0, 1, 2 );
-		static MATCH_TRI : Match<StarTriangle<usize>> = 
-			Match{input: TRI_IN, output: TRI_OUT, weight: 1.0};
-		
-		mock_t.expect_find_match_triangle().times(1).returning(|_,_,out| out.push_back(MATCH_TRI).expect(""));
-		mock_s.expect_same().times(1).returning(|_, _| return false); // The triangles are the correct orientation.
-		
-		// mock_g.expect_find_match_triangle().times(1)
-		// 		.returning(|_, _, triangles| (*triangles).push_back(MATCH_TRI));
-		
-		// The output for converting the TRI_OUT to equatorial (searching database).
-		static STAR_OUT : [Equatorial ; 3] =
-			[Equatorial{ra: Radians(111.2), dec: Radians(222.3)},
-			Equatorial{ra: Radians(11.2), dec: Radians(22.3)},
-			Equatorial{ra: Radians(1.2), dec: Radians(2.3)}];
-		mock_d.expect_find_star().times(3).returning(|i| Ok(STAR_OUT[i]));
-		
-		let tri = &Constellation::new::<MockConfigBig>(&stars, &mock_d, &mut mock_t, &mut mock_p, &mut mock_s);
-		if let Constellation::Triangle(_t) = tri
+		let mut i = 0;
+		mock_t.expect_next().returning(move |_, _| 
 		{
-			panic!("Triangle was formed");
-		}
+			i += 1; 
+			if 3 < i 
+			{
+				return None;
+			}
+			else
+			{
+				let triangle = StarTriangle(3,3,3);
+				return Some(Match{input: triangle, output: triangle, weight: 1.0});
+			}
+		} );
+		
+		mock_d.expect_find_star().times(3 * 3).returning(|_| Err(Errors::NoMatch));
+		// 3 * 3 times as there is 3 iterations and find_star is called 3 times per loop.
+		
+		
+		let result = Constellation::find::<MockConfigBig> (
+			&stars, &mock_d, &mut mock_t, &mut mock_p, &mut mock_s); 
+			
+			assert_eq!(Constellation::None, result);
 	}
 
 
 
 
 
-
-
-
-
-
-
 	#[test]
-	// If there is 4 stars and a triangle cannot be formed, None should be returned.
-	fn test_new_invalid_4_stars ( )
+	// If there is triangles and the triangle is valid, the specularity should be tested.
+	// If the specularity is invalid, another triangle should be tested until all are exaused.
+	// None will be returned.
+	fn test_find_invalid_specularity ( )
 	{
 		let a = Equatorial{ra: Radians(0.0), dec: Radians(0.0)};
 		let stars : Vec<Equatorial> = vec![a, a, a, a];
-		let mut mock_t = MockTriangleConstruct::new();
-		let mut mock_p = MockPyramidConstruct::new();
-		let mock_d = MockDatabase::new();
-		let mut mock_s = MockSpecularityConstruct::new();
-		
-		mock_t.expect_find_match_triangle().times(1).returning(|_, _, _| ());
-		
-		let tri = Constellation::new::<MockConfigBig>(&stars, &mock_d, &mut mock_t, &mut mock_p, &mut mock_s);
-		assert_eq! ( mem::discriminant(&tri), mem::discriminant(&Constellation::None) );
-	}
-
-
-
-
-	#[test]
-	// If there is 4 stars and a triangle is found but not specular, None should be returned.
-	fn test_new_invalid_specular_4_stars ( )
-	{
-		let mut mock_t = MockTriangleConstruct::new();
-		let mut mock_p = MockPyramidConstruct::new();
 		let mut mock_d = MockDatabase::new();
+		let mut mock_t = MockTriangleConstruct::new();
+		let mut mock_p = MockPyramidConstruct::new();
 		let mut mock_s = MockSpecularityConstruct::new();
 		
+		mock_t.expect_begin().returning(|_, _| return);
 		
-		// These are points from the image referenced by TRI_IN
-		let a = Equatorial{ra: Radians(1.0), dec: Radians(0.1)};
-		let b = Equatorial{ra: Radians(2.0), dec: Radians(0.2)};
-		let c = Equatorial{ra: Radians(3.0), dec: Radians(0.3)};
-		let d = Equatorial{ra: Radians(4.0), dec: Radians(0.4)};
-		let stars : Vec<Equatorial> = vec![a, b, c, d];
-		
-		// The software function will call find_match_triangle;
-		// It will return the triangle from the image (TRI_IN) with the matched database triangle (TRI_OUT).
-		// This will then be converted to the equatorial coordinates from the reference locations.
-		static TRI_IN  : StarTriangle<usize> = StarTriangle( 0, 1, 2 );
-		static TRI_OUT : StarTriangle<usize> = StarTriangle( 0, 1, 2 );
-		static MATCH_TRI : Match<StarTriangle<usize>> = 
-			Match{input: TRI_IN, output: TRI_OUT, weight: 1.0};
-		
-		mock_t.expect_find_match_triangle().times(1).returning(|_,_,out| out.push_back(MATCH_TRI).expect(""));
-		mock_s.expect_same().times(1).returning(|_, _| return false); // The triangles are the correct orientation.
-		// The output for converting the TRI_OUT to equatorial (searching database).
-		static STAR_OUT : [Equatorial ; 3] =
-			[Equatorial{ra: Radians(111.2), dec: Radians(222.3)},
-			Equatorial{ra: Radians(11.2), dec: Radians(22.3)},
-			Equatorial{ra: Radians(1.2), dec: Radians(2.3)}];
-		mock_d.expect_find_star().times(3).returning(|i| Ok(STAR_OUT[i]));
-		
-		let tri = &Constellation::new::<MockConfigBig>(&stars, &mock_d, &mut mock_t, &mut mock_p, &mut mock_s);
-		if let Constellation::Triangle(_t) = tri
+		let mut i = 0;
+		mock_t.expect_next().returning(move |_, _| 
 		{
-			panic!("Triangle was formed");
-		}
+			i += 1;
+			if 3 < i 
+			{
+				return None;
+			}
+			else
+			{
+				let triangle = StarTriangle(0,0,0);
+				return Some(Match{input: triangle, output: triangle, weight: 1.0});
+			}
+		} );
+		
+		mock_d.expect_find_star().returning(|_| return Ok(Equatorial::zero()));
+		
+		
+		mock_s.expect_same().times(3).returning(|_, _| return false);
+		
+		let result = Constellation::find::<MockConfigBig> (
+			&stars, &mock_d, &mut mock_t, &mut mock_p, &mut mock_s); 
+			
+		assert_eq!(Constellation::None, result);
 	}
 	
+	
+	#[test]
+	// 4 Stars FAIL
+	// If there is triangles and the triangle is valid and the specularity is valid.
+	// If there are 4 stars, a pyramid must be found, if it cannot be found None is returned
+	fn test_find_4_stars_fail_find_pilot ( )
+	{
+		let a = Equatorial{ra: Radians(0.0), dec: Radians(0.0)};
+		let stars : Vec<Equatorial> = vec![a, a, a, a];
+		let mut mock_d = MockDatabase::new();
+		let mut mock_t = MockTriangleConstruct::new();
+		let mut mock_p = MockPyramidConstruct::new();
+		let mut mock_s = MockSpecularityConstruct::new();
+		
+		mock_t.expect_begin().returning(|_, _| return);
+		
+		let mut i = 0;
+		mock_t.expect_next().returning(move |_, _| 
+		{
+			i += 1;
+			if 3 < i 
+			{
+				return None;
+			}
+			else
+			{
+				let triangle = StarTriangle(0,0,0);
+				return Some(Match{input: triangle, output: triangle, weight: 1.0});
+			}
+		} );
+		
+		mock_d.expect_find_star().returning(|_| return Ok(Equatorial::zero()));
+		
+		
+		mock_s.expect_same().times(3).returning(|_, _| return true);
+		
+		mock_p.expect_find_pilot().times(3).returning(|_,_,_,_| Err(Errors::NoMatch));
+		
+		let result = Constellation::find::<MockConfigBig> (
+			&stars, &mock_d, &mut mock_t, &mut mock_p, &mut mock_s); 
+			
+		assert_eq!(Constellation::None, result);
+	}
+
+	#[test]
+	// 4 Stars Fail
+	// If there is triangles and the triangle is valid and the specularity is valid.
+	// If there are 4 stars, if a pyramid can be found but the observed or database values are wrong.
+	// ...
+	fn test_find_4_stars_fail_database_search ( )
+	{
+		let a = Equatorial{ra: Radians(0.0), dec: Radians(0.0)};
+		let stars : Vec<Equatorial> = vec![a, a, a, a];
+		let mut mock_d = MockDatabase::new();
+		let mut mock_t = MockTriangleConstruct::new();
+		let mut mock_p = MockPyramidConstruct::new();
+		let mut mock_s = MockSpecularityConstruct::new();
+		
+		mock_t.expect_begin().returning(|_, _| return);
+		
+		let mut i = 0;
+		mock_t.expect_next().returning(move |_, _| 
+		{
+			i += 1;
+			if 3 < i 
+			{
+				return None;
+			}
+			else
+			{
+				let triangle = StarTriangle(0,0,0);
+				return Some(Match{input: triangle, output: triangle, weight: 1.0});
+			}
+		} );
+		
+		mock_d.expect_find_star()
+			.returning(|index| 
+				if index == 0 
+				{
+					return Ok(Equatorial::zero())
+				} 
+				else 
+				{
+					return Err(Errors::OutOfBounds)
+				});
+		
+		
+		mock_s.expect_same().times(3).returning(|_, _| return true);
+		
+		mock_p.expect_find_pilot().times(3)
+			.returning(|_,_,_,_| Ok(Match{input: 1, output: 1, weight: 0.0}));
+		
+		let result = Constellation::find::<MockConfigBig> (
+			&stars, &mock_d, &mut mock_t, &mut mock_p, &mut mock_s); 
+			
+		assert_eq!(Constellation::None, result);
+	}
+
 
 
 	#[test]
-	// If there is 4 stars and a triangle is found and is specular, Pyramid should be returned.
-	fn test_new_valid_4_stars ( )
+	// 4 Stars SUCCESS
+	// If there is triangles and the triangle is valid and the specularity is valid.
+	// If there are 4 stars, if a pyramid is made, Pyramid should be returned.
+	fn test_success_first_try ( )
 	{
-		let mut mock_t = MockTriangleConstruct::new();
-		let mut mock_p = MockPyramidConstruct::new();
-		let mut mock_d = MockDatabase::new();
-		let mut mock_s = MockSpecularityConstruct::new();
-		
-		// These are points from the image referenced by TRI_IN
-		let a = Equatorial{ra: Radians(1.0), dec: Radians(0.1)};
-		let b = Equatorial{ra: Radians(2.0), dec: Radians(0.2)};
-		let c = Equatorial{ra: Radians(3.0), dec: Radians(0.3)};
-		let d = Equatorial{ra: Radians(4.0), dec: Radians(0.4)};
+		let a = Equatorial{ra: Radians(0.0), dec: Radians(0.0)};
+		let b = Equatorial{ra: Radians(1.0), dec: Radians(1.0)};
+		let c = Equatorial{ra: Radians(2.0), dec: Radians(2.0)};
+		let d = Equatorial{ra: Radians(3.0), dec: Radians(3.0)};
 		let stars : Vec<Equatorial> = vec![a, b, c, d];
-		
-		// The software function will call find_match_triangle;
-		// It will return the triangle from the image (TRI_IN) with the matched database triangle (TRI_OUT).
-		// This will then be converted to the equatorial coordinates from the reference locations.
-		static TRI_IN  : StarTriangle<usize> = StarTriangle( 0, 1, 2 );
-		static TRI_OUT : StarTriangle<usize> = StarTriangle( 0, 1, 2 );
-		static MATCH_TRI : Match<StarTriangle<usize>> = 
-			Match{input: TRI_IN, output: TRI_OUT, weight: 1.0};
-		
-		mock_t.expect_find_match_triangle().times(1).returning(|_,_,out| out.push_back(MATCH_TRI).expect(""));
-		mock_s.expect_same().times(1).returning(|_,_| return true); // The triangles are the correct orientation.
-		// The output for converting the TRI_OUT to equatorial (searching database).
-		static STAR_OUT : [Equatorial ; 4] =
-			[Equatorial{ra: Radians(111.2), dec: Radians(222.3)},
-			Equatorial{ra: Radians(11.2), dec: Radians(22.3)},
-			Equatorial{ra: Radians(1.2), dec: Radians(2.3)},
-			Equatorial{ra: Radians(0.2), dec: Radians(0.3)}];
-		mock_d.expect_find_star().times(4).returning(|i| Ok(STAR_OUT[i]));
-		
-		mock_p.expect_find_pilot()
-			.times(1)
-			.returning(|_, _, _, _|return Ok(Match{input:3, output:3, weight: 1.0}));
-		
-		let pyr = &Constellation::new::<MockConfigBig>(&stars, &mock_d, &mut mock_t, &mut mock_p, &mut mock_s);
-		if let Constellation::Pyramid(p) = pyr
-		{
-			assert_eq!(p.input.0, a);
-			assert_eq!(p.input.1, b);
-			assert_eq!(p.input.2, c);
-			assert_eq!(p.input.3, d);
-			
-			assert_eq!(p.output.0.ra.0, 111.2);
-			assert_eq!(p.output.1.ra.0, 11.2);
-			assert_eq!(p.output.2.ra.0, 1.2);
-			assert_eq!(p.output.3.ra.0, 0.2);
-			
-			assert_eq!(p.output.0.dec.0, 222.3);
-			assert_eq!(p.output.1.dec.0, 22.3);
-			assert_eq!(p.output.2.dec.0, 2.3);
-			assert_eq!(p.output.3.dec.0, 0.3);
-		}
-		else
-		{
-			panic!("FAILED TO FORM PYRAMID: {:?}", pyr);
-		}
-	}
-
-
-	#[test]
-	// If there is more than 4 stars,
-	// If any match is found, it should be returned, even if one fails specularity.
-	fn test_new_valid_pyramid_iterate_specularity_stars (  )
-	{
+		let mut mock_d = MockDatabase::new();
 		let mut mock_t = MockTriangleConstruct::new();
 		let mut mock_p = MockPyramidConstruct::new();
-		let mut mock_d = MockDatabase::new();
 		let mut mock_s = MockSpecularityConstruct::new();
 		
-		// These are points from the image referenced by TRI_IN
-		let a = Equatorial{ra: Radians(1.0), dec: Radians(0.1)};
-		let b = Equatorial{ra: Radians(2.0), dec: Radians(0.2)};
-		let c = Equatorial{ra: Radians(3.0), dec: Radians(0.3)};
-		let d = Equatorial{ra: Radians(4.0), dec: Radians(0.4)};
-		let e = Equatorial{ra: Radians(5.0), dec: Radians(0.5)};
-		let stars : Vec<Equatorial> = vec![a, b, c, d, e];
+		mock_t.expect_begin().returning(|_, _| return);
 		
-		// The software function will call find_match_triangle;
-		// It will return the triangle from the image (TRI_IN) with the matched database triangle (TRI_OUT).
-		// This will then be converted to the equatorial coordinates from the reference locations.
-		static TRI_IN  : StarTriangle<usize> = StarTriangle( 0, 1, 2 );
-		static TRI_OUT : StarTriangle<usize> = StarTriangle( 0, 1, 2 );
-		static MATCH_TRI : Match<StarTriangle<usize>> = 
-			Match{input: TRI_IN, output: TRI_OUT, weight: 1.0};
+		mock_t.expect_next().returning(move |_, _| 
+		{		let triangle = StarTriangle(0,1,2);
+				return Some(Match{input: triangle, output: triangle, weight: 1.0});	} );
 		
-		mock_t.expect_find_match_triangle().times(1).returning(|_,_,out| {out.push_back(MATCH_TRI); out.push_back(MATCH_TRI);});
+		mock_d.expect_find_star()
+			.returning(|i| 
+				return Ok(
+					Equatorial{ra: Radians(i as Decimal+10.0), dec: Radians(i as Decimal+10.0)}));
 		
-		let specularity = [false, true];
-		let mut i = 0;
-		mock_s.expect_same().times(2).returning(move |_,_| {let spec = specularity[i]; i+=1; return spec});
-		// The output for converting the TRI_OUT to equatorial (searching database).
-		static STAR_OUT : [Equatorial ; 4] =
-			[Equatorial{ra: Radians(111.2), dec: Radians(222.3)},
-			Equatorial{ra: Radians(11.2), dec: Radians(22.3)},
-			Equatorial{ra: Radians(1.2), dec: Radians(2.3)},
-			Equatorial{ra: Radians(0.2), dec: Radians(0.3)}];
-		mock_d.expect_find_star().times(7).returning(|i| Ok(STAR_OUT[i]));
 		
-		mock_p.expect_find_pilot()
-			.times(1)
-			.returning(|_, _, _, _|return Ok(Match{input:3, output:3, weight: 1.0}));
+		mock_s.expect_same().returning(|_, _| return true);
 		
-		let pyr = &Constellation::new::<MockConfigBig>(&stars, &mock_d, &mut mock_t, &mut mock_p, &mut mock_s);
-		if let Constellation::Pyramid(p) = pyr
-		{
-			assert_eq!(p.input.0, a);
-			assert_eq!(p.input.1, b);
-			assert_eq!(p.input.2, c);
-			assert_eq!(p.input.3, d);
+		mock_p.expect_find_pilot().times(1)
+			.returning(|_,_,_,_| Ok(Match{input: 3, output: 3, weight: 0.0}));
+		
+		let result = Constellation::find::<MockConfigBig> (
+			&stars, &mock_d, &mut mock_t, &mut mock_p, &mut mock_s); 
 			
-			assert_eq!(p.output.0.ra.0, 111.2);
-			assert_eq!(p.output.1.ra.0, 11.2);
-			assert_eq!(p.output.2.ra.0, 1.2);
-			assert_eq!(p.output.3.ra.0, 0.2);
-		}
-		else
-		{
-			panic!("FAILED TO FORM PYRAMID: {:?}", pyr);
-		}
+		let expect_input = StarPyramid(stars[0], stars[1], stars[2], stars[3]);
+		let expect_output = StarPyramid(
+			Equatorial{ra: Radians(10.0), dec: Radians(10.0)}, 
+			Equatorial{ra: Radians(11.0), dec: Radians(11.0)}, 
+			Equatorial{ra: Radians(12.0), dec: Radians(12.0)}, 
+			Equatorial{ra: Radians(13.0), dec: Radians(13.0)});
+		let expect = Match{input: expect_input, output: expect_output, weight: 1.0};
+		
+		assert_eq!(Constellation::Pyramid(expect), result);
 	}
-
-
-
-
+	
+	
+	
+	
 	#[test]
-	// If there is more than 4 stars,
-	// If any match is found, it should be returned, even if one fails specularity.
-	fn test_new_valid_pyramid_iterate_find_pilot_stars (  )
+	// 4 Stars SUCCESS
+	// If there is triangles and the triangle is valid and the specularity is valid.
+	// If there are 4 stars, if a pyramid is made, Pyramid should be returned even on a fail.
+	fn test_success_second_try ( )
 	{
+		let a = Equatorial{ra: Radians(0.0), dec: Radians(0.0)};
+		let b = Equatorial{ra: Radians(1.0), dec: Radians(1.0)};
+		let c = Equatorial{ra: Radians(2.0), dec: Radians(2.0)};
+		let d = Equatorial{ra: Radians(3.0), dec: Radians(3.0)};
+		let stars : Vec<Equatorial> = vec![a, b, c, d];
+		let mut mock_d = MockDatabase::new();
 		let mut mock_t = MockTriangleConstruct::new();
 		let mut mock_p = MockPyramidConstruct::new();
-		let mut mock_d = MockDatabase::new();
 		let mut mock_s = MockSpecularityConstruct::new();
 		
-		// These are points from the image referenced by TRI_IN
-		let a = Equatorial{ra: Radians(1.0), dec: Radians(0.1)};
-		let b = Equatorial{ra: Radians(2.0), dec: Radians(0.2)};
-		let c = Equatorial{ra: Radians(3.0), dec: Radians(0.3)};
-		let d = Equatorial{ra: Radians(4.0), dec: Radians(0.4)};
-		let e = Equatorial{ra: Radians(5.0), dec: Radians(0.5)};
-		let stars : Vec<Equatorial> = vec![a, b, c, d, e];
+		mock_t.expect_begin().returning(|_, _| return);
 		
-		// The software function will call find_match_triangle;
-		// It will return the triangle from the image (TRI_IN) with the matched database triangle (TRI_OUT).
-		// This will then be converted to the equatorial coordinates from the reference locations.
-		static TRI_IN  : StarTriangle<usize> = StarTriangle( 0, 1, 2 );
-		static TRI_OUT : StarTriangle<usize> = StarTriangle( 0, 1, 2 );
-		static MATCH_TRI : Match<StarTriangle<usize>> = 
-			Match{input: TRI_IN, output: TRI_OUT, weight: 1.0};
+		mock_t.expect_next().returning(move |_, _| 
+		{		let triangle = StarTriangle(0,1,2);
+				return Some(Match{input: triangle, output: triangle, weight: 1.0});	} );
 		
-		mock_t.expect_find_match_triangle()
-			.times(1)
-			.returning(|_,_,out| {out.push_back(MATCH_TRI); out.push_back(MATCH_TRI);});
+		mock_d.expect_find_star()
+			.returning(|i| 
+				return Ok(
+					Equatorial{ra: Radians(i as Decimal+10.0), dec: Radians(i as Decimal+10.0)}));
 		
-
-		mock_s.expect_same().times(2).returning(|_,_| return true);
-		// The output for converting the TRI_OUT to equatorial (searching database).
-		static STAR_OUT : [Equatorial ; 4] =
-			[Equatorial{ra: Radians(111.2), dec: Radians(222.3)},
-			Equatorial{ra: Radians(11.2), dec: Radians(22.3)},
-			Equatorial{ra: Radians(1.2), dec: Radians(2.3)},
-			Equatorial{ra: Radians(0.2), dec: Radians(0.3)}];
-		mock_d.expect_find_star().times(7).returning(|i| Ok(STAR_OUT[i]));
 		
-		let pyramid = [Err(Errors::NoMatch), Ok(Match{input:3, output:3, weight: 1.0})];
-		let mut i = 0;
-		mock_p.expect_find_pilot()
-			.times(2)
-			.returning(move |_, _, _, _| {i+=1; return pyramid[i - 1]});
+		mock_s.expect_same().returning(|_, _| return true);
 		
-		let pyr = &Constellation::new::<MockConfigBig>(&stars, &mock_d, &mut mock_t, &mut mock_p, &mut mock_s);
-		if let Constellation::Pyramid(p) = pyr
-		{
-			assert_eq!(p.input.0, a);
-			assert_eq!(p.input.1, b);
-			assert_eq!(p.input.2, c);
-			assert_eq!(p.input.3, d);
+		let mut already_called = false;
+		mock_p.expect_find_pilot().times(2)
+			.returning(move |_,_,_,_| 
+				{
+					if already_called { return Ok(Match{input: 3, output: 3, weight: 0.0}) }
+					else { already_called = true; return Err(Errors::NoMatch); }
+				});
+		
+		let result = Constellation::find::<MockConfigBig> (
+			&stars, &mock_d, &mut mock_t, &mut mock_p, &mut mock_s); 
 			
-			assert_eq!(p.output.0.ra.0, 111.2);
-			assert_eq!(p.output.1.ra.0, 11.2);
-			assert_eq!(p.output.2.ra.0, 1.2);
-			assert_eq!(p.output.3.ra.0, 0.2);
-		}
-		else
-		{
-			panic!("FAILED TO FORM PYRAMID: {:?}", pyr);
-		}
+		let expect_input = StarPyramid(stars[0], stars[1], stars[2], stars[3]);
+		let expect_output = StarPyramid(
+			Equatorial{ra: Radians(10.0), dec: Radians(10.0)}, 
+			Equatorial{ra: Radians(11.0), dec: Radians(11.0)}, 
+			Equatorial{ra: Radians(12.0), dec: Radians(12.0)}, 
+			Equatorial{ra: Radians(13.0), dec: Radians(13.0)});
+		let expect = Match{input: expect_input, output: expect_output, weight: 1.0};
+		
+		assert_eq!(Constellation::Pyramid(expect), result);
 	}
 }

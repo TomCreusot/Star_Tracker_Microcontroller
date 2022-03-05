@@ -1,10 +1,8 @@
 /// Implementation for Database
-use std::ops::RangeInclusive;
 use std::ops::Range;
 
 use super::PyramidDatabase;
 use super::Database;
-// use crate::tracking_mode::database::array_database::*;
 use crate::tracking_mode::database::KVectorSearch;
 use crate::tracking_mode::StarPair;
 
@@ -13,8 +11,6 @@ use crate::util::units::Radians;
 use crate::util::list::List;
 use crate::util::err::Errors;
 use crate::util::err::Error;
-// use crate::util::aliases::DECIMAL_PRECISION;
-
 
 // The new function is located in template.txt and array_database.
 // To use new, ```use crate::tracking_mode::database::array_database;```
@@ -28,7 +24,6 @@ impl Database for PyramidDatabase
 	/// # Arguments
 	/// * `find` - The angular separation between the found stars to find in the database.
 	/// * `found` - The closest matches to the provided `find`.
-	
 	fn find_close_ref ( &self, find : Radians, tolerance: Radians, 
 														found : &mut dyn List<StarPair<usize>> )
 	{
@@ -36,9 +31,14 @@ impl Database for PyramidDatabase
 		if range_k_vec_wrapped.is_ok()
 		{
 			let range_k_vec = range_k_vec_wrapped.unwrap();
-			let mut range=self.k_vector[*range_k_vec.start()]..self.k_vector[*range_k_vec.end()]+1;
+			let mut end_range = range_k_vec.end;
+			if self.k_vector.len() <= end_range
+			{
+				end_range -= 1; // sometimes the upper value is stored in the bin above.
+			} 
+			let mut range = self.k_vector[range_k_vec.start]..self.k_vector[end_range];
 			range = self.trim_range(find, tolerance, range);
-			
+
 			for i in range
 			{
 				if !found.is_full()
@@ -63,48 +63,66 @@ impl Database for PyramidDatabase
 		return Err(Errors::OutOfBounds);
 	}
 
-	/// Returns the field of view of the database compiled.
-	fn get_fov ( &self ) -> Radians
+	
+	
+	/// Trims the range provided by the k-vector so that every value is within the tolerance.
+	/// # Arguments
+	/// * `find`      - The center point of the tolerance.
+	/// * `tolerance` - The distance allowed from the center.
+	/// * `range`     - The range to be trimmed.
+	/// # Returns
+	/// The a trimmed version of `range`.
+	fn trim_range ( &self, find: Radians, tolerance: Radians, range: Range<usize> )	-> Range<usize>
 	{
-		return self.fov;
+		let mut start =if range.start < self.pairs.len() { range.start } else {self.pairs.len()-1};
+		let mut end   =if range.end   < self.pairs.len() { range.end   } else {self.pairs.len()};
+		
+		// lower bounds
+		loop
+		{
+			let valid    = start < end && start < self.pairs.len() - 1;
+			let distance = self.angle_distance(self.pairs[start]);
+			if !(distance.is_ok() && tolerance.0 < (find - distance.unwrap()).abs() && valid)
+			{
+				break;
+			}
+			
+			start += 1;
+		}
+		
+		// upper bounds
+		loop
+		{
+			let distance = self.angle_distance(self.pairs[end - 1]);
+			if !(distance.is_ok() && tolerance.0 < (find - distance.unwrap()).abs() && start < end)
+			{
+				break;
+			}
+			end -= 1;
+		}
+		
+		return Range{start: start, end: end};
 	}
 }
 		
 
 impl PyramidDatabase		
 {
-	/// 
-	///
-	///
-	fn trim_range ( &self, find: Radians, tolerance: Radians, range: Range<usize> )	-> Range<usize>
-	{
-		let mut start = range.start;
-		let mut end = range.end;
-		
-		// lower bounds
-		while tolerance.0 < (find - self.angle_distance(self.pairs[start])).abs() && start < end -1
-		{
-			start += 1;
-		}
-		// upper bounds
-		while tolerance.0 < (self.angle_distance(self.pairs[end - 1]) - find).abs() && start < end
-		{
-			end -= 1;
-		}
-		
-		return Range{start: start, end: end};
-	}
-	
-	
-	
 	/// Finds the angular distance between a star pair referencing the catalogue.
 	/// # Arguments
 	/// * `pair` - The pair to find the distance from.
 	/// # Returns
 	/// The angular distance between the pair.
-	pub fn angle_distance ( &self, pair: StarPair<usize> ) -> Radians
+	pub fn angle_distance ( &self, pair: StarPair<usize> ) -> Error<Radians>
 	{
-		return self.catalogue[pair.0].angle_distance(self.catalogue[pair.1]);
+		if pair.0 < self.catalogue.len() && pair.1 < self.catalogue.len()
+		{
+			return Ok(self.catalogue[pair.0].angle_distance(self.catalogue[pair.1]));
+		}
+		else
+		{
+			return Err(Errors::OutOfBounds);
+		}
 	}
 }
 
@@ -123,164 +141,276 @@ impl PyramidDatabase
 #[allow(unused_must_use)]
 mod test
 {
+	// use std::ops::Range;
+	
 	use crate::tracking_mode::StarPair;
-	use crate::tracking_mode::database::*;
+	// use crate::tracking_mode::database::MockKVectorSearch;
+	use crate::tracking_mode::database::PyramidDatabase;
+	use crate::tracking_mode::database::Database;
+	use crate::tracking_mode::database::KVector;
 
 	use crate::util::units::Equatorial;
 	use crate::util::units::Radians;
 	use crate::util::list::ArrayList;
-	use crate::util::test::TestEqual;
+	use crate::util::list::List;
+	// use crate::util::test::TestEqual;
+	use crate::util::err::Errors;
+	// use crate::util::err::Error;
+	use crate::util::aliases::DECIMAL_PRECISION;
+	
 
-	static DEFAULT_K_VEC : [usize;5]          = [0, 2, 4, 6, 8];
-	static DEFAULT_PAIRS: [StarPair<usize>; 8] = [
-		StarPair(0, 1), // (0, 2)
-		StarPair(1, 2), // (0, 2)
-		StarPair(2, 3), // (2, 4)
-		StarPair(3, 4), // (2, 4)
-		StarPair(4, 5), // (4, 6)
-		StarPair(5, 6), // (4, 6)
-		StarPair(6, 7), // (6, 8)
-		StarPair(7, 8), // (6, 8)
+	static DEFAULT_K_VECTOR_BIN : [usize;5]          = [0, 2, 4, 5, 9];
+	static DEFAULT_PAIRS: [StarPair<usize>; 9] = [
+		StarPair(0, 0),
+		StarPair(0, 1),
+		StarPair(0, 2),
+		StarPair(0, 3),
+		StarPair(0, 4),
+		StarPair(0, 5),
+		StarPair(0, 6),
+		StarPair(0, 7),
+		StarPair(0, 8),
 	];
-	static DEFAULT_CATALOGUE : [Equatorial;0] = [];
-
-
+	static DEFAULT_CATALOGUE : [Equatorial;9] = 
+	[
+		Equatorial{ra: Radians(0.0), dec: Radians(0.0)},
+		Equatorial{ra: Radians(0.1), dec: Radians(0.0)},
+		Equatorial{ra: Radians(0.2), dec: Radians(0.0)},
+		Equatorial{ra: Radians(0.3), dec: Radians(0.0)},
+		Equatorial{ra: Radians(0.4), dec: Radians(0.0)},
+		Equatorial{ra: Radians(0.5), dec: Radians(0.0)},
+		Equatorial{ra: Radians(0.6), dec: Radians(0.0)},
+		Equatorial{ra: Radians(0.7), dec: Radians(0.0)},
+		Equatorial{ra: Radians(0.8), dec: Radians(0.0)},
+	];
+		
+	// Uses the above values to create a database.
 	fn create_database ( ) -> PyramidDatabase
 	{
+		let k_vector = KVector::new(DEFAULT_K_VECTOR_BIN.len(), 0.0, 0.8);	
 		return PyramidDatabase
 		{
-			fov: Radians(0.0),
-			k_lookup: KVector::new(5, 0.0, 8.0), // Create a kvector designed around DEFAULT_K_VEC.
-			k_vector: &DEFAULT_K_VEC,
+			fov: DEFAULT_CATALOGUE[8].angle_distance(DEFAULT_CATALOGUE[0]),
+			k_lookup: k_vector,
+			k_vector: &DEFAULT_K_VECTOR_BIN,
 			pairs: &DEFAULT_PAIRS,
 			catalogue: &DEFAULT_CATALOGUE
 		};
 	}
 
-	//
-	// fn find_close_ref ( &self, Radians, List<StarPair<usize>> )
-	// Unfortuantly structs struggle containing traits, this function was tested with the black box approach.
-	//
 
-	#[test]
-	// If the k-vector cannot find the element within its range, nothing should happen.
-	fn find_close_ref_out_of_range ( )
-	{
-		let database = create_database();
+//###############################################################################################//
+//
+//										Find Close Ref
+//
+// fn find_close_ref ( 
+// 			&self, find : Radians, tolerance: Radians, found : &mut dyn List<StarPair<usize>> )
+//
+//###############################################################################################//
 
-		let mut out : Vec<StarPair<usize>> = Vec::new();
-		database.find_close_ref(Radians(100.0), &mut out);
-
-		assert_eq!(out.len(), 0);
-	}
-
-
-	#[test]
-	// If the output list cannot store enough elements, it should input as many as it can.
-	fn find_close_ref_not_enough_space ( )
-	{
-		let database = create_database();
-
-		let mut out : ArrayList<StarPair<usize>, 1> = ArrayList::new();
-		database.find_close_ref(Radians(1.0), &mut out);
-		// 1 fall under 0, 2 which is: (0,2) (2, 4) which is (0,1), (1, 2), |This one: (2, 3)|, (2, 4)
-		assert_eq!(out.size(), 1);
-		assert_eq!(out.get(0).0, 2);
-		assert_eq!(out.get(0).1, 3);
-	}
+#[test]
+// If the k_vector cannot find anything in range, it will immediatly end without checking.
+fn test_find_close_ref_invalid_angle ( )
+{
+	let database = create_database();
+	
+	let find      = Radians(0.9);
+	let tolerance = Radians(0.01);
+	let mut found : Vec<StarPair<usize>> = Vec::new();
+	database.find_close_ref(find, tolerance, &mut found);
+	
+	assert_eq!(found.len(), 0);
+}
 
 
-	#[test]
-	// If the element to search is off the edges of the kvector and within a bin and enough space,
-	// they should be added in the appropreate order.
-	fn find_close_ref_odd ( )
-	{
-		let database = create_database();
-
-		let mut out : ArrayList<StarPair<usize>, 10> = ArrayList::new();
-		database.find_close_ref(Radians(3.0), &mut out);
-		// With a tolerance of 2 and a bin set of [0, 2, 4, 6, 8]
-		// 3 is on the 4 side of [2,4] so the range will be [2, 4, 6]
-		// The order starts at the middle or middle - 1 which is is:
-		// mid     (i = 4): (4,5)
-		// mid + 1 (i = 5): (5,6)
-		// mid - 1 (i = 3): (3,4)
-		// mid + 2 (i = 6): (6,7)
-		// mid - 2 (i = 2): (2,3)
-
-		assert_eq!(out.size(), 5);
+#[test]
+// If the arraylist is too small to fit all values, it should try to fit as many as possible.
+fn test_find_close_ref_too_small ( )
+{
+	let database = create_database();
+	
+	let find      = Radians(0.0);
+	let tolerance = Radians(10.0);
+	let mut found : ArrayList<StarPair<usize>, 2> = ArrayList::new();
+	database.find_close_ref(find, tolerance, &mut found);
+	
+	assert_eq!(2, found.size());
+	assert_eq!(StarPair(0, 0),found.get(0));
+	assert_eq!(StarPair(0, 1),found.get(1));
+}
 
 
-		assert_eq!(out.get(0).0, 4);
-		assert_eq!(out.get(0).1, 5);
+#[test]
+// If the list is big enough and the inputs are correct, the correct values should be returned.
+fn test_find_close_ref_valid ( )
+{
+	let database = create_database();
+	
+	let mut find      = Radians(0.1);
+	let mut tolerance = Radians(0.01);
+	let mut found : ArrayList<StarPair<usize>, 10> = ArrayList::new();
+	database.find_close_ref(find, tolerance, &mut found);
+	assert_eq!(1, found.size());
+	assert_eq!(StarPair(0, 1), found.get(0));
+	
+	find      = Radians(0.1);
+	tolerance = Radians(0.1 + DECIMAL_PRECISION);
+	found = ArrayList::new();
+	database.find_close_ref(find, tolerance, &mut found);
+	assert_eq!(3, found.size());
+	assert_eq!(StarPair(0, 0), found.get(0));
+	assert_eq!(StarPair(0, 1), found.get(1));
+	assert_eq!(StarPair(0, 2), found.get(2));
 
-		assert_eq!(out.get(1).0, 5);
-		assert_eq!(out.get(1).1, 6);
-
-		assert_eq!(out.get(2).0, 3);
-		assert_eq!(out.get(2).1, 4);
-
-		assert_eq!(out.get(3).0, 6);
-		assert_eq!(out.get(3).1, 7);
-
-		assert_eq!(out.get(4).0, 2);
-		assert_eq!(out.get(4).1, 3);
-	}
-
-
-
-
-
-
-	#[test]
-	fn test_find_star ( )
-	{
-		let k_vector = KVector{
-			gradient: 0.0,
-			intercept: 0.0,
-			min_value: Radians(0.0),
-			max_value: Radians(0.0),
-			num_bins: 1};
-		static K_VEC : [usize;0] = [];
-		static PAIRS: [StarPair<usize>;0] = [];
-		static CATALOGUE : [Equatorial;1] = [Equatorial{ra: Radians(0.9), dec: Radians(0.1)}];
-		let database = PyramidDatabase{
-			fov: Radians(0.3),
-			k_lookup: k_vector,
-			k_vector: &K_VEC,
-			pairs: &PAIRS,
-			catalogue: &CATALOGUE
-		};
-		assert!(database.find_star(0).expect("SHOULD BE OK").ra.0.test_close(&0.89999, 0.0001));
-		assert!(database.find_star(0).expect("SHOULD BE OK").dec.0.test_close(&0.09999, 0.0001));
-
-		assert!(database.find_star(1).is_err());
-		assert!(database.find_star(1).is_err());
-	}
+	find      = Radians(0.7);
+	tolerance = Radians(0.1 + DECIMAL_PRECISION);
+	found = ArrayList::new();
+	database.find_close_ref(find, tolerance, &mut found);
+	assert_eq!(3, found.size());
+	assert_eq!(StarPair(0, 6), found.get(0));
+	assert_eq!(StarPair(0, 7), found.get(1));
+	assert_eq!(StarPair(0, 8), found.get(2));
+	
+	
+	find      = Radians(0.1);
+	tolerance = Radians(2.0);
+	found = ArrayList::new();
+	database.find_close_ref(find, tolerance, &mut found);
+	assert_eq!(9, found.size());
+	
+	
+	assert_eq!(StarPair(0, 0), found.get(0));
+	assert_eq!(StarPair(0, 1), found.get(1));
+	assert_eq!(StarPair(0, 2), found.get(2));
+	assert_eq!(StarPair(0, 3), found.get(3));
+	assert_eq!(StarPair(0, 4), found.get(4));
+	assert_eq!(StarPair(0, 5), found.get(5));
+	assert_eq!(StarPair(0, 6), found.get(6));
+	assert_eq!(StarPair(0, 7), found.get(7));
+	assert_eq!(StarPair(0, 8), found.get(8));
+}
 
 
+//###############################################################################################//
+//
+//										Find Star
+//
+// fn find_star ( &self, index: usize ) -> Error<Equatorial>
+//
+//###############################################################################################//
+
+#[test]
+// If a star is within the bounds of the catalogue, the corresponding element should be returned.
+fn test_find_star_exists ( )
+{
+	let database = create_database();
+	assert_eq!(DEFAULT_CATALOGUE[0], database.find_star(0).expect("Not out of bounds"));
+	assert_eq!(DEFAULT_CATALOGUE[1], database.find_star(1).expect("Not out of bounds"));
+	assert_eq!(DEFAULT_CATALOGUE[2], database.find_star(2).expect("Not out of bounds"));
+	assert_eq!(DEFAULT_CATALOGUE[3], database.find_star(3).expect("Not out of bounds"));
+	assert_eq!(DEFAULT_CATALOGUE[4], database.find_star(4).expect("Not out of bounds"));
+	assert_eq!(DEFAULT_CATALOGUE[5], database.find_star(5).expect("Not out of bounds"));
+	assert_eq!(DEFAULT_CATALOGUE[6], database.find_star(6).expect("Not out of bounds"));
+	assert_eq!(DEFAULT_CATALOGUE[7], database.find_star(7).expect("Not out of bounds"));
+	assert_eq!(DEFAULT_CATALOGUE[8], database.find_star(8).expect("Not out of bounds"));
+}
+
+#[test]
+// If a star is outside the bounds of the catalogue, an error should be returned.
+fn test_find_star_invalid ( )
+{
+	let database = create_database();
+	assert!(database.find_star(9).is_err());
+}
 
 
-	#[test]
-	fn test_get_fov ( )
-	{
-		let k_vector = KVector{
-			gradient: 0.0,
-			intercept: 0.0,
-			min_value: Radians(0.0),
-			max_value: Radians(0.0),
-			num_bins: 1};
-		static K_VEC : [usize;0] = [];
-		static PAIRS: [StarPair<usize>;0] = [];
-		static CATALOGUE : [Equatorial;0] = [];
-		let database = PyramidDatabase{
-			fov: Radians(0.3),
-			k_lookup: k_vector,
-			k_vector: &K_VEC,
-			pairs: &PAIRS,
-			catalogue: &CATALOGUE
-		};
-		assert!(database.get_fov().test_close(&Radians(0.29999), 0.0001));
-	}
+
+
+//###############################################################################################//
+//
+//										Trim Range
+//
+// fn trim_range ( &self, find: Radians, tolerance: Radians, range: Range<usize> )-> Range<usize>
+//
+//###############################################################################################//
+
+#[test]
+// The output of trim range should always be within the tolerance.
+fn test_trim_range ( )
+{
+	let database      = create_database();
+	let find          = Radians(0.3);
+	let range         = 0..10;
+	let mut tolerance = Radians(-1.0);
+	let mut output    = 8..8; // Lower bounds first, everything moves up.
+	assert_eq!(output, database.trim_range(find, tolerance, range.clone()));
+	
+	tolerance = Radians(0.000001);
+	output    = 3..4;
+	assert_eq!(output, database.trim_range(find, tolerance, range.clone()));
+
+	tolerance = Radians(0.100001);
+	output    = 2..5;
+	assert_eq!(output, database.trim_range(find, tolerance, range.clone()));
+	
+	tolerance = Radians(0.200001);
+	output    = 1..6;
+	assert_eq!(output, database.trim_range(find, tolerance, range.clone()));
+	
+	tolerance = Radians(0.300001);
+	output    = 0..7;
+	assert_eq!(output, database.trim_range(find, tolerance, range.clone()));
+	
+	tolerance = Radians(0.400001);
+	output    = 0..8;
+	assert_eq!(output, database.trim_range(find, tolerance, range.clone()));
+	
+	tolerance = Radians(0.500001);
+	output    = 0..9;
+	assert_eq!(output, database.trim_range(find, tolerance, range.clone()));
+}
+
+
+
+
+//###############################################################################################//
+//
+//										Angle Distance
+//
+// pub fn angle_distance ( &self, pair: StarPair<usize> ) -> Radians
+//
+//###############################################################################################//
+
+#[test]
+// If a StarPair is provided within the bounds of the catalogue database, the angle should match.
+fn test_angle_distance_valid ( )
+{
+	let database = create_database();
+	// From the star pair database.
+	assert_eq!(Ok(Radians(0.0)), database.angle_distance(StarPair(0, 0)));
+	assert_eq!(Ok(Radians(0.1)), database.angle_distance(StarPair(0, 1)));
+	assert_eq!(Ok(Radians(0.2)), database.angle_distance(StarPair(0, 2)));
+	assert_eq!(Ok(Radians(0.3)), database.angle_distance(StarPair(0, 3)));
+	assert_eq!(Ok(Radians(0.4)), database.angle_distance(StarPair(0, 4)));
+	assert_eq!(Ok(Radians(0.5)), database.angle_distance(StarPair(0, 5)));
+	assert_eq!(Ok(Radians(0.6)), database.angle_distance(StarPair(0, 6)));
+	assert_eq!(Ok(Radians(0.7)), database.angle_distance(StarPair(0, 7)));
+	assert_eq!(Ok(Radians(0.8)), database.angle_distance(StarPair(0, 8)));
+
+	// Not in the star pair database.
+	assert_eq!(Ok(Radians(0.1)), database.angle_distance(StarPair(2, 3)));
+}
+
+
+#[test]
+// If a StarPair is outside the bounds of the catalogue database, Errors::OutOfBounds is returned.
+fn test_angle_distance_invalid ( )
+{
+	let database = create_database();
+	assert_eq!(Err(Errors::OutOfBounds), database.angle_distance(StarPair(0, 9)));
+	assert_eq!(Err(Errors::OutOfBounds), database.angle_distance(StarPair(9, 0)));
+	assert_eq!(Err(Errors::OutOfBounds), database.angle_distance(StarPair(9, 9)));
+	assert_eq!(Err(Errors::OutOfBounds), database.angle_distance(StarPair(100, 100)));
+}
 
 }

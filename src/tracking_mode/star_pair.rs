@@ -18,11 +18,11 @@ impl <T> StarPair <T> where T : PartialEq + Copy + std::fmt::Debug
 	/// 
 	///	let pair_a = StarPair(3, 2);
 	///	let pair_b = StarPair(3, 1);
-	/// assert_eq!(StarPair::<usize>::find_same(&pair_a, &pair_b).unwrap(), 3);
+	/// assert_eq!(StarPair::<usize>::find_same(pair_a, pair_b).unwrap(), 3);
 	///
 	///	let pair_a = StarPair(1, 2);
 	/// let pair_b = StarPair(3, 4);
-	/// assert_eq!(StarPair::<usize>::find_same(&pair_a, &pair_b), None);
+	/// assert_eq!(StarPair::<usize>::find_same(pair_a, pair_b), None);
 	/// ```
 	
 	pub fn find_same ( pair_a: StarPair<T>, pair_b: StarPair<T> ) -> Option<T>
@@ -95,11 +95,11 @@ impl <T> StarPair <T> where T : PartialEq + Copy + std::fmt::Debug
 	/// let pair_a = StarPair(0, 0);
 	/// let pair_b = StarPair(0, 1);
 	//
-	/// assert!(pair_a.has(&0));
-	/// assert!(!pair_a.has(&1));
-	/// assert!(pair_b.has(&0));
-	/// assert!(pair_b.has(&1));
-	/// assert!(!pair_b.has(&2));
+	/// assert!(pair_a.has(0));
+	/// assert!(!pair_a.has(1));
+	/// assert!(pair_b.has(0));
+	/// assert!(pair_b.has(1));
+	/// assert!(!pair_b.has(2));
 	/// ```
 	
 	pub fn has ( &self, same: T ) -> bool
@@ -123,7 +123,7 @@ impl <T> StarPair <T> where T : PartialEq + Copy + std::fmt::Debug
 	/// let pair_a = StarPair(1, 1);
 	/// let pair_b = StarPair(0, 1);
 	///
-	/// assert!(pair_a.find_not(&1).is_none());
+	/// assert!(pair_a.find_not(1).is_none());
 	/// assert_eq!(pair_a.find_not(0).expect("should be Some"), 1);
 	/// assert_eq!(pair_b.find_not(0).expect("should be Some"), 1);
 	/// assert_eq!(pair_b.find_not(1).expect("should be Some"), 0);

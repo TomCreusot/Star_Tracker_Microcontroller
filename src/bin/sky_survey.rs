@@ -123,7 +123,7 @@ fn find_least_stars ( num_stars: &mut Vec<Vec<u32>>, magnitude_idx: usize, fov_r
 			let mut current = 0;
 			for actual in stars
 			{
-				if even.angle_distance(*actual).0 < fov_range.get(f)
+				if even.angle_distance(*actual).0 < fov_range.get(f) / 2.0
 				{
 					current+=1;
 				}
@@ -149,7 +149,7 @@ fn find_percent_stars ( percent: &mut Vec<Vec<Decimal>>, magnitude_idx: usize, f
 			let mut siblings = 0;
 			for actual in stars
 			{
-				if even.angle_distance(*actual).0 < fov_range.get(f)
+				if even.angle_distance(*actual).0 < fov_range.get(f) / 2.0
 				{
 					siblings += 1;
 				}

@@ -213,6 +213,26 @@ impl<T, const N : usize> List<T> for ArrayList<T, N> where T: Clone
 		self.end -= 1;
 		return self.array[self.end].clone();
 	}
+	
+	
+	/// Sets the counter to 0 so all elements will be override and the list is essentialy cleared.
+	/// # Example
+	/// ``` 
+	/// use star_tracker::util::list::{ArrayList, List};
+	/// let mut lst : ArrayList<u32, 2> = ArrayList::new();
+	/// lst.push_back(2);
+	/// lst.push_back(1);
+	/// lst.clear();
+	/// assert_eq!(0, lst.size());
+	/// lst.push_back(10);
+	/// assert_eq!(1, lst.size());
+	/// assert_eq!(10, lst.get(0));
+	/// ```
+	fn clear ( &mut self )
+	{
+		self.end = 0;
+	}
+	
 
 	/// Sorts the list
 	/// # Arguments
@@ -528,6 +548,26 @@ mod test
 		lst.pop_back();
 	}
 
+
+
+
+	//
+	// clear ( &mut self )
+	//
+	
+	#[test]
+	// Clear should set list to 0 and override any values when pushback occures.
+	fn test_clear ( )
+	{
+		let mut lst : ArrayList<u32, 2> = ArrayList::new();
+		lst.push_back(2);
+		lst.push_back(1);
+		lst.clear();
+		assert_eq!(0, lst.size());
+		lst.push_back(10);
+		assert_eq!(1, lst.size());
+		assert_eq!(10, lst.get(0));
+	}
 
 //
 // sort ( fn ( &mut T, &mut T ) -> bool )

@@ -363,7 +363,7 @@ mod test
 		// This should be called 2 * 3 times as there are 3 calls per loop and 2 valid entries.
 		database.expect_find_close_ref()
 			.times(2 * 3) 						// Called 3 times per loop
-			.returning(|_, _| ());
+			.returning(|_, _, _| ());
 			// .withf(|find, _| {find.0 < 0.0}/*0.1 < find.0*/); // star and pilot.
 			
 		assert! ( PyramidConstruct::<MockConfigBig>::
@@ -387,7 +387,7 @@ mod test
 		let mut index = 0;
 		database.expect_find_close_ref()
 			.times(1 * 3)
-			.returning(move |_, found| {found.push_back(OUTPUT[index]); index+=1;});
+			.returning(move |_, _, found| {found.push_back(OUTPUT[index]); index+=1;});
 		
 		pyr_mock.expect_confirm_pilot()
 			.times(1)

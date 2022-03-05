@@ -1,4 +1,3 @@
-
 #![allow(unused_must_use)]
 extern crate star_tracker;
 extern crate image;
@@ -7,6 +6,7 @@ extern crate rand;
 use rand::prelude::*;
 
 use star_tracker::config::TrackingModeConstsStruct;
+use star_tracker::config::TrackingModeConsts;
 use star_tracker::config::AttitudeDeterminationConstsStruct;
 
 
@@ -22,6 +22,7 @@ use star_tracker::util::units::Equatorial;
 
 
 use star_tracker::tracking_mode::Constellation;
+use star_tracker::tracking_mode::StarTriangleIterator;
 // use star_tracker::tracking_mode::StarPyramid;
 // use star_tracker::tracking_mode::StarTriangle;
 use star_tracker::tracking_mode::Match;
@@ -51,14 +52,22 @@ fn main ( )
 		println!("\tStars In Image: {}", input.len());
 		
 		println!("Corrupting Image           \t\t...");
-		dither(&mut input, 0.0001);
+		dither(&mut input, 0.00001);
 		hide_stars(&mut input, 1);
-		false_stars(&mut input, center, 4);
+		false_stars(&mut input, center, 2);
+		println!("\tStars: {}", input.len());
 		rotate(&mut input, orientation);
 		
 		
 		println!("Finding Constellation      \t\t...");
-		let constellation : Constellation = Constellation::find_constellation::<TrackingModeConstsStruct>(&input, &PyramidDatabase::new());
+		// let constellation : Constellation = Constellation::find_constellation
+		// 							::<TrackingModeConstsStruct>(&input, &PyramidDatabase::new());
+		let constellation : Constellation = Constellation::find::<TrackingModeConstsStruct>(
+			&input, 
+			&PyramidDatabase::new(), 
+			&mut StarTriangleIterator::<{TrackingModeConstsStruct::PAIRS_MAX}>::new(), 
+			&mut star_tracker::tracking_mode::StarPyramid(0,0,0,0), 
+			&mut star_tracker::tracking_mode::Specularity::Ignore);
 
 		match constellation
 		{
@@ -112,7 +121,7 @@ pub fn get_stars ( pos : Equatorial ) -> Vec<Equatorial>
 	for i in 0..array_database::CATALOGUE_DATABASE.len()
 	{
 		let star = array_database::CATALOGUE_DATABASE[i];
-		if star.angle_distance(pos) < array_database::FOV
+		if star.angle_distance(pos) < array_database::FOV / 2.0
 		{
 			stars.push(star);
 		}
@@ -231,7 +240,7 @@ pub fn false_stars ( add: &mut dyn List<Equatorial>, pos : Equatorial, num : u32
 			   ra:  Degrees(rng.gen::<Decimal>() * 360.0).to_radians(),
 			   dec: Degrees(rng.gen::<Decimal>() * 180.0 - 90.0).to_radians()};
 	
-			if pos.angle_distance(star) < array_database::FOV
+			if pos.angle_distance(star) < array_database::FOV / 2.0
 			{
 				add.push_back(star);
 				break;

@@ -5,6 +5,23 @@ use super::{Equatorial, Cartesian3D, Radians};
 
 impl Equatorial
 {
+	/// Returns an equatorial coordinate at ra: 0, dec: 0 (on the equator at 0 hours).
+	/// Useful for initialization or testing.
+	///
+	/// # Returns
+	/// Equatorial{ra: Radians(0.0), dec: Radians(0.0)};
+	/// 
+	/// # Example
+	/// ```
+	/// use star_tracker::util::units::{Equatorial, Radians};
+	/// assert_eq!(Equatorial{ra: Radians(0.0), dec: Radians(0.0)}, Equatorial::zero());
+	/// ```
+	pub const fn zero ( ) -> Equatorial
+	{
+		return Equatorial{ra: Radians(0.0), dec: Radians(0.0)};
+	}
+	
+	
 	/// The range for declination.
 	pub fn range_dec ( ) -> RangeInclusive<Radians>
 	{
@@ -105,7 +122,7 @@ impl Equatorial
 	/// let cart = equ.to_cartesian3();
 	/// assert!((cart.x - 0.5).abs() < 0.0001);
 	/// assert!((cart.y - 0.5).abs() < 0.0001);
-	/// assert!((cart.z - -0.7071067812).abs() < 0.0001);
+	/// assert!((cart.z - 0.7071067812).abs() < 0.0001);
 	/// ```
 	pub fn to_cartesian3 ( &self ) -> Cartesian3D
 	{
@@ -204,6 +221,18 @@ mod test
 	{
 		return (a - b).abs() < 0.00001;
 	}
+	
+	
+	//
+	// zero ( ) -> Equatorial{ra: Radians(0.0), dec: Radians(0.0)}
+	//
+	
+	#[test]
+	fn test_zero ( )
+	{
+		assert_eq!(Equatorial{ra: Radians(0.0), dec: Radians(0.0)}, Equatorial::zero());
+	}
+	
 
 	//
 	// Getters

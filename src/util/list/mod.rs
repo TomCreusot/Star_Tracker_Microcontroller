@@ -73,6 +73,9 @@ pub trait List<T>
 	/// The value removed.
 	fn pop_back ( &mut self ) -> T;
 
+	/// Sets the counter to 0 so all elements will be override and the list is essentialy cleared.
+	fn clear ( &mut self );
+
 	/// Sorts the list
 	/// # Arguments
 	/// * 'in_order' - A function which returns TRUE if it is in order.

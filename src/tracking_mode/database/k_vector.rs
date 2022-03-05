@@ -1,5 +1,5 @@
 //! Implementation for KVector
-use std::ops::RangeInclusive;
+use std::ops::Range;
 use std::fmt;
 
 use super::StarDatabaseElement;
@@ -67,7 +67,7 @@ impl KVector
 	pub fn new ( num_bins: usize, min_value: Decimal, max_value: Decimal ) -> KVector
 	{
 		let e = DECIMAL_PRECISION;
-		let grad : Decimal = (max_value - min_value + 2.0 * e) / (num_bins as Decimal - 1.0);
+		let grad : Decimal = (max_value - min_value + 2.0 * e) / (num_bins as Decimal);
 		let int  : Decimal = min_value - e;
 	
 		return KVector {
@@ -100,8 +100,6 @@ impl KVector
 	/// let mut kvec = KVector::new(NUM_BINS, dec[0] as Decimal, dec[14] as Decimal);
 	/// let mut vec = kvec.generate_bins(&lst).expect("Should not fail");
 	/// 
-	/// assert_eq!(vec.len(), NUM_BINS + 1);
-	/// 
 	/// // The vector specifies the bounds.
 	/// // To use this, specify the lower index as inclusive and the next index as exclusive.
 	/// // e.g. for an element between bin 1 and 2, it will be index 9 (inclusive) to 11 (exclusive).
@@ -117,12 +115,8 @@ impl KVector
 	/// // 20.4
 	/// assert_eq!(*vec.get(3).expect("?"), 11);	// value = 22, THERE IS NO ELEMENTS SO IT IS THE SAME AS 2.
 	/// 
-	/// // 27.2
-	/// assert_eq!(*vec.get(4).expect("?"), 12);	// value = 33
-	/// 
-	/// // 27.2
-	/// assert_eq!(*vec.get(5).expect("?"), 15);	// value = 34	
-	///
+	/// // 34.0
+	/// assert_eq!(*vec.get(4).expect("?"), 15);	// value = 34
 	///
 	///	fn convert_dec_to_star_database_element ( val: Vec<Decimal> ) -> Vec<StarDatabaseElement>
 	/// {
@@ -132,7 +126,7 @@ impl KVector
 	/// 	{
 	///			let ptr_1 = 2;
 	///			let ptr_2 = 2;
-	/// 		let pair = (ptr_1, ptr_2);
+	/// 		let pair = StarPair(ptr_1, ptr_2);
 	/// 		vec.push(StarDatabaseElement{pair: pair, dist: Radians(val[i])});
 	/// 	}
 	/// 	return vec;
@@ -140,7 +134,7 @@ impl KVector
 	/// ```
 	pub fn generate_bins ( &self, sorted_database: &Vec<StarDatabaseElement> ) -> Error<Vec<usize>>
 	{
-		if sorted_database.size() < 2
+		if sorted_database.size() < 3
 		{
 			return Err(Errors::InvalidSize);
 		}
@@ -154,7 +148,7 @@ impl KVector
 			let max_value = self.gradient * (ii) as Decimal + self.intercept;
 			
 			let mut jj = 0;
-			if ii > 0
+			if 0 < ii
 			{
 				jj = vec.get(ii - 1);
 			}
@@ -164,7 +158,7 @@ impl KVector
 			}
 			vec.push(jj);
 		}
-		vec.push(sorted_database.size() - 1);
+		vec.push(sorted_database.size());
 		return Ok(vec);
 	}
 }
@@ -207,7 +201,7 @@ impl KVectorSearch for KVector
 	/// let kvec = KVector::new(NUM_BINS, dec[0].clone() as Decimal, dec[4] as Decimal);
 	/// // Use the ranges in vec to find the elements in the star pair database.
 	/// ```
-	fn get_bins ( &self, value: Radians, angle_tolerance: Radians ) -> Error<RangeInclusive<usize>>
+	fn get_bins ( &self, value: Radians, angle_tolerance: Radians ) -> Error<Range<usize>>
 	{
 		if value.0 < self.min_value.0
 		{
@@ -225,11 +219,11 @@ impl KVectorSearch for KVector
 		low = low.floor();
 		high = high.ceil();
 		
-		if high > self.num_bins as Decimal - 1.0
+		if high > self.num_bins as Decimal
 		{
-			high = self.num_bins as Decimal - 1.0
+			high = self.num_bins as Decimal
 		}
-		return Ok(low as usize ..= high as usize);
+		return Ok(low as usize .. high as usize);
 	}
 }
 
@@ -255,6 +249,11 @@ impl fmt::Display for KVector
 		return Ok(());
 	}
 }
+
+
+
+
+
 
 
 
@@ -306,7 +305,7 @@ mod test
 		let k_vector = KVector::new(num_bins, element_min, element_max);
 		
 		let machine_epsilon = DECIMAL_PRECISION;
-		let gradient = (element_max - element_min + machine_epsilon * 2.0) / (num_bins as Decimal);
+		let gradient = (element_max - element_min + machine_epsilon*2.0)/(num_bins as Decimal);
 		let intercept = element_min - machine_epsilon;
 		assert!(k_vector.gradient.test_equal(&(gradient as Decimal)));
 		assert!(k_vector.intercept.test_equal(&(intercept as Decimal)));
@@ -320,7 +319,7 @@ mod test
 		assert!(y < element_min);						// Must be smaller than min value.
 		assert!(element_min.test_equal(&y));			// Must be close to the min value.
 		
-		y = gradient * 1.0 + intercept;					// This is the middle bounds.
+		y = gradient * 1.0 + intercept;					// This is the middle bounds (first bin).
 		assert!(element_min < y && y < element_max);	// Value must be greater than the smallest element.
 		assert!(y.test_equal(&((element_max + element_min) / 2.0)));// Must be in the center between the bounds.
 
@@ -332,15 +331,16 @@ mod test
 
 
 	#[test]
-	fn test_new_one_hundred_elements ( )
+	// As there is a large amount of bins, the final bin should be slightly under the max value.
+	fn test_new_1000_elements ( )
 	{
 		let element_min = 1.23;
 		let element_max = 10.0;
-		let num_bins = 2;
+		let num_bins = 1000;
 		let k_vector = KVector::new(num_bins, element_min, element_max);
 		
 		let machine_epsilon = DECIMAL_PRECISION;
-		let gradient = (element_max - element_min + machine_epsilon * 2.0) / (num_bins as Decimal);
+		let gradient = (element_max - element_min + machine_epsilon*2.0)/(num_bins as Decimal);
 		let intercept = element_min - machine_epsilon;
 		assert!(k_vector.gradient.test_equal(&(gradient as Decimal)));
 		assert!(k_vector.intercept.test_equal(&(intercept as Decimal)));
@@ -348,30 +348,10 @@ mod test
 		let mut y = gradient * 0.0 + intercept;
 		assert!(y < element_min);
 		assert!(element_min.test_equal(&y));
-		
-		let mut min_diff = 10000.0;
-		let mut max_diff = -10000.0;
-		
-		// Test consistant intival
-		for i in 1..(num_bins as u32 - 1)
-		{
-			let new_y = gradient * i as Decimal + intercept;
-			
-			if new_y - y < min_diff
-			{
-				min_diff = new_y - y;
-			}
-			else if new_y - y > max_diff
-			{
-				max_diff = new_y - y;
-			}
-			y = new_y;
-			assert!( max_diff.test_equal(&min_diff) );
-		}
 	
 		y = gradient * (num_bins as Decimal) + intercept;
-		assert!(element_max <= y);						// Must include all values.
-		assert!(y.test_close(&element_max, 0.0001));	// Must be close to the max value.
+		assert!(element_max <= y);					// Must include all values.
+		assert!(y.test_close(&element_max, 0.01) );	// Must be close to the max value.
 	}
 	
 	
@@ -413,21 +393,21 @@ mod test
 		let dec_0 = vec![];
 		let dec_1 = vec![0.0];
 		let dec_2 = vec![0.0, 0.0];
+		let dec_3 = vec![0.0, 0.0, 0.0];
 		
 		let lst_0 = convert_dec_to_star_database_element(dec_0);
 		let lst_1 = convert_dec_to_star_database_element(dec_1);
 		let lst_2 = convert_dec_to_star_database_element(dec_2);
+		let lst_3 = convert_dec_to_star_database_element(dec_3);
 		
 		let kvec = KVector::new(0, 0.0, 0.0);
 		kvec.generate_bins(&lst_0).expect_err("Should fail.");
 		kvec.generate_bins(&lst_1).expect_err("Should fail.");
-		kvec.generate_bins(&lst_2).expect("Should NOT fail.");
+		kvec.generate_bins(&lst_2).expect_err("Should fail.");
+		kvec.generate_bins(&lst_3).expect("Should NOT fail.");
 	}
 
 
-	//
-	// Generate Bins
-	//
 
 	#[test]
 	fn test_generate_bins_combined_bins ( )
@@ -435,21 +415,12 @@ mod test
 		//             0    1    2    3    4    5    6    7    8    9     10    11    12    13    14
 		let dec = vec![0.0, 0.0, 0.0, 1.0, 1.0, 2.0, 3.0, 5.0, 6.0, 10.0, 11.0, 27.0, 33.0, 33.0, 34.0];
 		let lst = convert_dec_to_star_database_element(dec.clone());
-		const NUM_BINS_1 : usize = 1;
 		const NUM_BINS_2 : usize = 5;
 		
-		let mut kvec = KVector::new(NUM_BINS_1, dec[0] as Decimal, dec[14] as Decimal);
-		let mut vec : Vec<usize> = kvec.generate_bins(&lst.clone()).expect("Should not fail");
+		let kvec = KVector::new(NUM_BINS_2, dec[0] as Decimal, dec[14] as Decimal);
+		let vec = kvec.generate_bins(&lst).expect("Should not fail");
 		
-		assert_eq!(vec.size(), NUM_BINS_1 + 1);
-		assert_eq!(vec.get(0), 0);			// Inclusive
-		assert_eq!(vec.get(1), 15);			// Exclusive
-		
-		
-		kvec = KVector::new(NUM_BINS_2, dec[0] as Decimal, dec[14] as Decimal);
-		vec = kvec.generate_bins(&lst).expect("Should not fail");
-		
-		assert_eq!(vec.size(), NUM_BINS_2 + 1);
+		assert_eq!(vec.size(), NUM_BINS_2);
 		
 		// The vector specifies the bounds.
 		// To use this, specify the lower index as inclusive and the next index as exclusive.
@@ -467,10 +438,7 @@ mod test
 		assert_eq!(vec.get(3), 11);		// value = 22, THERE IS NO ELEMENTS SO IT IS THE SAME AS 2.
 
 		// 27.2
-		assert_eq!(vec.get(4), 12);		// value = 33
-		
-		// 27.2
-		assert_eq!(vec.get(5), 15);		// value = 34		
+		assert_eq!(vec.get(4), 15);		// value = 34		
 	}
 	
 	
@@ -486,7 +454,12 @@ mod test
 		let kvec = KVector::new(NUM_BINS, dec[0].clone() as Decimal, dec[14] as Decimal);
 		let vec : Vec<usize> = kvec.generate_bins(&lst).expect("Should not fail");
 		
-		assert_eq!(vec.size(), NUM_BINS + 1);
+		assert_eq!(vec.size(), NUM_BINS);
+		
+		for i in 0..vec.size()
+		{
+			println!("{}", vec.get(i));
+		}
 		
 		// 2
 		assert_eq!(vec.get(0), 0);		// value = 2
@@ -516,19 +489,9 @@ mod test
 		assert_eq!(vec.get(12), 11);		// value = 190
 		// ~183.7
 		assert_eq!(vec.get(13), 11);		// value = 190
-		// ~197.9
-		assert_eq!(vec.get(14), 12);		// value = 210
 		// ~212
-		assert_eq!(vec.get(15), 15);		// value = 212
+		assert_eq!(vec.get(14), 15);		// value = 212
 	}
-	
-
-
-
-
-
-
-
 
 
 
@@ -599,23 +562,23 @@ mod test
 		let t_sl = Radians(1.0000001);
 		
 		// Should not crash due to low value.
-		assert_eq!((0 ..= 1), kvec.get_bins ( Radians(4.0), t_s).expect("Should pass"));
-		assert_eq!((0 ..= 1), kvec.get_bins ( Radians(4.0), t_m).expect("Should pass"));
-		assert_eq!((0 ..= 2), kvec.get_bins ( Radians(4.0), t_l).expect("Should pass"));
-		assert_eq!((0 ..= 2), kvec.get_bins ( Radians(4.0), t_xl).expect("Should pass"));
-		assert_eq!((0 ..= 2), kvec.get_bins ( Radians(4.0), t_sl).expect("Should pass"));
+		assert_eq!((0 .. 1), kvec.get_bins ( Radians(4.0), t_s).expect("Should pass"));
+		assert_eq!((0 .. 1), kvec.get_bins ( Radians(4.0), t_m).expect("Should pass"));
+		assert_eq!((0 .. 2), kvec.get_bins ( Radians(4.0), t_l).expect("Should pass"));
+		assert_eq!((0 .. 2), kvec.get_bins ( Radians(4.0), t_xl).expect("Should pass"));
+		assert_eq!((0 .. 2), kvec.get_bins ( Radians(4.0), t_sl).expect("Should pass"));
 		
 		// Should not crash due to large value.
-		assert_eq!((3 ..= 4), kvec.get_bins ( Radians(8.0), t_s).expect("Should pass"));
-		assert_eq!((3 ..= 4), kvec.get_bins ( Radians(8.0), t_m).expect("Should pass"));
-		assert_eq!((2 ..= 4), kvec.get_bins ( Radians(8.0), t_l).expect("Should pass"));
-		assert_eq!((2 ..= 4), kvec.get_bins ( Radians(8.0), t_xl).expect("Should pass"));
-		assert_eq!((2 ..= 4), kvec.get_bins ( Radians(8.0), t_sl).expect("Should pass"));
+		assert_eq!((3 .. 4), kvec.get_bins ( Radians(8.0), t_s).expect("Should pass"));
+		assert_eq!((3 .. 4), kvec.get_bins ( Radians(8.0), t_m).expect("Should pass"));
+		assert_eq!((2 .. 4), kvec.get_bins ( Radians(8.0), t_l).expect("Should pass"));
+		assert_eq!((2 .. 4), kvec.get_bins ( Radians(8.0), t_xl).expect("Should pass"));
+		assert_eq!((2 .. 4), kvec.get_bins ( Radians(8.0), t_sl).expect("Should pass"));
 	
 		
-		assert_eq!((1 ..= 3), kvec.get_bins ( Radians(6.0), t_s).expect("Should pass"));
-		assert_eq!((1 ..= 3), kvec.get_bins ( Radians(6.0), t_m).expect("Should pass"));
-		assert_eq!((0 ..= 4), kvec.get_bins ( Radians(6.0), t_l).expect("Should pass"));
+		assert_eq!((1 .. 3), kvec.get_bins ( Radians(6.0), t_s).expect("Should pass"));
+		assert_eq!((1 .. 3), kvec.get_bins ( Radians(6.0), t_m).expect("Should pass"));
+		assert_eq!((0 .. 4), kvec.get_bins ( Radians(6.0), t_l).expect("Should pass"));
 	
 	}
 	
@@ -652,27 +615,40 @@ mod test
 		// 8.0 :   3 ..= 4
 		// 8.0+:   4 ..= 4 (Out of bounds)
 		
-		// Multiplied decimal_precision by 3 as the number is so small that adding to it modifies the value.
-		let e = kvec.gradient / 2.0 - DECIMAL_PRECISION as Decimal * 3.0;
+		let e = 0.01;
 		let t = Radians(0.0);
 		
-		assert_eq!((0 ..= 1), kvec.get_bins ( Radians(4.00000), t).expect("Should pass")); // 4.0
-		assert_eq!((0 ..= 1), kvec.get_bins ( Radians(4.0 + e), t).expect("Should pass")); // 4.0+
+		println!("y = {} x + {}", kvec.gradient, kvec.intercept);
+		println!("4  {:?}", kvec.get_bins ( Radians(4.00000), t).expect("Should pass"));
+		println!("4+ {:?}", kvec.get_bins ( Radians(4.0 + e), t).expect("Should pass"));
+		println!("5- {:?}", kvec.get_bins ( Radians(5.0 - e), t).expect("Should pass"));
+		println!("5  {:?}", kvec.get_bins ( Radians(5.00000), t).expect("Should pass"));
+		println!("5+ {:?}", kvec.get_bins ( Radians(5.0 + e), t).expect("Should pass"));
+		println!("6- {:?}", kvec.get_bins ( Radians(6.0 - e), t).expect("Should pass"));
+		println!("6  {:?}", kvec.get_bins ( Radians(6.00000), t).expect("Should pass"));
+		println!("6+ {:?}", kvec.get_bins ( Radians(6.0 + e), t).expect("Should pass"));
+		println!("7- {:?}", kvec.get_bins ( Radians(7.0 - e), t).expect("Should pass"));
+		println!("7  {:?}", kvec.get_bins ( Radians(7.00000), t).expect("Should pass"));
+		println!("7+ {:?}", kvec.get_bins ( Radians(7.0 + e), t).expect("Should pass"));
+		println!("8- {:?}", kvec.get_bins ( Radians(8.0 - e), t).expect("Should pass"));
+		println!("8  {:?}", kvec.get_bins ( Radians(8.00000), t).expect("Should pass"));
 		
-		assert_eq!((0 ..= 2), kvec.get_bins ( Radians(5.0 - e), t).expect("Should pass")); // 5.0-
-		assert_eq!((0 ..= 2), kvec.get_bins ( Radians(5.00000), t).expect("Should pass")); // 5.0
-		assert_eq!((0 ..= 2), kvec.get_bins ( Radians(5.0 + e), t).expect("Should pass")); // 5.0+
+		assert_eq!((0 .. 1), kvec.get_bins ( Radians(4.00000), t).expect("Should pass")); // 4.0
+		assert_eq!((0 .. 1), kvec.get_bins ( Radians(4.0 + e), t).expect("Should pass")); // 4.0+
+		
+		assert_eq!((0 .. 2), kvec.get_bins ( Radians(5.0 - e), t).expect("Should pass")); // 5.0-
+		assert_eq!((0 .. 2), kvec.get_bins ( Radians(5.00000), t).expect("Should pass")); // 5.0
+		assert_eq!((0 .. 2), kvec.get_bins ( Radians(5.0 + e), t).expect("Should pass")); // 5.0+
+		
+		assert_eq!((1 .. 3), kvec.get_bins ( Radians(6.0 - e), t).expect("Should pass")); // 6.0-
+		assert_eq!((1 .. 3), kvec.get_bins ( Radians(6.00000), t).expect("Should pass")); // 6.0
+		assert_eq!((1 .. 3), kvec.get_bins ( Radians(6.0 + e), t).expect("Should pass")); // 6.0+
+		
+		assert_eq!((2 .. 4), kvec.get_bins ( Radians(7.0 - e), t).expect("Should pass")); // 7.0-
+		assert_eq!((2 .. 4), kvec.get_bins ( Radians(7.00000), t).expect("Should pass")); // 7.0
+		assert_eq!((2 .. 4), kvec.get_bins ( Radians(7.0 + e), t).expect("Should pass")); // 7.0+
 
-		assert_eq!((1 ..= 3), kvec.get_bins ( Radians(6.0 - e), t).expect("Should pass")); // 6.0-
-		assert_eq!((1 ..= 3), kvec.get_bins ( Radians(6.00000), t).expect("Should pass")); // 6.0
-		assert_eq!((1 ..= 3), kvec.get_bins ( Radians(6.0 + e), t).expect("Should pass")); // 6.0+
-
-		assert_eq!((2 ..= 4), kvec.get_bins ( Radians(7.0 - e), t).expect("Should pass")); // 7.0-
-		assert_eq!((2 ..= 4), kvec.get_bins ( Radians(7.00000), t).expect("Should pass")); // 7.0
-		assert_eq!((2 ..= 4), kvec.get_bins ( Radians(7.0 + e), t).expect("Should pass")); // 7.0+
-
-		assert_eq!((3 ..= 4), kvec.get_bins ( Radians(8.0 - e), t).expect("Should pass")); // 8.0-
-		assert_eq!((3 ..= 4), kvec.get_bins ( Radians(8.00000), t).expect("Should pass")); // 8.0
+		assert_eq!((3 .. 4), kvec.get_bins ( Radians(8.0 - e), t).expect("Should pass")); // 8.0-
+		assert_eq!((3 .. 4), kvec.get_bins ( Radians(8.00000), t).expect("Should pass")); // 8.0
 	}
-	
 }
