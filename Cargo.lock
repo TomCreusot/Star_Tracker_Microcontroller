@@ -413,6 +413,36 @@ dependencies = [
 ]
 
 [[package]]
+name = "fitsio"
+version = "0.19.0"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "3d148827a974d52994dc1b9c88dd4be0c8885a7e29ebf6cd335de8c74658b456"
+dependencies = [
+ "fitsio-sys",
+ "libc",
+]
+
+[[package]]
+name = "fitsio-derive"
+version = "0.2.0"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "f98c4407384c62f7ed9d91cd0534c9eac002e0ea5501876d689876fdee5b7421"
+dependencies = [
+ "quote",
+ "syn",
+]
+
+[[package]]
+name = "fitsio-sys"
+version = "0.4.0"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "3189ae01f4bcdb8e6b90ec9efe5575a1b12c3e63298bde9fc45694fcc488a595"
+dependencies = [
+ "libc",
+ "pkg-config",
+]
+
+[[package]]
 name = "float-cmp"
 version = "0.8.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -1200,6 +1230,8 @@ dependencies = [
  "criterion",
  "csv",
  "curl",
+ "fitsio",
+ "fitsio-derive",
  "image",
  "mockall",
  "plotters",

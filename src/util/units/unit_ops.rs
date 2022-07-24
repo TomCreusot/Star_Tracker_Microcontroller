@@ -7,7 +7,7 @@ use std::ops::Div;
 use std::ops::Neg;
 use super::{
 	Degrees, Radians, Hours,
-	Quaternion, Cartesian3D, Equatorial, AngleAxis, super::aliases::Decimal};
+	Quaternion, Cartesian3D, Equatorial, AngleAxis, Pixel, PixelWeighted, super::aliases::Decimal};
 
 use util::test::TestEqual;
 use util::aliases::DECIMAL_PRECISION;
@@ -256,8 +256,64 @@ impl TestEqual for Quaternion {
 
 
 //###############################################################################################//
+//									---	Pixel ---
+//###############################################################################################//
+
+
+impl Into<Cartesian3D> for Pixel { 
+	fn into ( self ) -> Cartesian3D { 
+		return Cartesian3D{x: self.x as Decimal, y: self.y as Decimal, z: 0.0} } }
+
+
+
+
+//###############################################################################################//
+//									---	PixelWeighted ---
+//###############################################################################################//
+
+
+impl Into<Cartesian3D> for PixelWeighted { 
+	fn into ( self ) -> Cartesian3D { return Cartesian3D{x: self.x, y: self.y, z: 0.0} } }
+
+
+
+	
+//###############################################################################################//
 //									---	Cartesian3D ---
 //###############################################################################################//	
+
+impl Mul<Decimal> for Cartesian3D {
+    type Output = Self;
+    fn mul ( self, rhs: Decimal ) -> Self { 
+		return Cartesian3D{x: self.x * rhs, y: self.y * rhs, z: self.z * rhs} } }
+
+impl Mul<Cartesian3D> for Cartesian3D {
+    type Output = Self;
+    fn mul ( self, rhs: Cartesian3D ) -> Self {
+		return Cartesian3D{x: self.x * rhs.x, y: self.y * rhs.y, z: self.z * rhs.z} } }
+
+impl Add<Cartesian3D> for Cartesian3D {
+    type Output = Self;
+    fn add ( self, rhs: Cartesian3D ) -> Self {
+		return Cartesian3D{x: self.x + rhs.x, y: self.y + rhs.y, z: self.z + rhs.z} } }
+	
+	
+impl Sub for Cartesian3D {
+    type Output = Self;
+    fn sub ( self, rhs: Cartesian3D ) -> Self {
+		return Cartesian3D{x: self.x - rhs.x, y: self.y - rhs.y, z: self.z - rhs.z} } }
+
+impl Div<Decimal> for Cartesian3D {
+    type Output = Self;
+	fn div ( self, rhs: Decimal ) -> Self {
+		return Cartesian3D{x: self.x / rhs, y: self.y / rhs, z: self.z / rhs} } }
+
+
+impl Div<Cartesian3D> for Cartesian3D {
+    type Output = Self;
+	fn div ( self, rhs: Cartesian3D ) -> Self {
+	return Cartesian3D{x: self.x / rhs.x, y: self.y / rhs.y, z: self.z / rhs.z} } }
+	
 
 impl PartialEq for Cartesian3D {
 	 fn eq ( &self, other: &Self ) -> bool 

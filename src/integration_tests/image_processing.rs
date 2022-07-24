@@ -53,7 +53,7 @@ pub fn run ( )
 	let mut num_correct = 0; // Identified star and is real.
 	let mut num_false = 0;   // Identified star which is incorrect.
 	let mut rgb = NixImage::new(&image);
-	rgb.img_rgb.save("src/integration_tests/images/image_processing_test_hidden.png").expect("");
+	rgb.img_rgb.save("results/integration_tests/image_processing/hidden.png").expect("");
 	for ii in 0..blobs.len()
 	{
 		let point = Pixel{x: blobs[ii].centroid.x.round() as usize, 
@@ -83,21 +83,21 @@ pub fn run ( )
 	println!("This is a stress test, it is unlikely that this will happen in real life.");
 	println!("The stars are difficult to see on the image.");
 	println!("To find the image, go to:");
-	println!(" - src/integration_tests/images/image_processing_test_hidden.png for an unaltered image.");
-	println!(" - src/integration_tests/images/image_processing_test_found.png to show all found stars.");
-	println!(" - src/integration_tests/images/image_processing_test_shown.png to show actual stars.");
+	println!(" - results/integration_tests/image_processing/hidden.png for an unaltered image.");
+	println!(" - results/integration_tests/image_processing/found.png to show all found stars.");
+	println!(" - results/integration_tests/image_processing/shown.png to show actual stars.");
 	println!("  found {} blobs", blobs.len());
 	println!("  {} correctly identified (within 2 pixels).", num_correct);
 	println!("  {} falsely identified.", num_false);
 	println!("  {} missed.", stars.len() - num_correct);
 	
-	rgb.img_rgb.save("src/integration_tests/images/image_processing_test_found.png").expect("");
+	rgb.img_rgb.save("results/integration_tests/image_processing/found.png").expect("");
 	
 	rgb = NixImage::new(&image);
 	for i in 0..stars.len()
 	{
 		rgb.draw_points(stars[i], 5, [100, 255, 0])
 	}
-	rgb.img_rgb.save("src/integration_tests/images/image_processing_test_shown.png").expect("");
+	rgb.img_rgb.save("results/integration_tests/image_processing/shown.png").expect("");
 }
 

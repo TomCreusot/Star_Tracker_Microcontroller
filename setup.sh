@@ -13,8 +13,14 @@ sudo apt-get install build-essential -y
 # openssl-sys v0.9.65
 sudo apt-get install libssl-dev -y
 
+
+# For reading .fits files for lens correction.
+sudo apt-get install libcfitsio-dev -y
+
+
 # freetype-sys v0.13.1
 sudo apt-get install cmake -y
+
 
 # tiff v0.6.1
 sudo apt-get install libfontconfig libfontconfig1-dev -y

@@ -7,6 +7,7 @@
 
 pub mod basic_image;
 pub mod blob;
+pub mod distortion;
 
 use crate::util::aliases::Byte;
 use crate::util::aliases::UInt;
@@ -179,7 +180,12 @@ pub struct BasicImage <const WIDTH : usize, const HEIGHT : usize>
 }
 
 
+//###############################################################################################//
+//										---	Distortion ---
+//###############################################################################################//
 
+/// A struct designated to remove distortion from an image.
+pub struct Distortion ( );
 
 
 
