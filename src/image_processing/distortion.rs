@@ -3,7 +3,7 @@ use super::Distortion;
 
 use crate::util::units::PixelWeighted;
 use crate::util::units::Cartesian3D;
-use crate::util::units::Equatorial;
+// use crate::util::units::Equatorial;
 use crate::util::units::Matrix;
 use crate::util::units::MatPos;
 

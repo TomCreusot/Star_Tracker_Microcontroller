@@ -53,7 +53,7 @@ fn main ( )
 		// Chooses the orientation of the camera relative to the spacecraft.
 		// It is random in this case for testing.
 		// let mut orientation = random_orientation();
-		let mut orientation = AngleAxis{
+		let orientation = AngleAxis{
 			angle: random_angle(Degrees(0.0).to_radians(), Degrees(360.0).to_radians()), 
 			axis: center.to_cartesian3()}.to_quaternion();
 	
@@ -135,7 +135,7 @@ fn main ( )
 			rotation.z = -rotation.z;
 		}
 		
-		if ( rotation != orientation )
+		if rotation != orientation
 		{
 			println!("\n\n\nERROR!*!*!!*!*!*!!*!**!!*!**!*!*!*!*!*!*!!*!*!*!*!*!*!*!*!*!*!*!*!*!*\n\n\n\n\n");
 		}
@@ -144,7 +144,7 @@ fn main ( )
 		println!("\tactual:   {:?}", rotation.to_angle_axis());
 		println!("\texpected: {:?}", orientation);
 		println!("\tactual:   {:?}", rotation);
-		if ( matched_stars.len() != 0 )
+		if matched_stars.len() != 0
 		{
 			println!("*** separation:   {:?}", rotation.to_angle_axis().axis.angle_distance(matched_stars[0].output).to_degrees());
 		}

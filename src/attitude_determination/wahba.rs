@@ -29,8 +29,10 @@ pub fn find_b ( positions: &dyn List<Match<Cartesian3D>> ) -> Matrix<3, 3>
 			let mut output : Decimal = 0.0;
 			for pos in 0..positions.size()	
 			{
-				let obs_v = positions.get(pos).output.to_matrix().get(MatPos{row:0, col: out_row});
-				let ref_v = positions.get(pos).input.to_matrix().get(MatPos{row: 0, col: out_col});
+				let obs_v =
+					positions.get(pos).output.to_matrix_row().get(MatPos{row:0, col: out_row});
+				let ref_v =
+					positions.get(pos).input.to_matrix_row().get(MatPos{row: 0, col: out_col});
 				output += obs_v * ref_v * positions.get(pos).weight;
 			}
 			b.set(MatPos{row: out_row, col: out_col}, output);

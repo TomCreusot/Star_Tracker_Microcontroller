@@ -6,7 +6,7 @@ extern crate image;
 
 use fitsio::FitsFile;                   
 use fitsio::tables::FitsRow;    
-use fitsio::hdu::FitsHdu;    
+// use fitsio::hdu::FitsHdu;    
 use fitsio::hdu::HduInfo;    
 use fitsio_derive::FitsRow;
 
@@ -38,6 +38,8 @@ fn main ( )
 
 	if let HduInfo::TableInfo { ref column_descriptions, ref num_rows, .. } = hdu_corr.info
 	{
+		// Find the difference between actual and expected in the corr.fits.
+		// diff is the distance between the actual and expected and the position in the image.
 		let mut diff : Vec<(f64, Cartesian3D)> = Vec::new();
 		let mut min = 10.0;
 		let mut max = 0.0;
@@ -82,46 +84,86 @@ fn main ( )
 		
 		
 		
-		println!("");
+		println!("Creating displacement map...");
 		
-		for x in 0..img.width()
+		// Find variance in difference.
+		let mut avg_diff : f64 = 0.0;
+		// let mut max_diff : f64 = 0.0;
+		let mut min_diff : f64 = f64::INFINITY;
+		
+		for i in 0..diff.len()
 		{
-			for y in 0..img.height()
+			avg_diff = diff[i].0;
+			// max_diff = if max_diff < diff[i].0 { diff[i].0 } else { max_diff };
+			min_diff = if min_diff < diff[i].0 { min_diff } else { diff[i].0 };
+		}
+		avg_diff /= diff.len() as f64;
+		// let var_diff = max_diff - min_diff;
+		
+		
+		// Create displacement map by:
+		// * Setting all pixels to 50%.
+		// * Finding the closest N measurements.
+		// * Adding the intensity of each measurement to the pixel - the average displacement.
+		// * A dark patch is when the measurement is below the average displacement.
+		// * A light patch is when the measurement is above the average displacement.
+		// Pixels will be skipped by *step* to speed up the process.
+		let max_dist : f64 = 100.0;
+		let step = 1;
+		let mut x = 0;
+		let mut y = 0;
+		while x < img.width()
+		{
+			while y < img.height()
 			{
-				let mut intensity = 0.0;
-				let cur_pix = Pixel{x: x, y: y};
+				let loops = 20;					// The number of measurements to consider.
+				let pixel = Pixel{x: x, y: y};
+				let mut influence = avg_diff;
+				let mut lowest_all_val = 0.0;			// The previous closest distance.
+				let mut lowest_cur_val = f64::INFINITY;	// The current distance.
+				let mut lowest_cur_idx = 0;				// The index of the current distance.
 				
-				let mut count = 0;
-				let mut max_dist = 0.0;
-				for i in 0..diff.len()
+				// Loops through and finds the closest n measurements to the pixel.
+				for _i in 0..loops
 				{
-					let cur = (diff[i].1 - cur_pix.into()).magnitude();
-					if max_dist < cur
+					for d in 0..diff.len()
 					{
-						max_dist = cur;
+						let dist = (diff[d].1 - pixel.into()).magnitude();
+						if lowest_all_val < dist && dist < lowest_cur_val
+						{
+							lowest_cur_idx = d;
+							lowest_cur_val = dist;
+						}
 					}
+					influence += diff[lowest_cur_idx].0 - avg_diff;
+					lowest_all_val = lowest_cur_val;
+					lowest_cur_val = f64::INFINITY;
 				}
-				for i in 0..diff.len()
-				{
-					let dist = (diff[i].1 - cur_pix.into()).magnitude();
-					intensity += (1.0 - dist / max_dist) * 1.0/diff[i].0;
-						// intensity += (max_dist - (diff[i].1 - cur_pix.into()).magnitude()) * 1.0/diff[i].0;
-					count += 1;
-				}
-				if count != 0
-				{
-					intensity /= count as f64;
-				}
-				intensity *= 500.0;
-				// println!("{:?}", intensity);
-				// print!("\x1B[2J \x1B[3J \x1B[H");
-				img.set(cur_pix, intensity as Byte);
-				// img.draw_points(cur_pix, 10, [0, 0, 255]);
+				influence /= loops as f64;
+
+				let intensity = influence * 255.0 / max_dist;
 				
+				// Applies to all pixels which will be skipped.
+				let mut xx = x;
+				let mut yy = y;
+				while xx < step + x && xx < img.width()
+				{
+					while yy < step + y && yy < img.height()
+					{
+						img.set(Pixel{x: xx, y: yy}, intensity as Byte);
+						yy+=1;
+					}
+					yy = y;
+					xx+=1;
+				}
+				// img.draw_points(cur_pix, 10, [0, 0, 255]);
+
+				y += step;
 			}
+			y = 0;
+			x += step;
 			println!("{} of {}", x, img.width());
 		}
-
 		img.img_rgb.save("results/lens/out/img_curve.png");
 		
 		
@@ -133,9 +175,7 @@ fn main ( )
 		
 		
 		
-		
-		
-		
+		// Draws on the other image.
 		for r in 0..*num_rows
 		{
 			let actual = Cartesian3D

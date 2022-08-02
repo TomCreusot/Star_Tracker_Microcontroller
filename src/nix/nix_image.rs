@@ -40,7 +40,25 @@ impl NixImage
 	/// Copies the provided image.
 	/// # Arguments
 	/// * `img` - The image to copy.
-	pub fn new ( image: &dyn Image ) -> Self
+	pub fn clone ( &self ) -> Self
+	{
+		let mut img = RgbImage::new(self.width() as u32, self.height() as u32);
+		for y in 0..self.height()
+		{
+			for x in 0..self.width()
+			{
+				let val = self.get(Pixel{x: x, y: y});
+				let px_value = Rgb{0:[val, val, val]};
+				img.put_pixel(x as u32, y as u32, px_value);
+			}
+		}
+		return Self{img_rgb: img};
+	}
+	
+	/// Copies the provided image.
+	/// # Arguments
+	/// * `img` - The image to copy.
+	pub fn duplicate ( image : &dyn Image ) -> Self
 	{
 		let mut img = RgbImage::new(image.width() as u32, image.height() as u32);
 		for y in 0..image.height()
@@ -54,6 +72,18 @@ impl NixImage
 		}
 		return Self{img_rgb: img};
 	}
+
+
+	/// Copies the provided image.
+	/// # Arguments
+	/// * `size` - The size of the image.
+	pub fn new ( size : Pixel ) -> Self
+	{
+		let img = RgbImage::new(size.x as u32, size.y as u32);
+		return Self{img_rgb: img};
+	}
+	
+	
 	
 	
 	/// Draws the points onto the image of the specified color.
@@ -121,7 +151,7 @@ impl NixImage
 	/// The image.
 	pub fn image_to_dynamic ( &mut self, img : &dyn Image ) -> &RgbImage
 	{
-		self.img_rgb = NixImage::new(img).img_rgb;
+		self.img_rgb = NixImage::duplicate(img).img_rgb;
 		return &self.img_rgb;
 	}
 }

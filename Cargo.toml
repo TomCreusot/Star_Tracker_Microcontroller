@@ -26,6 +26,8 @@ csv = "1.1.5"
 serde = {version = "1.0", features = ["derive"] }
 # serde = {version = "1.0.126" "1.0", features = ["derive"] }
 
+static_assertions = "1.1.0" # Compile time asserts.
+
 rand = "0.8.0"
 
 # Observing the database and hipacaros database.

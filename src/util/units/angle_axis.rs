@@ -1,5 +1,11 @@
+use static_assertions;
+
 use super::AngleAxis;
 use super::Quaternion;
+use super::Cartesian3D;
+use super::Matrix;
+use super::MatPos;
+use super::Radians;
 
 use util::test::TestEqual;
 use util::aliases::DECIMAL_PRECISION;
@@ -29,6 +35,71 @@ impl AngleAxis
 			y: (self.angle / 2.0).sin() * self.axis.y,
 			z: (self.angle / 2.0).sin() * self.axis.z,
 		};
+	}
+	
+	
+	/// Provides a rotation which orientates the point start to the point end.
+	/// Consider this as a camera pointing direction.
+	/// # Example
+	/// ``` 
+	/// use star_tracker::util::units::Cartesian3D;
+	/// use star_tracker::util::units::AngleAxis;
+	/// use star_tracker::util::units::Degrees;
+	/// let mut start = Cartesian3D { x: 1.0, y: 0.0, z: 0.0 };
+	/// let mut end   = Cartesian3D { x: 0.0, y: 0.0, z: 1.0 };
+	///
+	/// let aa = AngleAxis::look_at(start, end);
+	/// assert_eq!(aa.to_quaternion().rotate_point(start), end);
+	/// assert_eq!(aa.angle, Degrees(90.0).to_radians());
+	/// assert_eq!(aa.axis, Cartesian3D{x: 0.0, y: 1.0, z: 0.0});
+	// }
+	/// ```
+	pub fn look_at ( start: Cartesian3D, end : Cartesian3D ) -> Self
+	{
+		assert!(start.magnitude().test_close(&1.0, DECIMAL_PRECISION) &&
+				start.magnitude().test_close(&1.0, DECIMAL_PRECISION), "Not unit vector");
+		if (start - end).magnitude() < DECIMAL_PRECISION
+		{
+			return Self{angle: Radians(0.0), axis: Cartesian3D{x: 1.0, y: 0.0, z: 0.0}}
+		}
+		let mut axis = end.cross(&start);
+		let angle = start.angle_distance(end); // The cross will vary the direction. // Right curl rule
+		axis.normalize();
+		return Self{angle: angle, axis: axis};
+	}
+	
+	
+	/// Converts angle axis to represent the position and rotation of a camera in matrix form.
+	/// This can be used for cv based matrix transformations.
+	/// This can be used in a 3x3 or a 4x4 size.
+	///
+	pub fn to_matrix ( &self ) -> Matrix<4,4>
+	{
+		// Follow this equation: [Rodregues Formula](https://mathworld.wolfram.com/RodriguesRotationFormula.html)
+		// let mut mat : Matrix<3,3> = Matrix::new();
+		let identity : Matrix<4,4> = Matrix::identity();
+		let mut w : Matrix<4,4> = Matrix::new(); // Anti symmetric matrix.
+		// Horizontal [x, y, z] * transform method.
+		// w.set(MatPos{row: 0, col: 1}, -self.axis.z);
+		// w.set(MatPos{row: 0, col: 2}, self.axis.y);
+		// 
+		// w.set(MatPos{row: 1, col: 0}, self.axis.z);
+		// w.set(MatPos{row: 1, col: 2}, -self.axis.x);
+		// 
+		// w.set(MatPos{row: 2, col: 0}, -self.axis.y);
+		// w.set(MatPos{row: 2, col: 1}, self.axis.x);
+		
+		// Open CV transform method (vertical position).
+		w.set(MatPos{row: 1, col: 0}, -self.axis.z);
+		w.set(MatPos{row: 2, col: 0}, self.axis.y);
+		
+		w.set(MatPos{row: 0, col: 1}, self.axis.z);
+		w.set(MatPos{row: 2, col: 1}, -self.axis.x);
+		
+		w.set(MatPos{row: 0, col: 2}, -self.axis.y);
+		w.set(MatPos{row: 1, col: 2}, self.axis.x);
+		
+		return identity + w * self.angle.0.sin() + w*w * (1.0 - self.angle.0.cos());
 	}
 
 /*
@@ -83,7 +154,6 @@ impl fmt::Debug for AngleAxis {
     }
 }
 
-
 //###############################################################################################//
 //###############################################################################################//
 //
@@ -95,6 +165,7 @@ impl fmt::Debug for AngleAxis {
 #[cfg(test)]
 mod test
 {	
+	use rand::prelude::*;
 	use util::aliases::{M_PI};
 	use util::units::{Cartesian3D, Radians, AngleAxis};
 	
@@ -125,6 +196,78 @@ mod test
 		let axis = Cartesian3D{x: 1.0, y: 1.0, z: 1.0};
 		let angle_axis = AngleAxis{angle:angle, axis: axis};
 		let q = angle_axis.to_quaternion();
+	}
+	
+	
+	#[test]
+	fn test_look_at ( )
+	{
+		let mut rng = rand::thread_rng();
+		for i in 0..100
+		{
+			println!("{}", i);
+			
+			let mut start = Cartesian3D {
+				x: rng.gen_range(-1.0..1.0),
+				y: rng.gen_range(-1.0..1.0),
+				z: rng.gen_range(-1.0..1.0) };
+				
+			let mut end = Cartesian3D {
+				x: rng.gen_range(-1.0..1.0),
+				y: rng.gen_range(-1.0..1.0),
+				z: rng.gen_range(-1.0..1.0) };
+			
+			start.normalize();
+			end.normalize();
+			let aa = AngleAxis::look_at(start, end);
+			assert_eq!(aa.to_quaternion().rotate_point(start), end);
+		}
+	}
+	
+	#[test]
+	fn test_look_at_default ( )
+	{
+		let a = Cartesian3D{x: 1.0, y: 0.0, z: 0.0};
+		assert_eq!(AngleAxis::look_at(a,a), 
+			AngleAxis{angle: Radians(0.0), axis: Cartesian3D{x: 1.0, y: 0.0, z: 0.0}});
+	}
+	
+	#[test]
+	#[should_panic = "Not unit vector"]
+	#[allow(unused_variables)]
+	fn test_look_at_panic ( )
+	{
+		let a = Cartesian3D{x: 0.0, y: 0.0, z: 0.0};
+		AngleAxis::look_at(a,a);
+	}
+	
+	
+	
+	#[test]
+	fn test_to_matrix_3x3 ( )
+	{
+		let mut rng = rand::thread_rng();
+		for i in 0..100
+		{
+			println!("{}", i);
+			let angle = Radians(rng.gen_range(-M_PI..M_PI));
+			let mut axis = Cartesian3D {
+				x: rng.gen_range(-1.0..1.0),
+				y: rng.gen_range(-1.0..1.0),
+				z: rng.gen_range(-1.0..1.0) };
+				
+			axis.normalize();
+			let angle_axis = AngleAxis{angle: angle, axis: axis};
+			let q = angle_axis.to_quaternion();
+			let m = angle_axis.to_matrix();
+			
+			let point = Cartesian3D {
+				x: rng.gen_range(-1.0..1.0),
+				y: rng.gen_range(-1.0..1.0),
+				z: rng.gen_range(-1.0..1.0) };
+	
+			assert_eq!(q.rotate_point(point), (m * point.to_matrix_column_homo()).to_cartesian3());
+		}
 	}
 	
 	/*

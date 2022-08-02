@@ -52,7 +52,7 @@ pub fn run ( )
 	let blobs = get_blobs::<255, 200>(&image, 0.9999);
 	let mut num_correct = 0; // Identified star and is real.
 	let mut num_false = 0;   // Identified star which is incorrect.
-	let mut rgb = NixImage::new(&image);
+	let mut rgb = NixImage::duplicate(&image);
 	rgb.img_rgb.save("results/integration_tests/image_processing/hidden.png").expect("");
 	for ii in 0..blobs.len()
 	{
@@ -93,7 +93,7 @@ pub fn run ( )
 	
 	rgb.img_rgb.save("results/integration_tests/image_processing/found.png").expect("");
 	
-	rgb = NixImage::new(&image);
+	rgb = NixImage::duplicate(&image);
 	for i in 0..stars.len()
 	{
 		rgb.draw_points(stars[i], 5, [100, 255, 0])

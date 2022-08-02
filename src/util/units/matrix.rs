@@ -1,6 +1,7 @@
 //! Implementation for matrix.
 use crate::util::aliases::Decimal;
 use crate::util::units::MatPos;
+use crate::util::units::Cartesian3D;
 // use crate::util::err::{Error, Errors};
 use super::Matrix;
 
@@ -463,9 +464,146 @@ impl Matrix <4, 4>
 
 
 
+//###############################################################################################//
+//							---	Convert to Cartesian3D Coords ---
+//###############################################################################################//
+impl Matrix <1, 3>
+{
+	/// Converts the matrix into a Cartesian3D.
+	/// # Example
+	/// ``` 
+	/// use star_tracker::util::units::Matrix;
+	/// use star_tracker::util::units::MatPos;
+	/// use star_tracker::util::units::Cartesian3D;
+	/// let mut mat1x3 : Matrix<1,3> = Matrix::new();
+	/// mat1x3.set(MatPos{row: 0, col: 0}, 1.0);
+	/// mat1x3.set(MatPos{row: 0, col: 1}, 2.0);
+	/// mat1x3.set(MatPos{row: 0, col: 2}, 3.0);
+	/// assert_eq!(mat1x3.to_cartesian3(), Cartesian3D{x: 1.0, y: 2.0, z: 3.0});
+	/// ```
+	pub fn to_cartesian3 ( &self ) -> Cartesian3D
+	{
+		return Cartesian3D{
+			x: self.get(MatPos{row: 0, col: 0}),
+			y: self.get(MatPos{row: 0, col: 1}),
+			z: self.get(MatPos{row: 0, col: 2}),
+		};
+	}
+}
+
+impl Matrix <3, 1>
+{
+	/// Converts the matrix into a Cartesian3D.
+	/// # Example
+	/// ``` 
+	/// use star_tracker::util::units::Matrix;
+	/// use star_tracker::util::units::MatPos;
+	/// use star_tracker::util::units::Cartesian3D;
+	/// let mut mat3x1 : Matrix<3,1> = Matrix::new();
+	/// mat3x1.set(MatPos{row: 0, col: 0}, 1.0);
+	/// mat3x1.set(MatPos{row: 1, col: 0}, 2.0);
+	/// mat3x1.set(MatPos{row: 2, col: 0}, 3.0);
+	/// assert_eq!(mat3x1.to_cartesian3(), Cartesian3D{x: 1.0, y: 2.0, z: 3.0});
+	/// ```
+	pub fn to_cartesian3 ( &self ) -> Cartesian3D
+	{
+		return Cartesian3D{
+			x: self.get(MatPos{row: 0, col: 0}),
+			y: self.get(MatPos{row: 1, col: 0}),
+			z: self.get(MatPos{row: 2, col: 0}),
+		};
+	}
+}
+
+
+impl Matrix <1, 4>
+{
+	/// Converts the matrix into a Cartesian3D.
+	/// This assumes a homogeneous form, everything will be divided by the final number.
+	/// # Panic
+	/// Panics if the final number is 0.
+	///
+	/// # Example
+	/// ``` 
+	/// use star_tracker::util::units::Matrix;
+	/// use star_tracker::util::units::MatPos;
+	/// use star_tracker::util::units::Cartesian3D;
+	/// let mut mat1x4 : Matrix<1,4> = Matrix::new();
+	/// mat1x4.set(MatPos{row: 0, col: 0}, 1.0);
+	/// mat1x4.set(MatPos{row: 0, col: 1}, 2.0);
+	/// mat1x4.set(MatPos{row: 0, col: 2}, 3.0);
+	/// mat1x4.set(MatPos{row: 0, col: 3}, 0.5); // homogeneous number.
+	/// assert_eq!(mat1x4.to_cartesian3(), Cartesian3D{x: 2.0, y: 4.0, z: 6.0});
+	/// ```
+	pub fn to_cartesian3 ( &self ) -> Cartesian3D
+	{
+		return Cartesian3D{
+			x: self.get(MatPos{row: 0, col: 0}) / self.get(MatPos{row: 0, col: 3}),
+			y: self.get(MatPos{row: 0, col: 1}) / self.get(MatPos{row: 0, col: 3}),
+			z: self.get(MatPos{row: 0, col: 2}) / self.get(MatPos{row: 0, col: 3}),
+		};
+	}
+}
+
+impl Matrix <4, 1>
+{
+	/// Converts the matrix into a Cartesian3D.
+	/// # Example
+	/// ``` 
+	/// use star_tracker::util::units::Matrix;
+	/// use star_tracker::util::units::MatPos;
+	/// use star_tracker::util::units::Cartesian3D;
+	/// let mut mat4x1 : Matrix<4,1> = Matrix::new();
+	/// mat4x1.set(MatPos{row: 0, col: 0}, 1.0);
+	/// mat4x1.set(MatPos{row: 1, col: 0}, 2.0);
+	/// mat4x1.set(MatPos{row: 2, col: 0}, 3.0);
+	/// mat4x1.set(MatPos{row: 3, col: 0}, 0.5);
+	/// assert_eq!(mat4x1.to_cartesian3(), Cartesian3D{x: 2.0, y: 4.0, z: 6.0});
+	/// ```
+	pub fn to_cartesian3 ( &self ) -> Cartesian3D
+	{
+		return Cartesian3D{
+			x: self.get(MatPos{row: 0, col: 0}) / self.get(MatPos{row: 3, col: 0}),
+			y: self.get(MatPos{row: 1, col: 0}) / self.get(MatPos{row: 3, col: 0}),
+			z: self.get(MatPos{row: 2, col: 0}) / self.get(MatPos{row: 3, col: 0}),
+		};
+	}
+}
+
+
+
+//###############################################################################################//
+//							---	Debug ---
+//###############################################################################################//
+
 
 impl <const ROW: usize, const COLUMN: usize> fmt::Display for Matrix<ROW, COLUMN> {
     fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result
+	{
+		write!(f, "\n")?;
+		for yy in 0..self.height()
+		{
+			write!(f, "|\t")?;
+			for xx in 0..self.width()
+			{
+				let val = self.get(MatPos{col: xx, row: yy});
+				write!(f, "{:.2}", val)?;
+				if xx < self.width() - 1
+				{
+					write!(f, ",\t")?;
+				}
+
+			}
+			write!(f, "\t|")?;
+			write!(f, "\n")?;
+		}
+		return Ok(());
+	}
+}
+
+
+impl <const ROW: usize, const COLUMN: usize> fmt::Debug for Matrix<ROW, COLUMN> {
+    fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result 
 	{
 		write!(f, "\n")?;
 		for yy in 0..self.height()
@@ -485,13 +623,6 @@ impl <const ROW: usize, const COLUMN: usize> fmt::Display for Matrix<ROW, COLUMN
 			write!(f, "\n")?;
 		}
 		return Ok(());
-	}
-}
-
-
-impl <const ROW: usize, const COLUMN: usize> fmt::Debug for Matrix<ROW, COLUMN> {
-    fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
-        return (self as &dyn fmt::Display).fmt(f);
     }
 }
 
@@ -633,6 +764,7 @@ mod test
 	use util::aliases::Decimal;
 	use util::units::Matrix;
 	use util::units::MatPos;
+	use util::units::Cartesian3D;
 	// use util::err::Errors;
 
 	#[test]
@@ -995,6 +1127,69 @@ mod test
 		
 		assert_eq!(res, mat3x3.adjoint());
 	}
+
+
+
+
+
+
+
+	//
+	// fn to_cartesian3 ( ) -> Cartesian3D
+	// For:
+	// <1, 3>, <3, 1>, <1, 4>, <4, 1>
+	//
+	
+	#[test]
+	fn test_to_cartesian3_1x3 ( )
+	{
+		let mut mat1x3 : Matrix<1,3> = Matrix::new();
+		mat1x3.set(MatPos{row: 0, col: 0}, 1.0);
+		mat1x3.set(MatPos{row: 0, col: 1}, 2.0);
+		mat1x3.set(MatPos{row: 0, col: 2}, 3.0);
+		assert_eq!(mat1x3.to_cartesian3(), Cartesian3D{x: 1.0, y: 2.0, z: 3.0});
+	}
+	
+	#[test]
+	fn test_to_cartesian3_3x1 ( )
+	{
+		let mut mat3x1 : Matrix<3,1> = Matrix::new();
+		mat3x1.set(MatPos{row: 0, col: 0}, 1.0);
+		mat3x1.set(MatPos{row: 1, col: 0}, 2.0);
+		mat3x1.set(MatPos{row: 2, col: 0}, 3.0);
+		assert_eq!(mat3x1.to_cartesian3(), Cartesian3D{x: 1.0, y: 2.0, z: 3.0});
+	}
+	
+
+	#[test]
+	fn test_to_cartesian3_1x4 ( )
+	{
+		let mut mat1x4 : Matrix<1,4> = Matrix::new();
+		mat1x4.set(MatPos{row: 0, col: 0}, 1.0);
+		mat1x4.set(MatPos{row: 0, col: 1}, 2.0);
+		mat1x4.set(MatPos{row: 0, col: 2}, 3.0);
+		mat1x4.set(MatPos{row: 0, col: 3}, 0.5);
+		assert_eq!(mat1x4.to_cartesian3(), Cartesian3D{x: 2.0, y: 4.0, z: 6.0});
+	}
+	
+	#[test]
+	fn test_to_cartesian3_4x1 ( )
+	{
+		let mut mat4x1 : Matrix<4,1> = Matrix::new();
+		mat4x1.set(MatPos{row: 0, col: 0}, 1.0);
+		mat4x1.set(MatPos{row: 1, col: 0}, 2.0);
+		mat4x1.set(MatPos{row: 2, col: 0}, 3.0);
+		mat4x1.set(MatPos{row: 3, col: 0}, 0.5);
+		assert_eq!(mat4x1.to_cartesian3(), Cartesian3D{x: 2.0, y: 4.0, z: 6.0});
+	}
+
+
+
+
+
+
+
+
 
 
 

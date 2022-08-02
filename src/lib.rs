@@ -17,6 +17,7 @@ extern crate serde;
 extern crate image;
 extern crate rand;
 extern crate mockall;
+extern crate static_assertions;
 
 
 

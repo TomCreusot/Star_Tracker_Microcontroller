@@ -15,8 +15,6 @@ impl Cartesian3D
 	/// ```
 	pub fn magnitude ( &self ) -> Decimal
 	{
-		assert!(self.x != 0.0 || self.y != 0.0 || self.z != 0.0, 
-			"Cannot find the magnitude of a zero vector.");
 		return (self.x.powf(2.0) + self.y.powf(2.0) + self.z.powf(2.0)).sqrt();
 	}
 	
@@ -119,12 +117,12 @@ impl Cartesian3D
 	/// use star_tracker::util::units::Matrix;
 	/// use star_tracker::util::units::MatPos;
 	/// let c = Cartesian3D {x: 1.0, y: 2.0, z: 3.0};
-	/// let m : Matrix<1,3> = c.to_matrix();
+	/// let m : Matrix<1,3> = c.to_matrix_row();
 	/// assert_eq!(c.x, m.get(MatPos{row: 0, col: 0}));
 	/// assert_eq!(c.y, m.get(MatPos{row: 0, col: 1}));
 	/// assert_eq!(c.z, m.get(MatPos{row: 0, col: 2}));
 	/// ```
-	pub fn to_matrix ( &self ) -> Matrix<1,3>
+	pub fn to_matrix_row ( &self ) -> Matrix<1,3>
 	{
 		let mut mat : Matrix<1,3> = Matrix::new();
 		mat.set(MatPos{row: 0, col: 0}, self.x);
@@ -132,6 +130,77 @@ impl Cartesian3D
 		mat.set(MatPos{row: 0, col: 2}, self.z);
 		return mat;
 	}
+	
+	/// Converts the coordinates into a column matrix form (vertical set of rows).
+	/// # Example
+	/// ```
+	/// use star_tracker::util::units::Cartesian3D;
+	/// use star_tracker::util::units::Matrix;
+	/// use star_tracker::util::units::MatPos;
+	/// let c = Cartesian3D {x: 1.0, y: 2.0, z: 3.0};
+	/// let m : Matrix<3,1> = c.to_matrix_column();
+	/// assert_eq!(c.x, m.get(MatPos{row: 0, col: 0}));
+	/// assert_eq!(c.y, m.get(MatPos{row: 1, col: 0}));
+	/// assert_eq!(c.z, m.get(MatPos{row: 2, col: 0}));
+	/// ```
+	pub fn to_matrix_column ( &self ) -> Matrix<3,1>
+	{
+		let mut mat : Matrix<3,1> = Matrix::new();
+		mat.set(MatPos{row: 0, col: 0}, self.x);
+		mat.set(MatPos{row: 1, col: 0}, self.y);
+		mat.set(MatPos{row: 2, col: 0}, self.z);
+		return mat;
+	}
+
+
+	/// Converts the coordinates into a matrix form [x, y, z].
+	/// This is in homogeneous form for matrix transformations.
+	/// # Example
+	/// ```
+	/// use star_tracker::util::units::Cartesian3D;
+	/// use star_tracker::util::units::Matrix;
+	/// use star_tracker::util::units::MatPos;
+	/// let c = Cartesian3D {x: 1.0, y: 2.0, z: 3.0};
+	/// let m : Matrix<1,4> = c.to_matrix_row_homo();
+	/// assert_eq!(c.x, m.get(MatPos{row: 0, col: 0}));
+	/// assert_eq!(c.y, m.get(MatPos{row: 0, col: 1}));
+	/// assert_eq!(c.z, m.get(MatPos{row: 0, col: 2}));
+	/// assert_eq!(1.0, m.get(MatPos{row: 0, col: 3}));
+	/// ```
+	pub fn to_matrix_row_homo ( &self ) -> Matrix<1,4>
+	{
+		let mut mat : Matrix<1,4> = Matrix::new();
+		mat.set(MatPos{row: 0, col: 0}, self.x);
+		mat.set(MatPos{row: 0, col: 1}, self.y);
+		mat.set(MatPos{row: 0, col: 2}, self.z);
+		mat.set(MatPos{row: 0, col: 3}, 1.0);
+		return mat;
+	}
+	
+	/// Converts the coordinates into a column matrix form (vertical set of rows).
+	/// This is in homogeneous form for matrix transformations.
+	/// # Example
+	/// ```
+	/// use star_tracker::util::units::Cartesian3D;
+	/// use star_tracker::util::units::Matrix;
+	/// use star_tracker::util::units::MatPos;
+	/// let c = Cartesian3D {x: 1.0, y: 2.0, z: 3.0};
+	/// let m : Matrix<4,1> = c.to_matrix_column_homo();
+	/// assert_eq!(c.x, m.get(MatPos{row: 0, col: 0}));
+	/// assert_eq!(c.y, m.get(MatPos{row: 1, col: 0}));
+	/// assert_eq!(c.z, m.get(MatPos{row: 2, col: 0}));
+	/// assert_eq!(1.0, m.get(MatPos{row: 3, col: 0}));
+	/// ```
+	pub fn to_matrix_column_homo ( &self ) -> Matrix<4,1>
+	{
+		let mut mat : Matrix<4,1> = Matrix::new();
+		mat.set(MatPos{row: 0, col: 0}, self.x);
+		mat.set(MatPos{row: 1, col: 0}, self.y);
+		mat.set(MatPos{row: 2, col: 0}, self.z);
+		mat.set(MatPos{row: 3, col: 0}, 1.0);
+		return mat;
+	}
+	
 
 
 
@@ -342,14 +411,51 @@ mod test
 	//
 
 	#[test]
-	fn test_to_matrix ( )
+	fn test_to_matrix_row ( )
 	{
 		let c = Cartesian3D {x: 1.0, y: 2.0, z: 3.0};
-		let m : Matrix<1,3> = c.to_matrix();
+		let m : Matrix<1,3> = c.to_matrix_row();
 		assert_eq!(c.x, m.get(MatPos{row: 0, col: 0}));
 		assert_eq!(c.y, m.get(MatPos{row: 0, col: 1}));
 		assert_eq!(c.z, m.get(MatPos{row: 0, col: 2}));
 	}
+	
+	#[test]
+	fn test_to_matrix_column ( )
+	{
+		let c = Cartesian3D {x: 1.0, y: 2.0, z: 3.0};
+		let m : Matrix<3,1> = c.to_matrix_column();
+		assert_eq!(c.x, m.get(MatPos{row: 0, col: 0}));
+		assert_eq!(c.y, m.get(MatPos{row: 1, col: 0}));
+		assert_eq!(c.z, m.get(MatPos{row: 2, col: 0}));
+	}
+
+	#[test]
+	fn test_to_matrix_row_homo ( )
+	{
+		let c = Cartesian3D {x: 1.0, y: 2.0, z: 3.0};
+		let m : Matrix<1,4> = c.to_matrix_row_homo();
+		assert_eq!(c.x, m.get(MatPos{row: 0, col: 0}));
+		assert_eq!(c.y, m.get(MatPos{row: 0, col: 1}));
+		assert_eq!(c.z, m.get(MatPos{row: 0, col: 2}));
+		assert_eq!(1.0, m.get(MatPos{row: 0, col: 3}));
+	}
+	
+	#[test]
+	fn test_to_matrix_column_homo ( )
+	{
+		let c = Cartesian3D {x: 1.0, y: 2.0, z: 3.0};
+		let m : Matrix<4,1> = c.to_matrix_column_homo();
+		assert_eq!(c.x, m.get(MatPos{row: 0, col: 0}));
+		assert_eq!(c.y, m.get(MatPos{row: 1, col: 0}));
+		assert_eq!(c.z, m.get(MatPos{row: 2, col: 0}));
+		assert_eq!(1.0, m.get(MatPos{row: 3, col: 0}));
+	}
+	
+	
+	
+	
+	
 	
 	//
 	//  to_equatorial ( ) -> Equatorial
