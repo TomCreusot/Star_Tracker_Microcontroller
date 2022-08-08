@@ -40,8 +40,11 @@ const HYG_DATABASE_URL	: &'static str	= "https://raw.githubusercontent.com/astro
 
 /// The local path to the hipacaros csv database.
 /// If the file is not at the given path, it will be downloaded.
-const HYG_DATABASE_PATH	: &'static str	= "database/hyg.csv";
+const HYG_DATABASE_PATH	: &'static str	= "database/";
 
+/// The file where the database is stored.
+/// If the file is not at the given path, it will be downloaded.
+const HYG_DATABASE_FILE : &'static str  = "hyg.csv";
 
 /// If Declination is in degrees format
 const HYG_DATABASE_DEC_DEGREES				: bool = true;
@@ -55,6 +58,8 @@ const HYG_DATABASE_HEADER_RIGHT_ASCENTION	: &'static str = "ra";
 const HYG_DATABASE_HEADER_DECLINATION		: &'static str = "dec";
 /// The column name for specularity for the HYG Database.
 const HYG_DATABASE_HEADER_SPECULARITY		: &'static str = "spect";
+/// The column name for name for the HYG Database.
+const HYG_DATABASE_HEADER_NAME				: &'static str = "proper";
 }
 
 //###############################################################################################//
@@ -221,10 +226,14 @@ pub trait NixConsts
 	/// If the database is not already installed, it will install.
 	const HYG_DATABASE_URL	: &'static str;
 
-
 	/// The local path to the hipacaros csv database.
 	/// If the file is not at the given path, it will be downloaded.
 	const HYG_DATABASE_PATH	: &'static str;
+
+	/// The file where the database is stored.
+	/// If the file is not at the given path, it will be downloaded.
+	const HYG_DATABASE_FILE : &'static str  = "hyg.csv";
+
 
 
 	/// If Declination is in degrees format
@@ -239,6 +248,8 @@ pub trait NixConsts
 	const HYG_DATABASE_HEADER_DECLINATION		: &'static str;
 	/// The column name for specularity for the HYG Database.
 	const HYG_DATABASE_HEADER_SPECULARITY		: &'static str;
+	/// The column name for name for the HYG Database.
+	const HYG_DATABASE_HEADER_NAME				: &'static str;
 }
 
 

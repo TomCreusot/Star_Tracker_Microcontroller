@@ -93,7 +93,7 @@ impl <const ROW : usize, const COLUMN : usize> Matrix <ROW, COLUMN>
 	/// mat3x4.set(MatPos{row: 1, col: 0}, 1.0);
 	/// mat3x4.set(MatPos{row: 1, col: 1}, 1.1);
 	/// mat3x4.set(MatPos{row: 2, col: 3}, 2.3);
-	/// let mat4x3 = mat3x4.transpose();
+	/// let mat4x3 = mat3x4.transposed();
 	/// assert_eq!(mat4x3.width(), 3);
 	/// assert_eq!(mat4x3.height(), 4);
 	/// assert_eq!(mat3x4.get(MatPos{row:0, col:0}), mat4x3.get(MatPos{row:0, col:0}));
@@ -102,7 +102,7 @@ impl <const ROW : usize, const COLUMN : usize> Matrix <ROW, COLUMN>
 	/// assert_eq!(mat3x4.get(MatPos{row:1, col:1}), mat4x3.get(MatPos{row:1, col:1}));
 	/// assert_eq!(mat3x4.get(MatPos{row:2, col:3}), mat4x3.get(MatPos{row:3, col:2}));
 	/// ```
-	pub fn transpose ( &self ) -> Matrix<COLUMN, ROW>
+	pub fn transposed ( &self ) -> Matrix<COLUMN, ROW>
 	{
 		let mut trans : Matrix<COLUMN, ROW> = Matrix::new();
 		for x in 0..self.width()
@@ -467,29 +467,6 @@ impl Matrix <4, 4>
 //###############################################################################################//
 //							---	Convert to Cartesian3D Coords ---
 //###############################################################################################//
-impl Matrix <1, 3>
-{
-	/// Converts the matrix into a Cartesian3D.
-	/// # Example
-	/// ``` 
-	/// use star_tracker::util::units::Matrix;
-	/// use star_tracker::util::units::MatPos;
-	/// use star_tracker::util::units::Cartesian3D;
-	/// let mut mat1x3 : Matrix<1,3> = Matrix::new();
-	/// mat1x3.set(MatPos{row: 0, col: 0}, 1.0);
-	/// mat1x3.set(MatPos{row: 0, col: 1}, 2.0);
-	/// mat1x3.set(MatPos{row: 0, col: 2}, 3.0);
-	/// assert_eq!(mat1x3.to_cartesian3(), Cartesian3D{x: 1.0, y: 2.0, z: 3.0});
-	/// ```
-	pub fn to_cartesian3 ( &self ) -> Cartesian3D
-	{
-		return Cartesian3D{
-			x: self.get(MatPos{row: 0, col: 0}),
-			y: self.get(MatPos{row: 0, col: 1}),
-			z: self.get(MatPos{row: 0, col: 2}),
-		};
-	}
-}
 
 impl Matrix <3, 1>
 {
@@ -511,36 +488,6 @@ impl Matrix <3, 1>
 			x: self.get(MatPos{row: 0, col: 0}),
 			y: self.get(MatPos{row: 1, col: 0}),
 			z: self.get(MatPos{row: 2, col: 0}),
-		};
-	}
-}
-
-
-impl Matrix <1, 4>
-{
-	/// Converts the matrix into a Cartesian3D.
-	/// This assumes a homogeneous form, everything will be divided by the final number.
-	/// # Panic
-	/// Panics if the final number is 0.
-	///
-	/// # Example
-	/// ``` 
-	/// use star_tracker::util::units::Matrix;
-	/// use star_tracker::util::units::MatPos;
-	/// use star_tracker::util::units::Cartesian3D;
-	/// let mut mat1x4 : Matrix<1,4> = Matrix::new();
-	/// mat1x4.set(MatPos{row: 0, col: 0}, 1.0);
-	/// mat1x4.set(MatPos{row: 0, col: 1}, 2.0);
-	/// mat1x4.set(MatPos{row: 0, col: 2}, 3.0);
-	/// mat1x4.set(MatPos{row: 0, col: 3}, 0.5); // homogeneous number.
-	/// assert_eq!(mat1x4.to_cartesian3(), Cartesian3D{x: 2.0, y: 4.0, z: 6.0});
-	/// ```
-	pub fn to_cartesian3 ( &self ) -> Cartesian3D
-	{
-		return Cartesian3D{
-			x: self.get(MatPos{row: 0, col: 0}) / self.get(MatPos{row: 0, col: 3}),
-			y: self.get(MatPos{row: 0, col: 1}) / self.get(MatPos{row: 0, col: 3}),
-			z: self.get(MatPos{row: 0, col: 2}) / self.get(MatPos{row: 0, col: 3}),
 		};
 	}
 }
@@ -570,6 +517,186 @@ impl Matrix <4, 1>
 	}
 }
 
+
+// Pure rotation matrix.
+impl Matrix <3, 3>
+{
+	/// Multiplies this matrix by the provided vector.
+	/// # Arguments
+	/// * `rhs` - The point to transform by this matrix.
+	/// 
+	/// # Example
+	/// ```
+	/// use star_tracker::util::units::Cartesian3D;
+	/// use star_tracker::util::units::Matrix;
+	/// use star_tracker::util::units::MatPos;
+	///
+	///	let pt = Cartesian3D{x: 1.0, y: 2.0, z: 3.0};
+	///	let mut mat3x3 : Matrix<3,3> = Matrix::new();
+	///
+	///	// x is the addition of all. 
+	///	mat3x3.set(MatPos{row: 0, col: 0}, 1.0);
+	///	mat3x3.set(MatPos{row: 0, col: 1}, 1.0);
+	///	mat3x3.set(MatPos{row: 0, col: 2}, 1.0);
+	///
+	///	// y is 2y + z. 
+	///	mat3x3.set(MatPos{row: 1, col: 0}, 0.0);
+	///	mat3x3.set(MatPos{row: 1, col: 1}, 2.0);
+	///	mat3x3.set(MatPos{row: 1, col: 2}, 1.0);
+	///
+	///	// z is 0.5x + 3.0y + 2.0z. 
+	///	mat3x3.set(MatPos{row: 2, col: 0}, 0.5);
+	///	mat3x3.set(MatPos{row: 2, col: 1}, 3.0);
+	///	mat3x3.set(MatPos{row: 2, col: 2}, 2.0);
+	///
+	///	let expected = Cartesian3D
+	///	{
+	///		x: pt.x + pt.y + pt.z,
+	///		y: 2.0 * pt.y + pt.z,
+	///		z: 0.5 * pt.x + 3.0 * pt.y + 2.0 * pt.z,
+	///	};
+	///	assert_eq!(mat3x3.multiply(pt), expected);	
+	/// ```
+	pub fn multiply ( &self, rhs: Cartesian3D ) -> Cartesian3D
+	{
+		let mut pt : Matrix<3, 1> = Matrix::new();
+		pt.set(MatPos{row: 0, col: 0}, rhs.x);
+		pt.set(MatPos{row: 1, col: 0}, rhs.y);
+		pt.set(MatPos{row: 2, col: 0}, rhs.z);
+		
+		let val = *self * pt;
+		
+		return Cartesian3D{
+			x: val.get(MatPos{row: 0, col: 0}), 
+			y: val.get(MatPos{row: 1, col: 0}), 
+			z: val.get(MatPos{row: 2, col: 0})};
+	}
+}
+
+// Non homogeneous matrix
+impl Matrix <3, 4>
+{
+	/// Multiplies this matrix by the provided vector.
+	/// # Arguments
+	/// * `rhs` - The point to transform by this matrix.
+	/// 
+	/// # Example
+	/// ```
+	/// use star_tracker::util::units::Cartesian3D;
+	/// use star_tracker::util::units::Matrix;
+	/// use star_tracker::util::units::MatPos;
+	///
+	///	let pt = Cartesian3D{x: 1.0, y: 2.0, z: 3.0};
+	///	let mut mat4x4 : Matrix<3,4> = Matrix::new();
+	///
+	///	// x is the addition of all + 1. 
+	///	mat4x4.set(MatPos{row: 0, col: 0}, 1.0);
+	///	mat4x4.set(MatPos{row: 0, col: 1}, 1.0);
+	///	mat4x4.set(MatPos{row: 0, col: 2}, 1.0);
+	///	mat4x4.set(MatPos{row: 0, col: 3}, 1.0);
+	///
+	///	// y is 2y + z. 
+	///	mat4x4.set(MatPos{row: 1, col: 0}, 0.0);
+	///	mat4x4.set(MatPos{row: 1, col: 1}, 2.0);
+	///	mat4x4.set(MatPos{row: 1, col: 2}, 1.0);
+	///	mat4x4.set(MatPos{row: 1, col: 3}, 0.0);
+	///
+	///	// z is 0.5x + 3.0y + 2.0z + 1. 
+	///	mat4x4.set(MatPos{row: 2, col: 0}, 0.5);
+	///	mat4x4.set(MatPos{row: 2, col: 1}, 3.0);
+	///	mat4x4.set(MatPos{row: 2, col: 2}, 2.0);
+	///	mat4x4.set(MatPos{row: 2, col: 3}, 1.0);
+	///
+	///	let expected = Cartesian3D
+	///	{
+	///		x: pt.x + pt.y + pt.z + 1.0,
+	///		y: 2.0 * pt.y + pt.z,
+	///		z: 0.5 * pt.x + 3.0 * pt.y + 2.0 * pt.z + 1.0,
+	///	};
+	///	assert_eq!(mat4x4.multiply(pt), expected);	
+	/// ```
+	pub fn multiply ( &self, rhs: Cartesian3D ) -> Cartesian3D
+	{
+		let mut pt : Matrix<4, 1> = Matrix::new();
+		pt.set(MatPos{row: 0, col: 0}, rhs.x);
+		pt.set(MatPos{row: 1, col: 0}, rhs.y);
+		pt.set(MatPos{row: 2, col: 0}, rhs.z);
+		pt.set(MatPos{row: 3, col: 0}, 1.0);
+		
+		let val = *self * pt;
+		
+		return Cartesian3D{
+			x: val.get(MatPos{row: 0, col: 0}), 
+			y: val.get(MatPos{row: 1, col: 0}), 
+			z: val.get(MatPos{row: 2, col: 0})};
+	}
+}
+
+// Homogeneous matrix
+impl Matrix <4, 4>
+{
+	/// Multiplies this matrix by the provided vector.
+	/// # Arguments
+	/// * `rhs` - The point to transform by this matrix.
+	/// # Example
+	/// ```
+	/// use star_tracker::util::units::Cartesian3D;
+	/// use star_tracker::util::units::Matrix;
+	/// use star_tracker::util::units::MatPos;
+	///
+	/// let pt = Cartesian3D{x: 1.0, y: 2.0, z: 3.0};
+	/// let mut mat3x4 : Matrix<4,4> = Matrix::new();
+	/// 
+	/// // x is the addition of all. 
+	/// mat3x4.set(MatPos{row: 0, col: 0}, 1.0);
+	/// mat3x4.set(MatPos{row: 0, col: 1}, 1.0);
+	/// mat3x4.set(MatPos{row: 0, col: 2}, 1.0);
+	/// mat3x4.set(MatPos{row: 0, col: 3}, 0.0);
+	/// 
+	/// // y is 2y + z + 1. 
+	/// mat3x4.set(MatPos{row: 1, col: 0}, 0.0);
+	/// mat3x4.set(MatPos{row: 1, col: 1}, 2.0);
+	/// mat3x4.set(MatPos{row: 1, col: 2}, 1.0);
+	/// mat3x4.set(MatPos{row: 1, col: 3}, 1.0);
+	/// 
+	/// // z is 0.5x + 3.0y + 2.0z. 
+	/// mat3x4.set(MatPos{row: 2, col: 0}, 0.5);
+	/// mat3x4.set(MatPos{row: 2, col: 1}, 3.0);
+	/// mat3x4.set(MatPos{row: 2, col: 2}, 2.0);
+	/// mat3x4.set(MatPos{row: 2, col: 3}, 0.0);
+	/// 
+	/// // w is 2x + 2y + 2z + 2. 
+	/// mat3x4.set(MatPos{row: 3, col: 0}, 2.0);
+	/// mat3x4.set(MatPos{row: 3, col: 1}, 2.0);
+	/// mat3x4.set(MatPos{row: 3, col: 2}, 2.0);
+	/// mat3x4.set(MatPos{row: 3, col: 3}, 2.0);
+	/// 
+	/// let w = 2.0 * (pt.x + pt.y + pt.z) + 2.0;
+	/// let expected = Cartesian3D
+	/// {
+	/// 	x: pt.x + pt.y + pt.z,
+	/// 	y: 2.0 * pt.y + pt.z + 1.0,
+	/// 	z: 0.5 * pt.x + 3.0 * pt.y + 2.0 * pt.z,
+	/// } / w;
+	/// assert_eq!(mat3x4.multiply(pt), expected);	
+	/// ```
+	pub fn multiply ( &self, rhs: Cartesian3D ) -> Cartesian3D
+	{
+		let mut pt : Matrix<4, 1> = Matrix::new();
+		pt.set(MatPos{row: 0, col: 0}, rhs.x);
+		pt.set(MatPos{row: 1, col: 0}, rhs.y);
+		pt.set(MatPos{row: 2, col: 0}, rhs.z);
+		pt.set(MatPos{row: 3, col: 0}, 1.0);
+		
+		let val = *self * pt;
+		
+		return Cartesian3D{
+			x: val.get(MatPos{row: 0, col: 0}) / val.get(MatPos{row: 3, col: 0}), 
+			y: val.get(MatPos{row: 1, col: 0}) / val.get(MatPos{row: 3, col: 0}), 
+			z: val.get(MatPos{row: 2, col: 0}) / val.get(MatPos{row: 3, col: 0}),
+		};
+	}
+}
 
 
 //###############################################################################################//
@@ -820,20 +947,20 @@ mod test
 
 
 	//
-	// fn transpose ( &self ) -> Matrix<H, W>
+	// fn transposed ( &self ) -> Matrix<H, W>
 	//
 
 	#[test]
-	fn test_transpose_empty ( )
+	fn test_transposed_empty ( )
 	{
 		let mat0x0 : Matrix<0,0> = Matrix::new();
-		let matt0x0 = mat0x0.transpose();
+		let matt0x0 = mat0x0.transposed();
 		assert_eq!(matt0x0.width(), 0);
 		assert_eq!(matt0x0.height(), 0);
 	}
 
 	#[test]
-	fn test_transpose_square ( )
+	fn test_transposed_square ( )
 	{
 		let mut mat4x4 : Matrix<4, 4> = Matrix::new();
 		for x in 0..mat4x4.width()
@@ -844,7 +971,7 @@ mod test
 			}
 		}
 
-		let matt4x4 : Matrix<4, 4> = mat4x4.transpose();
+		let matt4x4 : Matrix<4, 4> = mat4x4.transposed();
 		assert_eq!(matt4x4.height(), 4);
 		assert_eq!(matt4x4.width(), 4);
 		for x in 0..mat4x4.width()
@@ -859,7 +986,7 @@ mod test
 	}
 
 	#[test]
-	fn test_transpose_rectangle ( )
+	fn test_transposed_rectangle ( )
 	{
 		let mut mat3x4 : Matrix<3, 4> = Matrix::new();
 		for x in 0..mat3x4.width()
@@ -871,7 +998,7 @@ mod test
 		}
 		println!("BEFORE");
 
-		let matt4x3 : Matrix<4, 3> = mat3x4.transpose();
+		let matt4x3 : Matrix<4, 3> = mat3x4.transposed();
 
 		println!("AFTER");
 
@@ -1137,18 +1264,8 @@ mod test
 	//
 	// fn to_cartesian3 ( ) -> Cartesian3D
 	// For:
-	// <1, 3>, <3, 1>, <1, 4>, <4, 1>
+	// <3, 1>, <4, 1>
 	//
-	
-	#[test]
-	fn test_to_cartesian3_1x3 ( )
-	{
-		let mut mat1x3 : Matrix<1,3> = Matrix::new();
-		mat1x3.set(MatPos{row: 0, col: 0}, 1.0);
-		mat1x3.set(MatPos{row: 0, col: 1}, 2.0);
-		mat1x3.set(MatPos{row: 0, col: 2}, 3.0);
-		assert_eq!(mat1x3.to_cartesian3(), Cartesian3D{x: 1.0, y: 2.0, z: 3.0});
-	}
 	
 	#[test]
 	fn test_to_cartesian3_3x1 ( )
@@ -1161,17 +1278,7 @@ mod test
 	}
 	
 
-	#[test]
-	fn test_to_cartesian3_1x4 ( )
-	{
-		let mut mat1x4 : Matrix<1,4> = Matrix::new();
-		mat1x4.set(MatPos{row: 0, col: 0}, 1.0);
-		mat1x4.set(MatPos{row: 0, col: 1}, 2.0);
-		mat1x4.set(MatPos{row: 0, col: 2}, 3.0);
-		mat1x4.set(MatPos{row: 0, col: 3}, 0.5);
-		assert_eq!(mat1x4.to_cartesian3(), Cartesian3D{x: 2.0, y: 4.0, z: 6.0});
-	}
-	
+
 	#[test]
 	fn test_to_cartesian3_4x1 ( )
 	{
@@ -1182,6 +1289,134 @@ mod test
 		mat4x1.set(MatPos{row: 3, col: 0}, 0.5);
 		assert_eq!(mat4x1.to_cartesian3(), Cartesian3D{x: 2.0, y: 4.0, z: 6.0});
 	}
+
+
+
+
+
+
+
+
+
+	//
+	// fn multiply
+	// <3, 3> <3, 4> <4, 4>
+	//
+
+	#[test]
+	fn test_multiply_3x3 ( )
+	{
+		let pt = Cartesian3D{x: 1.0, y: 2.0, z: 3.0};
+		let mut mat3x3 : Matrix<3,3> = Matrix::new();
+		
+		// x is the addition of all. 
+		mat3x3.set(MatPos{row: 0, col: 0}, 1.0);
+		mat3x3.set(MatPos{row: 0, col: 1}, 1.0);
+		mat3x3.set(MatPos{row: 0, col: 2}, 1.0);
+		
+		// y is 2y + z. 
+		mat3x3.set(MatPos{row: 1, col: 0}, 0.0);
+		mat3x3.set(MatPos{row: 1, col: 1}, 2.0);
+		mat3x3.set(MatPos{row: 1, col: 2}, 1.0);
+		
+		// z is 0.5x + 3.0y + 2.0z. 
+		mat3x3.set(MatPos{row: 2, col: 0}, 0.5);
+		mat3x3.set(MatPos{row: 2, col: 1}, 3.0);
+		mat3x3.set(MatPos{row: 2, col: 2}, 2.0);
+		
+		let expected = Cartesian3D
+		{
+			x: pt.x + pt.y + pt.z,
+			y: 2.0 * pt.y + pt.z,
+			z: 0.5 * pt.x + 3.0 * pt.y + 2.0 * pt.z,
+		};
+		assert_eq!(mat3x3.multiply(pt), expected);	
+	}
+
+	#[test]
+	fn test_multiply_3x4 ( )
+	{
+		let pt = Cartesian3D{x: 1.0, y: 2.0, z: 3.0};
+		let mut mat3x4 : Matrix<3,4> = Matrix::new();
+		
+		// x is the addition of all + 1. 
+		mat3x4.set(MatPos{row: 0, col: 0}, 1.0);
+		mat3x4.set(MatPos{row: 0, col: 1}, 1.0);
+		mat3x4.set(MatPos{row: 0, col: 2}, 1.0);
+		mat3x4.set(MatPos{row: 0, col: 3}, 1.0);
+		
+		// y is 2y + z. 
+		mat3x4.set(MatPos{row: 1, col: 0}, 0.0);
+		mat3x4.set(MatPos{row: 1, col: 1}, 2.0);
+		mat3x4.set(MatPos{row: 1, col: 2}, 1.0);
+		mat3x4.set(MatPos{row: 1, col: 3}, 0.0);
+		
+		// z is 0.5x + 3.0y + 2.0z + 1. 
+		mat3x4.set(MatPos{row: 2, col: 0}, 0.5);
+		mat3x4.set(MatPos{row: 2, col: 1}, 3.0);
+		mat3x4.set(MatPos{row: 2, col: 2}, 2.0);
+		mat3x4.set(MatPos{row: 2, col: 3}, 1.0);
+		
+		let expected = Cartesian3D
+		{
+			x: pt.x + pt.y + pt.z + 1.0,
+			y: 2.0 * pt.y + pt.z,
+			z: 0.5 * pt.x + 3.0 * pt.y + 2.0 * pt.z + 1.0,
+		};
+		assert_eq!(mat3x4.multiply(pt), expected);	
+	}
+
+	#[test]
+	fn test_multiply_4x4 ( )
+	{
+		let pt = Cartesian3D{x: 1.0, y: 2.0, z: 3.0};
+		let mut mat4x4 : Matrix<4,4> = Matrix::new();
+		
+		// x is the addition of all. 
+		mat4x4.set(MatPos{row: 0, col: 0}, 1.0);
+		mat4x4.set(MatPos{row: 0, col: 1}, 1.0);
+		mat4x4.set(MatPos{row: 0, col: 2}, 1.0);
+		mat4x4.set(MatPos{row: 0, col: 3}, 0.0);
+		
+		// y is 2y + z + 1. 
+		mat4x4.set(MatPos{row: 1, col: 0}, 0.0);
+		mat4x4.set(MatPos{row: 1, col: 1}, 2.0);
+		mat4x4.set(MatPos{row: 1, col: 2}, 1.0);
+		mat4x4.set(MatPos{row: 1, col: 3}, 1.0);
+		
+		// z is 0.5x + 3.0y + 2.0z. 
+		mat4x4.set(MatPos{row: 2, col: 0}, 0.5);
+		mat4x4.set(MatPos{row: 2, col: 1}, 3.0);
+		mat4x4.set(MatPos{row: 2, col: 2}, 2.0);
+		mat4x4.set(MatPos{row: 2, col: 3}, 0.0);
+		
+		// w is 2x + 2y + 2z + 2. 
+		mat4x4.set(MatPos{row: 3, col: 0}, 2.0);
+		mat4x4.set(MatPos{row: 3, col: 1}, 2.0);
+		mat4x4.set(MatPos{row: 3, col: 2}, 2.0);
+		mat4x4.set(MatPos{row: 3, col: 3}, 2.0);
+		
+		let w = 2.0 * (pt.x + pt.y + pt.z) + 2.0;
+		let expected = Cartesian3D
+		{
+			x: pt.x + pt.y + pt.z,
+			y: 2.0 * pt.y + pt.z + 1.0,
+			z: 0.5 * pt.x + 3.0 * pt.y + 2.0 * pt.z,
+		} / w;
+		assert_eq!(mat4x4.multiply(pt), expected);	
+	}
+
+
+
+
+
+
+
+
+
+
+
+
 
 
 

@@ -26,7 +26,10 @@ fn main (  )
 {
 	println!("\n\n\nRUNNING");
 	
-	let mut rdr=Io::get_csv(NixConstsStruct::HYG_DATABASE_PATH, NixConstsStruct::HYG_DATABASE_URL);
+	let mut rdr = Io::get_csv (
+		NixConstsStruct::HYG_DATABASE_PATH,
+		NixConstsStruct::HYG_DATABASE_FILE,
+		NixConstsStruct::HYG_DATABASE_URL );
 
 	let mut comparison_points : [Equatorial; 1000] = [Equatorial{ra: Radians(0.0), dec: Radians(0.0)}; 1000];
 	Equatorial::evenly_distribute(&mut comparison_points);

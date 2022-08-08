@@ -239,7 +239,7 @@ pub fn generate_catalogue ( num_elements: usize ) -> Vec<Star>
 			ra:  Degrees(rng.gen::<Decimal>() * 360.0).to_radians(),
 			dec: Degrees(rng.gen::<Decimal>() * 180.0 - 90.0).to_radians()};
 
-		let star = Star{mag: 0.0, spec: "".to_string(), pos: element};
+		let star = Star{mag: 0.0, spec: "".to_string(), pos: element, name: "".to_string()};
 		cat.push_back(star).expect("Vecs should not be full");
 	}	
 	return cat;

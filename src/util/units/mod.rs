@@ -58,7 +58,7 @@ pub struct PixelWeighted
 //###############################################################################################//
 /// A 3d point.
 /// This is to represent equatorial coordinates for doing angle calculations.
-#[derive(Debug, Copy, Clone)]
+#[derive(Copy, Clone)]
 pub struct Cartesian3D
 {
 	pub x : Decimal,
@@ -72,7 +72,7 @@ pub struct Cartesian3D
 /// Equatorial Coordinates are coordinates which define a direction along a sphere.
 /// Right Ascension (ra) is defined as the angle around the equator from 0 to 2PI (Don't use 0h to 24h).
 /// Declination (dec) is defined as the angle from -PI to PI (Don't use -90 to 90 deg).
-#[derive(Debug, Copy, Clone)]
+#[derive(Copy, Clone)]
 #[derive(Deserialize)]
 pub struct Equatorial
 {
@@ -114,11 +114,11 @@ pub struct Quaternion
 //###############################################################################################//
 //										---	classical rodrigues parameters ---
 //###############################################################################################//
-/// A CRP is an old method of describing a rotation.  
-/// It is considered as a sphere cut in half on a plane.  
-/// The top of a hemisphere is projecting onto the plane where the point is.  
-/// There is a singularity if the point to project is at the projection point as it cannot be projected on the plane (infinity).  
-/// There is not much information on this.  
+/// A CRP is an old method of describing a rotation.
+/// It is considered as a sphere cut in half on a plane.
+/// The top of a hemisphere is projecting onto the plane where the point is.
+/// There is a singularity if the point to project is at the projection point as it cannot be projected on the plane (infinity).
+/// There is not much information on this.
 #[derive(Debug, Copy, Clone)]
 pub struct CRP
 {

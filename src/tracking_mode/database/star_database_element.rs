@@ -36,11 +36,11 @@ impl StarDatabaseElement
 	/// let v45 = Degrees(45.0).to_radians();
 	/// let v0 = Degrees(0.0).to_radians();
 	/// let mut lst: Vec<Star> = Vec::with_capacity(5);
-	/// lst.push(Star{pos: Equatorial{ ra: v180, dec: v90 }, mag: 0.0, spec: "".to_string()});	// 0 North
-	/// lst.push(Star{pos: Equatorial{ ra: v0, dec: v90 },   mag: 0.0, spec: "".to_string()});	// 1 North
-	/// lst.push(Star{pos: Equatorial{ ra: v0, dec: vn90 },  mag: 0.0, spec: "".to_string()});	// 2 South
-	/// lst.push(Star{pos: Equatorial{ ra: v90, dec: v45 },  mag: 0.0, spec: "".to_string()});	// 3 45* Equator
-	/// lst.push(Star{pos: Equatorial{ ra: v0, dec: v0 },    mag: 0.0, spec: "".to_string()});	// 4 Equator
+	/// lst.push(Star{pos: Equatorial{ ra: v180, dec: v90 }, mag: 0.0, spec: "".to_string(), name: "".to_string()});	// 0 North
+	/// lst.push(Star{pos: Equatorial{ ra: v0, dec: v90 },   mag: 0.0, spec: "".to_string(), name: "".to_string()});	// 1 North
+	/// lst.push(Star{pos: Equatorial{ ra: v0, dec: vn90 },  mag: 0.0, spec: "".to_string(), name: "".to_string()});	// 2 South
+	/// lst.push(Star{pos: Equatorial{ ra: v90, dec: v45 },  mag: 0.0, spec: "".to_string(), name: "".to_string()});	// 3 45* Equator
+	/// lst.push(Star{pos: Equatorial{ ra: v0, dec: v0 },    mag: 0.0, spec: "".to_string(), name: "".to_string()});	// 4 Equator
 	/// 
 	/// let mut fov = Degrees(45.000001).to_radians();
 	/// let mut out = StarDatabaseElement::create_list(fov, &lst);
@@ -186,11 +186,11 @@ mod test
 		let v45 = Degrees(45.0).to_radians();
 		let v0 = Degrees(0.0).to_radians();
 		let mut lst: Vec<Star> = Vec::with_capacity(5);
-		lst.push(Star{pos: Equatorial{ ra: v180, dec: v90 }, mag: 0.0, spec: "".to_string()});	// 0 North
-		lst.push(Star{pos: Equatorial{ ra: v0, dec: v90 },   mag: 0.0, spec: "".to_string()});	// 1 North
-		lst.push(Star{pos: Equatorial{ ra: v0, dec: vn90 },  mag: 0.0, spec: "".to_string()});	// 2 South
-		lst.push(Star{pos: Equatorial{ ra: v90, dec: v45 },  mag: 0.0, spec: "".to_string()});	// 3 45* Equator
-		lst.push(Star{pos: Equatorial{ ra: v0, dec: v0 },    mag: 0.0, spec: "".to_string()});	// 4 Equator
+		lst.push(Star{pos: Equatorial{ ra: v180, dec: v90 }, mag: 0.0, spec: "".to_string(), name: "".to_string()});	// 0 North
+		lst.push(Star{pos: Equatorial{ ra: v0, dec: v90 },   mag: 0.0, spec: "".to_string(), name: "".to_string()});	// 1 North
+		lst.push(Star{pos: Equatorial{ ra: v0, dec: vn90 },  mag: 0.0, spec: "".to_string(), name: "".to_string()});	// 2 South
+		lst.push(Star{pos: Equatorial{ ra: v90, dec: v45 },  mag: 0.0, spec: "".to_string(), name: "".to_string()});	// 3 45* Equator
+		lst.push(Star{pos: Equatorial{ ra: v0, dec: v0 },    mag: 0.0, spec: "".to_string(), name: "".to_string()});	// 4 Equator
 		return lst;
 	}
 

@@ -89,6 +89,7 @@ use crate::util::err::{/*Errors, */Error};
 
 mod k_vector;
 mod star_database_element;
+#[cfg(not(feature = "setup"))]
 pub mod array_database;
 pub mod pyramid_database;
 

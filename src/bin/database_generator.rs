@@ -17,7 +17,7 @@ fn main ( )
 {
 	// Read CSV.
 	println!("Reading CSV Database        ...");
-	let mut rdr = Io::get_csv(NixConstsStruct::HYG_DATABASE_PATH, NixConstsStruct::HYG_DATABASE_URL);
+	let mut rdr = Io::get_csv(NixConstsStruct::HYG_DATABASE_PATH, NixConstsStruct::HYG_DATABASE_FILE, NixConstsStruct::HYG_DATABASE_URL);
 	let iter = rdr.deserialize();
 	
 	// Create Star List +

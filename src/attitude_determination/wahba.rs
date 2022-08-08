@@ -51,10 +51,10 @@ pub fn find_z ( b: &Matrix<3,3> ) -> Matrix<3,1>
 	return z;
 }
 
-/// S is B multiplied by its transpose.
+/// S is B multiplied by its transposed.
 pub fn find_s ( b: &Matrix<3, 3> ) -> Matrix<3,3>
 {
-	return *b + b.transpose();
+	return *b + b.transposed();
 }
 
 
@@ -78,7 +78,7 @@ pub fn find_k ( z: &Matrix<3, 1>, s: &Matrix<3, 3>, sigma: Decimal ) -> Matrix<4
 {
 	let mut k : Matrix<4,4> = Matrix::new();
 	k.insert(MatPos{row: 1, col: 0}, &z);
-	k.insert(MatPos{row: 0, col: 1}, &z.transpose());
+	k.insert(MatPos{row: 0, col: 1}, &z.transposed());
 	k.insert(MatPos{row: 1, col: 1}, &s);
 	
 	k.set(MatPos{row: 0, col: 0}, k.get(MatPos{row: 0, col: 0}) + sigma);

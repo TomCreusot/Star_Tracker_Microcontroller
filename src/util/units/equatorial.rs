@@ -1,4 +1,5 @@
 //! The implementation of Equatorial.
+use std::fmt;
 use std::ops::RangeInclusive;
 use crate::util::aliases::{Decimal, M_PI};
 use super::{Equatorial, Cartesian3D, Radians};
@@ -10,7 +11,7 @@ impl Equatorial
 	///
 	/// # Returns
 	/// Equatorial{ra: Radians(0.0), dec: Radians(0.0)};
-	/// 
+	///
 	/// # Example
 	/// ```
 	/// use star_tracker::util::units::{Equatorial, Radians};
@@ -20,20 +21,20 @@ impl Equatorial
 	{
 		return Equatorial{ra: Radians(0.0), dec: Radians(0.0)};
 	}
-	
-	
+
+
 	/// The range for declination.
 	pub fn range_dec ( ) -> RangeInclusive<Radians>
 	{
 		return Radians(-M_PI / 2.0) ..= Radians(M_PI / 2.0);
 	}
-	
+
 	/// The range for right ascention
 	pub fn range_ra ( ) -> RangeInclusive<Radians>
 	{
 		return Radians(0.0) ..= Radians(2.0 * M_PI);
 	}
-	
+
 	/// Returns dec + 180 degrees to the declination to match with spherical coordinates.
 	///	# Example
 	/// ```
@@ -81,11 +82,11 @@ impl Equatorial
 		let cur = self.to_cartesian3();
 		let oth = other.to_cartesian3();
 		return cur.angle_distance(oth);
-		// 
+		//
 		// let dot = cur.dot(&oth);
 		// let mag_cur = (cur.x.powf(2.0) + cur.y.powf(2.0) + cur.z.powf(2.0)).sqrt();
 		// let mag_oth = (oth.x.powf(2.0) + oth.y.powf(2.0) + oth.z.powf(2.0)).sqrt();
-		// 
+		//
 		// return Radians((dot / (mag_cur * mag_oth)).acos());
 	}
 
@@ -132,9 +133,9 @@ impl Equatorial
 			z: -self.get_phi().cos()
 		};
 	}
-	
-	
-	
+
+
+
 	/// Sets the points of the input equatorial array as a set of evenly spaced points.
 	/// This uses the fibinachi golden ratio algorithm.
 	///
@@ -149,7 +150,7 @@ impl Equatorial
 	/// let variance = 0.1;
 	/// let mut eq : [Equatorial; N] = [Equatorial{ra: Radians(0.0), dec: Radians(0.0)}; N];
 	/// Equatorial::evenly_distribute(&mut eq);
-	/// 
+	///
 	/// let mut compare : Option<Decimal> = None;
 	/// for e in eq.iter()
 	/// {
@@ -158,7 +159,7 @@ impl Equatorial
 	/// 	{
 	/// 		current += ee.angle_distance(*e).0;
 	/// 	}
-	/// 
+	///
 	/// 	if compare == None
 	/// 	{
 	/// 		compare = Some(current);
@@ -194,6 +195,30 @@ impl Equatorial
 
 
 
+
+//###############################################################################################//
+//							---	Debug ---
+//###############################################################################################//
+
+
+impl fmt::Display for Equatorial {
+    fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result
+	{
+		write!(f, "Equatorial({:.2}, {:.2})d", self.ra.to_degrees().0, self.dec.to_degrees().0)?;
+		return Ok(());
+	}
+}
+
+
+impl fmt::Debug for Equatorial {
+    fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result
+	{
+		write!(f, "Equatorial(ra: {}, dec: {})", self.ra, self.dec)?;
+		return Ok(());
+    }
+}
+
+
 //###############################################################################################//
 //###############################################################################################//
 //
@@ -209,7 +234,7 @@ mod test
 //										---	Equatorial ---
 //###############################################################################################//
 
-	use rand::prelude::*;	
+	use rand::prelude::*;
 
 	use util::units::{Equatorial, Cartesian3D, Radians};
 	use util::aliases::Decimal;
@@ -221,18 +246,18 @@ mod test
 	{
 		return (a - b).abs() < 0.00001;
 	}
-	
-	
+
+
 	//
 	// zero ( ) -> Equatorial{ra: Radians(0.0), dec: Radians(0.0)}
 	//
-	
+
 	#[test]
 	fn test_zero ( )
 	{
 		assert_eq!(Equatorial{ra: Radians(0.0), dec: Radians(0.0)}, Equatorial::zero());
 	}
-	
+
 
 	//
 	// Getters
@@ -245,7 +270,7 @@ mod test
 		assert_eq!(Equatorial::range_dec(), Radians(-M_PI / 2.0) ..= Radians(M_PI) / 2.0);
 	}
 
-	
+
 	#[test]
 	fn test_get_phi ( )
 	{
@@ -429,15 +454,15 @@ mod test
 		assert_close(cart.y, 0.0);
 		assert_close(cart.z, 1.0);
 	}
-	
-	
+
+
 	#[test]
 	fn test_to_cartesian_3_random ( )
 	{
 		let mut rng = rand::thread_rng();
 		for _i in 0..100
 		{
-			let mut c = 
+			let mut c =
 			Cartesian3D{
 				x: rng.gen::<Decimal>() - 0.5,
 				y: rng.gen::<Decimal>() - 0.5,
@@ -445,19 +470,19 @@ mod test
 			};
 			c.normalize();
 			let e = c.to_equatorial();
-			
+
 			assert!(e.test_close(&c.to_equatorial(), 0.0001));
 		}
 	}
-	
-	
-	
 
-	
-	
-	
-	
-	
+
+
+
+
+
+
+
+
 	//
 	// fn evenly_distribute ( &mut [Equatorial] )
 	//
@@ -481,7 +506,7 @@ mod test
 		e.set_phi(Radians(M_PI / 2.0));
 		println!("phi 90: {}", e.dec);
 		e.set_phi(Radians(M_PI));
-		
+
 		println!("phi 180: {}", e.dec);
 		const N : usize = 1000;
 		let mut eq : [Equatorial; N] = [Equatorial{ra: Radians(0.0), dec: Radians(0.0)}; N];

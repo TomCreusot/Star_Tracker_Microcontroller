@@ -324,8 +324,6 @@ impl PartialEq for Cartesian3D {
 			(self.z - other.z).abs() < DECIMAL_PRECISION;
 	}
 }
-		
-
 
 impl TestEqual for Cartesian3D {
 	fn test_close ( &self, other: &Self, precision: Decimal ) -> bool

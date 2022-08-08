@@ -48,26 +48,26 @@ impl Io
 	
 	
 	
-	pub fn get_csv ( file_name: &str, database_url: &str ) -> csv::Reader<File>
+	pub fn get_csv ( file_path: &str, file_name: &str, database_url: &str ) -> csv::Reader<File>
 	{
-		let mut rdr = csv::Reader::from_path(file_name);
+		let mut rdr = csv::Reader::from_path(format!("{}{}", file_path, file_name));
 		
 		if rdr.is_err()
 		{
 			println!("Database file missing, downloading...");
-			Io::download_file(file_name, database_url);
+			Io::download_file(file_path, file_name, database_url);
 			println!("Downloaded.");		
-			rdr = csv::Reader::from_path(file_name);
+			rdr = csv::Reader::from_path(format!("{}{}", file_path, file_name));
 		}
 		println!("File found");
-		return rdr.expect("File not working?");
+		return rdr.expect(&format!("File not working? {}{}", file_path, file_name));
 	}
 
 
 
 
 
-	pub fn download_file ( file_name: &str, database_url: &str )
+	pub fn download_file ( file_path: &str, file_name: &str, database_url: &str )
 	{
 		let mut dst = Vec::new();
 		let mut easy = Easy::new();
@@ -83,7 +83,9 @@ impl Io
 			transfer.perform().unwrap();
 		}
 		{
-			let mut file = File::create(file_name).expect("Could not create file.");
+			std::fs::create_dir_all(file_path).expect(&format!("Could not construct path {}, try creating the folder manually.", file_path));
+			let mut file = File::create(&format!("{}{}",file_path, file_name))
+				.expect(&format!("Could not create file: {}, try downloading it from: {}", file_name, database_url) );
 			file.write_all(dst.as_slice()).expect("Could not write file.");
 		}
 	}

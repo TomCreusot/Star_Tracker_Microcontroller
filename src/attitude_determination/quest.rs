@@ -25,7 +25,7 @@ impl AttitudeDetermination for Quest
 		where T: AttitudeDeterminationConsts
 	{
 		// Create K matrix (Davenport).
-		let b = Wahba::find_b(positions).transpose();
+		let b = Wahba::find_b(positions).transposed();
 		let z = Wahba::find_z(&b);
 		let s = Wahba::find_s(&b);
 		let sigma = Wahba::find_sigma(&b);
@@ -40,9 +40,9 @@ impl AttitudeDetermination for Quest
 
 		// Finding lambda uses a quatric polynomial.
 		let a = sigma * sigma - s.adjoint().trace();
-		let b = sigma * sigma + (z.transpose() * z).to_decimal();
-		let c = s.determinate() + (z.transpose() * s * z).to_decimal(); 
-		let d = (z.transpose() * s * s * z).to_decimal();
+		let b = sigma * sigma + (z.transposed() * z).to_decimal();
+		let c = s.determinate() + (z.transposed() * s * z).to_decimal(); 
+		let d = (z.transposed() * s * s * z).to_decimal();
 		
 		// Use the neuton raphson method to solve for lambda.
 		// This would be:

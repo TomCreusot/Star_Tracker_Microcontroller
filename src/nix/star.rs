@@ -102,11 +102,11 @@ impl<'de> Deserialize<'de> for Star
 
 	fn deserialize<D>(deserializer: D) -> Result<Self, D::Error> where D: Deserializer<'de>,
 	{
-		#[derive(Deserialize)]
-		#[serde(field_identifier, rename_all = "lowercase")]
+		// #[derive(Deserialize)]
+		// #[serde(field_identifier, rename_all = "lowercase")]
 		#[derive(Debug)]
-        enum Field { Mag, Ra, Dec, Spect }
-/*
+        enum Field { Mag, Ra, Dec, Spect, Name }
+
         // This part could also be generated independently by:
         //
         //    #[derive(Deserialize)]
@@ -129,23 +129,26 @@ impl<'de> Deserialize<'de> for Star
                     fn expecting(&self, formatter: &mut fmt::Formatter) -> fmt::Result {
                         // formatter.write_str("`secs` or `nanos`")
 						println!("EXPECTING FIELD");
-						let s = format!("`{}` or `{}` or `{}` or `{}`", FIELDS[0], FIELDS[1], FIELDS[2], FIELDS[3]);
+						let s = format!("`{}` or `{}` or `{}` or `{}` or `{}`", 
+							FIELDS[0], FIELDS[1], FIELDS[2], FIELDS[3], FIELDS[4]);
 						// let s = format!("`{}`", FIELDS[0]);
 						return formatter.write_str(&s);
                     }
 
 					//
 					// Returns the enumeration of the field requested.
-                    fn visit_str<E>(self, value: &str) -> Result<Field, E> where E: de::Error
+                    fn visit_bytes<E>(self, value: &[u8]) -> Result<Field, E> where E: de::Error
                     {
-						println!("Visit str");
+						// println!("Visit str");
+						let val = std::str::from_utf8(value).expect("NOT A STRING!");
 						
 						// Rust doesnt like match with arrays?
-						if FIELDS[0].eq(value) 		{ return Ok(Field::Mag); }
-						else if FIELDS[1].eq(value) { return Ok(Field::Ra); }
-						else if FIELDS[2].eq(value) { return Ok(Field::Dec); }
-						else if FIELDS[3].eq(value) { return Ok(Field::Spec); }
-						else { return Err(de::Error::unknown_field(value, FIELDS)); }
+						if FIELDS[0].eq(val) 		{ return Ok(Field::Mag); }
+						else if FIELDS[1].eq(val) { return Ok(Field::Ra); }
+						else if FIELDS[2].eq(val) { return Ok(Field::Dec); }
+						else if FIELDS[3].eq(val) { return Ok(Field::Spect); }
+						else if FIELDS[4].eq(val) { return Ok(Field::Name); }
+						else { return Err(de::Error::unknown_field(val, FIELDS)); }
                     }
                 }
 
@@ -154,7 +157,7 @@ impl<'de> Deserialize<'de> for Star
         }
 		
 		
-		*/
+		
 		
 		
 		struct DurationVisitor;
@@ -181,8 +184,9 @@ impl<'de> Deserialize<'de> for Star
 				let ra   = seq.next_element()?.ok_or_else(|| de::Error::invalid_length(1, &self))?;
 				let dec  = seq.next_element()?.ok_or_else(|| de::Error::invalid_length(2, &self))?;
 				let spec = seq.next_element()?.ok_or_else(|| de::Error::invalid_length(3, &self))?;
+				let name = seq.next_element()?.ok_or_else(|| de::Error::invalid_length(4, &self))?;
 				let pos  = Equatorial{ra: Radians(ra), dec: Radians(dec)};
-				return Ok(Star{mag: mag, pos: pos, spec: spec});
+				return Ok(Star{mag: mag, pos: pos, spec: spec, name: name});
 			}
 
 			//
@@ -194,12 +198,14 @@ impl<'de> Deserialize<'de> for Star
 				let mut ra = None;
 				let mut dec = None;
 				let mut spec = None;
+				let mut name = None;
 				let mut continue_loop = true;
 				// Assigns secs and nanos if there is the correct entries of that variable.
 				while continue_loop
 				{
 					let key_wrapped = map.next_key::<Field>();
 					let next = map.next_value::<String>();
+					// println!("{:?}", key_wrapped);
 					
 					// The values are from the enum
 					if key_wrapped.is_ok()
@@ -227,6 +233,10 @@ impl<'de> Deserialize<'de> for Star
 								{
 									spec = Some(next);
 								}
+								Field::Name =>
+								{
+									name = Some(next);
+								}
 							}
 						}
 						// End of List
@@ -241,6 +251,7 @@ impl<'de> Deserialize<'de> for Star
 				let mut ra   = ra.ok_or_else(|| de::Error::missing_field(FIELDS[1]))?;
 				let mut dec  = dec.ok_or_else(|| de::Error::missing_field(FIELDS[2]))?;
 				let spec = spec.ok_or_else(|| de::Error::missing_field(FIELDS[3]))?;
+				let name = name.ok_or_else(|| de::Error::missing_field(FIELDS[4]))?;
 				
 				if NixConstsStruct::HYG_DATABASE_DEC_DEGREES
 				{
@@ -252,7 +263,7 @@ impl<'de> Deserialize<'de> for Star
 				}
 				
 				let pos  = Equatorial{ra: Radians(ra), dec: Radians(dec)};
-				return Ok(Star{mag: mag, pos: pos, spec: spec.expect("")});
+				return Ok(Star{mag: mag, pos: pos, spec: spec.expect(""), name: name.expect("")});
 			}
 		}
 
@@ -262,6 +273,7 @@ impl<'de> Deserialize<'de> for Star
 				NixConstsStruct::HYG_DATABASE_HEADER_RIGHT_ASCENTION, 
 				NixConstsStruct::HYG_DATABASE_HEADER_DECLINATION, 
 				NixConstsStruct::HYG_DATABASE_HEADER_SPECULARITY,
+				NixConstsStruct::HYG_DATABASE_HEADER_NAME,
 			];
 		deserializer.deserialize_struct("Star", FIELDS, DurationVisitor)
 	}

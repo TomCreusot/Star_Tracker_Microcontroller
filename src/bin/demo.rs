@@ -81,10 +81,9 @@ fn main ( )
 		
 		//////*************************************************************************************
 		// Distort equatorial coordinates to a 2d image.
-		use star_tracker::image_processing::Distortion;
 		let mut center = Cartesian3D{x: 4.0, y: 3.0, z: 2.0};
 		center.normalize();
-		println!("{:?}", Distortion::equatorial_to_local_image(center, center));
+		// println!("{:?}", Distortion::equatorial_to_local_image(center, center));
 		
 		
 		// Undistort the image into equatorial.
@@ -337,3 +336,5 @@ pub fn hide_stars ( remove: &mut Vec<Equatorial>, num: u32 )
 		remove.remove(rng.gen_range(0..(remove.len() - 1)));
 	}
 }
+
+

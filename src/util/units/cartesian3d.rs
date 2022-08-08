@@ -1,4 +1,5 @@
 //! The implementation of Cartesian3D.
+use std::fmt;
 use crate::util::aliases::Decimal;
 use crate::util::aliases::M_PI;
 use super::{Equatorial, Cartesian3D, Radians, Matrix, MatPos};
@@ -17,8 +18,8 @@ impl Cartesian3D
 	{
 		return (self.x.powf(2.0) + self.y.powf(2.0) + self.z.powf(2.0)).sqrt();
 	}
-	
-	
+
+
 	/// Normalizes the vector so the magnitude is 1.
 	/// # Example
 	/// ```
@@ -36,8 +37,24 @@ impl Cartesian3D
 		self.y /= magnitude;
 		self.z /= magnitude;
 	}
-	
-	
+
+
+	/// Returns a new normalized vector of the current direction.
+	/// # Example
+	/// ```
+	/// use star_tracker::util::units::Cartesian3D;
+	/// use star_tracker::util::test::TestEqual;
+	/// let mut c = Cartesian3D{x: 10.3, y: 23.1, z: 12.3};
+	/// let c_out = Cartesian3D{x: 0.366228, y: 0.8213466, z: 0.43734};
+	/// assert!(c.normalized().test_close(&c_out, 0.0001));
+	/// ```
+	pub fn normalized ( &mut self ) -> Self
+	{
+		let magnitude  = self.magnitude();
+		return Cartesian3D{x: self.x/magnitude, y: self.y/magnitude, z: self.z/magnitude};
+	}
+
+
 	/// Finds the cross product between self and the input object.
 	/// # Arguments
 	/// * `other` - The other cartesian3d.
@@ -94,17 +111,17 @@ impl Cartesian3D
 	pub fn angle_distance ( &self, oth: Cartesian3D ) -> Radians
 	{
 		let dot = self.dot(&oth);
-		
+
 		let mag_cur = self.magnitude();
 		let mag_oth = oth.magnitude();
-		
+
 		assert!(0.0 < (mag_cur * mag_oth).abs());
 		let mut cos = dot / (mag_cur * mag_oth);
 		if 1.0 < cos  // floating point errors can get slightly above.
 		{
 			cos = 1.0;
 		}
-		
+
 		return Radians(cos.acos());
 	}
 
@@ -130,7 +147,7 @@ impl Cartesian3D
 		mat.set(MatPos{row: 0, col: 2}, self.z);
 		return mat;
 	}
-	
+
 	/// Converts the coordinates into a column matrix form (vertical set of rows).
 	/// # Example
 	/// ```
@@ -176,7 +193,7 @@ impl Cartesian3D
 		mat.set(MatPos{row: 0, col: 3}, 1.0);
 		return mat;
 	}
-	
+
 	/// Converts the coordinates into a column matrix form (vertical set of rows).
 	/// This is in homogeneous form for matrix transformations.
 	/// # Example
@@ -200,7 +217,7 @@ impl Cartesian3D
 		mat.set(MatPos{row: 3, col: 0}, 1.0);
 		return mat;
 	}
-	
+
 
 
 
@@ -238,12 +255,36 @@ impl Cartesian3D
 		}
 
 		let phi =(self.z / (self.x.powf(2.0) + self.y.powf(2.0) + self.z.powf(2.0)).sqrt()).acos();
-		
+
 		let mut eq = Equatorial{ra: Radians(ra), dec: Radians(0.0)};
 		eq.set_phi(Radians(phi));
 		eq.dec = -eq.dec;
 		return eq;
 	}
+}
+
+
+
+//###############################################################################################//
+//							---	Debug ---
+//###############################################################################################//
+
+
+impl fmt::Display for Cartesian3D {
+    fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result
+	{
+		write!(f, "Cartesian3D({:.3}, {:.3}, {:.3})", self.x, self.y, self.z)?;
+		return Ok(());
+	}
+}
+
+
+impl fmt::Debug for Cartesian3D {
+    fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result
+	{
+		write!(f, "Cartesian3D(x: {}, y: {}, z: {})", self.x, self.y, self.z)?;
+		return Ok(());
+    }
 }
 
 
@@ -260,7 +301,7 @@ impl Cartesian3D
 mod test
 {
 	use rand::prelude::*;
-	
+
 	use util::units::Cartesian3D;
 	use util::units::Matrix;
 	use util::units::MatPos;
@@ -270,8 +311,8 @@ mod test
 	use util::units::Decimal;
 	use util::aliases::M_PI;
 	use util::test::TestEqual;
-	
-	
+
+
 //###############################################################################################//
 //										---	Equatorial ---
 //###############################################################################################//
@@ -285,8 +326,8 @@ mod test
 		let c = Cartesian3D{x: 10.3, y: 23.1, z: 12.3};
 		assert!(c.magnitude().test_close(&28.1245463, 0.0001));
 	}
-	
-	
+
+
 	//
 	// normalize ( &self )
 	//
@@ -297,6 +338,17 @@ mod test
 		let c_out = Cartesian3D{x: 0.366228, y: 0.8213466, z: 0.43734};
 		c.normalize();
 		assert!(c.test_close(&c_out, 0.00001));
+	}
+
+	//
+	// normalized ( &self )
+	//
+	#[test]
+	fn test_normalized ( )
+	{
+		let mut c = Cartesian3D{x: 10.3, y: 23.1, z: 12.3};
+		let c_out = Cartesian3D{x: 0.366228, y: 0.8213466, z: 0.43734};
+		assert!(c.normalized().test_close(&c_out, 0.00001));
 	}
 
 	//
@@ -419,7 +471,7 @@ mod test
 		assert_eq!(c.y, m.get(MatPos{row: 0, col: 1}));
 		assert_eq!(c.z, m.get(MatPos{row: 0, col: 2}));
 	}
-	
+
 	#[test]
 	fn test_to_matrix_column ( )
 	{
@@ -440,7 +492,7 @@ mod test
 		assert_eq!(c.z, m.get(MatPos{row: 0, col: 2}));
 		assert_eq!(1.0, m.get(MatPos{row: 0, col: 3}));
 	}
-	
+
 	#[test]
 	fn test_to_matrix_column_homo ( )
 	{
@@ -451,12 +503,12 @@ mod test
 		assert_eq!(c.z, m.get(MatPos{row: 2, col: 0}));
 		assert_eq!(1.0, m.get(MatPos{row: 3, col: 0}));
 	}
-	
-	
-	
-	
-	
-	
+
+
+
+
+
+
 	//
 	//  to_equatorial ( ) -> Equatorial
 	//
@@ -508,8 +560,8 @@ mod test
 		compare = Equatorial{ra: Radians(0.7853), dec: -Radians(M_PI / 2.0)};
 		assert!(e.test_close(&compare, 0.001));
 	}
-	
-	
+
+
 	#[test]
 	fn test_to_equatorial_random ( )
 	{
@@ -531,9 +583,9 @@ mod test
 		for _i in 0..100
 		{
 			let e = Equatorial{
-				ra:  Radians(rng.gen::<Decimal>() * M_PI * 2.0), 
+				ra:  Radians(rng.gen::<Decimal>() * M_PI * 2.0),
 				dec: Radians(rng.gen::<Decimal>() * M_PI - M_PI / 2.0)};
-			
+
 			let c = e.to_cartesian3();
 			assert!(e.angle_distance(c.to_equatorial()) < Radians(0.00001));
 		}
