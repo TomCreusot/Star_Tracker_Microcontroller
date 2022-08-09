@@ -49,7 +49,7 @@ use crate::tracking_mode::database::Database;
 use crate::config::TrackingModeConsts;
 
 use crate::util::aliases::Decimal;
-use crate::util::units::Cartesian3D;
+use crate::util::units::Vector3;
 use crate::util::units::Equatorial;
 use crate::util::units::Radians;
 use crate::util::list::List;
@@ -75,7 +75,7 @@ pub mod database;
 /// Groups the stars to identify with their corresponding element in the database.
 #[derive(Debug, Clone, Copy, PartialEq)]
 pub struct Match <T>
-{ 
+{
 	/// The values to be identified.
 	pub input: T,
 	/// The values from the database.
@@ -107,17 +107,17 @@ pub struct StarTriangleIterator <const N_MAX_MATCHES: usize>
 	/// The iterator for comparing star pairs.
 	/// Ideal as does not priorities the first star pair found.
 	kernel: KernelIterator,
-	
+
 	/// The values searched by the kernel.
 	input:  StarTriangle<usize>,
-	
+
 	/// All found elements from the database when searched by the star pairs constructing input.
 	pair_a: ArrayList<StarPair<usize>, {N_MAX_MATCHES}>,
 	/// All found elements from the database when searched by the star pairs constructing input.
 	pair_b: ArrayList<StarPair<usize>, {N_MAX_MATCHES}>,
 	/// All found elements from the database when searched by the star pairs constructing input.
 	pair_c: ArrayList<StarPair<usize>, {N_MAX_MATCHES}>,
-	
+
 	/// The index sequence has begun.
 	indexing: bool,
 	/// The current search index of pair_a.
@@ -126,7 +126,7 @@ pub struct StarTriangleIterator <const N_MAX_MATCHES: usize>
 	index_b: usize,
 	/// The current search index of pair_c.
 	index_c: usize,
-	
+
 	angle_tolerance: Radians,
 }
 
@@ -215,27 +215,27 @@ pub enum Specularity
 //###############################################################################################//
 
 #[automock]
-pub trait PyramidConstruct <T: 'static> 
+pub trait PyramidConstruct <T: 'static>
 	// where T: TrackingModeConsts, [(); T::PAIRS_MAX]: Sized
 	where T: TrackingModeConsts//, ArrayList<(), {T::PAIRS_MAX}> : Sized
 {
-	/// Finds the pilot 
+	/// Finds the pilot
 	/// # Arguments
-	/// * `stars` - The stars from the image. 
+	/// * `stars` - The stars from the image.
 	/// * `database` - The database to lookup.
 	/// * `input` - The star triangle from the input.
 	/// # Returns
 	/// Ok(pilot) if valid.
-	fn find_pilot (	
+	fn find_pilot (
 				&mut self,
-				stars : &dyn List<Equatorial>, 
-				database : &dyn Database, 
+				stars : &dyn List<Equatorial>,
+				database : &dyn Database,
 				input : StarTriangle<usize>,
 				output : StarTriangle<usize>,
 			) -> Error<Match<usize>>;
-			
-			
-	
+
+
+
 }
 
 
@@ -244,7 +244,7 @@ pub trait PyramidConstruct <T: 'static>
 /// Dont use.
 pub trait PyramidConstructBackEnd
 {
-	/// INTERNAL FUNCTION!!! (This is just here so it can be used as a mock in tests)		
+	/// INTERNAL FUNCTION!!! (This is just here so it can be used as a mock in tests)
 	/// Finds the index of the pilot and confirms it as valid.
 	/// # Arguments
 	/// * `output` - The confirmed triangle of the database.
@@ -253,11 +253,11 @@ pub trait PyramidConstructBackEnd
 	/// * `pair_c` - The found stars matching the distance from output.2 to pilot.
 	/// # Returns
 	/// The database catalogue index to the pilot or none if pilot could not be confirmed.
-	fn confirm_pilot ( 
+	fn confirm_pilot (
 		&mut self,
-		output: StarTriangle<usize>, 
-		pair_a: &mut dyn List<StarPair<usize>>, 
-		pair_b: &dyn List<StarPair<usize>>, 
+		output: StarTriangle<usize>,
+		pair_a: &mut dyn List<StarPair<usize>>,
+		pair_b: &dyn List<StarPair<usize>>,
 		pair_c: &dyn List<StarPair<usize>> ) -> Option<usize>;
 }
 
@@ -266,7 +266,7 @@ pub trait PyramidConstructBackEnd
 
 #[automock]
 pub trait TriangleConstruct
-{	
+{
 	/// Call this to get the next StarTriangle observed/database pair.
 	/// # Arguments
 	/// * `stars` - The observed stars in the image.
@@ -276,11 +276,11 @@ pub trait TriangleConstruct
 	/// * Some(Match{input: observed star triangle, output: database match}) if possible.
 	fn next ( &mut self, stars: &dyn List<Equatorial>, database: &dyn Database
 														) -> Option<Match<StarTriangle<usize>>>;
-			
+
 	/// Prepares the StarTriangleIterator for iterating.
 	/// # Arguments
 	/// * `angle_tolerance` - When searching the database, the tolerance to use.
-	/// * `stars` - The observed stars.											
+	/// * `stars` - The observed stars.
 	fn begin ( &mut self, angle_tolerance: Radians, stars: &dyn List<Equatorial> );
 }
 
@@ -289,6 +289,5 @@ pub trait TriangleConstruct
 pub trait SpecularityConstruct <T: 'static> where T: TrackingModeConsts
 {
 	/// Returns true if the triangle is the same orientation OR a triangle is IGNORE.
-	fn same ( &mut self, a: &StarTriangle<Cartesian3D>, b: &StarTriangle<Cartesian3D> ) -> bool;
+	fn same ( &mut self, a: &StarTriangle<Vector3>, b: &StarTriangle<Vector3> ) -> bool;
 }
-

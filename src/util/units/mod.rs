@@ -3,7 +3,8 @@
 /// Try to use these where possible.
 pub mod unit_ops;
 pub mod angles;
-pub mod cartesian3d;
+pub mod vector2;
+pub mod vector3;
 pub mod quaternion;
 pub mod equatorial;
 pub mod crp;
@@ -34,32 +35,35 @@ pub struct Hours ( pub Decimal );
 
 
 //###############################################################################################//
-//										---	Pixel ---
+//										---	Vector2 ---
 //###############################################################################################//
 
-/// A position of a pixel.
+pub type Pixel = Vector2Int;
+
+
+/// An integer version of Vector2.
 #[derive(Debug, Copy, Clone, PartialEq)]
-pub struct Pixel
+pub struct Vector2Int
 {
 	pub x: usize,
 	pub y: usize,
 }
 
-/// A coordinate in 2d space not fixed to a grid.
-#[derive(Debug, Copy, Clone, PartialEq)]
-pub struct PixelWeighted
+/// 2D Cartesian Coordinates.
+#[derive(Copy, Clone)]
+pub struct Vector2
 {
 	pub x: Decimal,
 	pub y: Decimal,
 }
 
 //###############################################################################################//
-//										---	Cartesian3D ---
+//										---	Vector3 ---
 //###############################################################################################//
 /// A 3d point.
-/// This is to represent equatorial coordinates for doing angle calculations.
+/// This is to represent cartesian coordinates for doing angle calculations.
 #[derive(Copy, Clone)]
-pub struct Cartesian3D
+pub struct Vector3
 {
 	pub x : Decimal,
 	pub y : Decimal,
@@ -92,7 +96,7 @@ pub struct Equatorial
 pub struct AngleAxis
 {
 	pub angle : Radians,
-	pub axis  : Cartesian3D,
+	pub axis  : Vector3,
 }
 
 

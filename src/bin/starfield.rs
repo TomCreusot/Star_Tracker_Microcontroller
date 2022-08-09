@@ -6,15 +6,10 @@ use star_tracker::nix::Color;
 use star_tracker::image_processing::Image;
 use star_tracker::util::aliases::Decimal;
 use star_tracker::util::units::Pixel;
-use star_tracker::util::units::AngleAxis;
 use star_tracker::util::units::Equatorial;
-use star_tracker::util::units::Cartesian3D;
 use star_tracker::util::units::Radians;
 use star_tracker::util::units::Degrees;
-use star_tracker::util::units::Matrix;
-use star_tracker::util::units::MatPos;
-use star_tracker::util::units::PixelWeighted;
-use star_tracker::util::aliases::DECIMAL_PRECISION;
+use star_tracker::util::units::Vector2;
 
 use star_tracker::nix::Io;
 use star_tracker::config::NixConstsStruct;
@@ -51,7 +46,6 @@ fn main ( )
 	// Extrinsic Parameters
 	let cutoff_mag : Decimal     = 2.5;
 	let dir        : Equatorial  = Equatorial{ra: Degrees(90.0).to_radians(), dec: Degrees(-16.0).to_radians()};
-	let angle      : Radians     = Radians(0.0);
 
 	// Intrinsic Parameters
 	// let fov        : Radians     = Degrees(90.0).to_radians();
@@ -65,47 +59,44 @@ fn main ( )
 	// 60 degrees   |	864.0
 	// 70 degrees   |	710.0
 	// 80 degrees   |   594.0
-	let principle_point = PixelWeighted{x:img_size.x as Decimal/2.0, y:img_size.y as Decimal/2.0};
-	let f_l = 594.0;
 	let fov = Degrees(90.0).to_radians();
-	let focal_length    = PixelWeighted{x: f_l, y: f_l};
 
 	// Construct Matrix
 	let extrinsic = ExtrinsicParameters::look_at(dir, Equatorial{ra: Radians(0.0), dec: Degrees(90.0).to_radians()});
 	let intrinsic = IntrinsicParameters::from_fov(fov, img.height() as Decimal);
 	let transform = Transformation{intrinsic: intrinsic, extrinsic: extrinsic};
-	
-	println!("10d {:?}", transform.to_image(Equatorial{ra: Degrees(0.0).to_radians(), dec: Degrees(10.0).to_radians()}.to_cartesian3()));
-	println!("20d {:?}", transform.to_image(Equatorial{ra: Degrees(0.0).to_radians(), dec: Degrees(20.0).to_radians()}.to_cartesian3()));
-	println!("30d {:?}", transform.to_image(Equatorial{ra: Degrees(0.0).to_radians(), dec: Degrees(30.0).to_radians()}.to_cartesian3()));
-	println!("40d {:?}", transform.to_image(Equatorial{ra: Degrees(0.0).to_radians(), dec: Degrees(40.0).to_radians()}.to_cartesian3()));
-	println!("50d {:?}", transform.to_image(Equatorial{ra: Degrees(0.0).to_radians(), dec: Degrees(50.0).to_radians()}.to_cartesian3()));
-	println!("60d {:?}", transform.to_image(Equatorial{ra: Degrees(0.0).to_radians(), dec: Degrees(60.0).to_radians()}.to_cartesian3()));
-	println!("70d {:?}", transform.to_image(Equatorial{ra: Degrees(0.0).to_radians(), dec: Degrees(70.0).to_radians()}.to_cartesian3()));
-	println!("80d {:?}", transform.to_image(Equatorial{ra: Degrees(0.0).to_radians(), dec: Degrees(80.0).to_radians()}.to_cartesian3()));
-	println!("90d {:?}", transform.to_image(Equatorial{ra: Degrees(0.0).to_radians(), dec: Degrees(90.0).to_radians()}.to_cartesian3()));
-	
+
+	println!("10d {:?}", transform.to_image(Equatorial{ra: Degrees(0.0).to_radians(), dec: Degrees(10.0).to_radians()}.to_vector3()));
+	println!("20d {:?}", transform.to_image(Equatorial{ra: Degrees(0.0).to_radians(), dec: Degrees(20.0).to_radians()}.to_vector3()));
+	println!("30d {:?}", transform.to_image(Equatorial{ra: Degrees(0.0).to_radians(), dec: Degrees(30.0).to_radians()}.to_vector3()));
+	println!("40d {:?}", transform.to_image(Equatorial{ra: Degrees(0.0).to_radians(), dec: Degrees(40.0).to_radians()}.to_vector3()));
+	println!("50d {:?}", transform.to_image(Equatorial{ra: Degrees(0.0).to_radians(), dec: Degrees(50.0).to_radians()}.to_vector3()));
+	println!("60d {:?}", transform.to_image(Equatorial{ra: Degrees(0.0).to_radians(), dec: Degrees(60.0).to_radians()}.to_vector3()));
+	println!("70d {:?}", transform.to_image(Equatorial{ra: Degrees(0.0).to_radians(), dec: Degrees(70.0).to_radians()}.to_vector3()));
+	println!("80d {:?}", transform.to_image(Equatorial{ra: Degrees(0.0).to_radians(), dec: Degrees(80.0).to_radians()}.to_vector3()));
+	println!("90d {:?}", transform.to_image(Equatorial{ra: Degrees(0.0).to_radians(), dec: Degrees(90.0).to_radians()}.to_vector3()));
+
 	println!("");
 	println!("");
-	println!("Acher {:?}", transform.to_image(Equatorial{ra: Degrees(24.43).to_radians(), dec: Degrees(-57.23).to_radians()}.to_cartesian3()));
+	println!("Acher {:?}", transform.to_image(Equatorial{ra: Degrees(24.43).to_radians(), dec: Degrees(-57.23).to_radians()}.to_vector3()));
 	println!("");
 	println!("");
-	
-	
+
+
 	let mut i = 0;
 	let iter = rdr.deserialize();
 	for record in iter
 	{
 		let star : Star = record.expect("Could not decode.");
-		let point = star.pos.to_cartesian3();
+		let point = star.pos.to_vector3();
 
-		if star.mag < cutoff_mag && star.pos.angle_distance(dir) < fov / 2.0//0.0 < point.dot(&dir.to_cartesian3())
+		if star.mag < cutoff_mag && star.pos.angle_distance(dir) < fov / 2.0//0.0 < point.dot(dir.to_vector3())
 		{
-			let plane : PixelWeighted = transform.to_image(point);
+			let plane : Vector2 = transform.to_image(point);
 			let px    : Pixel = Pixel { x: (plane.x) as usize, y: (plane.y) as usize};
 			if (&img as &dyn Image).valid_pixel(px)
 			{
-				let mut color = Color::Black;
+				let color;
 				match i
 				{
 					0 => { color = Color::Black;	}
@@ -125,14 +116,10 @@ fn main ( )
 					14 => { color = Color::Lavender;}
 					_ => { color = Color::Grey;		}
 				}
-				// if star.mag < cutoff_mag / 5.0 		{	color = [255, 0, 0];	}
-				// else if star.mag < cutoff_mag / 4.0 {	color = [255, 125, 0];	}
-				// else if star.mag < cutoff_mag / 3.0 {	color = [50, 255, 50];	}
-				// else if star.mag < cutoff_mag / 2.0 {	color = [0, 200, 200];	}
-				// else								{	color = [0, 125, 255];	}
 				img.draw_points(px, ((cutoff_mag - star.mag) as u32 + 2) * 10, color.get_color());
 				i+=1;
-				println!("{} {} \t {:.2}\t{:?}    \t{}    \t{:?}", i, star.pos, star.pos.angle_distance(dir).to_degrees().0, plane, star.name, color);
+				println!("{} {} \t {:.2}\t{:?}    \t{}    \t{:?}",
+				i, star.pos, star.pos.angle_distance(dir).to_degrees().0, plane, star.name, color);
 			}
 
 		}

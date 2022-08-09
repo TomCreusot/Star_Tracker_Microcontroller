@@ -11,7 +11,7 @@ pub mod blob;
 use crate::util::aliases::Byte;
 use crate::util::aliases::UInt;
 use crate::util::aliases::Decimal;
-use crate::util::units::{Pixel, PixelWeighted};
+use crate::util::units::{Pixel, Vector2};
 
 
 //###############################################################################################//
@@ -90,7 +90,7 @@ pub trait Image
 		}
 	}
 
-	
+
 	/// Finds the minimum bar of the histogram which satisfies the percentage of pixels.
 	/// # Arguments
 	/// * `percentage` - The minimum % of pixels to be foreground.
@@ -133,7 +133,7 @@ pub trait Image
 //###############################################################################################//
 
 /// This is a struct to store a raw image and can provide basic image thresholding.
-/// 
+///
 /// # Example
 /// The following example will:
 /// * Create an image 10x5 in size.
@@ -189,7 +189,7 @@ pub struct BasicImage <const WIDTH : usize, const HEIGHT : usize>
 /// # Example
 /// ```
 /// use star_tracker::image_processing::{Blob, Image, BasicImage};
-/// use star_tracker::util::{list::ArrayList, list::List, units::PixelWeighted};
+/// use star_tracker::util::{list::ArrayList, list::List, units::Vector2};
 /// use star_tracker::util::units::Pixel;
 ///
 /// let mut img : BasicImage<3, 3> = BasicImage::new();
@@ -220,7 +220,7 @@ pub struct Blob
 	/// The combined intensity of all the pixels.
 	pub intensity : UInt,
 	/// The center weighted point.
-	pub centroid : PixelWeighted,
+	pub centroid : Vector2,
 }
 
 
@@ -261,11 +261,11 @@ mod test
 {
 	use crate::util::aliases::{Byte, UInt};
 	use image_processing::*;
-		
+
 	//
 	// valid_pixel (x, y) -> bool
 	//
-	
+
 	#[test]
 	fn test_valid_pixel_safe ( )
 	{
@@ -283,12 +283,12 @@ mod test
 		assert!(!img.valid_pixel(Pixel{x: 0, y: 10}));
 		assert!(!img.valid_pixel(Pixel{x: 0, y: 10}));
 	}
-	
-	
+
+
 	//
 	// histogram ( histogram : &mut [Byte] )
 	//
-	
+
 	#[test]
 	fn test_histogram_256_bars ( )
 	{
@@ -298,7 +298,7 @@ mod test
 		img.set(Pixel{x: 2, y: 0}, 20);
 		img.set(Pixel{x: 0, y: 2}, 32);
 		img.set(Pixel{x: 0, y: 1}, 43);
-	
+
 		img.histogram(&mut hist);
 		assert_eq!(hist[0], 5);
 		assert_eq!(hist[10], 1);
@@ -306,7 +306,7 @@ mod test
 		assert_eq!(hist[32], 1);
 		assert_eq!(hist[43], 1);
 	}
-	
+
 	#[test]
 	fn test_histogram_2_bar ( )
 	{
@@ -317,7 +317,7 @@ mod test
 		assert_eq!(hist[0], 8);
 		assert_eq!(hist[1], 1);
 	}
-	
+
 	#[test]
 	fn test_histogram_1_bar ( )
 	{
@@ -327,10 +327,10 @@ mod test
 		img.histogram(&mut hist);
 		assert_eq!(hist[0], 9);
 	}
-	
-	
-	
-	
+
+
+
+
 	//
 	// novel_threshold ( percentage : Decimal, histogram : &[Byte] )
 	//
@@ -341,7 +341,7 @@ mod test
 		let hist : [UInt; 1] = [9];
 		assert_eq!(img.novel_threshold(0.0, &hist), 0);
 	}
-	
+
 	#[test]
 	fn test_novel_threshold_1_bar_1_percent ( )
 	{
@@ -349,7 +349,7 @@ mod test
 		let hist : [UInt; 1] = [9];
 		assert_eq!(img.novel_threshold(0.01, &hist), Byte::MAX);
 	}
-	
+
 	#[test]
 	fn test_novel_threshold_2_bar_49_percent ( )
 	{
@@ -357,7 +357,7 @@ mod test
 		let hist : [UInt; 2] = [2, 2];
 		assert_eq!(img.novel_threshold(0.49, &hist), 128);
 	}
-	
+
 	#[test]
 	fn test_novel_threshold_2_bar_50_percent ( )
 	{
@@ -365,7 +365,7 @@ mod test
 		let hist : [UInt; 2] = [2, 2];
 		assert_eq!(img.novel_threshold(0.6, &hist), Byte::MAX);
 	}
-	
+
 	#[test]
 	fn test_novel_threshold_256_bar ( )
 	{

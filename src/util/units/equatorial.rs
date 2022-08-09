@@ -2,7 +2,7 @@
 use std::fmt;
 use std::ops::RangeInclusive;
 use crate::util::aliases::{Decimal, M_PI};
-use super::{Equatorial, Cartesian3D, Radians};
+use super::{Equatorial, Vector3, Radians};
 
 impl Equatorial
 {
@@ -63,7 +63,7 @@ impl Equatorial
 	}
 
 
-	/// USE Cartesian3D.angular_distance IF YOU HAVE A CARTESIAN, CONVERTING TO EQUATORIAL HAS A SINGULARITY!!!
+	/// USE Vector3.angular_distance IF YOU HAVE A CARTESIAN, CONVERTING TO EQUATORIAL HAS A SINGULARITY!!!
 	/// Finds the angle between the 2 points on a sphere.
 	/// # Example
 	/// ```
@@ -79,11 +79,11 @@ impl Equatorial
 	/// ```
 	pub fn angle_distance ( &self, other: Equatorial ) -> Radians
 	{
-		let cur = self.to_cartesian3();
-		let oth = other.to_cartesian3();
+		let cur = self.to_vector3();
+		let oth = other.to_vector3();
 		return cur.angle_distance(oth);
 		//
-		// let dot = cur.dot(&oth);
+		// let dot = cur.dot(oth);
 		// let mag_cur = (cur.x.powf(2.0) + cur.y.powf(2.0) + cur.z.powf(2.0)).sqrt();
 		// let mag_oth = (oth.x.powf(2.0) + oth.y.powf(2.0) + oth.z.powf(2.0)).sqrt();
 		//
@@ -105,8 +105,8 @@ impl Equatorial
 	/// ```
 	pub fn planar_distance ( &self, other: Equatorial ) -> Decimal
 	{
-		let cur = self.to_cartesian3();
-		let oth = other.to_cartesian3();
+		let cur = self.to_vector3();
+		let oth = other.to_vector3();
 		return
 		((cur.x - oth.x).powf(2.0) + (cur.y - oth.y).powf(2.0) + (cur.z - oth.z).powf(2.0)).sqrt();
 	}
@@ -120,14 +120,14 @@ impl Equatorial
 	/// use star_tracker::util::aliases::M_PI;
 	/// use star_tracker::util::units::{Radians, Equatorial};
 	/// let equ = Equatorial { ra : Radians(M_PI / 4.0), dec: Radians(M_PI / 4.0) };
-	/// let cart = equ.to_cartesian3();
+	/// let cart = equ.to_vector3();
 	/// assert!((cart.x - 0.5).abs() < 0.0001);
 	/// assert!((cart.y - 0.5).abs() < 0.0001);
 	/// assert!((cart.z - 0.7071067812).abs() < 0.0001);
 	/// ```
-	pub fn to_cartesian3 ( &self ) -> Cartesian3D
+	pub fn to_vector3 ( &self ) -> Vector3
 	{
-		return Cartesian3D {
+		return Vector3 {
 			x: self.ra.cos() * self.get_phi().sin(),
 			y: self.ra.sin() * self.get_phi().sin(),
 			z: -self.get_phi().cos()
@@ -236,7 +236,7 @@ mod test
 
 	use rand::prelude::*;
 
-	use util::units::{Equatorial, Cartesian3D, Radians};
+	use util::units::{Equatorial, Vector3, Radians};
 	use util::aliases::Decimal;
 	use util::aliases::M_PI;
 	use util::test::TestEqual;
@@ -388,68 +388,68 @@ mod test
 
 
 	//
-	//  to_cartesian3 ( &self ) -> Cartesian3D
+	//  to_vector3 ( &self ) -> Vector3
 	//
 
 	#[test]
-	fn test_to_cartesian3 ( )
+	fn test_to_vector3 ( )
 	{
 		let equ = Equatorial { ra : Radians(M_PI / 4.0), dec: Radians(M_PI / 4.0) };
-		let cart = equ.to_cartesian3();
+		let cart = equ.to_vector3();
 		assert_close(cart.x, 0.5);
 		assert_close(cart.y, 0.5);
 		assert_close(cart.z, -0.7071067812);
 	}
 
 	#[test]
-	fn test_to_cartesian3_x ( )
+	fn test_to_vector3_x ( )
 	{
 		let mut equ = Equatorial { ra : Radians(0.0), dec: Radians(0.0) };
-		let mut cart = equ.to_cartesian3();
+		let mut cart = equ.to_vector3();
 		assert_close(cart.x, 1.0);
 		assert_close(cart.y, 0.0);
 		assert_close(cart.z, 0.0);
 
 		equ = Equatorial { ra : Radians(M_PI), dec: Radians(0.0) };
-		cart = equ.to_cartesian3();
+		cart = equ.to_vector3();
 		assert_close(cart.x, -1.0);
 		assert_close(cart.y, 0.0);
 		assert_close(cart.z, 0.0);
 
 		equ = Equatorial { ra : Radians(-M_PI), dec: Radians(0.0) };
-		cart = equ.to_cartesian3();
+		cart = equ.to_vector3();
 		assert_close(cart.x, -1.0);
 		assert_close(cart.y, 0.0);
 		assert_close(cart.z, 0.0);
 	}
 
 	#[test]
-	fn test_to_cartesian3_y ( )
+	fn test_to_vector3_y ( )
 	{
 		let mut equ = Equatorial { ra : Radians(M_PI / 2.0), dec: Radians(0.0) };
-		let mut cart = equ.to_cartesian3();
+		let mut cart = equ.to_vector3();
 		assert_close(cart.x, 0.0);
 		assert_close(cart.y, 1.0);
 		assert_close(cart.z, 0.0);
 
 		equ = Equatorial { ra : Radians(-M_PI / 2.0), dec: Radians(0.0) };
-		cart = equ.to_cartesian3();
+		cart = equ.to_vector3();
 		assert_close(cart.x, 0.0);
 		assert_close(cart.y, -1.0);
 		assert_close(cart.z, 0.0);
 	}
 
 	#[test]
-	fn test_to_cartesian3_z ( )
+	fn test_to_vector3_z ( )
 	{
 		let mut equ = Equatorial { ra : Radians(0.0), dec: Radians(M_PI / 2.0) };
-		let mut cart = equ.to_cartesian3();
+		let mut cart = equ.to_vector3();
 		assert_close(cart.x, 0.0);
 		assert_close(cart.y, 0.0);
 		assert_close(cart.z, -1.0);
 
 		equ = Equatorial { ra : Radians(0.0), dec: Radians(-M_PI / 2.0) };
-		cart = equ.to_cartesian3();
+		cart = equ.to_vector3();
 		assert_close(cart.x, 0.0);
 		assert_close(cart.y, 0.0);
 		assert_close(cart.z, 1.0);
@@ -463,7 +463,7 @@ mod test
 		for _i in 0..100
 		{
 			let mut c =
-			Cartesian3D{
+			Vector3{
 				x: rng.gen::<Decimal>() - 0.5,
 				y: rng.gen::<Decimal>() - 0.5,
 				z: rng.gen::<Decimal>() - 0.5,

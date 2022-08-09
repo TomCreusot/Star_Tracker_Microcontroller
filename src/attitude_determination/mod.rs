@@ -50,7 +50,7 @@
 //!
 //!
 
-use util::units::Cartesian3D;
+use util::units::Vector3;
 use util::units::Quaternion;
 use util::list::List;
 use tracking_mode::Match;
@@ -65,7 +65,7 @@ pub trait AttitudeDetermination
 	/// # Arguments
 	/// * `positions` - The (input: observed, output: reference, weighting: __).
 	/// The weighting is just a ratio, it does not matter the size, just how it relates to other weightings.
-	fn estimate <T: 'static> ( positions: &dyn List<Match<Cartesian3D>> ) -> Quaternion
+	fn estimate <T: 'static> ( positions: &dyn List<Match<Vector3>> ) -> Quaternion
 		where T: AttitudeDeterminationConsts;
 }
 
@@ -94,7 +94,7 @@ mod test
 	use attitude_determination::AttitudeDetermination;
 	use attitude_determination::Quest;
 
-	use util::units::Cartesian3D;
+	use util::units::Vector3;
 	// use util::units::Quaternion;
 	use util::units::AngleAxis;
 	use util::units::Radians;
@@ -123,13 +123,13 @@ mod test
 
 	fn random_coordinates <const N : usize> (
 			rotation : AngleAxis, variation : AngleAxis, var_weight : Decimal
-		) -> ArrayList<Match<Cartesian3D>, N>
+		) -> ArrayList<Match<Vector3>, N>
 	{
 		let mut rng = rand::thread_rng();
-		let mut coords : ArrayList<Match<Cartesian3D>, N> = ArrayList::new();
+		let mut coords : ArrayList<Match<Vector3>, N> = ArrayList::new();
 		while !coords.is_full()
 		{
-			let mut input = Cartesian3D
+			let mut input = Vector3
 			{ x: rng.gen::<Decimal>(), y: rng.gen::<Decimal>(), z: rng.gen::<Decimal>() };
 			input.normalize();
 
@@ -141,7 +141,7 @@ mod test
 			axis.normalize();
 			let output = (AngleAxis{angle: angle, axis: axis}.to_quaternion()).rotate_point(input);
 			let weight = var_weight + rng.gen::<Decimal>();
-			let element : Match<Cartesian3D> = Match{input: input, output: output, weight: weight};
+			let element : Match<Vector3> = Match{input: input, output: output, weight: weight};
 
 			coords.push_back(element).expect("HELLO");
 		}
@@ -153,15 +153,15 @@ mod test
 	#[test]
 	fn test_quest_matlab ( )
 	{
-		let mut input : ArrayList<Match<Cartesian3D>, 10> = ArrayList::new();
-		input.push_back(Match{input: Cartesian3D{x: 1.0, y: 0.0, z: 0.3},
-						output: Cartesian3D{x: 0.1, y: 1.0, z: 1.0}, weight: 1.0}).expect("HUH");
-		input.push_back(Match{input: Cartesian3D{x: 1.0, y: 0.4, z: 0.0},
-						output: Cartesian3D{x: 0.5, y: 1.0, z: 1.0}, weight: 1.0}).expect("HUH");
-		input.push_back(Match{input: Cartesian3D{x: 1.0, y: 0.3, z: 0.0},
-						output: Cartesian3D{x: 0.3, y: 1.0, z: 1.0}, weight: 1.0}).expect("HUH");
-		input.push_back(Match{input: Cartesian3D{x: 1.0, y: 0.5, z: 0.0},
-						output: Cartesian3D{x: 0.2, y: 1.0, z: 1.0}, weight: 1.0}).expect("HUH");
+		let mut input : ArrayList<Match<Vector3>, 10> = ArrayList::new();
+		input.push_back(Match{input: Vector3{x: 1.0, y: 0.0, z: 0.3},
+						output: Vector3{x: 0.1, y: 1.0, z: 1.0}, weight: 1.0}).expect("HUH");
+		input.push_back(Match{input: Vector3{x: 1.0, y: 0.4, z: 0.0},
+						output: Vector3{x: 0.5, y: 1.0, z: 1.0}, weight: 1.0}).expect("HUH");
+		input.push_back(Match{input: Vector3{x: 1.0, y: 0.3, z: 0.0},
+						output: Vector3{x: 0.3, y: 1.0, z: 1.0}, weight: 1.0}).expect("HUH");
+		input.push_back(Match{input: Vector3{x: 1.0, y: 0.5, z: 0.0},
+						output: Vector3{x: 0.2, y: 1.0, z: 1.0}, weight: 1.0}).expect("HUH");
 
 		for i in 0..input.size()
 		{
@@ -194,11 +194,11 @@ mod test
 	fn test_quest_perfect_values ( )
 	{
 		let angle = Degrees(90.0).to_radians();
-		let axis = Cartesian3D{x: 1.0, y: 0.0, z: 0.0};
+		let axis = Vector3{x: 1.0, y: 0.0, z: 0.0};
 		let mut angle_axis = AngleAxis{angle: angle, axis: axis};
 
 		let angle_var = Degrees(0.0).to_radians();
-		let axis_var = Cartesian3D{x: 0.0, y: 0.0, z: 0.0};
+		let axis_var = Vector3{x: 0.0, y: 0.0, z: 0.0};
 		let angle_axis_var = AngleAxis{angle: angle_var, axis: axis_var};
 
 		let input = random_coordinates::<100>(angle_axis, angle_axis_var, 0.0);
@@ -214,11 +214,11 @@ mod test
 	fn test_quest_bad_weight ( )
 	{
 		let angle = Degrees(90.0).to_radians();
-		let axis = Cartesian3D{x: 1.0, y: 0.0, z: 0.0};
+		let axis = Vector3{x: 1.0, y: 0.0, z: 0.0};
 		let angle_axis = AngleAxis{angle: angle, axis: axis};
 
 		let angle_var = Degrees(0.0).to_radians();
-		let axis_var = Cartesian3D{x: 0.0, y: 0.0, z: 0.0};
+		let axis_var = Vector3{x: 0.0, y: 0.0, z: 0.0};
 		let angle_axis_var = AngleAxis{angle: angle_var, axis: axis_var};
 
 		let input = random_coordinates::<100>(angle_axis, angle_axis_var, 1000.0);
@@ -236,11 +236,11 @@ mod test
 	fn test_quest_bad_axis ( )
 	{
 		let angle = Degrees(90.0).to_radians();
-		let axis = Cartesian3D{x: 1.0, y: 0.0, z: 0.0};
+		let axis = Vector3{x: 1.0, y: 0.0, z: 0.0};
 		let angle_axis = AngleAxis{angle: angle, axis: axis};
 
 		let angle_var = Degrees(0.0).to_radians();
-		let axis_var = Cartesian3D{x: 0.1, y: 0.1, z: 0.1};
+		let axis_var = Vector3{x: 0.1, y: 0.1, z: 0.1};
 		let angle_axis_var = AngleAxis{angle: angle_var, axis: axis_var};
 
 		let input = random_coordinates::<100>(angle_axis, angle_axis_var, 0.0);
@@ -261,11 +261,11 @@ mod test
 	fn test_quest_bad_angle ( )
 	{
 		let angle = Degrees(90.0).to_radians();
-		let axis = Cartesian3D{x: 1.0, y: 0.0, z: 0.0};
+		let axis = Vector3{x: 1.0, y: 0.0, z: 0.0};
 		let angle_axis = AngleAxis{angle: angle, axis: axis};
 
 		let angle_var = Degrees(10.0).to_radians();
-		let axis_var = Cartesian3D{x: 0.0, y: 0.0, z: 0.0};
+		let axis_var = Vector3{x: 0.0, y: 0.0, z: 0.0};
 		let angle_axis_var = AngleAxis{angle: angle_var, axis: axis_var};
 
 		let input = random_coordinates::<100>(angle_axis, angle_axis_var, 0.0);
@@ -285,11 +285,11 @@ mod test
 	fn test_quest_bad_angle_weight_axis ( )
 	{
 		let angle = Degrees(90.0).to_radians();
-		let axis = Cartesian3D{x: 1.0, y: 0.0, z: 0.0};
+		let axis = Vector3{x: 1.0, y: 0.0, z: 0.0};
 		let angle_axis = AngleAxis{angle: angle, axis: axis};
 
 		let angle_var = Degrees(10.0).to_radians();
-		let axis_var = Cartesian3D{x: 0.1, y: 0.1, z: 0.1};
+		let axis_var = Vector3{x: 0.1, y: 0.1, z: 0.1};
 		let angle_axis_var = AngleAxis{angle: angle_var, axis: axis_var};
 
 		let input = random_coordinates::<100>(angle_axis, angle_axis_var, 1000.0);

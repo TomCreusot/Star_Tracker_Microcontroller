@@ -113,7 +113,7 @@ pub fn insert_lens_flare ( image: &mut dyn Image, center: Pixel, intensity: Byte
 /// The location.
 // pub fn equatorial_to_pixel ( point: Equatorial, orientation: Quaternion, fov: Radians, dimensions: Pixel ) -> Pixel
 // {
-// 	let pt = point.to_cartesian3();
+// 	let pt = point.to_vector3();
 // 	// let 
 // }
 

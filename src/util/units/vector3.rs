@@ -1,17 +1,17 @@
-//! The implementation of Cartesian3D.
+//! The implementation of Vector3.
 use std::fmt;
 use crate::util::aliases::Decimal;
 use crate::util::aliases::M_PI;
-use super::{Equatorial, Cartesian3D, Radians, Matrix, MatPos};
+use super::{Equatorial, Vector3, Vector2, Radians, Matrix, MatPos};
 
-impl Cartesian3D
+impl Vector3
 {
 	/// Finds the magnitude of the vector.
 	/// # Example
 	/// ```
-	/// use star_tracker::util::units::Cartesian3D;
+	/// use star_tracker::util::units::Vector3;
 	/// use star_tracker::util::test::TestEqual;
-	/// let c = Cartesian3D{x: 10.3, y: 23.1, z: 12.3};
+	/// let c = Vector3{x: 10.3, y: 23.1, z: 12.3};
 	/// assert!(c.magnitude().test_close(&28.124544440, 0.00001));
 	/// ```
 	pub fn magnitude ( &self ) -> Decimal
@@ -23,10 +23,10 @@ impl Cartesian3D
 	/// Normalizes the vector so the magnitude is 1.
 	/// # Example
 	/// ```
-	/// use star_tracker::util::units::Cartesian3D;
+	/// use star_tracker::util::units::Vector3;
 	/// use star_tracker::util::test::TestEqual;
-	/// let mut c = Cartesian3D{x: 10.3, y: 23.1, z: 12.3};
-	/// let c_out = Cartesian3D{x: 0.366228, y: 0.8213466, z: 0.43734};
+	/// let mut c = Vector3{x: 10.3, y: 23.1, z: 12.3};
+	/// let c_out = Vector3{x: 0.366228, y: 0.8213466, z: 0.43734};
 	/// c.normalize();
 	/// assert!(c.test_close(&c_out, 0.0001));
 	/// ```
@@ -42,16 +42,16 @@ impl Cartesian3D
 	/// Returns a new normalized vector of the current direction.
 	/// # Example
 	/// ```
-	/// use star_tracker::util::units::Cartesian3D;
+	/// use star_tracker::util::units::Vector3;
 	/// use star_tracker::util::test::TestEqual;
-	/// let mut c = Cartesian3D{x: 10.3, y: 23.1, z: 12.3};
-	/// let c_out = Cartesian3D{x: 0.366228, y: 0.8213466, z: 0.43734};
+	/// let mut c = Vector3{x: 10.3, y: 23.1, z: 12.3};
+	/// let c_out = Vector3{x: 0.366228, y: 0.8213466, z: 0.43734};
 	/// assert!(c.normalized().test_close(&c_out, 0.0001));
 	/// ```
-	pub fn normalized ( &mut self ) -> Self
+	pub fn normalized ( &self ) -> Self
 	{
 		let magnitude  = self.magnitude();
-		return Cartesian3D{x: self.x/magnitude, y: self.y/magnitude, z: self.z/magnitude};
+		return Vector3{x: self.x/magnitude, y: self.y/magnitude, z: self.z/magnitude};
 	}
 
 
@@ -64,15 +64,15 @@ impl Cartesian3D
 	///
 	/// # Example
 	/// ```
-	/// use star_tracker::util::units::Cartesian3D;
-	/// let a = Cartesian3D { x: -1.0, y: 2.0, z: 10.0 };
-	/// let b = Cartesian3D { x: 9.0, y: 3.0, z: -4.0 };
-	/// assert_eq!(a.cross(&b), Cartesian3D{x: -38.0, y: 86.0, z: -21.0});
-	/// assert_eq!(b.cross(&a), Cartesian3D{x: 38.0, y: -86.0, z: 21.0});
+	/// use star_tracker::util::units::Vector3;
+	/// let a = Vector3 { x: -1.0, y: 2.0, z: 10.0 };
+	/// let b = Vector3 { x: 9.0, y: 3.0, z: -4.0 };
+	/// assert_eq!(a.cross(b), Vector3{x: -38.0, y: 86.0, z: -21.0});
+	/// assert_eq!(b.cross(a), Vector3{x: 38.0, y: -86.0, z: 21.0});
 	/// ```
-	pub fn cross ( &self, other: &Cartesian3D ) -> Cartesian3D
+	pub fn cross ( &self, other: Vector3 ) -> Vector3
 	{
-		return Cartesian3D
+		return Vector3
 		{
 			x: self.y * other.z - self.z * other.y,
 			y: self.z * other.x - self.x * other.z,
@@ -89,12 +89,12 @@ impl Cartesian3D
 	///
 	/// # Example
 	/// ```
-	/// use star_tracker::util::units::Cartesian3D;
-	/// let a = Cartesian3D { x: 2.0, y: 3.0, z: 4.0 };
-	/// let b = Cartesian3D { x: 5.0, y: 6.0, z: 7.0 };
-	/// assert_eq!(a.dot(&b), 56.0);
+	/// use star_tracker::util::units::Vector3;
+	/// let a = Vector3 { x: 2.0, y: 3.0, z: 4.0 };
+	/// let b = Vector3 { x: 5.0, y: 6.0, z: 7.0 };
+	/// assert_eq!(a.dot(b), 56.0);
 	/// ```
-	pub fn dot ( &self, other: &Cartesian3D ) -> Decimal
+	pub fn dot ( &self, other: Vector3 ) -> Decimal
 	{	return self.x * other.x + self.y * other.y + self.z * other.z;			}
 
 
@@ -103,14 +103,14 @@ impl Cartesian3D
 	/// Finds the angle between the 2 points on a sphere.
 	/// # Example
 	/// ```
-	/// use star_tracker::util::units::{Cartesian3D, Degrees};
-	/// let mut car1 = Cartesian3D { x: 0.0, y: 1.0, z: 0.0 };
-	/// let mut car2 = Cartesian3D { x: 1.0, y: 0.0, z: 0.0 };
+	/// use star_tracker::util::units::{Vector3, Degrees};
+	/// let mut car1 = Vector3 { x: 0.0, y: 1.0, z: 0.0 };
+	/// let mut car2 = Vector3 { x: 1.0, y: 0.0, z: 0.0 };
 	/// assert_eq!(car1.angle_distance(car2), Degrees(90.0).to_radians());
 	/// ```
-	pub fn angle_distance ( &self, oth: Cartesian3D ) -> Radians
+	pub fn angle_distance ( &self, oth: Vector3 ) -> Radians
 	{
-		let dot = self.dot(&oth);
+		let dot = self.dot(oth);
 
 		let mag_cur = self.magnitude();
 		let mag_oth = oth.magnitude();
@@ -127,34 +127,13 @@ impl Cartesian3D
 
 
 
-	/// Converts the coordinates into a matrix form [x, y, z].
-	/// # Example
-	/// ```
-	/// use star_tracker::util::units::Cartesian3D;
-	/// use star_tracker::util::units::Matrix;
-	/// use star_tracker::util::units::MatPos;
-	/// let c = Cartesian3D {x: 1.0, y: 2.0, z: 3.0};
-	/// let m : Matrix<1,3> = c.to_matrix_row();
-	/// assert_eq!(c.x, m.get(MatPos{row: 0, col: 0}));
-	/// assert_eq!(c.y, m.get(MatPos{row: 0, col: 1}));
-	/// assert_eq!(c.z, m.get(MatPos{row: 0, col: 2}));
-	/// ```
-	pub fn to_matrix_row ( &self ) -> Matrix<1,3>
-	{
-		let mut mat : Matrix<1,3> = Matrix::new();
-		mat.set(MatPos{row: 0, col: 0}, self.x);
-		mat.set(MatPos{row: 0, col: 1}, self.y);
-		mat.set(MatPos{row: 0, col: 2}, self.z);
-		return mat;
-	}
-
 	/// Converts the coordinates into a column matrix form (vertical set of rows).
 	/// # Example
 	/// ```
-	/// use star_tracker::util::units::Cartesian3D;
+	/// use star_tracker::util::units::Vector3;
 	/// use star_tracker::util::units::Matrix;
 	/// use star_tracker::util::units::MatPos;
-	/// let c = Cartesian3D {x: 1.0, y: 2.0, z: 3.0};
+	/// let c = Vector3 {x: 1.0, y: 2.0, z: 3.0};
 	/// let m : Matrix<3,1> = c.to_matrix_column();
 	/// assert_eq!(c.x, m.get(MatPos{row: 0, col: 0}));
 	/// assert_eq!(c.y, m.get(MatPos{row: 1, col: 0}));
@@ -169,39 +148,36 @@ impl Cartesian3D
 		return mat;
 	}
 
-
-	/// Converts the coordinates into a matrix form [x, y, z].
-	/// This is in homogeneous form for matrix transformations.
+	/// Converts the coordinates into a row matrix form (horizontal set of columns).
 	/// # Example
 	/// ```
-	/// use star_tracker::util::units::Cartesian3D;
+	/// use star_tracker::util::units::Vector3;
 	/// use star_tracker::util::units::Matrix;
 	/// use star_tracker::util::units::MatPos;
-	/// let c = Cartesian3D {x: 1.0, y: 2.0, z: 3.0};
-	/// let m : Matrix<1,4> = c.to_matrix_row_homo();
+	/// let c = Vector3 {x: 1.0, y: 2.0, z: 3.0};
+	/// let m : Matrix<1,3> = c.to_matrix_row();
 	/// assert_eq!(c.x, m.get(MatPos{row: 0, col: 0}));
 	/// assert_eq!(c.y, m.get(MatPos{row: 0, col: 1}));
 	/// assert_eq!(c.z, m.get(MatPos{row: 0, col: 2}));
-	/// assert_eq!(1.0, m.get(MatPos{row: 0, col: 3}));
 	/// ```
-	pub fn to_matrix_row_homo ( &self ) -> Matrix<1,4>
+	pub fn to_matrix_row ( &self ) -> Matrix<1,3>
 	{
-		let mut mat : Matrix<1,4> = Matrix::new();
+		let mut mat : Matrix<1,3> = Matrix::new();
 		mat.set(MatPos{row: 0, col: 0}, self.x);
 		mat.set(MatPos{row: 0, col: 1}, self.y);
 		mat.set(MatPos{row: 0, col: 2}, self.z);
-		mat.set(MatPos{row: 0, col: 3}, 1.0);
 		return mat;
 	}
+
 
 	/// Converts the coordinates into a column matrix form (vertical set of rows).
 	/// This is in homogeneous form for matrix transformations.
 	/// # Example
 	/// ```
-	/// use star_tracker::util::units::Cartesian3D;
+	/// use star_tracker::util::units::Vector3;
 	/// use star_tracker::util::units::Matrix;
 	/// use star_tracker::util::units::MatPos;
-	/// let c = Cartesian3D {x: 1.0, y: 2.0, z: 3.0};
+	/// let c = Vector3 {x: 1.0, y: 2.0, z: 3.0};
 	/// let m : Matrix<4,1> = c.to_matrix_column_homo();
 	/// assert_eq!(c.x, m.get(MatPos{row: 0, col: 0}));
 	/// assert_eq!(c.y, m.get(MatPos{row: 1, col: 0}));
@@ -219,6 +195,20 @@ impl Cartesian3D
 	}
 
 
+	/// Converts self to vector2 (LOSSY).
+	/// # Example
+	/// ```
+	/// use star_tracker::util::units::Vector3;
+	/// use star_tracker::util::units::Vector2;
+	/// let vec_3 = Vector3{x: 12.3, y: 23.4, z: 34.5};
+	/// let vec_2 = vec_3.to_vector2();
+	/// assert_eq!(vec_2.x, vec_3.x);
+	/// assert_eq!(vec_2.y, vec_3.y);
+	/// ```
+	pub fn to_vector2 ( &self ) -> Vector2
+	{
+		return Vector2{x: self.x, y: self.y};
+	}
 
 
 	/// Converts cartesian3D to equatorial coordinates.
@@ -230,15 +220,15 @@ impl Cartesian3D
 	/// # Example
 	/// ```
 	/// use star_tracker::util::aliases::M_PI;
-	/// use star_tracker::util::units::{Equatorial, Cartesian3D, Radians};
+	/// use star_tracker::util::units::{Equatorial, Vector3, Radians};
 	/// use star_tracker::util::aliases::Decimal;
 	/// use star_tracker::util::test::TestEqual;
-	/// let mut c = Cartesian3D { x: 0.5, y: 0.5, z: -0.7071067812 };
+	/// let mut c = Vector3 { x: 0.5, y: 0.5, z: -0.7071067812 };
 	/// let mut e = c.to_equatorial();
 	/// let mut compare = Equatorial{ra: Radians(M_PI / 4.0), dec: Radians(-M_PI / 4.0)};
 	/// assert!(compare.test_close(&e, 0.0000001));
 	///
-	/// c = Cartesian3D { x: 3.0, y: 4.0, z: 5.0 };
+	/// c = Vector3 { x: 3.0, y: 4.0, z: 5.0 };
 	/// e = c.to_equatorial();
 	/// compare = Equatorial{ra: Radians(0.927295218), dec: Radians(0.78539816)};
 	/// assert!(compare.test_close(&e, 0.0000001));
@@ -270,19 +260,19 @@ impl Cartesian3D
 //###############################################################################################//
 
 
-impl fmt::Display for Cartesian3D {
+impl fmt::Display for Vector3 {
     fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result
 	{
-		write!(f, "Cartesian3D({:.3}, {:.3}, {:.3})", self.x, self.y, self.z)?;
+		write!(f, "Vector3({:.3}, {:.3}, {:.3})", self.x, self.y, self.z)?;
 		return Ok(());
 	}
 }
 
 
-impl fmt::Debug for Cartesian3D {
+impl fmt::Debug for Vector3 {
     fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result
 	{
-		write!(f, "Cartesian3D(x: {}, y: {}, z: {})", self.x, self.y, self.z)?;
+		write!(f, "Vector3(x: {}, y: {}, z: {})", self.x, self.y, self.z)?;
 		return Ok(());
     }
 }
@@ -302,7 +292,7 @@ mod test
 {
 	use rand::prelude::*;
 
-	use util::units::Cartesian3D;
+	use util::units::Vector3;
 	use util::units::Matrix;
 	use util::units::MatPos;
 	use util::units::Equatorial;
@@ -323,7 +313,7 @@ mod test
 	#[test]
 	fn test_magnitude ( )
 	{
-		let c = Cartesian3D{x: 10.3, y: 23.1, z: 12.3};
+		let c = Vector3{x: 10.3, y: 23.1, z: 12.3};
 		assert!(c.magnitude().test_close(&28.1245463, 0.0001));
 	}
 
@@ -334,8 +324,8 @@ mod test
 	#[test]
 	fn test_normalize ( )
 	{
-		let mut c = Cartesian3D{x: 10.3, y: 23.1, z: 12.3};
-		let c_out = Cartesian3D{x: 0.366228, y: 0.8213466, z: 0.43734};
+		let mut c = Vector3{x: 10.3, y: 23.1, z: 12.3};
+		let c_out = Vector3{x: 0.366228, y: 0.8213466, z: 0.43734};
 		c.normalize();
 		assert!(c.test_close(&c_out, 0.00001));
 	}
@@ -346,81 +336,81 @@ mod test
 	#[test]
 	fn test_normalized ( )
 	{
-		let mut c = Cartesian3D{x: 10.3, y: 23.1, z: 12.3};
-		let c_out = Cartesian3D{x: 0.366228, y: 0.8213466, z: 0.43734};
+		let c = Vector3{x: 10.3, y: 23.1, z: 12.3};
+		let c_out = Vector3{x: 0.366228, y: 0.8213466, z: 0.43734};
 		assert!(c.normalized().test_close(&c_out, 0.00001));
 	}
 
 	//
-	// cross ( &Cartesian3D ) -> Cartesian3D
+	// cross ( &Vector3 ) -> Vector3
 	//
 	#[test]
 	fn test_cross_zero ( )
 	{
-		let a = Cartesian3D { x: 0.0, y: 0.0, z: 0.0 };
-		let b = Cartesian3D { x: 0.0, y: 0.0, z: 0.0 };
-		assert_eq!(a.cross(&b), Cartesian3D{x: 0.0, y: 0.0, z: 0.0});
+		let a = Vector3 { x: 0.0, y: 0.0, z: 0.0 };
+		let b = Vector3 { x: 0.0, y: 0.0, z: 0.0 };
+		assert_eq!(a.cross(b), Vector3{x: 0.0, y: 0.0, z: 0.0});
 	}
 
 	#[test]
 	fn test_cross_single_axis ( )
 	{
-		let a = Cartesian3D { x: 1.0, y: 0.0, z: 0.0 };
-		let b = Cartesian3D { x: 0.0, y: 2.0, z: 0.0 };
-		let c = Cartesian3D { x: 0.0, y: 0.0, z: 3.0 };
-		assert_eq!(a.cross(&b), Cartesian3D{x: 0.0, y: 0.0, z: 2.0});
-		assert_eq!(b.cross(&a), Cartesian3D{x: 0.0, y: 0.0, z: -2.0});
-		assert_eq!(a.cross(&c), Cartesian3D{x: 0.0, y: -3.0, z: 0.0});
-		assert_eq!(c.cross(&a), Cartesian3D{x: 0.0, y: 3.0, z: 0.0});
-		assert_eq!(b.cross(&c), Cartesian3D{x: 6.0, y: 0.0, z: 0.0});
-		assert_eq!(c.cross(&b), Cartesian3D{x: -6.0, y: 0.0, z: 0.0});
+		let a = Vector3 { x: 1.0, y: 0.0, z: 0.0 };
+		let b = Vector3 { x: 0.0, y: 2.0, z: 0.0 };
+		let c = Vector3 { x: 0.0, y: 0.0, z: 3.0 };
+		assert_eq!(a.cross(b), Vector3{x: 0.0, y: 0.0, z: 2.0});
+		assert_eq!(b.cross(a), Vector3{x: 0.0, y: 0.0, z: -2.0});
+		assert_eq!(a.cross(c), Vector3{x: 0.0, y: -3.0, z: 0.0});
+		assert_eq!(c.cross(a), Vector3{x: 0.0, y: 3.0, z: 0.0});
+		assert_eq!(b.cross(c), Vector3{x: 6.0, y: 0.0, z: 0.0});
+		assert_eq!(c.cross(b), Vector3{x: -6.0, y: 0.0, z: 0.0});
 	}
 
 	#[test]
 	fn test_cross_dual_axis ( )
 	{
-		let a = Cartesian3D { x: 1.0, y: 2.0, z: 0.0 };
-		let b = Cartesian3D { x: 0.0, y: 3.0, z: 4.0 };
-		let c = Cartesian3D { x: 5.0, y: 0.0, z: 6.0 };
-		assert_eq!(a.cross(&b), Cartesian3D{x: 8.0, y: -4.0, z: 3.0});
-		assert_eq!(b.cross(&a), Cartesian3D{x: -8.0, y: 4.0, z: -3.0});
-		assert_eq!(a.cross(&c), Cartesian3D{x: 12.0, y: -6.0, z: -10.0});
-		assert_eq!(c.cross(&a), Cartesian3D{x: -12.0, y: 6.0, z: 10.0});
-		assert_eq!(b.cross(&c), Cartesian3D{x: 18.0, y: 20.0, z: -15.0});
-		assert_eq!(c.cross(&b), Cartesian3D{x: -18.0, y: -20.0, z: 15.0});
+		let a = Vector3 { x: 1.0, y: 2.0, z: 0.0 };
+		let b = Vector3 { x: 0.0, y: 3.0, z: 4.0 };
+		let c = Vector3 { x: 5.0, y: 0.0, z: 6.0 };
+		assert_eq!(a.cross(b), Vector3{x: 8.0, y: -4.0, z: 3.0});
+		assert_eq!(b.cross(a), Vector3{x: -8.0, y: 4.0, z: -3.0});
+		assert_eq!(a.cross(c), Vector3{x: 12.0, y: -6.0, z: -10.0});
+		assert_eq!(c.cross(a), Vector3{x: -12.0, y: 6.0, z: 10.0});
+		assert_eq!(b.cross(c), Vector3{x: 18.0, y: 20.0, z: -15.0});
+		assert_eq!(c.cross(b), Vector3{x: -18.0, y: -20.0, z: 15.0});
 	}
 
 	#[test]
 	fn test_cross_tri_axis ( )
 	{
-		let a = Cartesian3D { x: -1.0, y: 2.0, z: 10.0 };
-		let b = Cartesian3D { x: 9.0, y: 3.0, z: -4.0 };
-		assert_eq!(a.cross(&b), Cartesian3D{x: -38.0, y: 86.0, z: -21.0});
-		assert_eq!(b.cross(&a), Cartesian3D{x: 38.0, y: -86.0, z: 21.0});
+		let a = Vector3 { x: -1.0, y: 2.0, z: 10.0 };
+		let b = Vector3 { x: 9.0, y: 3.0, z: -4.0 };
+		assert_eq!(a.cross(b), Vector3{x: -38.0, y: 86.0, z: -21.0});
+		assert_eq!(b.cross(a), Vector3{x: 38.0, y: -86.0, z: 21.0});
 	}
 
 
 	//
-	// dot ( &Cartesian3D ) -> Decimal
+	// dot ( &Vector3 ) -> Decimal
 	//
 	#[test]
 	fn test_dot ( )
 	{
-		let a = Cartesian3D { x: 1.0, y: 0.0, z: 0.0 };
-		let b = Cartesian3D { x: 0.0, y: 1.0, z: 0.0 };
-		let c = Cartesian3D { x: 1.0, y: 1.0, z: 0.0 };
-		let d = Cartesian3D { x: 0.0, y: 0.0, z: 1.0 };
-		let e = Cartesian3D { x: 1.0, y: 0.0, z: 1.0 };
-		let f = Cartesian3D { x: 0.0, y: 1.0, z: 1.0 };
-		let g = Cartesian3D { x: 1.0, y: 1.0, z: 1.0 };
+		let a = Vector3 { x: 1.0, y: 0.0, z: 0.0 };
+		let b = Vector3 { x: 0.0, y: 1.0, z: 0.0 };
+		let c = Vector3 { x: 1.0, y: 1.0, z: 0.0 };
+		let d = Vector3 { x: 0.0, y: 0.0, z: 1.0 };
+		let e = Vector3 { x: 1.0, y: 0.0, z: 1.0 };
+		let f = Vector3 { x: 0.0, y: 1.0, z: 1.0 };
+		let g = Vector3 { x: 1.0, y: 1.0, z: 1.0 };
 
-		assert_eq!(a.dot(&g), 1.0);
-		assert_eq!(a.dot(&b), 0.0);
-		assert_eq!(b.dot(&g), 1.0);
-		assert_eq!(c.dot(&g), 2.0);
-		assert_eq!(d.dot(&g), 1.0);
-		assert_eq!(e.dot(&g), 2.0);
-		assert_eq!(f.dot(&g), 2.0);
+		assert_eq!(a.dot(g), 1.0);
+		assert_eq!(a.dot(b), 0.0);
+		assert_eq!(b.dot(g), 1.0);
+		assert_eq!(c.dot(g), 2.0);
+		assert_eq!(d.dot(g), 1.0);
+		assert_eq!(e.dot(g), 2.0);
+		assert_eq!(f.dot(g), 2.0);
 	}
 
 
@@ -432,14 +422,14 @@ mod test
 
 
 	//
-	// angular_distance ( Cartesian3D ) -> Radians
+	// angular_distance ( Vector3 ) -> Radians
 	//
 
 	#[test]
 	fn test_angle_distance ( )
 	{
-		let car1 = Cartesian3D { x: 0.0, y: 1.0, z: 0.0 };
-		let mut car2 = Cartesian3D { x: 1.0, y: 0.0, z: 0.0 };
+		let car1 = Vector3 { x: 0.0, y: 1.0, z: 0.0 };
+		let mut car2 = Vector3 { x: 1.0, y: 0.0, z: 0.0 };
 		assert_eq!(car1.angle_distance(car2), Degrees(90.0).to_radians());
 		car2.x = 0.0;
 		car2.y = 1.0;
@@ -463,19 +453,9 @@ mod test
 	//
 
 	#[test]
-	fn test_to_matrix_row ( )
-	{
-		let c = Cartesian3D {x: 1.0, y: 2.0, z: 3.0};
-		let m : Matrix<1,3> = c.to_matrix_row();
-		assert_eq!(c.x, m.get(MatPos{row: 0, col: 0}));
-		assert_eq!(c.y, m.get(MatPos{row: 0, col: 1}));
-		assert_eq!(c.z, m.get(MatPos{row: 0, col: 2}));
-	}
-
-	#[test]
 	fn test_to_matrix_column ( )
 	{
-		let c = Cartesian3D {x: 1.0, y: 2.0, z: 3.0};
+		let c = Vector3 {x: 1.0, y: 2.0, z: 3.0};
 		let m : Matrix<3,1> = c.to_matrix_column();
 		assert_eq!(c.x, m.get(MatPos{row: 0, col: 0}));
 		assert_eq!(c.y, m.get(MatPos{row: 1, col: 0}));
@@ -483,20 +463,19 @@ mod test
 	}
 
 	#[test]
-	fn test_to_matrix_row_homo ( )
+	fn test_to_matrix_row ( )
 	{
-		let c = Cartesian3D {x: 1.0, y: 2.0, z: 3.0};
-		let m : Matrix<1,4> = c.to_matrix_row_homo();
+		let c = Vector3 {x: 1.0, y: 2.0, z: 3.0};
+		let m : Matrix<1,3> = c.to_matrix_row();
 		assert_eq!(c.x, m.get(MatPos{row: 0, col: 0}));
 		assert_eq!(c.y, m.get(MatPos{row: 0, col: 1}));
 		assert_eq!(c.z, m.get(MatPos{row: 0, col: 2}));
-		assert_eq!(1.0, m.get(MatPos{row: 0, col: 3}));
 	}
 
 	#[test]
 	fn test_to_matrix_column_homo ( )
 	{
-		let c = Cartesian3D {x: 1.0, y: 2.0, z: 3.0};
+		let c = Vector3 {x: 1.0, y: 2.0, z: 3.0};
 		let m : Matrix<4,1> = c.to_matrix_column_homo();
 		assert_eq!(c.x, m.get(MatPos{row: 0, col: 0}));
 		assert_eq!(c.y, m.get(MatPos{row: 1, col: 0}));
@@ -505,6 +484,14 @@ mod test
 	}
 
 
+	#[test]
+	fn test_to_vector_2 ( )
+	{
+		let vec_3 = Vector3{x: 12.3, y: 23.4, z: 34.5};
+		let vec_2 = vec_3.to_vector2();
+		assert_eq!(vec_2.x, vec_3.x);
+		assert_eq!(vec_2.y, vec_3.y);
+	}
 
 
 
@@ -515,11 +502,11 @@ mod test
 	#[test]
 	fn test_to_equatorial ( )
 	{
-		let mut c = Cartesian3D { x: 0.5, y: 0.5, z: -0.7071067812 };
+		let mut c = Vector3 { x: 0.5, y: 0.5, z: -0.7071067812 };
 		let mut e = c.to_equatorial();
 		let mut compare = Equatorial{ra: Radians(M_PI / 4.0), dec: Radians(-M_PI / 4.0)};
 		assert!(e.test_close(&compare, 0.000001));
-		c = Cartesian3D { x: 3.0, y: 4.0, z: 5.0 };
+		c = Vector3 { x: 3.0, y: 4.0, z: 5.0 };
 		e = c.to_equatorial();
 		compare = Equatorial{ra: Radians(0.927295218), dec: Radians(0.78539816)};
 		assert!(e.test_close(&compare, 0.000001));
@@ -528,7 +515,7 @@ mod test
 	// #[test]
 	// fn test_to_equatorial_z_zero ( )
 	// {
-	// 	let c = Cartesian3D { x: 0.5, y: 0.5, z: 0.0 };
+	// 	let c = Vector3 { x: 0.5, y: 0.5, z: 0.0 };
 	// 	let e = c.to_equatorial();
 	// 	assert_eq!(e.ra,  Radians(M_PI / 4.0));
 	// 	assert_eq!(e.dec, Radians(0.0));
@@ -537,11 +524,11 @@ mod test
 	#[test]
 	fn test_to_equatorial_z_full ( )
 	{
-		let mut c = Cartesian3D { x: 0.0, y: 0.0, z: 10000.0 };
+		let mut c = Vector3 { x: 0.0, y: 0.0, z: 10000.0 };
 		let mut e = c.to_equatorial();
 		assert_eq!(e.ra,  Radians(0.0));
 		assert_eq!(e.dec, Radians(M_PI / 2.0));
-		c = Cartesian3D { x: 0.0, y: 0.0, z: -10000.0 };
+		c = Vector3 { x: 0.0, y: 0.0, z: -10000.0 };
 		 e = c.to_equatorial();
 		assert_eq!(e.ra,  Radians(0.0));
 		assert_eq!(e.dec, Radians(-M_PI / 2.0));
@@ -551,11 +538,11 @@ mod test
 	#[test]
 	fn test_to_equatorial_z_high ( )
 	{
-		let mut c = Cartesian3D { x: 0.1, y: 0.1, z: 10000.0 };
+		let mut c = Vector3 { x: 0.1, y: 0.1, z: 10000.0 };
 		let mut e = c.to_equatorial();
 		let mut compare = Equatorial{ra: Radians(0.7853), dec: Radians(M_PI / 2.0)};
 		assert!(e.test_close(&compare, 0.001));
-		c = Cartesian3D { x: 0.1, y: 0.1, z: -10000.0 };
+		c = Vector3 { x: 0.1, y: 0.1, z: -10000.0 };
 		e = c.to_equatorial();
 		compare = Equatorial{ra: Radians(0.7853), dec: -Radians(M_PI / 2.0)};
 		assert!(e.test_close(&compare, 0.001));
@@ -565,7 +552,7 @@ mod test
 	#[test]
 	fn test_to_equatorial_random ( )
 	{
-		// let mut c = Cartesian3D { x: -1.0, y: 0.1, z: -1.0 };
+		// let mut c = Vector3 { x: -1.0, y: 0.1, z: -1.0 };
 		// for i in 0..20
 		// {
 		// 	// c.z += 0.1;
@@ -576,7 +563,7 @@ mod test
 		// for i in 0..20
 		// {
 		// 	e.ra.0 += M_PI / 10.0;
-		// 	println!("{:?} \t\t {:?}", e, e.to_cartesian3());
+		// 	println!("{:?} \t\t {:?}", e, e.to_vector3());
 		// }
 		// panic!("");
 		let mut rng = rand::thread_rng();
@@ -586,7 +573,7 @@ mod test
 				ra:  Radians(rng.gen::<Decimal>() * M_PI * 2.0),
 				dec: Radians(rng.gen::<Decimal>() * M_PI - M_PI / 2.0)};
 
-			let c = e.to_cartesian3();
+			let c = e.to_vector3();
 			assert!(e.angle_distance(c.to_equatorial()) < Radians(0.00001));
 		}
 	}

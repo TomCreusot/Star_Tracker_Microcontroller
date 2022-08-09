@@ -7,7 +7,7 @@ use std::ops::Div;
 use std::ops::Neg;
 use super::{
 	Degrees, Radians, Hours,
-	Quaternion, Cartesian3D, Equatorial, AngleAxis, Pixel, PixelWeighted, super::aliases::Decimal};
+	Quaternion, Vector3, Equatorial, AngleAxis, Pixel, Vector2, super::aliases::Decimal};
 
 use util::test::TestEqual;
 use util::aliases::DECIMAL_PRECISION;
@@ -17,7 +17,7 @@ use util::aliases::DECIMAL_PRECISION;
 //###############################################################################################//
 
 impl TestEqual for Decimal {
-	fn test_close ( &self, other: &Self, precision: Decimal ) -> bool 
+	fn test_close ( &self, other: &Self, precision: Decimal ) -> bool
 	{ return (self - other).abs() < precision }
 }
 
@@ -72,7 +72,7 @@ impl Into<Decimal> for Degrees { fn into ( self ) -> Decimal { return self.0; } 
 
 
 impl TestEqual for Degrees {
-	fn test_close ( &self, other: &Self, precision: Decimal ) -> bool 
+	fn test_close ( &self, other: &Self, precision: Decimal ) -> bool
 	{ return (self.0 - other.0).abs() < precision }
 }
 
@@ -114,27 +114,27 @@ impl Div<Decimal> for Radians {
 impl Div<Radians> for Radians {
     type Output = Self;
     fn div ( self, rhs: Radians ) -> Self { return Radians(self.0 / rhs.0); } }
-	
-	
+
+
 impl Neg for Radians {
 	type Output = Self;
 	fn neg ( self ) -> Self::Output { return Self(-self.0); }
 }
-	
+
 impl PartialEq for Radians {
 	fn eq ( &self, other: &Self ) -> bool { return (self.0 - other.0).abs() < DECIMAL_PRECISION; }
 }
-	
+
 impl Into<Decimal> for Radians { fn into ( self ) -> Decimal { return self.0; } }
 
 impl TestEqual for Radians {
-	fn test_close ( &self, other : &Self, precision: Decimal ) -> bool 
+	fn test_close ( &self, other : &Self, precision: Decimal ) -> bool
 	{ return (self.0 - other.0).abs() < precision }
 }
 
 //###############################################################################################//
 //									---	Hours ---
-//###############################################################################################//	
+//###############################################################################################//
 
 impl Hours
 {
@@ -154,52 +154,52 @@ impl Into<Decimal> for Hours { fn into ( self ) -> Decimal { return self.0; } }
 
 
 impl TestEqual for Hours {
-	fn test_close ( &self, other: &Self, precision: Decimal ) -> bool 
+	fn test_close ( &self, other: &Self, precision: Decimal ) -> bool
 	{ return (self.0 - other.0).abs() < precision }
 }
 
 //###############################################################################################//
 //									---	Equatiorial ---
-//###############################################################################################//	
+//###############################################################################################//
 
 impl PartialEq for Equatorial {
-	fn eq ( &self, other: &Self ) -> bool 
-	{return (self.ra.0- other.ra.0).abs() < DECIMAL_PRECISION && 
+	fn eq ( &self, other: &Self ) -> bool
+	{return (self.ra.0- other.ra.0).abs() < DECIMAL_PRECISION &&
 		(self.dec.0 - other.dec.0).abs() < DECIMAL_PRECISION;}
 }
 
 
 impl TestEqual for Equatorial {
-	fn test_close ( &self, other: &Self, precision: Decimal ) -> bool 
-	{ return (self.ra.0- other.ra.0).abs() < precision && 
+	fn test_close ( &self, other: &Self, precision: Decimal ) -> bool
+	{ return (self.ra.0- other.ra.0).abs() < precision &&
 		(self.dec.0 - other.dec.0).abs() < precision; }
 }
 
-	
+
 
 
 //###############################################################################################//
 //									---	AngleAxis ---
-//###############################################################################################//	
+//###############################################################################################//
 
 impl PartialEq for AngleAxis {
-	fn eq ( &self, other: &Self ) -> bool 
-	{ 
-		return self.angle == other.angle && self.axis == other.axis; 
+	fn eq ( &self, other: &Self ) -> bool
+	{
+		return self.angle == other.angle && self.axis == other.axis;
 	}
 }
 
 
 impl TestEqual for AngleAxis {
-	fn test_close ( &self, other: &Self, precision: Decimal ) -> bool 
-	{ return self.angle.test_close(&other.angle, precision) && 
+	fn test_close ( &self, other: &Self, precision: Decimal ) -> bool
+	{ return self.angle.test_close(&other.angle, precision) &&
 		other.axis.test_close(&other.axis, precision); }
 }
 
-	
+
 //###############################################################################################//
 //									---	Quaternion ---
-//###############################################################################################//	
+//###############################################################################################//
 
 
 
@@ -223,24 +223,24 @@ impl Mul for Quaternion
 		return Quaternion{w: w , x: x, y: y, z: z};
 	}
 }
-	
-	
+
+
 impl PartialEq for Quaternion {
-	 fn eq ( &self, other: &Self ) -> bool 
-	 { 
-		 return 
+	 fn eq ( &self, other: &Self ) -> bool
+	 {
+		 return
 		 	(self.w - other.w).abs() < DECIMAL_PRECISION &&
 			(self.x - other.x).abs() < DECIMAL_PRECISION &&
 			(self.y - other.y).abs() < DECIMAL_PRECISION &&
 			(self.z - other.z).abs() < DECIMAL_PRECISION;
 	}
 }
-		
+
 
 impl TestEqual for Quaternion {
 	fn test_close ( &self, other: &Self, precision: Decimal ) -> bool
-	{	
-		return 
+	{
+		return
 		(self.w - other.w).abs() < precision &&
 		(self.x - other.x).abs() < precision &&
 		(self.y - other.y).abs() < precision &&
@@ -248,7 +248,7 @@ impl TestEqual for Quaternion {
 	}
 }
 
-	
+
 
 
 
@@ -260,81 +260,114 @@ impl TestEqual for Quaternion {
 //###############################################################################################//
 
 
-impl Into<Cartesian3D> for Pixel { 
-	fn into ( self ) -> Cartesian3D { 
-		return Cartesian3D{x: self.x as Decimal, y: self.y as Decimal, z: 0.0} } }
+impl Into<Vector3> for Pixel {
+	fn into ( self ) -> Vector3 {
+		return Vector3{x: self.x as Decimal, y: self.y as Decimal, z: 0.0} } }
 
 
 
 
 //###############################################################################################//
-//									---	PixelWeighted ---
+//									---	Vector2 ---
 //###############################################################################################//
 
 
-impl Into<Cartesian3D> for PixelWeighted { 
-	fn into ( self ) -> Cartesian3D { return Cartesian3D{x: self.x, y: self.y, z: 0.0} } }
+impl Into<Vector3> for Vector2 {
+	fn into ( self ) -> Vector3				{ return Vector3{x: self.x, y: self.y, z: 0.0} } }
+
+impl Mul<Decimal> for Vector2 {
+    type Output = Self;
+    fn mul ( self, rhs: Decimal ) -> Self	{ return Self{x: self.x * rhs, y: self.y * rhs} } }
+
+impl Mul<Vector2> for Vector2 {
+    type Output = Self;
+    fn mul ( self, rhs: Self ) -> Self		{ return Self{x: self.x * rhs.x, y: self.y * rhs.y} } }
+
+impl Add<Vector2> for Vector2 {
+    type Output = Self;
+    fn add ( self, rhs: Self ) -> Self		{ return Self{x: self.x + rhs.x, y: self.y + rhs.y} } }
 
 
+impl Sub for Vector2 {
+    type Output = Self;
+    fn sub ( self, rhs: Vector2 ) -> Self	{ return Self{x: self.x - rhs.x, y: self.y - rhs.y} } }
 
-	
+impl Div<Decimal> for Vector2 {
+    type Output = Self;
+	fn div ( self, rhs: Decimal ) -> Self	{ return Self{x: self.x / rhs, y: self.y / rhs} } }
+
+impl PartialEq for Vector2 {
+	 fn eq ( &self, other: &Self ) -> bool
+	 {
+		 return
+		 	(self.x - other.x).abs() < DECIMAL_PRECISION &&
+			(self.y - other.y).abs() < DECIMAL_PRECISION;
+	}
+}
+
+impl TestEqual for Vector2 {
+	fn test_close ( &self, other: &Self, precision: Decimal ) -> bool
+	{
+		return
+		(self.x - other.x).abs() < precision &&
+		(self.y - other.y).abs() < precision;
+	}
+}
+
+
 //###############################################################################################//
-//									---	Cartesian3D ---
-//###############################################################################################//	
+//									---	Vector3 ---
+//###############################################################################################//
 
-impl Mul<Decimal> for Cartesian3D {
+impl Mul<Decimal> for Vector3 {
     type Output = Self;
-    fn mul ( self, rhs: Decimal ) -> Self { 
-		return Cartesian3D{x: self.x * rhs, y: self.y * rhs, z: self.z * rhs} } }
+    fn mul ( self, rhs: Decimal ) -> Self {
+		return Vector3{x: self.x * rhs, y: self.y * rhs, z: self.z * rhs} } }
 
-impl Mul<Cartesian3D> for Cartesian3D {
+impl Mul<Vector3> for Vector3 {
     type Output = Self;
-    fn mul ( self, rhs: Cartesian3D ) -> Self {
-		return Cartesian3D{x: self.x * rhs.x, y: self.y * rhs.y, z: self.z * rhs.z} } }
+    fn mul ( self, rhs: Vector3 ) -> Self {
+		return Vector3{x: self.x * rhs.x, y: self.y * rhs.y, z: self.z * rhs.z} } }
 
-impl Add<Cartesian3D> for Cartesian3D {
+impl Add<Vector3> for Vector3 {
     type Output = Self;
-    fn add ( self, rhs: Cartesian3D ) -> Self {
-		return Cartesian3D{x: self.x + rhs.x, y: self.y + rhs.y, z: self.z + rhs.z} } }
-	
-	
-impl Sub for Cartesian3D {
-    type Output = Self;
-    fn sub ( self, rhs: Cartesian3D ) -> Self {
-		return Cartesian3D{x: self.x - rhs.x, y: self.y - rhs.y, z: self.z - rhs.z} } }
+    fn add ( self, rhs: Vector3 ) -> Self {
+		return Vector3{x: self.x + rhs.x, y: self.y + rhs.y, z: self.z + rhs.z} } }
 
-impl Div<Decimal> for Cartesian3D {
+
+impl Sub for Vector3 {
+    type Output = Self;
+    fn sub ( self, rhs: Vector3 ) -> Self {
+		return Vector3{x: self.x - rhs.x, y: self.y - rhs.y, z: self.z - rhs.z} } }
+
+impl Div<Decimal> for Vector3 {
     type Output = Self;
 	fn div ( self, rhs: Decimal ) -> Self {
-		return Cartesian3D{x: self.x / rhs, y: self.y / rhs, z: self.z / rhs} } }
+		return Vector3{x: self.x / rhs, y: self.y / rhs, z: self.z / rhs} } }
 
 
-impl Div<Cartesian3D> for Cartesian3D {
+impl Div<Vector3> for Vector3 {
     type Output = Self;
-	fn div ( self, rhs: Cartesian3D ) -> Self {
-	return Cartesian3D{x: self.x / rhs.x, y: self.y / rhs.y, z: self.z / rhs.z} } }
-	
+	fn div ( self, rhs: Vector3 ) -> Self {
+	return Vector3{x: self.x / rhs.x, y: self.y / rhs.y, z: self.z / rhs.z} } }
 
-impl PartialEq for Cartesian3D {
-	 fn eq ( &self, other: &Self ) -> bool 
-	 { 
-		 return 
+
+impl PartialEq for Vector3 {
+	 fn eq ( &self, other: &Self ) -> bool
+	 {
+		 return
 		 	(self.x - other.x).abs() < DECIMAL_PRECISION &&
 			(self.y - other.y).abs() < DECIMAL_PRECISION &&
 			(self.z - other.z).abs() < DECIMAL_PRECISION;
 	}
 }
 
-impl TestEqual for Cartesian3D {
+impl TestEqual for Vector3 {
 	fn test_close ( &self, other: &Self, precision: Decimal ) -> bool
-	{	
-		return 
+	{
+		return
 		(self.x - other.x).abs() < precision &&
 		(self.y - other.y).abs() < precision &&
 		(self.z - other.z).abs() < precision;
 	}
 }
-
-
-
-

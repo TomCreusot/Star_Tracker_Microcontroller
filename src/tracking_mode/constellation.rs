@@ -59,7 +59,7 @@ pub fn find	<T: TrackingModeConsts> (
 			let output = output.unwrap();
 			
 			// ~~~~~~~~~~~~~~~~~~~~~	 The speculariy in/out match	~~~~~~~~~~~~~~~~~~~~
-			if gen_spec.same(&input.to_cartesian3(), &output.to_cartesian3())
+			if gen_spec.same(&input.to_vector3(), &output.to_vector3())
 			{
 				let result = gen_pyr.find_pilot(stars, database, iter.input, iter.output);
 				// ~~~~~~~~~~~~~	A match is found.				~~~~~~~~~~~~~~~~~~~~

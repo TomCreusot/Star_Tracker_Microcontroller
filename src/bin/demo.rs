@@ -15,7 +15,7 @@ use star_tracker::util::aliases::Decimal;
 
 use star_tracker::util::units::Quaternion;
 use star_tracker::util::units::AngleAxis;
-use star_tracker::util::units::Cartesian3D;
+use star_tracker::util::units::Vector3;
 use star_tracker::util::units::Degrees;
 use star_tracker::util::units::Radians;
 use star_tracker::util::units::Equatorial;
@@ -38,37 +38,37 @@ use star_tracker::attitude_determination::AttitudeDetermination;
 fn main ( )
 {
 	println!("\n\nWARNING:\nTHIS CURRENTLY WILL SKIP THE IMAGE PROCESSING AND BLOB DETECTION.");
-	
+
 	// Creates a set of tests by sampling equaly spaced points on a unit sphere.
 	let mut centers : [Equatorial; 100] = [Equatorial{ra: Radians(0.0), dec: Radians(0.0)};100];
 	Equatorial::evenly_distribute(&mut centers);
-	
-	
+
+
 	// return;
 	// Runs each test.
 	for i in 0..centers.len()
 	{
 		let center = centers[i];
-		
+
 		// Chooses the orientation of the camera relative to the spacecraft.
 		// It is random in this case for testing.
 		// let mut orientation = random_orientation();
 		let orientation = AngleAxis{
-			angle: random_angle(Degrees(0.0).to_radians(), Degrees(360.0).to_radians()), 
-			axis: center.to_cartesian3()}.to_quaternion();
-	
-		
-		
-		println!("Loop: {},\t position ra: {:?}, dec: {:?}", 
+			angle: random_angle(Degrees(0.0).to_radians(), Degrees(360.0).to_radians()),
+			axis: center.to_vector3()}.to_quaternion();
+
+
+
+		println!("Loop: {},\t position ra: {:?}, dec: {:?}",
 											i, center.ra.to_degrees(), center.dec.to_degrees());
 		println!("Reading array_database File\t\t...", );
-		
+
 		// Finds all stars in the database within the sample are of the test.
 		let mut input = get_stars(center);
-		
-		
+
+
 		println!("\tStars In Image: {}", input.len());
-		
+
 		// Simulates an actual scenario by providing corruption to the image.
 		println!("Corrupting Image           \t\t...");
 		dither(&mut input, 0.00001);			// Randomises the positions of the stars slightly.
@@ -76,30 +76,30 @@ fn main ( )
 		false_stars(&mut input, center, 2);		// Pretends some stars were identified that dont exist.
 		rotate(&mut input, orientation);		// Rotates the stars to fit
 
-		
+
 		println!("\tStars: {}", input.len());
-		
+
 		//////*************************************************************************************
 		// Distort equatorial coordinates to a 2d image.
-		let mut center = Cartesian3D{x: 4.0, y: 3.0, z: 2.0};
+		let mut center = Vector3{x: 4.0, y: 3.0, z: 2.0};
 		center.normalize();
 		// println!("{:?}", Distortion::equatorial_to_local_image(center, center));
-		
-		
+
+
 		// Undistort the image into equatorial.
 		//
 		//
 		//
 		//////*************************************************************************************
-		
-		
+
+
 		// Attempts to create a star pyramid.
 		println!("Finding Constellation      \t\t...");
 		let constellation : Constellation = Constellation::find::<TrackingModeConstsStruct>(
-			&input, 
-			&PyramidDatabase::new(), 
-			&mut StarTriangleIterator::<{TrackingModeConstsStruct::PAIRS_MAX}>::new(), 
-			&mut star_tracker::tracking_mode::StarPyramid(0,0,0,0), 
+			&input,
+			&PyramidDatabase::new(),
+			&mut StarTriangleIterator::<{TrackingModeConstsStruct::PAIRS_MAX}>::new(),
+			&mut star_tracker::tracking_mode::StarPyramid(0,0,0,0),
 			&mut star_tracker::tracking_mode::Specularity::Ignore);
 
 		match constellation
@@ -122,9 +122,9 @@ fn main ( )
 
 		// Combines the star vectors into a quaternion.
 		println!("Rotation                   \t\t...");
-		let matched_stars : Vec<Match<Cartesian3D>> = convert_constellation(constellation);
+		let matched_stars : Vec<Match<Vector3>> = convert_constellation(constellation);
 		let mut rotation = Quest::estimate::<AttitudeDeterminationConstsStruct>(&matched_stars);
-	
+
 		let angle = rotation.to_angle_axis().axis.angle_distance(matched_stars[0].output).to_degrees();
 		if angle < Degrees(90.0)
 		{
@@ -133,12 +133,12 @@ fn main ( )
 			rotation.x = -rotation.y;
 			rotation.z = -rotation.z;
 		}
-		
+
 		if rotation != orientation
 		{
 			println!("\n\n\nERROR!*!*!!*!*!*!!*!**!!*!**!*!*!*!*!*!*!!*!*!*!*!*!*!*!*!*!*!*!*!*!*\n\n\n\n\n");
 		}
-	
+
 		println!("\texpected: {:?}", orientation.to_angle_axis());
 		println!("\tactual:   {:?}", rotation.to_angle_axis());
 		println!("\texpected: {:?}", orientation);
@@ -147,7 +147,7 @@ fn main ( )
 		{
 			println!("*** separation:   {:?}", rotation.to_angle_axis().axis.angle_distance(matched_stars[0].output).to_degrees());
 		}
-		
+
 		println!("\n\n\n\n\n\n\n");
 	}
 }
@@ -162,7 +162,7 @@ fn main ( )
 
 
 /// Finds all stars in the region from the star_tracker::tracking_mode::database::array_database::CATALOGUE_DATABASE database.
-/// 
+///
 /// # Arguments
 /// * `pos` - The position of the center of the camera, anything outside the database FOV is excluded.
 /// # Returns
@@ -182,25 +182,25 @@ pub fn get_stars ( pos : Equatorial ) -> Vec<Equatorial>
 }
 
 
-/// Converts a constellation into an Vec<Match<Cartesian3D>>
-pub fn convert_constellation ( constellation : Constellation ) -> Vec<Match<Cartesian3D>>
+/// Converts a constellation into an Vec<Match<Vector3>>
+pub fn convert_constellation ( constellation : Constellation ) -> Vec<Match<Vector3>>
 {
-	let mut vec : Vec<Match<Cartesian3D>> = Vec::new();
-	
+	let mut vec : Vec<Match<Vector3>> = Vec::new();
+
 	match constellation
 	{
 		Constellation::Pyramid(stars) =>
 		{
-			vec.push_back(Match{input: stars.input.0.to_cartesian3(), output: stars.output.0.to_cartesian3(), weight: stars.weight } );
-			vec.push_back(Match{input: stars.input.1.to_cartesian3(), output: stars.output.1.to_cartesian3(), weight: stars.weight } );
-			vec.push_back(Match{input: stars.input.2.to_cartesian3(), output: stars.output.2.to_cartesian3(), weight: stars.weight } );
-			vec.push_back(Match{input: stars.input.3.to_cartesian3(), output: stars.output.3.to_cartesian3(), weight: stars.weight } );
+			vec.push_back(Match{input: stars.input.0.to_vector3(), output: stars.output.0.to_vector3(), weight: stars.weight } );
+			vec.push_back(Match{input: stars.input.1.to_vector3(), output: stars.output.1.to_vector3(), weight: stars.weight } );
+			vec.push_back(Match{input: stars.input.2.to_vector3(), output: stars.output.2.to_vector3(), weight: stars.weight } );
+			vec.push_back(Match{input: stars.input.3.to_vector3(), output: stars.output.3.to_vector3(), weight: stars.weight } );
 		}
 		Constellation::Triangle(stars) =>
 		{
-			vec.push_back(Match{input: stars.input.0.to_cartesian3(), output: stars.output.0.to_cartesian3(), weight: stars.weight } );
-			vec.push_back(Match{input: stars.input.1.to_cartesian3(), output: stars.output.1.to_cartesian3(), weight: stars.weight } );			
-			vec.push_back(Match{input: stars.input.2.to_cartesian3(), output: stars.output.2.to_cartesian3(), weight: stars.weight } );			
+			vec.push_back(Match{input: stars.input.0.to_vector3(), output: stars.output.0.to_vector3(), weight: stars.weight } );
+			vec.push_back(Match{input: stars.input.1.to_vector3(), output: stars.output.1.to_vector3(), weight: stars.weight } );
+			vec.push_back(Match{input: stars.input.2.to_vector3(), output: stars.output.2.to_vector3(), weight: stars.weight } );
 		}
 		Constellation::None => { }
 	}
@@ -217,7 +217,7 @@ pub fn convert_constellation ( constellation : Constellation ) -> Vec<Match<Cart
 // / An image with the stars inserted.
 // pub fn create_img ( center: Quaternion, stars: Vec<Equatorial> ) -> NixImage
 // {
-	
+
 // }
 
 
@@ -230,16 +230,16 @@ pub fn convert_constellation ( constellation : Constellation ) -> Vec<Match<Cart
 
 
 /// Creates random noise to the position of each star.
-/// 
+///
 /// # Arguments
 /// * `disrupt` - The stars to create noise.
 /// * `amount`  - 0 is not random, 1 is completely random.
-pub fn dither ( disrupt: &mut dyn List<Equatorial>, amount: Decimal ) 
+pub fn dither ( disrupt: &mut dyn List<Equatorial>, amount: Decimal )
 {
 	let mut rng = rand::thread_rng();
 	for i in 0..disrupt.size()
 	{
-		let mut cart = disrupt.get(i).to_cartesian3();
+		let mut cart = disrupt.get(i).to_vector3();
 		cart.x += rng.gen::<Decimal>() * amount - amount / 2.0;
 		cart.y += rng.gen::<Decimal>() * amount - amount / 2.0;
 		cart.z += rng.gen::<Decimal>() * amount - amount / 2.0;
@@ -255,13 +255,13 @@ pub fn random_orientation ( ) -> Quaternion
 {
 	let mut rng = rand::thread_rng();
 	let angle = Degrees(rng.gen::<Decimal>() * 360.0).to_radians();
-	let mut axis = Cartesian3D{
+	let mut axis = Vector3{
 		x: rng.gen::<Decimal>() - 0.5,
 		y: rng.gen::<Decimal>() - 0.5,
 		z: rng.gen::<Decimal>() - 0.5 };
-		
+
 	axis.normalize();
-	
+
 	let angle_axis = AngleAxis{angle: angle, axis: axis};
 	return angle_axis.to_quaternion();
 }
@@ -285,7 +285,7 @@ pub fn rotate ( rotate: &mut dyn List<Equatorial>, rotation : Quaternion )
 {
 	for i in 0..rotate.size()
 	{
-		let mut cart = rotate.get(i).to_cartesian3();
+		let mut cart = rotate.get(i).to_vector3();
 		cart = rotation.rotate_point(cart);
 		rotate.set(i, cart.to_equatorial());
 	}
@@ -311,7 +311,7 @@ pub fn false_stars ( add: &mut dyn List<Equatorial>, pos : Equatorial, num : u32
 			star = Equatorial{
 			   ra:  Degrees(rng.gen::<Decimal>() * 360.0).to_radians(),
 			   dec: Degrees(rng.gen::<Decimal>() * 180.0 - 90.0).to_radians()};
-	
+
 			if pos.angle_distance(star) < array_database::FOV / 2.0
 			{
 				add.push_back(star);
@@ -336,5 +336,3 @@ pub fn hide_stars ( remove: &mut Vec<Equatorial>, num: u32 )
 		remove.remove(rng.gen_range(0..(remove.len() - 1)));
 	}
 }
-
-
