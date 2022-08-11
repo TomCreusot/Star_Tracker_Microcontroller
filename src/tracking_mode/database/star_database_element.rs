@@ -94,6 +94,19 @@ impl StarDatabaseElement
 		}
 		return vec;
 	}
+	
+	
+	/// List implementation for sort.
+	/// Returns true if in order (TRUE IF LEFT IS A SMALLER DISTANCE).
+	/// # Arguments
+	pub fn sort ( &self, other: &Self ) -> bool
+	{
+		if self.dist.0 < other.dist.0
+		{
+			return true;
+		}
+		return false;
+	}
 }
 
 
@@ -340,6 +353,24 @@ mod test
 		assert_eq!(out.get(1), StarPair(0, 2));
 		assert_eq!(out.get(2), StarPair(3, 0));
 		assert_eq!(out.get(3), StarPair(0, 4));
+	}
+	
+	
+	
+	#[test]
+	fn test_sort ( )
+	{
+		let mut vec : Vec<StarDatabaseElement> = Vec::new();
+		vec.push_back(StarDatabaseElement{pair: StarPair(3, 0), dist: Radians(30.0)}).expect("");
+		vec.push_back(StarDatabaseElement{pair: StarPair(0, 2), dist: Radians(20.0)}).expect("");
+		vec.push_back(StarDatabaseElement{pair: StarPair(0, 4), dist: Radians(40.0)}).expect("");
+		vec.push_back(StarDatabaseElement{pair: StarPair(1, 0), dist: Radians(10.0)}).expect("");
+		
+		vec.sort(StarDatabaseElement::sort);
+		assert_eq!(vec[0].dist.0, 10.0);
+		assert_eq!(vec[1].dist.0, 20.0);
+		assert_eq!(vec[2].dist.0, 30.0);
+		assert_eq!(vec[3].dist.0, 40.0);
 	}
 
 }

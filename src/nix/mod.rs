@@ -1,5 +1,5 @@
 //! Nix contains any functionality which should only function on a computer.
-//! This may be due to using the heap, unnessisary code, interfacing with external crates, etc.
+//! This may be due to using the heap, unnecessary code, interfacing with external crates, etc.
 //!
 //!
 //!
@@ -21,28 +21,6 @@ pub struct NixImage
 	pub img_rgb: RgbImage,
 }
 
-
-/// A star position and its magnitude.
-// #[derive(Clone)]
-// pub struct Star
-// {
-// 	pub position: Equatorial,
-// 	pub magnitude: Decimal,
-// }
-
-
-/*
-// #[derive(Deserialize, Debug)]
-#[derive(Debug)]
-/// Used by extern csv library.
-pub struct Star
-{
-	pub mag  : Decimal,
-	pub pos  : Equatorial,
-	pub spec : String,
-}
-
-*/
 #[derive(Debug, /*Deserialize,*/ Clone)]
 /// Use for CSV serialization 
 pub struct Star

@@ -84,6 +84,7 @@ use crate::util::units::Equatorial;
 use crate::util::units::Radians;
 use crate::util::aliases::Decimal;
 use crate::util::list::List;
+use crate::util::linear_lookup::LinearLookup;
 
 use crate::util::err::{/*Errors, */Error};
 
@@ -149,9 +150,12 @@ pub struct PyramidDatabase
 {
 	pub fov:       Radians,
 	pub k_lookup:  KVector,
-	pub k_vector:  &'static [usize],
-	pub pairs:     &'static [StarPair<usize>],
-	pub catalogue: &'static [Equatorial],
+	// pub k_vector:  &'static [usize],
+	// pub pairs:     &'static [StarPair<usize>],
+	// pub catalogue: &'static [Equatorial],
+	pub k_vector:  &'static dyn LinearLookup<usize>,
+	pub pairs:     &'static dyn LinearLookup<StarPair<usize>>,
+	pub catalogue: &'static dyn LinearLookup<Equatorial>,
 }
 
 

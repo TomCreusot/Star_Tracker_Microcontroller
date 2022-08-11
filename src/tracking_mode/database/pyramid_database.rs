@@ -32,18 +32,18 @@ impl Database for PyramidDatabase
 		{
 			let range_k_vec = range_k_vec_wrapped.unwrap();
 			let mut end_range = range_k_vec.end;
-			if self.k_vector.len() <= end_range
+			if self.k_vector.size() <= end_range
 			{
 				end_range -= 1; // sometimes the upper value is stored in the bin above.
 			} 
-			let mut range = self.k_vector[range_k_vec.start]..self.k_vector[end_range];
+			let mut range = self.k_vector.get(range_k_vec.start)..self.k_vector.get(end_range);
 			range = self.trim_range(find, tolerance, range);
 
 			for i in range
 			{
 				if !found.is_full()
 				{
-					found.push_back(self.pairs[i]).expect("?");
+					found.push_back(self.pairs.get(i)).expect("?");
 				}
 			}
 		}
@@ -56,9 +56,9 @@ impl Database for PyramidDatabase
 	/// The actual position (usualy J2000).
 	fn find_star ( &self, index: usize ) -> Error<Equatorial>
 	{
-		if index < self.catalogue.len()
+		if index < self.catalogue.size()
 		{
-			return Ok(self.catalogue[index]);
+			return Ok(self.catalogue.get(index));
 		}
 		return Err(Errors::OutOfBounds);
 	}
@@ -74,14 +74,14 @@ impl Database for PyramidDatabase
 	/// The a trimmed version of `range`.
 	fn trim_range ( &self, find: Radians, tolerance: Radians, range: Range<usize> )	-> Range<usize>
 	{
-		let mut start =if range.start < self.pairs.len() { range.start } else {self.pairs.len()-1};
-		let mut end   =if range.end   < self.pairs.len() { range.end   } else {self.pairs.len()};
+		let mut start =if range.start < self.pairs.size() { range.start }else{self.pairs.size()-1};
+		let mut end   =if range.end   < self.pairs.size() { range.end   }else{self.pairs.size()};
 		
 		// lower bounds
 		loop
 		{
-			let valid    = start < end && start < self.pairs.len() - 1;
-			let distance = self.angle_distance(self.pairs[start]);
+			let valid    = start < end && start < self.pairs.size() - 1;
+			let distance = self.angle_distance(self.pairs.get(start));
 			if !(distance.is_ok() && tolerance.0 < (find - distance.unwrap()).abs() && valid)
 			{
 				break;
@@ -93,7 +93,7 @@ impl Database for PyramidDatabase
 		// upper bounds
 		loop
 		{
-			let distance = self.angle_distance(self.pairs[end - 1]);
+			let distance = self.angle_distance(self.pairs.get(end - 1));
 			if !(distance.is_ok() && tolerance.0 < (find - distance.unwrap()).abs() && start < end)
 			{
 				break;
@@ -115,9 +115,9 @@ impl PyramidDatabase
 	/// The angular distance between the pair.
 	pub fn angle_distance ( &self, pair: StarPair<usize> ) -> Error<Radians>
 	{
-		if pair.0 < self.catalogue.len() && pair.1 < self.catalogue.len()
+		if pair.0 < self.catalogue.size() && pair.1 < self.catalogue.size()
 		{
-			return Ok(self.catalogue[pair.0].angle_distance(self.catalogue[pair.1]));
+			return Ok(self.catalogue.get(pair.0).angle_distance(self.catalogue.get(pair.1)));
 		}
 		else
 		{
@@ -219,7 +219,7 @@ fn test_find_close_ref_invalid_angle ( )
 	let mut found : Vec<StarPair<usize>> = Vec::new();
 	database.find_close_ref(find, tolerance, &mut found);
 	
-	assert_eq!(found.len(), 0);
+	assert_eq!(found.size(), 0);
 }
 
 

@@ -9,18 +9,15 @@ use star_tracker::util::units::Pixel;
 use star_tracker::util::units::Equatorial;
 use star_tracker::util::units::Radians;
 use star_tracker::util::units::Degrees;
-use star_tracker::util::units::Vector2;
+// use star_tracker::util::units::Vector2;
 
 use star_tracker::nix::Io;
 use star_tracker::config::NixConstsStruct;
 use star_tracker::config::NixConsts;
 
-use star_tracker::projection::Transformation;
 use star_tracker::projection::IntrinsicParameters;
 use star_tracker::projection::ExtrinsicParameters;
-// use star_tracker::config::TrackingModeConstructConstsStruct;
-// use star_tracker::config::TrackingModeConstructConsts;
-// use star_tracker::config::starfield;
+use star_tracker::projection::SpaceWorld;
 
 // Input:
 // * fov
@@ -44,46 +41,32 @@ fn main ( )
 
 
 	// Extrinsic Parameters
-	let cutoff_mag : Decimal     = 2.5;
+	let cutoff_mag : Decimal     = 4.0;
 	let dir        : Equatorial  = Equatorial{ra: Degrees(90.0).to_radians(), dec: Degrees(-16.0).to_radians()};
 
 	// Intrinsic Parameters
-	// let fov        : Radians     = Degrees(90.0).to_radians();
-	// Vertical Field of View (Top of image to bottom or left to right)
-	//    FOV		|	Focal Length
-	// 10 degrees	|	5700.0
-	// 20 degrees   |   2830.0
-	// 30 degrees   |   1860.0
-	// 40 degrees   |   1370.0
-	// 50 degrees   |	1070.0
-	// 60 degrees   |	864.0
-	// 70 degrees   |	710.0
-	// 80 degrees   |   594.0
 	let fov = Degrees(90.0).to_radians();
 
 	// Construct Matrix
 	let extrinsic = ExtrinsicParameters::look_at(dir, Equatorial{ra: Radians(0.0), dec: Degrees(90.0).to_radians()});
 	let intrinsic = IntrinsicParameters::from_fov(fov, img.height() as Decimal);
-	let transform = Transformation{intrinsic: intrinsic, extrinsic: extrinsic};
-
-	println!("10d {:?}", transform.to_image(Equatorial{ra: Degrees(0.0).to_radians(), dec: Degrees(10.0).to_radians()}.to_vector3()));
-	println!("20d {:?}", transform.to_image(Equatorial{ra: Degrees(0.0).to_radians(), dec: Degrees(20.0).to_radians()}.to_vector3()));
-	println!("30d {:?}", transform.to_image(Equatorial{ra: Degrees(0.0).to_radians(), dec: Degrees(30.0).to_radians()}.to_vector3()));
-	println!("40d {:?}", transform.to_image(Equatorial{ra: Degrees(0.0).to_radians(), dec: Degrees(40.0).to_radians()}.to_vector3()));
-	println!("50d {:?}", transform.to_image(Equatorial{ra: Degrees(0.0).to_radians(), dec: Degrees(50.0).to_radians()}.to_vector3()));
-	println!("60d {:?}", transform.to_image(Equatorial{ra: Degrees(0.0).to_radians(), dec: Degrees(60.0).to_radians()}.to_vector3()));
-	println!("70d {:?}", transform.to_image(Equatorial{ra: Degrees(0.0).to_radians(), dec: Degrees(70.0).to_radians()}.to_vector3()));
-	println!("80d {:?}", transform.to_image(Equatorial{ra: Degrees(0.0).to_radians(), dec: Degrees(80.0).to_radians()}.to_vector3()));
-	println!("90d {:?}", transform.to_image(Equatorial{ra: Degrees(0.0).to_radians(), dec: Degrees(90.0).to_radians()}.to_vector3()));
-
-	println!("");
-	println!("");
-	println!("Acher {:?}", transform.to_image(Equatorial{ra: Degrees(24.43).to_radians(), dec: Degrees(-57.23).to_radians()}.to_vector3()));
-	println!("");
-	println!("");
+	// let transform = Transformation{intrinsic: intrinsic, extrinsic: extrinsic};
 
 
-	let mut i = 0;
+	let iter = rdr.deserialize();
+	for record in iter
+	{
+		let star : Star = record.expect("Could not decode.");
+		let point = SpaceWorld(star.pos.to_vector3());
+		if star.mag < cutoff_mag
+		{
+			let size = cutoff_mag - star.mag;
+			let red = 150_u8.saturating_add((star.mag * 10.0) as u8);
+			img.draw_star(point, size, [red, 50, 255], intrinsic, extrinsic);
+		}
+	}
+
+	/*let mut i = 0;
 	let iter = rdr.deserialize();
 	for record in iter
 	{
@@ -122,10 +105,10 @@ fn main ( )
 				i, star.pos, star.pos.angle_distance(dir).to_degrees().0, plane, star.name, color);
 			}
 
-		}
-	}
+		}*/
+	// }
 
-	img.img_rgb.save("results/star_field.png").expect("Could not save.");
+	img.img_rgb.save("results/starfield/star_field.png").expect("Could not save.");
 
 
 

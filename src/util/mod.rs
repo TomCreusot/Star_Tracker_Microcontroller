@@ -10,3 +10,4 @@ pub mod units;
 pub mod aliases;
 pub mod err;
 pub mod test;
+pub mod linear_lookup;

@@ -237,12 +237,14 @@ impl Vector3
 	{
 		// ra = atan(y/x)
 		// dec = acos(z / sqrt(x^2 + y ^2 + z^2)) = atan(sqrt(x^2 + y^2) / z)
-		let mut ra = 0.0;
-		if self.x != 0.0
+		let mut ra = (self.y).atan2(self.x);
+		
+		if ra < 0.0
 		{
-			ra = (self.y).atan2(self.x);
-			ra = (ra + M_PI * 2.0) % (M_PI * 2.0);
+			ra = -ra.abs() + M_PI * 2.0;
 		}
+		
+
 
 		let phi =(self.z / (self.x.powf(2.0) + self.y.powf(2.0) + self.z.powf(2.0)).sqrt()).acos();
 
@@ -532,6 +534,42 @@ mod test
 		 e = c.to_equatorial();
 		assert_eq!(e.ra,  Radians(0.0));
 		assert_eq!(e.dec, Radians(-M_PI / 2.0));
+	}
+
+	#[test]
+	fn test_to_equatorial_on_ra ( )
+	{
+		let mut c = Vector3 { x: 1.0, y: 0.0, z: 0.0 }; // x is 0
+		let mut e = c.to_equatorial();
+		assert_eq!(e.ra,  Degrees(0.0).to_radians());
+		
+		c = Vector3{ x: 1.0, y: 1.0, z: 0.0 }.normalized();
+		e = c.to_equatorial();
+		assert_eq!(e.ra,  Degrees(45.0).to_radians());
+		
+		c = Vector3{ x: 0.0, y: 1.0, z: 0.0 }.normalized();
+		e = c.to_equatorial();
+		assert_eq!(e.ra,  Degrees(90.0).to_radians());
+		
+		c = Vector3{ x: -1.0, y: 1.0, z: 0.0 }.normalized();
+		e = c.to_equatorial();
+		assert_eq!(e.ra,  Degrees(135.0).to_radians());
+		
+		c = Vector3{ x: -1.0, y: 0.0, z: 0.0 }.normalized();
+		e = c.to_equatorial();
+		assert_eq!(e.ra,  Degrees(180.0).to_radians());
+		
+		c = Vector3{ x: -1.0, y: -1.0, z: 0.0 }.normalized();
+		e = c.to_equatorial();
+		assert_eq!(e.ra,  Degrees(225.0).to_radians());
+		
+		c = Vector3{ x: 0.0, y: -1.0, z: 0.0 }.normalized();
+		e = c.to_equatorial();
+		assert_eq!(e.ra,  Degrees(270.0).to_radians());
+		
+		c = Vector3{ x: 1.0, y: -1.0, z: 0.0 }.normalized();
+		e = c.to_equatorial();
+		assert_eq!(e.ra,  Degrees(315.0).to_radians());
 	}
 
 

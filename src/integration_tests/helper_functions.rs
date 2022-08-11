@@ -284,7 +284,7 @@ pub fn create_k_vector ( num_bins : usize, pairs : &Vec<StarDatabaseElement> ) -
 {
 	let k_vector = KVector::new(num_bins, 
 			pairs[0].dist.0 as Decimal, 
-			pairs[pairs.len() - 1].dist.0 as Decimal);
+			pairs[pairs.size() - 1].dist.0 as Decimal);
 	return k_vector;
 			
 }
@@ -354,9 +354,9 @@ pub fn find_basic_angles ( angle: Radians, tolerance: Radians, database: &Pyrami
 {
 	let mut matches : Vec<StarPair<usize>> = Vec::new();
 	
-	for ii in 0..database.catalogue.len()
+	for ii in 0..database.catalogue.size()
 	{
-		for jj in (ii+1)..database.catalogue.len()
+		for jj in (ii+1)..database.catalogue.size()
 		{
 			if (database.angle_distance(StarPair(ii, jj)).expect("?") - angle).abs() < tolerance.0
 			{

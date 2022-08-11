@@ -1,5 +1,7 @@
 //! Implementation of IntrinsicParameters
 use super::IntrinsicParameters;
+use super::SpaceCamera;
+use super::SpaceImage;
 
 use util::units::Matrix;
 use util::units::MatPos;
@@ -11,7 +13,7 @@ use util::aliases::Decimal;
 
 impl IntrinsicParameters
 {
-	pub fn to_image ( &self, point: Vector3 ) -> Vector2
+	pub fn to_image ( &self, point: SpaceCamera ) -> SpaceImage
 	{
 		let mut matrix : Matrix<3,3> = Matrix::identity();
 		matrix.set(MatPos{row: 0, col: 0}, self.focal_length.x);
@@ -20,19 +22,19 @@ impl IntrinsicParameters
 		matrix.set(MatPos{row: 0, col: 2}, self.principle_point.x);
 		matrix.set(MatPos{row: 1, col: 2}, self.principle_point.y);
 
-		let out_3d = matrix.multiply(point);
+		let out_3d = matrix.multiply(point.0);
 		let out_2d = out_3d / out_3d.z;
 
-		return Vector2{x: out_2d.x, y: out_2d.y};
+		return SpaceImage(Vector2{x: out_2d.x, y: out_2d.y});
 	}
 
 
-	// pub fn from_image ( &self, point: Vector2 ) -> Vector3
-	// {
-	// 	let x = (point - self.principle_point.x) / self.focal_length;
-	// 	let y = (point - self.principle_point.y) / self.focal_length;
-	// 	return Vector3{x: x, y: y, z}
-	// }
+	pub fn from_image ( &self, point: SpaceImage ) -> SpaceCamera
+	{
+		let x = (point.0.x - self.principle_point.x) / self.focal_length.x;
+		let y = (point.0.y - self.principle_point.y) / self.focal_length.y;
+		return SpaceCamera(Vector3{x: x, y: y, z: 1.0});
+	}
 
 
 	/// Generates the intrinsic parameters from the field of view.

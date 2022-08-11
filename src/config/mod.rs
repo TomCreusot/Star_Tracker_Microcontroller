@@ -18,6 +18,33 @@ use crate::util::aliases::M_PI;
 //###############################################################################################//
 //###############################################################################################//
 //
+//										Test Code
+// ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+// This is test code which is not to be used in the actual mission.
+// This includes code for demo, starfield etc.
+//
+//###############################################################################################//
+//###############################################################################################//
+
+
+/// Sample Test Code to simulate the algorithm and check its functionality.
+// pub trait SampleConsts
+// {
+// 	/// The direction the camera should point in the program starfield.
+// 	const STAR_FIELD_DIRECTION			: Equatorial = Equatorial{ra: Degrees(90.0).to_radians(), dec: Degrees(-16.0).to_radians()};;
+// 	/// The up direction for the camera in the program starfield.
+// 	const STAR_FIELD_ORIENTATION		: Equatorial = ;
+// 	/// The field of view of the sensor in the program starfield.
+// 	const STAR_FIELD_FIELD_OF_VIEW		: Radians    = ;
+// 
+// 	/// The field of view of the camera in the demo program.
+// 	const DEMO_FIELD_OF_VIEW			: Radians;
+// }
+
+
+//###############################################################################################//
+//###############################################################################################//
+//
 //										Nix
 // ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 // Nix (UNIX) is for variables which are not required/cannot be used on a microcontroller.
@@ -76,8 +103,8 @@ const HYG_DATABASE_HEADER_NAME				: &'static str = "proper";
 impl AttitudeDeterminationConsts for AttitudeDeterminationConstsStruct
 {
 /// For quest algorithm, to find the correct attitude, the neuton raphson method is used.  
-/// This method will loop and slowely decrease the gap between the current and previous prediction.
-/// Acheiving perfect precision comparing the 2 values will take up computation power.
+/// This method will loop and slowly decrease the gap between the current and previous prediction.
+/// Achieving perfect precision comparing the 2 values will take up computation power.
 /// By specifying a precision, the computational requirements are lowered.
 const LAMBDA_PRECISION		:	Decimal		= 0.1;//DECIMAL_PRECISION * 10000000.0;//100000.0;
 	
@@ -197,6 +224,7 @@ const BLOB_SIZE_MAX				: usize					= 50;
 
 pub struct ImageProcessingConstsStruct();
 pub struct NixConstsStruct();
+pub struct SampleConstsStruct();
 pub struct TrackingModeConstructConstsStruct();
 pub struct TrackingModeConstsStruct();
 pub struct AttitudeDeterminationConstsStruct();
@@ -252,6 +280,22 @@ pub trait NixConsts
 	const HYG_DATABASE_HEADER_NAME				: &'static str;
 }
 
+/// Sample Test Code to simulate the algorithm and check its functionality.
+// pub trait SampleConsts
+// {
+// 	/// The direction the camera should point in the program starfield.
+// 	const STAR_FIELD_DIRECTION			: Equatorial;
+// 	/// The up direction for the camera in the program starfield.
+// 	const STAR_FIELD_ORIENTATION		: Equatorial;
+// 	/// The field of view of the sensor in the program starfield.
+// 	const STAR_FIELD_FIELD_OF_VIEW		: Radians;
+// 	/// The maximum magnitude of a star in the program starfield.
+// 	const STAR_FIELD_CUTOFF_MAGNITUDE	: Radians;
+// 
+// 	/// The field of view of the camera in the demo program.
+// 	const DEMO_FIELD_OF_VIEW			: Radians;
+// }
+
 
 /// When generating the database for the tracking mode, these are the constants required.
 pub trait TrackingModeConstructConsts
@@ -272,7 +316,7 @@ pub trait TrackingModeConstructConsts
 
 
 
-/// When running the tracking mode reconition software, these are the constants required.
+/// When running the tracking mode recognition software, these are the constants required.
 pub trait TrackingModeConsts
 {
 	/// When searching for values in the database, memory required must be forward declared.
@@ -301,8 +345,8 @@ pub trait TrackingModeConsts
 pub trait AttitudeDeterminationConsts
 {
 /// For quest algorithm, to find the correct attitude, the neuton raphson method is used.  
-/// This method will loop and slowely decrease the gap between the current and previous prediction.
-/// Acheiving perfect precision comparing the 2 values will take up computation power.
+/// This method will loop and slowly decrease the gap between the current and previous prediction.
+/// Achieving perfect precision comparing the 2 values will take up computation power.
 /// By specifying a precision, the computational requirements are lowered.
 const LAMBDA_PRECISION		:	Decimal;
 	

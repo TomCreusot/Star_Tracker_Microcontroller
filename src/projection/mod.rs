@@ -13,16 +13,9 @@ use util::units::Pixel;
 pub mod extrinsic_parameters;
 pub mod intrinsic_parameters;
 
-
-/// The transformation between 3D world and image pixel coordinates.
-pub struct Transformation
-{
-	pub extrinsic : ExtrinsicParameters,
-	pub intrinsic : IntrinsicParameters,
-}
-
 /// The extrinsic (world transformation) parameters.
 /// These are rotations and translations to convert world coordinates into the camera coordinates.
+#[derive(Debug, Copy, Clone, PartialEq)]
 pub struct ExtrinsicParameters
 {
 	/// The matrix in charge of rotating the point from world to camera.
@@ -31,10 +24,9 @@ pub struct ExtrinsicParameters
 	pub translation : Vector3,
 }
 
-
-
 /// The intrinsic (camera properties) parameters.
 /// This is used to specify how points in 3D space will be projected onto the camera plane.
+#[derive(Debug, Copy, Clone, PartialEq)]
 pub struct IntrinsicParameters
 {
 	/// Distance (in units) between image plane and projection center *camera_constant*.
@@ -51,14 +43,18 @@ pub struct IntrinsicParameters
 }
 
 
-
-impl Transformation
-{
-	pub fn to_image ( &self, point: Vector3 ) -> Vector2
-	{
-		return self.intrinsic.to_image(self.extrinsic.to_image(point));
-	}
-}
+/// A 3D point in a scene with no relation to the camera.
+#[derive(PartialEq, Debug, Clone, Copy)] 
+pub struct SpaceWorld  ( pub Vector3 );
+/// A 3D point relative to the camera with +z being the direction the camera is looking.
+#[derive(PartialEq, Debug, Clone, Copy)] 
+pub struct SpaceCamera ( pub Vector3 );
+/// A 2D point representing the position relative to the image sensor flat to the sensor.
+#[derive(PartialEq, Debug, Clone, Copy)] 
+pub struct SpaceImage  ( pub Vector2 );
+/// A 2D point on the image plane which has been rounded to the nearest pixel (LOSSY).
+#[derive(PartialEq, Debug, Clone, Copy)] 
+pub struct SpacePixel  ( pub Pixel );
 
 
 /// The planar space the coordinate is located in.
@@ -67,11 +63,12 @@ impl Transformation
 enum Space
 {
 	/// A 3D point in a scene with no relation to the camera.
-	World  (Vector3),
+	World  (SpaceWorld),
 	/// A 3D point relative to the camera with +z being the direction the camera is looking.
-	Camera (Vector3),
+	Camera (SpaceCamera),
 	/// A 2D point representing the position relative to the image sensor flat to the sensor.
-	Image  (Vector2),
+	Image  (SpaceImage),
 	/// A 2D point on the image plane which has been rounded to the nearest pixel (LOSSY).
-	Pixel  (Pixel),
+	Pixel  (SpacePixel),
 }
+

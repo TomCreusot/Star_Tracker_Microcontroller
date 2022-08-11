@@ -1,15 +1,12 @@
 //! Implementation of ExtrinsicParameters
 use super::ExtrinsicParameters;
+use super::SpaceWorld;
+use super::SpaceCamera;
 
 use util::units::Matrix;
 use util::units::MatPos;
-// use util::units::Degrees;
-// use util::units::Radians;
-// use util::units::AngleAxis;
 use util::units::Equatorial;
 use util::units::Vector3;
-
-// use util::aliases::DECIMAL_PRECISION;
 
 impl ExtrinsicParameters
 {
@@ -18,9 +15,9 @@ impl ExtrinsicParameters
 	/// * `point` - The point in world coordinates.
 	/// # Returns
 	/// The point in camera coordinates.
-	pub fn to_image ( &self, point: Vector3 ) -> Vector3
+	pub fn to_image ( &self, point: SpaceWorld ) -> SpaceCamera
 	{
-		return self.rotation.multiply(point) + self.translation;
+		return SpaceCamera(self.rotation.multiply(point.0) + self.translation);
 	}
 
 
@@ -29,9 +26,9 @@ impl ExtrinsicParameters
 	/// * `point` - The point in camera coordinates.
 	/// # Returns
 	/// The point in world coordinates.
-	pub fn from_image ( &self, point: Vector3 ) -> Vector3
+	pub fn from_image ( &self, point: SpaceCamera ) -> SpaceWorld
 	{
-		return self.rotation.transposed().multiply(point - self.translation);
+		return SpaceWorld(self.rotation.transposed().multiply(point.0 - self.translation));
 	}
 
 
@@ -40,7 +37,7 @@ impl ExtrinsicParameters
 	/// This is the [Matrix Version](https://www.geertarien.com/blog/2017/07/30/breakdown-of-the-lookAt-function-in-OpenGL/).
 	/// This is the [Quaternion Version](https://answers.unity.com/questions/467614/what-is-the-source-code-of-quaternionlookrotation.html).
 	/// Observing these, it appears that the quaternion version just uses the matrix version.
-	/// This is alot of unnecessary computation, thus it was decided to use the conventional matrix.
+	/// This is a lot of unnecessary computation, thus it was decided to use the conventional matrix.
 	/// This method implements the opengl `LookAt` function.
 	///
 	/// The parameters are equatorial to reduce input checking.
@@ -60,9 +57,9 @@ impl ExtrinsicParameters
 		let mut matrix : Matrix<3, 3> = Matrix::new();
 
 		// Matrix parameters.
-		let z_axis = forward.to_vector3();           				// Z axis goes through the center of the frame.
-		let x_axis = z_axis.cross(up.to_vector3()).normalized();	// X axis rotation applied as axis angle adjacent to z.
-		let y_axis = x_axis.cross(z_axis).normalized();   				// Same logic as x.
+		let z_axis = forward.to_vector3();		      			// Z axis goes through the center of the frame.
+		let x_axis = up.to_vector3().cross(z_axis).normalized();// X axis rotation applied as axis angle adjacent to z.
+		let y_axis = z_axis.cross(x_axis).normalized();   		// Same logic as x.
 
 		// Rotation
 		matrix.set(MatPos{row: 0, col: 0}, x_axis.x);
@@ -104,6 +101,8 @@ mod test
 	use rand::prelude::*;
 
 	use projection::ExtrinsicParameters;
+	use projection::SpaceWorld;
+	use projection::SpaceCamera;
 	use util::units::MatPos;
 	use util::units::Matrix;
 	use util::units::Degrees;
@@ -135,8 +134,8 @@ mod test
 		let translation = Vector3{x: 0.1, y: 0.2, z: 0.3};
 		let param = ExtrinsicParameters{rotation: rotation, translation};
 
-		let initial  = Vector3{x: 2.0, y: 3.0, z: 4.0};
-		let expected = Vector3{x: 4.1, y: 2.2, z: 3.3};
+		let initial  = SpaceWorld(Vector3{x: 2.0, y: 3.0, z: 4.0});
+		let expected = SpaceCamera(Vector3{x: 4.1, y: 2.2, z: 3.3});
 		assert_eq!(param.to_image(initial), expected);
 	}
 
@@ -161,7 +160,7 @@ mod test
 		let translation = Vector3{x: 0.1, y: 0.2, z: 0.3};
 		let param = ExtrinsicParameters{rotation: rotation, translation};
 
-		let initial  = Vector3{x: 2.0, y: 3.0, z: 4.0};
+		let initial  = SpaceWorld(Vector3{x: 2.0, y: 3.0, z: 4.0});
 		let camera   = param.to_image(initial);
 		assert_eq!(param.from_image(camera), initial);
 	}
@@ -222,6 +221,30 @@ mod test
 		rotation = ExtrinsicParameters::look_at(a, up).rotation;
 		start_to_end = rotation.multiply(a.to_vector3());
 		assert_eq!(start_to_end, Vector3{x: 0.0, y: 0.0, z: 1.0});
+	}
+
+
+	#[test] // Checks if the output will be flipped
+	fn test_look_at_specularity ( )
+	{
+		// Facing Up
+		let mut a  = Vector3{x: 1.0, y: 0.0, z: 0.0}.to_equatorial();
+		let mut up = Vector3{x: 0.0, y: 0.0, z: 1.0}.to_equatorial();
+		let mut rotation  = ExtrinsicParameters::look_at(a, up).rotation;
+		let mut point     = Vector3{x: 0.0, y: 0.0, z: 1.0};
+		let mut point_rot = Vector3{x: -1.0, y: 0.0, z: 0.0};
+		assert_eq!(point_rot, rotation.multiply(point));
+		// 
+		// let mut point     = Vector3{x: 0.0, y: 0.0, z: 0.0};
+		// let mut point_rot = Vector3{x: 1.0, y: 0.0, z: 0.0};
+		// assert_eq!(point_rot, rotation.multiply(point));
+		// 
+		// let mut a  = Vector3{x: 1.0, y: 0.0, z: 0.0}.to_equatorial();
+		// let mut up = Vector3{x: 0.0, y: 0.0, z: 1.0}.to_equatorial();
+		// let mut rotation  = ExtrinsicParameters::look_at(a, up).rotation;
+		// let mut point     = Vector3{x: 0.0, y: 1.0, z: 0.0};
+		// let mut point_rot = Vector3{x: 1.0, y: 0.0, z: 0.0};
+		// assert_eq!(point_rot, rotation.multiply(point));
 	}
 
 	#[test]

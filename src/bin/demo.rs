@@ -8,96 +8,198 @@ use rand::prelude::*;
 use star_tracker::config::TrackingModeConstsStruct;
 use star_tracker::config::TrackingModeConsts;
 use star_tracker::config::AttitudeDeterminationConstsStruct;
+use star_tracker::config::AttitudeDeterminationConsts;
+use star_tracker::config::NixConstsStruct;
+use star_tracker::config::NixConsts;
 
 
 use star_tracker::util::list::List;
 use star_tracker::util::aliases::Decimal;
+use star_tracker::util::aliases::Byte;
+use star_tracker::util::aliases::UInt;
 
 use star_tracker::util::units::Quaternion;
 use star_tracker::util::units::AngleAxis;
 use star_tracker::util::units::Vector3;
+use star_tracker::util::units::Vector2;
 use star_tracker::util::units::Degrees;
 use star_tracker::util::units::Radians;
 use star_tracker::util::units::Equatorial;
+use star_tracker::util::units::Pixel;
 
+use star_tracker::nix::NixImage;
+use star_tracker::nix::Io;
+use star_tracker::nix::Star;
+
+use star_tracker::image_processing::Blob;
+use star_tracker::image_processing::Image;
 
 use star_tracker::tracking_mode::Constellation;
 use star_tracker::tracking_mode::StarTriangleIterator;
 // use star_tracker::tracking_mode::StarPyramid;
 // use star_tracker::tracking_mode::StarTriangle;
 use star_tracker::tracking_mode::Match;
+use star_tracker::tracking_mode::StarPair;
 use star_tracker::tracking_mode::database::PyramidDatabase;
+use star_tracker::tracking_mode::database::KVector;
 use star_tracker::tracking_mode::database::array_database;
+use star_tracker::tracking_mode::database::StarDatabaseElement;
+
+use star_tracker::projection::IntrinsicParameters;
+use star_tracker::projection::ExtrinsicParameters;
+use star_tracker::projection::SpaceWorld;
+use star_tracker::projection::SpaceImage;
 
 
 use star_tracker::attitude_determination::Quest;
 use star_tracker::attitude_determination::AttitudeDetermination;
 
+const CUTOFF_MAGNITUDE	: Decimal = 3.5;
+const BINS_NUM			: usize = 4000;
 
+static mut K_VECTOR		: Vec<usize> = Vec::new();
+static mut PAIRS		: Vec<StarPair<usize>> = Vec::new();
+static mut CATALOGUE	: Vec<Equatorial> = Vec::new();
+
+
+
+const BLOB_SIZE		: usize = 100;
+
+const IMAGE_SIZE	: Pixel = Pixel{x: 1000, y: 1000};
 
 fn main ( )
 {
-	println!("\n\nWARNING:\nTHIS CURRENTLY WILL SKIP THE IMAGE PROCESSING AND BLOB DETECTION.");
 
-	// Creates a set of tests by sampling equaly spaced points on a unit sphere.
+//###############################################################################################//
+//							---	Setup ---
+//###############################################################################################//
+// Don't worry about this, it is only used in this test.
+	let mut database : PyramidDatabase;
+
+	// Creates a set of tests by sampling equally spaced points on a unit sphere.
 	let mut centers : [Equatorial; 100] = [Equatorial{ra: Radians(0.0), dec: Radians(0.0)};100];
 	Equatorial::evenly_distribute(&mut centers);
 
+	// Creates a camera projection matrix with the given field of view.
+	// The from_fov() method is only relevant for creating simulation images as lenses are complex.
+	let fov : Radians = Degrees(80.0).to_radians();
+	let intrinsic:IntrinsicParameters=IntrinsicParameters::from_fov(fov, IMAGE_SIZE.y as Decimal);
 
-	// return;
-	// Runs each test.
+	println!("Reading Star CSV Database\t\t...");
+	let stars = get_stars(CUTOFF_MAGNITUDE);
+
+	println!("Stars In Sky: {}", stars.size());
+
+	// Creates a database which is not the main database.
+	// This makes the tests easier.
+	println!("Creating Native Database \t\t...");
+	// PAIRS
+	let mut pairs : Vec<StarDatabaseElement> =
+	StarDatabaseElement::create_list(fov / 2.0, &stars);
+	pairs.sort(StarDatabaseElement::sort);
+	
+	// K_LOOKUP
+	let k_lookup : KVector = KVector::new(BINS_NUM, pairs[0].dist.0 as Decimal, 
+		pairs[pairs.len() - 1].dist.0 as Decimal);
+	
+	unsafe
+	{
+		for i in 0..pairs.len() { PAIRS.push(StarPair::<usize>(pairs[i].pair.0, pairs[i].pair.1));}
+
+		// K_VECTOR
+		K_VECTOR=k_lookup.generate_bins(&pairs).expect("Increase the cutoff magnitude.");
+		
+		// CATALOGUE
+		for i in 0..stars.size() { CATALOGUE.push(stars[i].pos); }
+
+		// Database
+		database = PyramidDatabase
+		{
+			fov: 		fov,
+			k_lookup: 	k_lookup,
+			k_vector: 	&K_VECTOR,
+			pairs: 		&PAIRS,
+			catalogue: 	&CATALOGUE,
+		};
+	}
+
+
+
+
+//###############################################################################################//
+//							---	Test Runner ---
+//###############################################################################################//
+// Runs all tests.
 	for i in 0..centers.len()
 	{
-		let center = centers[i];
+		let center : Equatorial = centers[i];
+		println!("\n\n\n\nLoop: {},\t position ra: {}, dec: {}",
+			i, center.ra.to_degrees(), center.dec.to_degrees());
 
-		// Chooses the orientation of the camera relative to the spacecraft.
-		// It is random in this case for testing.
-		// let mut orientation = random_orientation();
-		let orientation = AngleAxis{
-			angle: random_angle(Degrees(0.0).to_radians(), Degrees(360.0).to_radians()),
-			axis: center.to_vector3()}.to_quaternion();
+		// The input sample image.
+		let mut image : NixImage = NixImage::new(IMAGE_SIZE);
 
+		// The center and up direction of the camera.
+		let up = random_direction();
 
-
-		println!("Loop: {},\t position ra: {:?}, dec: {:?}",
-											i, center.ra.to_degrees(), center.dec.to_degrees());
-		println!("Reading array_database File\t\t...", );
-
-		// Finds all stars in the database within the sample are of the test.
-		let mut input = get_stars(center);
+		// Creates a camera rotation matrix which looks at a target and has an associated up direction.
+		let extrinsic : ExtrinsicParameters = ExtrinsicParameters::look_at(center, up);
 
 
-		println!("\tStars In Image: {}", input.len());
-
-		// Simulates an actual scenario by providing corruption to the image.
-		println!("Corrupting Image           \t\t...");
-		dither(&mut input, 0.00001);			// Randomises the positions of the stars slightly.
-		hide_stars(&mut input, 1);				// Pretends some stars were not identified.
-		false_stars(&mut input, center, 2);		// Pretends some stars were identified that dont exist.
-		rotate(&mut input, orientation);		// Rotates the stars to fit
-
-
-		println!("\tStars: {}", input.len());
-
-		//////*************************************************************************************
-		// Distort equatorial coordinates to a 2d image.
-		let mut center = Vector3{x: 4.0, y: 3.0, z: 2.0};
-		center.normalize();
-		// println!("{:?}", Distortion::equatorial_to_local_image(center, center));
-
-
-		// Undistort the image into equatorial.
-		//
-		//
-		//
-		//////*************************************************************************************
+		println!("Creating Image             \t\t...");
+		let mut stars_in_image = 0;
+		for star in &stars
+		{
+			let mut point = star.pos;
+			// if rand_num() < 0.9
+			{
+				if 	image.draw_star(SpaceWorld(point.to_vector3()),
+					CUTOFF_MAGNITUDE-star.mag,[100,100,255],intrinsic,extrinsic)
+				{
+					stars_in_image += 1;
+				}
+			}
+		}
+		println!("  * Stars In Image:           {}", stars_in_image);
+		let mut display_image = image.clone();
+		display_image.img_rgb.save("results/demo/demo.png").expect("Could not save");
 
 
+//###############################################################################################//
+//							---	Image Processing ---
+//###############################################################################################//
+		println!("Performing Image Processing\t\t...");
+		let mut histogram : [UInt; 255] = [0; 255];
+		image.histogram(&mut histogram);
+
+		let threshold_percent = 0.999;
+		let mut threshold : Byte = image.novel_threshold(threshold_percent, &histogram);
+
+		let mut blobs : Vec<Blob> = Vec::new();
+		Blob::find_blobs::<BLOB_SIZE>(threshold, &mut image, &mut blobs);
+
+		let mut points_vec2: Vec<Vector2> = Vec::new();
+		Blob::to_vector2(&blobs, &mut points_vec2);
+		
+//###############################################################################################//
+//							---	Projection ---
+//###############################################################################################//
+		let mut points : Vec<Equatorial> = Vec::new();
+		for i in 0..points_vec2.size() 
+		{ 
+			points.push(intrinsic.from_image(SpaceImage(points_vec2[i])).0.to_equatorial()); 
+		}
+
+
+
+//###############################################################################################//
+//							---	Tracking Mode ---
+//###############################################################################################//
 		// Attempts to create a star pyramid.
 		println!("Finding Constellation      \t\t...");
 		let constellation : Constellation = Constellation::find::<TrackingModeConstsStruct>(
-			&input,
-			&PyramidDatabase::new(),
+			&points,
+			&database,
 			&mut StarTriangleIterator::<{TrackingModeConstsStruct::PAIRS_MAX}>::new(),
 			&mut star_tracker::tracking_mode::StarPyramid(0,0,0,0),
 			&mut star_tracker::tracking_mode::Specularity::Ignore);
@@ -134,14 +236,14 @@ fn main ( )
 			rotation.z = -rotation.z;
 		}
 
-		if rotation != orientation
-		{
-			println!("\n\n\nERROR!*!*!!*!*!*!!*!**!!*!**!*!*!*!*!*!*!!*!*!*!*!*!*!*!*!*!*!*!*!*!*\n\n\n\n\n");
-		}
+		// if rotation != orientation
+		// {
+		// 	println!("\n\n\nERROR!*!*!!*!*!*!!*!**!!*!**!*!*!*!*!*!*!!*!*!*!*!*!*!*!*!*!*!*!*!*!*\n\n\n\n\n");
+		// }
 
-		println!("\texpected: {:?}", orientation.to_angle_axis());
-		println!("\tactual:   {:?}", rotation.to_angle_axis());
-		println!("\texpected: {:?}", orientation);
+		// println!("\texpected: {:?}", orientation.to_angle_axis());
+		// println!("\tactual:   {:?}", rotation.to_angle_axis());
+		// println!("\texpected: {:?}", orientation);
 		println!("\tactual:   {:?}", rotation);
 		if matched_stars.len() != 0
 		{
@@ -154,6 +256,36 @@ fn main ( )
 
 
 
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 //###############################################################################################//
 //
 //										Required
@@ -161,19 +293,26 @@ fn main ( )
 //###############################################################################################//
 
 
-/// Finds all stars in the region from the star_tracker::tracking_mode::database::array_database::CATALOGUE_DATABASE database.
+/// Gets all the stars under a certain magnitude.
 ///
 /// # Arguments
-/// * `pos` - The position of the center of the camera, anything outside the database FOV is excluded.
+/// * `cutoff_mag` - The lowest brightness the stars can be.
 /// # Returns
 /// Any stars in the database surrounding "pos".
-pub fn get_stars ( pos : Equatorial ) -> Vec<Equatorial>
+pub fn get_stars ( cutoff_mag: Decimal ) -> Vec<Star>
 {
-	let mut stars : Vec<Equatorial> = Vec::new();
-	for i in 0..array_database::CATALOGUE_DATABASE.len()
+
+	let mut stars : Vec<Star> = Vec::new();
+	let mut rdr = Io::get_csv (
+		NixConstsStruct::HYG_DATABASE_PATH,
+		NixConstsStruct::HYG_DATABASE_FILE,
+		NixConstsStruct::HYG_DATABASE_URL );
+
+	let iter = rdr.deserialize();
+	for record in iter
 	{
-		let star = array_database::CATALOGUE_DATABASE[i];
-		if star.angle_distance(pos) < array_database::FOV / 2.0
+		let star : Star = record.expect("Could not decode.");
+		if star.mag < cutoff_mag
 		{
 			stars.push(star);
 		}
@@ -207,132 +346,26 @@ pub fn convert_constellation ( constellation : Constellation ) -> Vec<Match<Vect
 	return vec;
 }
 
-
-
-
-// / Creates an image from the given stars.
-// / # Arguments
-// / * `stars` - The stars to draw.
-// / # Returns
-// / An image with the stars inserted.
-// pub fn create_img ( center: Quaternion, stars: Vec<Equatorial> ) -> NixImage
-// {
-
-// }
-
-
 //###############################################################################################//
 //
 //										Error Creation
 //
 //###############################################################################################//
 
-
-
-/// Creates random noise to the position of each star.
-///
-/// # Arguments
-/// * `disrupt` - The stars to create noise.
-/// * `amount`  - 0 is not random, 1 is completely random.
-pub fn dither ( disrupt: &mut dyn List<Equatorial>, amount: Decimal )
+/// Generates a random direction.
+pub fn random_direction ( ) -> Equatorial
 {
 	let mut rng = rand::thread_rng();
-	for i in 0..disrupt.size()
-	{
-		let mut cart = disrupt.get(i).to_vector3();
-		cart.x += rng.gen::<Decimal>() * amount - amount / 2.0;
-		cart.y += rng.gen::<Decimal>() * amount - amount / 2.0;
-		cart.z += rng.gen::<Decimal>() * amount - amount / 2.0;
-		cart.normalize();
-		disrupt.set(i, cart.to_equatorial());
-	}
+	let mut axis = Equatorial{
+		ra:  Degrees(rng.gen::<Decimal>() * 360.0).to_radians(),
+		dec: Degrees(rng.gen::<Decimal>() * 180.0 - 90.0).to_radians()};
+
+	return axis;
 }
 
-
-
-/// Generates a random orientation to rotate the stars through.
-pub fn random_orientation ( ) -> Quaternion
+/// Random num.
+pub fn rand_num ( ) -> Decimal
 {
 	let mut rng = rand::thread_rng();
-	let angle = Degrees(rng.gen::<Decimal>() * 360.0).to_radians();
-	let mut axis = Vector3{
-		x: rng.gen::<Decimal>() - 0.5,
-		y: rng.gen::<Decimal>() - 0.5,
-		z: rng.gen::<Decimal>() - 0.5 };
-
-	axis.normalize();
-
-	let angle_axis = AngleAxis{angle: angle, axis: axis};
-	return angle_axis.to_quaternion();
-}
-
-
-/// Generates a random angle between start and end.
-pub fn random_angle ( start: Radians, end: Radians ) -> Radians
-{
-	let mut rng = rand::thread_rng();
-	return Radians(rng.gen::<Decimal>()) * (start - end) + start;
-}
-
-
-
-/// Rotates all points by a provided quaternion.
-///
-/// # Arguments
-/// * `rotate`   - The stars to rotate.
-/// * `rotation` - The rotation to apply to each point.
-pub fn rotate ( rotate: &mut dyn List<Equatorial>, rotation : Quaternion )
-{
-	for i in 0..rotate.size()
-	{
-		let mut cart = rotate.get(i).to_vector3();
-		cart = rotation.rotate_point(cart);
-		rotate.set(i, cart.to_equatorial());
-	}
-}
-
-
-
-/// Randomly creates false stars to mislead the program.
-/// This simulates noise, a hot pixel or a celestial object which should not be in the frame.
-///
-/// # Arguments
-/// * `add` - The list to add false stars to.
-/// * `pos` - The center of the image.
-/// * `num` - The number of stars to manufacture.
-pub fn false_stars ( add: &mut dyn List<Equatorial>, pos : Equatorial, num : u32 )
-{
-	let mut rng = rand::thread_rng();
-	for _i in 0..num
-	{
-		let mut star;
-		loop
-		{
-			star = Equatorial{
-			   ra:  Degrees(rng.gen::<Decimal>() * 360.0).to_radians(),
-			   dec: Degrees(rng.gen::<Decimal>() * 180.0 - 90.0).to_radians()};
-
-			if pos.angle_distance(star) < array_database::FOV / 2.0
-			{
-				add.push_back(star);
-				break;
-			}
-		}
-	}
-}
-
-
-/// Randomly removes stars from the image.
-/// The may be because of a stuck pixel or lack of sensitivity...
-///
-/// # Arguments
-/// * `remove` - The list to remove stars from.
-/// * `num`    - The number of stars to remove.
-pub fn hide_stars ( remove: &mut Vec<Equatorial>, num: u32 )
-{
-	let mut rng = rand::thread_rng();
-	for _i in 0..num
-	{
-		remove.remove(rng.gen_range(0..(remove.len() - 1)));
-	}
+	return rng.gen::<Decimal>();
 }

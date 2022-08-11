@@ -2,6 +2,7 @@
 use crate::util::aliases::Decimal;
 use crate::util::units::MatPos;
 use crate::util::units::Vector3;
+use crate::util::units::Quaternion;
 // use crate::util::err::{Error, Errors};
 use super::Matrix;
 
@@ -518,6 +519,77 @@ impl Matrix <4, 1>
 }
 
 
+
+//###############################################################################################//
+//							---	Convert to Quaternion Rotation ---
+//###############################################################################################//
+impl Matrix <3,3>
+{
+	/// Converts a rotation matrix to a quaternion.
+	/// Derived from [Unity](https://answers.unity.com/questions/467614/what-is-the-source-code-of-quaternionlookrotation.html).
+	/// # Example
+	/// ```
+	/// panic!("WIP");
+	/// ```
+	pub fn to_quaternion ( &self ) -> Quaternion
+	{
+		let trace : Decimal = self.trace();
+		if trace > 0.0
+		{
+			let mut num = Decimal::sqrt(trace + 1.0);
+			let w = num * 0.5;
+			num = 0.5 / num;
+			let x = (self.get(MatPos{row: 1, col: 2}) - self.get(MatPos{row: 2, col: 1})) * num;
+			let y = (self.get(MatPos{row: 2, col: 0}) - self.get(MatPos{row: 0, col: 2})) * num;
+			let z = (self.get(MatPos{row: 0, col: 1}) - self.get(MatPos{row: 1, col: 0})) * num;
+			return Quaternion{w: w, x: x, y: y, z: z};
+		}
+		if  self.get(MatPos{row: 0, col: 0}) >= self.get(MatPos{row: 1, col: 1})
+		 && self.get(MatPos{row: 0, col: 0}) >= self.get(MatPos{row: 2, col: 2})
+		{
+			let num7 = Decimal::sqrt(1.0 
+									+ self.get(MatPos{row: 0, col: 0}) 
+									- self.get(MatPos{row: 1, col: 1}) 
+									- self.get(MatPos{row: 2, col: 2}));
+			let num4 = 0.5 / num7;
+			
+			let w = (self.get(MatPos{row: 1, col: 2}) - self.get(MatPos{row: 2, col: 1})) * num4;
+			let x = (self.get(MatPos{row: 0, col: 1}) - self.get(MatPos{row: 1, col: 0})) * num4;
+			let y = (self.get(MatPos{row: 0, col: 2}) - self.get(MatPos{row: 2, col: 0})) * num4;
+			let z = (self.get(MatPos{row: 1, col: 2}) - self.get(MatPos{row: 2, col: 1})) * num4;
+			return Quaternion{w: w, x: x, y: y, z: z};
+		}
+		if self.get(MatPos{row: 1, col: 1}) > self.get(MatPos{row: 2, col: 2})
+		{
+			let num6 = Decimal::sqrt(1.0 
+				+ self.get(MatPos{row: 1, col: 1}) 
+				- self.get(MatPos{row: 0, col: 0}) 
+				- self.get(MatPos{row: 2, col: 2}));
+			
+			let num3 = 0.5 / num6;	
+			
+			let x = (self.get(MatPos{row: 1, col: 0}) - self.get(MatPos{row: 0, col: 1})) * num3;
+			let y = 0.5 * num6;
+			let z = (self.get(MatPos{row: 2, col: 1}) - self.get(MatPos{row: 1, col: 2})) * num3;
+			let w = (self.get(MatPos{row: 2, col: 0}) - self.get(MatPos{row: 0, col: 2})) * num3;
+			return Quaternion{w: w, x: x, y: y, z: z}; 
+		}
+	
+		let num5 = Decimal::sqrt(1.0 
+			+ self.get(MatPos{row: 2, col: 2}) 
+			- self.get(MatPos{row: 0, col: 0}) 
+			- self.get(MatPos{row: 1, col: 1}));
+			
+		let num2 = 0.5 / num5;	
+		
+		let x = (self.get(MatPos{row: 2, col: 0}) - self.get(MatPos{row: 0, col: 2})) * num2;
+		let y = (self.get(MatPos{row: 2, col: 1}) - self.get(MatPos{row: 1, col: 2})) * num2;
+		let z = 0.5 * num5;
+		let w = (self.get(MatPos{row: 0, col: 1}) - self.get(MatPos{row: 1, col: 0})) * num2;
+		return Quaternion{w: w, x: x, y: y, z: z}; 
+	}
+}
+
 // Pure rotation matrix.
 impl Matrix <3, 3>
 {
@@ -888,6 +960,7 @@ impl<const ROW: usize, const COLUMN: usize> PartialEq for Matrix<ROW, COLUMN> {
 #[cfg(test)]
 mod test
 {
+	use rand::prelude::*;
 	use util::aliases::Decimal;
 	use util::units::Matrix;
 	use util::units::MatPos;
@@ -1289,7 +1362,129 @@ mod test
 		mat4x1.set(MatPos{row: 3, col: 0}, 0.5);
 		assert_eq!(mat4x1.to_vector3(), Vector3{x: 2.0, y: 4.0, z: 6.0});
 	}
+	
+	
+	
+	
+	
+	
+	
+	
+	//
+	// fn to_quaternion ( ) -> Quaternion
+	// for: <3,3>
+	//
 
+	#[test] // Case 1: trace > 0
+	fn test_to_quaternion_case_1 ( )
+	{
+		let mut rng = rand::thread_rng();
+		let pt = Vector3{x: 0.1, y: 0.2, z: 0.3};
+		let mut rotation : Matrix<3,3> = Matrix::identity() * 11.0;
+		
+		for i in 0..100
+		{
+			rotation.set(MatPos{row: 0, col: 1}, rng.gen::<Decimal>() * 10.0 - 5.0);
+			rotation.set(MatPos{row: 0, col: 2}, rng.gen::<Decimal>() * 10.0 - 5.0);
+			
+			rotation.set(MatPos{row: 1, col: 0}, rng.gen::<Decimal>() * 10.0 - 5.0);
+			rotation.set(MatPos{row: 1, col: 2}, rng.gen::<Decimal>() * 10.0 - 5.0);
+			
+			rotation.set(MatPos{row: 2, col: 0}, rng.gen::<Decimal>() * 10.0 - 5.0);
+			rotation.set(MatPos{row: 2, col: 1}, rng.gen::<Decimal>() * 10.0 - 5.0);
+		
+			let q = rotation.to_quaternion();
+			assert_eq!(q.rotate_point(pt), rotation.multiply(pt));
+		}
+	}
+
+	#[test] // m00 >= m11 && m00 >= m22
+	fn test_to_quaternion_case_2 ( )
+	{
+		let mut rng = rand::thread_rng();
+		let pt = Vector3{x: 0.1, y: 0.2, z: 0.3};
+		let mut rotation : Matrix<3,3> = Matrix::new();
+		
+		for i in 0..100
+		{
+			rotation.set(MatPos{row: 0, col: 1}, rng.gen::<Decimal>() * 10.0 - 5.0);
+			rotation.set(MatPos{row: 0, col: 2}, rng.gen::<Decimal>() * 10.0 - 5.0);
+			
+			rotation.set(MatPos{row: 1, col: 0}, rng.gen::<Decimal>() * 10.0 - 5.0);
+			rotation.set(MatPos{row: 1, col: 1}, rng.gen::<Decimal>() * 10.0 - 5.0);
+			rotation.set(MatPos{row: 1, col: 2}, rng.gen::<Decimal>() * 10.0 - 5.0);
+			
+			rotation.set(MatPos{row: 2, col: 0}, rng.gen::<Decimal>() * 10.0 - 5.0);
+			rotation.set(MatPos{row: 2, col: 1}, rng.gen::<Decimal>() * 10.0 - 5.0);
+			rotation.set(MatPos{row: 2, col: 2}, rng.gen::<Decimal>() * 10.0 - 5.0);
+			
+			let m11 = rotation.get(MatPos{row: 1, col: 1});
+			let m22 = rotation.get(MatPos{row: 2, col: 2});
+			rotation.set(MatPos{row: 0, col: 0}, m11.abs() + m22.abs());
+			println!("{}", rotation);
+			
+			let q = rotation.to_quaternion();
+			assert_eq!(q.rotate_point(pt), rotation.multiply(pt));
+		}
+	}
+
+	#[test] // m11 > m22 && m11 > m00
+	fn test_to_quaternion_case_3 ( )
+	{
+		let mut rng = rand::thread_rng();
+		let pt = Vector3{x: 0.1, y: 0.2, z: 0.3};
+		let mut rotation : Matrix<3,3> = Matrix::new();
+		
+		for i in 0..100
+		{
+			rotation.set(MatPos{row: 0, col: 0}, rng.gen::<Decimal>() * 10.0 - 5.0);
+			rotation.set(MatPos{row: 0, col: 2}, rng.gen::<Decimal>() * 10.0 - 5.0);
+			rotation.set(MatPos{row: 0, col: 2}, rng.gen::<Decimal>() * 10.0 - 5.0);
+			
+			rotation.set(MatPos{row: 1, col: 0}, rng.gen::<Decimal>() * 10.0 - 5.0);
+			rotation.set(MatPos{row: 1, col: 2}, rng.gen::<Decimal>() * 10.0 - 5.0);
+			
+			rotation.set(MatPos{row: 2, col: 0}, rng.gen::<Decimal>() * 10.0 - 5.0);
+			rotation.set(MatPos{row: 2, col: 1}, rng.gen::<Decimal>() * 10.0 - 5.0);
+			rotation.set(MatPos{row: 2, col: 2}, rng.gen::<Decimal>() * 10.0 - 5.0);
+			
+			let m00 = rotation.get(MatPos{row: 0, col: 0});
+			let m22 = rotation.get(MatPos{row: 2, col: 2});
+			rotation.set(MatPos{row: 1, col: 1}, m00.abs() + m22.abs());
+			
+			let q = rotation.to_quaternion();
+			assert_eq!(q.rotate_point(pt), rotation.multiply(pt));
+		}
+	}
+
+	#[test] // m22 > m11 && m22 > m00
+	fn test_to_quaternion_case_4 ( )
+	{
+		let mut rng = rand::thread_rng();
+		let pt = Vector3{x: 0.1, y: 0.2, z: 0.3};
+		let mut rotation : Matrix<3,3> = Matrix::new();
+		
+		for i in 0..100
+		{
+			rotation.set(MatPos{row: 0, col: 1}, rng.gen::<Decimal>() * 10.0 - 5.0);
+			rotation.set(MatPos{row: 0, col: 2}, rng.gen::<Decimal>() * 10.0 - 5.0);
+			rotation.set(MatPos{row: 0, col: 3}, rng.gen::<Decimal>() * 10.0 - 5.0);
+			
+			rotation.set(MatPos{row: 1, col: 0}, rng.gen::<Decimal>() * 10.0 - 5.0);
+			rotation.set(MatPos{row: 1, col: 1}, rng.gen::<Decimal>() * 10.0 - 5.0);
+			rotation.set(MatPos{row: 1, col: 2}, rng.gen::<Decimal>() * 10.0 - 5.0);
+			
+			rotation.set(MatPos{row: 2, col: 0}, rng.gen::<Decimal>() * 10.0 - 5.0);
+			rotation.set(MatPos{row: 2, col: 2}, rng.gen::<Decimal>() * 10.0 - 5.0);
+			
+			let m00 = rotation.get(MatPos{row: 0, col: 0});
+			let m11 = rotation.get(MatPos{row: 1, col: 1});
+			rotation.set(MatPos{row: 2, col: 2}, m00.abs() + m11.abs());
+			
+			let q = rotation.to_quaternion();
+			assert_eq!(q.rotate_point(pt), rotation.multiply(pt));
+		}
+	}
 
 
 

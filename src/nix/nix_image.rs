@@ -3,8 +3,17 @@ use crate::nix::NixImage;
 use image::io::Reader as ImageReader;
 use image::{RgbImage, Rgb};
 use crate::util::aliases::Byte;
+use crate::util::aliases::Decimal;
 use crate::util::units::Pixel;
+use crate::util::units::Vector2;
+use crate::util::units::Vector3;
 use std::env;
+
+use projection::SpaceWorld;
+use projection::SpaceCamera;
+use projection::SpaceImage;
+use projection::IntrinsicParameters;
+use projection::ExtrinsicParameters;
 
 
 impl Image for NixImage
@@ -103,6 +112,75 @@ impl NixImage
 		{
 			self.img_rgb.put_pixel(xx, px.y as u32, Rgb{0:color});
 		}
+	}
+	
+	
+	/// Projects a star onto the image if possible.
+	/// Only draws the star if the star is within the bounds of the sensor.
+	/// Only works with a field of view of or less than 180 degrees.
+	/// 
+	/// # Arguments
+	/// * `star` - The star in world space to be projected.
+	/// * `size` - The radius of the star.
+	/// * `color`- The color.
+	/// * `intrinsic` - The properties of the lens.
+	/// * `extrinsic` - The camera rotation.
+	///
+	/// # Returns
+	/// True if at least part of the star is visible.
+	pub fn draw_star ( 
+		&mut self,
+		star:      SpaceWorld,
+		size:      Decimal,
+		color:     [u8;3],
+		intrinsic: IntrinsicParameters, 
+		extrinsic: ExtrinsicParameters  ) -> bool
+	{
+		let mut visible : bool = false;
+		let camera_space : SpaceCamera = extrinsic.to_image(star);
+		// Stops any objects projected behind the image from appearing on the image.
+		if 0.0 <= camera_space.0.dot(Vector3{x: 0.0, y: 0.0, z: 1.0})
+		{
+			let image_space : SpaceImage   = intrinsic.to_image(camera_space);
+			let center      : Vector2      = image_space.0;
+			let mut xx = center.x - size - 1.0;
+			while xx < center.x + size + 1.0
+			{
+				let mut yy = center.y - size - 1.0;
+				while yy < center.y + size + 1.0
+				{
+					let point : Vector2 = Vector2{x: xx.round(), y: yy.round()};
+					let dist : Decimal = (center - point).magnitude();
+					let x : i32 = point.x as i32;
+					let y : i32 = point.y as i32;
+					if 0 < x && x < self.img_rgb.width() as i32 && 
+					   0 < y && y < self.img_rgb.height() as i32 &&
+					   dist < size
+					{
+						// need to check that the image is getting brighter.
+						let prev_color = self.img_rgb.get_pixel(x as u32, y as u32);
+						let prev_intens = (prev_color[0] as Decimal + 
+										  prev_color[1] as Decimal + 
+										  prev_color[2] as Decimal) / 255.0;
+						let curr_intens = (color[0] as Decimal + 
+										   color[1] as Decimal + 
+										   color[2] as Decimal) * (size - dist)/size / 255.0;
+						if prev_intens < curr_intens
+						{
+							let c=[
+								(color[0] as Decimal * curr_intens) as u8,
+								(color[1] as Decimal * curr_intens) as u8,
+								(color[2] as Decimal * curr_intens) as u8];
+							self.img_rgb.put_pixel(x as u32, y as u32, Rgb{0:c});
+						}
+						visible = true;
+					}
+					yy+=1.0;
+				}
+				xx+=1.0;
+			}
+		}
+		return visible;
 	}
 
 
