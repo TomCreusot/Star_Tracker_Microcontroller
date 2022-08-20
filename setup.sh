@@ -50,7 +50,7 @@ rustup default nightly-2021-08-20-x86_64-unknown-linux-gnu
 
 printf ${HEADER}"\n \n \n \n ---------- CONSTRUCTING DATABASE ---------\n\n"${BODY}
 # Creates database
-cargo build --bin database_generator --features "setup"
+cargo run --bin database_generator --features "setup"
 
 
 

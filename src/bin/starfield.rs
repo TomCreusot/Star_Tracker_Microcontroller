@@ -2,7 +2,7 @@ extern crate star_tracker;
 
 use star_tracker::nix::Star;
 use star_tracker::nix::NixImage;
-use star_tracker::nix::Color;
+// use star_tracker::nix::Color;
 use star_tracker::image_processing::Image;
 use star_tracker::util::aliases::Decimal;
 use star_tracker::util::units::Pixel;
@@ -42,7 +42,8 @@ fn main ( )
 
 	// Extrinsic Parameters
 	let cutoff_mag : Decimal     = 4.0;
-	let dir        : Equatorial  = Equatorial{ra: Degrees(90.0).to_radians(), dec: Degrees(-16.0).to_radians()};
+	// let dir        : Equatorial  = Equatorial{ra: Degrees(90.0).to_radians(), dec: Degrees(-16.0).to_radians()};
+	let dir        : Equatorial  = Equatorial{ra: Degrees(180.0).to_radians(), dec: Degrees(50.0).to_radians()};
 
 	// Intrinsic Parameters
 	let fov = Degrees(90.0).to_radians();
@@ -62,7 +63,7 @@ fn main ( )
 		{
 			let size = cutoff_mag - star.mag;
 			let red = 150_u8.saturating_add((star.mag * 10.0) as u8);
-			img.draw_star(point, size, [red, 50, 255], intrinsic, extrinsic);
+			img.draw_star(point, size + 3.0, [red, 50, 255], intrinsic, extrinsic);
 		}
 	}
 

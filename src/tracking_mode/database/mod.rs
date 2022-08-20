@@ -93,6 +93,21 @@ mod star_database_element;
 #[cfg(not(feature = "setup"))]
 pub mod array_database;
 pub mod pyramid_database;
+pub mod database_generator;
+
+/// Tool to help construct and analyse the database.
+pub struct DatabaseGenerator
+{
+	// The pyramid database can only hold statics.
+	pub k_vector  : Vec<usize>,
+	// The pyramid database can only hold statics.
+	pub pairs     : Vec<StarPair<usize>>,
+	// The pyramid database can only hold statics.
+	pub catalogue : Vec<Equatorial>,
+
+	fov : Radians,
+	k_lookup: KVector,
+}
 
 /// The database equation which points to the star pair database.
 ///
@@ -146,24 +161,35 @@ pub struct StarDatabaseElement
 
 
 /// The compiled k-vector database, this will allow the construction of the database and the lookup of elements in the database.
-pub struct PyramidDatabase
+#[derive(Clone, Copy)]
+pub struct PyramidDatabase <'a>
 {
 	pub fov:       Radians,
 	pub k_lookup:  KVector,
-	// pub k_vector:  &'static [usize],
-	// pub pairs:     &'static [StarPair<usize>],
-	// pub catalogue: &'static [Equatorial],
-	pub k_vector:  &'static dyn LinearLookup<usize>,
-	pub pairs:     &'static dyn LinearLookup<StarPair<usize>>,
-	pub catalogue: &'static dyn LinearLookup<Equatorial>,
+	pub k_vector:  &'a dyn LinearLookup<usize>,
+	pub pairs:     &'a dyn LinearLookup<StarPair<usize>>,
+	pub catalogue: &'a dyn LinearLookup<Equatorial>,
 }
+
+// 
+// pub struct DatabaseRegion
+// {
+// 	database: Database,
+// 	region:
+// }
+//
+//
+// pub struct RegionalDatabase <'a>
+// {
+// 	databases: LinearLookup<PyramidDatabase>,
+// }
 
 
 #[automock]
 pub trait Database
 {
-	fn find_close_ref ( &self, find : Radians, tolerance: Radians, 
+	fn find_close_ref ( &self, find : Radians, tolerance: Radians,
 														found : &mut dyn List<StarPair<usize>> );
 	fn find_star ( &self, index: usize ) -> Error<Equatorial>;
-	fn trim_range ( &self, find: Radians, tolerance: Radians, range: Range<usize> )-> Range<usize>;
+	// fn trim_range ( &self, find: Radians, tolerance: Radians, range: Range<usize> )-> Range<usize>;
 }

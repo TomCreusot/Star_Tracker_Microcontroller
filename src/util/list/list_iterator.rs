@@ -1,5 +1,5 @@
-//! Due to limitations with lifeimes and types, the default ToIterator trait cannot be used.
-//! Instead the iterator staticaly creates a new iterator from an input list.
+//! Due to limitations with lifetimes and types, the default ToIterator trait cannot be used.
+//! Instead the iterator statically creates a new iterator from an input list.
 use super::{List, ListIterator};
 use std::iter::Iterator;
 

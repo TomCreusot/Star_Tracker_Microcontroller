@@ -140,52 +140,53 @@ impl Equatorial
 	/// This uses the fibinachi golden ratio algorithm.
 	///
 	/// # Arguments
-	/// * `points` - The array to apply points to.
+	/// * `num_points` - The number of points on the sphere.
 	/// # Example
 	/// ```
 	/// use star_tracker::util::aliases::M_PI;
 	/// use star_tracker::util::units::{Radians, Equatorial};
 	/// use star_tracker::util::aliases::Decimal;
-	/// const N : usize = 100;
-	/// let variance = 0.1;
-	/// let mut eq : [Equatorial; N] = [Equatorial{ra: Radians(0.0), dec: Radians(0.0)}; N];
-	/// Equatorial::evenly_distribute(&mut eq);
-	///
-	/// let mut compare : Option<Decimal> = None;
-	/// for e in eq.iter()
-	/// {
-	/// 	let mut current = 0.0;
-	/// 	for ee in eq.iter()
-	/// 	{
-	/// 		current += ee.angle_distance(*e).0;
-	/// 	}
-	///
-	/// 	if compare == None
-	/// 	{
-	/// 		compare = Some(current);
-	/// 	}
-	/// 	else if variance < (current - compare.unwrap()).abs()
-	/// 	{
-	/// 		panic!("Variance too high: {}", current - compare.unwrap());
-	/// 	}
-	/// }
+	/// let points = Equatorial::evenly_distribute_points(Radians(10.0));
+	/// let mut eq : Vec<Equatorial> = Equatorial::evenly_distribute(points);
 	/// ```
-	pub fn evenly_distribute ( points : &mut [Equatorial] )
+	pub fn evenly_distribute ( num_points : usize ) -> Vec<Equatorial>
 	{
+		let mut output : Vec<Equatorial> = Vec::with_capacity(num_points);
 		let golden_ratio = (1.0 + (5.0 as Decimal).powf(0.5)) / 2.0;
 
-		for i in 0..points.len()
+		for i in 0..num_points
 		{
 			let mut theta = 2.0 * M_PI * (i as Decimal) / golden_ratio;
-			let phi = (1.0 - 2.0 * (i as Decimal + 0.5) / points.len() as Decimal).acos();
+			let phi = (1.0 - 2.0 * (i as Decimal + 0.5) / num_points as Decimal).acos();
 
 			theta = theta % (Equatorial::range_ra().end().0);
 
 			let mut val = Equatorial{ra: Radians(theta), dec: Radians(0.0)};
 			val.set_phi(Radians(phi));
-			points[i] = val;
+			output.push(val);
 		}
-
+		return output
+	}
+	
+	/// Returns the separation between neighboring points of the `evenly_distribute` function.
+	/// This is not perfectly accurate, give some tolerance when using this.
+	/// # Arguments
+	/// * `number_of_points` - The number of points to insert on the sphere.
+	/// # Asserts
+	/// The `number_of_points` must be above 100 points as bellow this is less accurate.
+	pub fn evenly_distribute_angle ( number_of_points: usize ) -> Radians
+	{
+		assert!(99 < number_of_points, "This model is inaccurate below 100 points.");
+		return Radians(3.3255 * (number_of_points as Decimal).powf(-0.4974));
+	}
+	
+	/// Returns the number of points required to get a particular angle using `evenly_distribute`.
+	/// This is not perfectly accurate, give some tolerance when using this.
+	/// # Arguments
+	/// * `angle_distance` - The distance each neighbor needs to be apart.
+	pub fn evenly_distribute_points ( angle_distance: Radians ) -> usize
+	{
+		return (11.2019 * angle_distance.0.powf(-2.0104)) as usize;
 	}
 }
 
@@ -236,7 +237,7 @@ mod test
 
 	use rand::prelude::*;
 
-	use util::units::{Equatorial, Vector3, Radians};
+	use util::units::{Equatorial, Vector3, Radians, Degrees};
 	use util::aliases::Decimal;
 	use util::aliases::M_PI;
 	use util::test::TestEqual;
@@ -490,9 +491,8 @@ mod test
 	#[test]
 	fn test_evenly_distribute_not_enough_elements ( )
 	{	// Should not panic!
-		const N : usize = 0;
-		let mut eq : [Equatorial; N] = [Equatorial{ra: Radians(0.0), dec: Radians(0.0)}; N];
-		Equatorial::evenly_distribute(&mut eq);
+		let n = 0;
+		let _eq : Vec<Equatorial> = Equatorial::evenly_distribute(n);
 	}
 
 	#[test]
@@ -508,9 +508,8 @@ mod test
 		e.set_phi(Radians(M_PI));
 
 		println!("phi 180: {}", e.dec);
-		const N : usize = 1000;
-		let mut eq : [Equatorial; N] = [Equatorial{ra: Radians(0.0), dec: Radians(0.0)}; N];
-		Equatorial::evenly_distribute(&mut eq);
+		let n : usize = 1000;
+		let eq : Vec<Equatorial> = Equatorial::evenly_distribute(n);
 
 		let range_ra = Equatorial::range_ra();
 		let range_dec = Equatorial::range_dec();
@@ -542,10 +541,9 @@ mod test
 	#[test]
 	fn test_evenly_distribute_evenly_distributed ( )
 	{	// Each element should not vary in distance by a small number
-		const N : usize = 100;
+		let n : usize = 100;
 		let variance = 0.1;
-		let mut eq : [Equatorial; N] = [Equatorial{ra: Radians(0.0), dec: Radians(0.0)}; N];
-		Equatorial::evenly_distribute(&mut eq);
+		let eq : Vec<Equatorial> = Equatorial::evenly_distribute(n);
 
 		let mut compare : Option<Decimal> = None;
 		for e in eq.iter()
@@ -566,4 +564,47 @@ mod test
 			}
 		}
 	}
+	
+	
+	#[test]
+	fn test_evenly_distribute_angle ( )
+	{
+		let method = Equatorial::evenly_distribute_angle;
+		assert!((method(100)   - Degrees(19.284).to_radians()).abs() < 1.0 );
+		assert!((method(125)   - Degrees(17.164).to_radians()).abs() < 1.0 );
+		assert!((method(250)   - Degrees(12.276).to_radians()).abs() < 0.1 );
+		assert!((method(500)   - Degrees( 8.734).to_radians()).abs() < 0.1 );
+		assert!((method(1000)  - Degrees( 6.111).to_radians()).abs() < 0.1 );
+		assert!((method(2000)  - Degrees( 4.343).to_radians()).abs() < 0.1 );
+		assert!((method(4000)  - Degrees( 3.108).to_radians()).abs() < 0.1 );
+		assert!((method(8000)  - Degrees( 2.18 ).to_radians()).abs() < 0.1 );
+		assert!((method(10000) - Degrees( 1.971).to_radians()).abs() < 0.1 );
+	}
+	
+	#[test]
+	#[should_panic]
+	fn test_evenly_distribute_angle_panic ( )
+	{
+		Equatorial::evenly_distribute_angle(99);
+	}
+	
+	
+	#[test]
+	fn test_evenly_distribute_angle_points ( )
+	{
+		let method = Equatorial::evenly_distribute_points;
+		assert!(method(Degrees(19.284).to_radians()).saturating_sub(100) < 15);
+		assert!(method(Degrees(17.164).to_radians()).saturating_sub(125) < 15);
+		assert!(method(Degrees(12.276).to_radians()).saturating_sub(250) < 15);
+		assert!(method(Degrees( 8.734).to_radians()).saturating_sub(500) < 15);
+		assert!(method(Degrees( 6.111).to_radians()).saturating_sub(1000) < 15);
+		assert!(method(Degrees( 4.343).to_radians()).saturating_sub(2000) < 15);
+		assert!(method(Degrees( 3.108).to_radians()).saturating_sub(4000) < 15);
+		assert!(method(Degrees( 2.180).to_radians()).saturating_sub(8000) < 15);
+		assert!(method(Degrees( 1.971).to_radians()).saturating_sub(10000) < 15);
+	}
+	// Numbers used for golden circle calibration.
+	// 1.533 1.039 0.666 0.471 0.336 0.3 0.214 0.1524 0.107 0.076 0.054 0.038 0.034
+	// 5 10 25 50 100 125 250 500 1000 2000 4000 8000 10000
+	
 }

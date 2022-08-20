@@ -13,7 +13,7 @@ use crate::tracking_mode::database::PyramidDatabase;
 use crate::tracking_mode::StarPair;
 
 // This is here instead of pyramid_database.rs to fix dependancy issues.
-impl PyramidDatabase
+impl <'a> PyramidDatabase <'a>
 {
 	/// Constructs a new pyramid database using the pregenerated databases (run database_generator).
 	pub fn new ( ) -> Self

@@ -39,12 +39,13 @@ impl <const N: usize> TriangleConstruct for StarTriangleIterator<N>
 			let b = self.pair_b.get(self.index_b);
 			let c = self.pair_c.get(self.index_c);
 			let triangle = StarTriangle::construct_triangle(a, b, c);
-			
+
 			if triangle.is_some()
 			{
 				tries = Some(Match{input: self.input, output: triangle.unwrap(), weight: 1.0});
 				break '_outer; // Rust implementation of a do while loop.
 			}
+			// println!("NEXT");
 		}
 		return tries;
 	}
@@ -77,7 +78,7 @@ impl <const N: usize> TriangleConstruct for StarTriangleIterator<N>
 		self.pair_a.clear();
 		self.pair_b.clear();
 		self.pair_c.clear();
-		self.indexing = false;			
+		self.indexing = false;
 		self.index_a = 0;
 		self.index_b = 0;
 		self.index_c = 0;
@@ -103,7 +104,7 @@ impl<const N: usize> StarTriangleIterator<N>
 			pair_a: ArrayList::new(),
 			pair_b: ArrayList::new(),
 			pair_c: ArrayList::new(),
-			indexing: false,			
+			indexing: false,
 			index_a: 0,
 			index_b: 0,
 			index_c: 0,
@@ -111,12 +112,14 @@ impl<const N: usize> StarTriangleIterator<N>
 			angle_tolerance: Radians(0.0),
 		};
 	}
-	
+
 	/// Steps the index of a, b and c to get a new value.
 	/// # Returns
 	/// False if the sequence ended.
 	fn step ( &mut self ) -> bool
 	{
+		// println!("  STEP");
+		// If new kernal was made, the values must be reset.
 		if !self.indexing
 		{
 			self.index_a = 0;
@@ -125,7 +128,7 @@ impl<const N: usize> StarTriangleIterator<N>
 			self.indexing = true;
 			return 0 < self.pair_a.size() && 0 < self.pair_b.size() && 0 < self.pair_c.size();
 		}
-		
+
 		if self.index_a < self.pair_a.size() - 1
 		{
 			self.index_a += 1;
@@ -133,7 +136,7 @@ impl<const N: usize> StarTriangleIterator<N>
 		else
 		{
 			self.index_a = 0;
-	
+
 			if self.index_b < self.pair_b.size() - 1
 			{
 				self.index_b += 1;
@@ -141,7 +144,7 @@ impl<const N: usize> StarTriangleIterator<N>
 			else
 			{
 				self.index_b = 0;
-				
+
 				if self.index_c < self.pair_c.size() - 1
 				{
 					self.index_c += 1;
@@ -153,11 +156,11 @@ impl<const N: usize> StarTriangleIterator<N>
 			}
 		}
 		return true;
-	}	
-	
-	
-	
-	
+	}
+
+
+
+
 	/// Iterates the kernel and searches the database.
 	/// # Arguments
 	/// * `stars` - The stars in the image.
@@ -169,22 +172,26 @@ impl<const N: usize> StarTriangleIterator<N>
 			return false;
 		}
 		self.indexing = false;
-		
+
 		// Ensures input is set.
 		self.input = StarTriangle(self.kernel.i, self.kernel.j, self.kernel.k);
-		
+
 		// The angular distance between observed stars.
 		let side_a = stars.get(self.kernel.i).angle_distance(stars.get(self.kernel.j)); // i, j
 		let side_b = stars.get(self.kernel.i).angle_distance(stars.get(self.kernel.k)); // i, k
 		let side_c = stars.get(self.kernel.j).angle_distance(stars.get(self.kernel.k)); // j, k
-		
+
+		self.pair_a.clear();
+		self.pair_b.clear();
+		self.pair_c.clear();
+
 		// Search the database for each side.
 		database.find_close_ref(side_a, self.angle_tolerance, &mut self.pair_a);
 		database.find_close_ref(side_b, self.angle_tolerance, &mut self.pair_b);
 		database.find_close_ref(side_c, self.angle_tolerance, &mut self.pair_c);
 		return true;
 	}
-	
+
 }
 
 
@@ -211,11 +218,11 @@ mod test
 	use crate::tracking_mode::StarPair;
 	use crate::tracking_mode::Match;
 	use crate::tracking_mode::database::MockDatabase;
-	
+
 	use crate::util::units::Equatorial;
 	use crate::util::units::Radians;
 	use crate::util::list::List;
-	
+
 //###############################################################################################//
 //
 //										New
@@ -242,10 +249,10 @@ mod test
 		assert_eq!(NUM_MATCH, iterator.pair_b.capacity());
 		assert_eq!(NUM_MATCH, iterator.pair_c.capacity());
 	}
-	
-	
-	
-	
+
+
+
+
 //###############################################################################################//
 //
 //										Next Match
@@ -256,7 +263,7 @@ mod test
 //###############################################################################################//
 
 	#[test]
-	// If the kernel cannot progress (due to no stars), none is returned, 
+	// If the kernel cannot progress (due to no stars), none is returned,
 	fn test_next_no_stars ( )
 	{
 		let stars : Vec<Equatorial> = Vec::new();
@@ -264,10 +271,10 @@ mod test
 		const NUM_MATCH : usize = 4;
 		let mut iterator: StarTriangleIterator<NUM_MATCH> = StarTriangleIterator::new();
 		iterator.begin(angle, &stars);
-		
+
 		let mut database = MockDatabase::new();
 		database.expect_find_close_ref().times(0);
-		
+
 		assert_eq!(None, iterator.next(&stars, &database));
 	}
 
@@ -286,17 +293,17 @@ mod test
 		const NUM_MATCH : usize = 4;
 		let mut iterator: StarTriangleIterator<NUM_MATCH> = StarTriangleIterator::new();
 		iterator.begin(angle, &stars);
-		
+
 		let mut database = MockDatabase::new();
 		database.expect_find_close_ref().times(3 * 4).returning(|_,_,_| ());
-		
+
 		// Should loop until finished
 		assert_eq!(None, iterator.next(&stars, &database));
 	}
 
 
 	#[test]
-	// If the kernel cannot progress, none is returned, 
+	// If the kernel cannot progress, none is returned,
 	fn test_next ( )
 	{
 		let mut stars : Vec<Equatorial> = Vec::new();
@@ -309,23 +316,23 @@ mod test
 		const NUM_MATCH : usize = 4;
 		let mut iterator: StarTriangleIterator<NUM_MATCH> = StarTriangleIterator::new();
 		iterator.begin(angle, &stars);
-		
+
 		// Triangles:
 		// 0, 1, 2
 		// 0, 2, 3
 		// 0, 2, 4
-		let outputs = 
+		let outputs =
 		[
 			StarPair(100, 101),
 			StarPair(0, 1),
 			StarPair(0, 2),
 			StarPair(0, 0),
-			
+
 			StarPair(1, 2),
 			StarPair(102, 103),
 			StarPair(2, 3),
 			StarPair(2, 4),
-			
+
 			StarPair(2, 0),
 			StarPair(3, 0),
 			StarPair(0, 4),
@@ -336,17 +343,17 @@ mod test
 		database.expect_find_close_ref().times(3)
 			.returning(move |_, _, found|
 				{
-					found.push_back(outputs[index]); 
+					found.push_back(outputs[index]);
 					index += 1;
-					found.push_back(outputs[index]); 
+					found.push_back(outputs[index]);
 					index += 1;
-					found.push_back(outputs[index]); 
+					found.push_back(outputs[index]);
 					index += 1;
-					found.push_back(outputs[index]); 
+					found.push_back(outputs[index]);
 					index += 1;
 				}
 			);
-		
+
 		let mut actual = iterator.next(&stars, &database);
 		let mut expect = Match{input:StarTriangle(0,1,2),output: StarTriangle(1,0,2), weight: 1.0};
 		assert!(iterator.indexing);
@@ -368,21 +375,21 @@ mod test
 		assert_eq!(StarPair(104, 105), iterator.pair_c.get(3));
 		assert_eq!((1, 0, 0), (iterator.index_a, iterator.index_b, iterator.index_c));
 		assert_eq!(Some(expect), actual);
-		
+
 		actual = iterator.next(&stars, &database);
 		expect = Match{input:StarTriangle(0, 1, 2),output: StarTriangle(2, 0, 3),weight:1.0};
 		assert_eq!(Some(expect), actual);
-		
+
 		actual = iterator.next(&stars, &database);
 		expect = Match{input:StarTriangle(0, 1, 2),output: StarTriangle(2, 0, 4),weight: 1.0};
 		assert_eq!(Some(expect), actual);
-		
-		
+
+
 		iterator.kernel.size = 0;
 		actual = iterator.next(&stars, &database);
 		assert_eq!(None, actual);
-		
-		
+
+
 		let outputs_2 = [StarPair(0,1), StarPair(1,2), StarPair(2,0)];
 		iterator.kernel = KernelIterator::new(outputs_2.len());
 		index = 0;
@@ -394,12 +401,12 @@ mod test
 					index+=1;
 				}
 			);
-			
-		
+
+
 		actual = iterator.next(&stars, &database);
 		expect = Match{input:StarTriangle(0, 1, 2),output: StarTriangle(1, 0, 2),weight: 1.0};
 		assert_eq!(Some(expect), actual);
-			
+
 	}
 
 
@@ -425,7 +432,7 @@ mod test
 		const NUM_MATCH : usize = 4;
 		let mut iterator: StarTriangleIterator<NUM_MATCH> = StarTriangleIterator::new();
 		iterator.begin(angle, &stars);
-		
+
 		check::<NUM_MATCH>(&mut iterator); 				// a: 0, b: 0, c: 0
 		iterator.pair_a.push_back(StarPair(0,0));
 		check::<NUM_MATCH>(&mut iterator);				// a: 1, b: 0, c: 0
@@ -439,7 +446,7 @@ mod test
 		check::<NUM_MATCH>(&mut iterator); 				// a: 0, b: 0, c: 1
 		iterator.pair_a.push_back(StarPair(0,0));
 		check::<NUM_MATCH>(&mut iterator); 				// a: 1, b: 0, c: 1
-		
+
 		fn check <const N : usize> ( iter: &mut StarTriangleIterator<N> )
 		{
 			iter.indexing = false;
@@ -448,7 +455,7 @@ mod test
 			assert_eq!(0, iter.index_a);
 			assert_eq!(0, iter.index_b);
 			assert_eq!(0, iter.index_c);
-		}	
+		}
 	}
 
 
@@ -464,17 +471,17 @@ mod test
 		const NUM_MATCH : usize = 4;
 		let mut iterator: StarTriangleIterator<NUM_MATCH> = StarTriangleIterator::new();
 		iterator.begin(angle, &stars);
-		
+
 		iterator.pair_a.push_back(StarPair(0,0)).expect("");
 		iterator.pair_a.push_back(StarPair(0,1)).expect("");
-		
+
 		iterator.pair_b.push_back(StarPair(1,0)).expect("");
-		
+
 		iterator.pair_c.push_back(StarPair(2,0)).expect("");
 		iterator.pair_c.push_back(StarPair(2,1)).expect("");
 		iterator.pair_c.push_back(StarPair(2,2)).expect("");
 		iterator.pair_c.push_back(StarPair(2,3)).expect("");
-		
+
 		assert!(iterator.step());
 		assert_eq!((0, 0, 0), (iterator.index_a, iterator.index_b, iterator.index_c));
 		assert!(iterator.step());
@@ -511,10 +518,10 @@ mod test
 		const NUM_MATCH : usize = 0;
 		let mut iterator: StarTriangleIterator<NUM_MATCH> = StarTriangleIterator::new();
 		iterator.begin(angle, &stars);
-		
+
 		let mut database = MockDatabase::new();
 		database.expect_find_close_ref().times(0);
-		
+
 		assert!(!iterator.prep_new_kernel(&stars, &database));
 	}
 
@@ -539,12 +546,12 @@ mod test
 		const NUM_MATCH : usize = 4;
 		let mut iterator: StarTriangleIterator<NUM_MATCH> = StarTriangleIterator::new();
 		iterator.begin(angle, &stars);
-		
+
 		let mut database = MockDatabase::new();
 		database.expect_find_close_ref().times(3)
 			.returning(|angle, _, found| found.push_back(StarPair(0, angle.0 as usize)).expect(""))
 			.withf(|_, tolerance, _| return *tolerance == Radians(0.123) );
-		
+
 		assert!(iterator.prep_new_kernel(&stars, &database));
 		assert!(!iterator.indexing);
 		assert_eq!(iterator.kernel.i, iterator.input.0);
@@ -552,7 +559,7 @@ mod test
 		assert_eq!(iterator.kernel.k, iterator.input.2);
 		assert_eq!(StarPair(0, 0),iterator.pair_a.get(0)); // (0,0) to (0,1)
 		assert_eq!(StarPair(0, 2),iterator.pair_b.get(0)); // (0,0) to (0,2)
-		assert_eq!(StarPair(0, 1),iterator.pair_c.get(0)); // (0,1) to (0,2) 
+		assert_eq!(StarPair(0, 1),iterator.pair_c.get(0)); // (0,1) to (0,2)
 	}
 
 
@@ -560,5 +567,5 @@ mod test
 
 
 
-	
+
 }

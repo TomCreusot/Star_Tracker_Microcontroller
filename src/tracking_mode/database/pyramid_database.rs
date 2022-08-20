@@ -17,14 +17,14 @@ use crate::util::err::Error;
 // To modify, go to template.txt, modify it and run database_generator.rs.
 
 
-impl Database for PyramidDatabase
+impl <'a> Database for PyramidDatabase <'a>
 {
 	/// Finds close matches to the provided angular separation and returns the star pair reference.
 	/// The an element of the star pair reference can be inserted into `find_star` to get the actual location.
 	/// # Arguments
 	/// * `find` - The angular separation between the found stars to find in the database.
 	/// * `found` - The closest matches to the provided `find`.
-	fn find_close_ref ( &self, find : Radians, tolerance: Radians, 
+	fn find_close_ref ( &self, find : Radians, tolerance: Radians,
 														found : &mut dyn List<StarPair<usize>> )
 	{
 		let range_k_vec_wrapped = self.k_lookup.get_bins(find, tolerance);
@@ -35,7 +35,7 @@ impl Database for PyramidDatabase
 			if self.k_vector.size() <= end_range
 			{
 				end_range -= 1; // sometimes the upper value is stored in the bin above.
-			} 
+			}
 			let mut range = self.k_vector.get(range_k_vec.start)..self.k_vector.get(end_range);
 			range = self.trim_range(find, tolerance, range);
 
@@ -48,12 +48,12 @@ impl Database for PyramidDatabase
 			}
 		}
 	}
-	
+
 	/// Finds the star with the provided index from the star pair database.
 	/// # Arguments
 	/// * `index` - The index of the star in the catalogue database.
 	/// # Returns
-	/// The actual position (usualy J2000).
+	/// The actual position (usually J2000).
 	fn find_star ( &self, index: usize ) -> Error<Equatorial>
 	{
 		if index < self.catalogue.size()
@@ -62,9 +62,11 @@ impl Database for PyramidDatabase
 		}
 		return Err(Errors::OutOfBounds);
 	}
+}
 
-	
-	
+
+impl <'a> PyramidDatabase <'a>
+{
 	/// Trims the range provided by the k-vector so that every value is within the tolerance.
 	/// # Arguments
 	/// * `find`      - The center point of the tolerance.
@@ -76,7 +78,7 @@ impl Database for PyramidDatabase
 	{
 		let mut start =if range.start < self.pairs.size() { range.start }else{self.pairs.size()-1};
 		let mut end   =if range.end   < self.pairs.size() { range.end   }else{self.pairs.size()};
-		
+
 		// lower bounds
 		loop
 		{
@@ -86,10 +88,10 @@ impl Database for PyramidDatabase
 			{
 				break;
 			}
-			
+
 			start += 1;
 		}
-		
+
 		// upper bounds
 		loop
 		{
@@ -100,14 +102,11 @@ impl Database for PyramidDatabase
 			}
 			end -= 1;
 		}
-		
+
 		return Range{start: start, end: end};
 	}
-}
-		
 
-impl PyramidDatabase		
-{
+
 	/// Finds the angular distance between a star pair referencing the catalogue.
 	/// # Arguments
 	/// * `pair` - The pair to find the distance from.
@@ -142,7 +141,7 @@ impl PyramidDatabase
 mod test
 {
 	// use std::ops::Range;
-	
+
 	use crate::tracking_mode::StarPair;
 	// use crate::tracking_mode::database::MockKVectorSearch;
 	use crate::tracking_mode::database::PyramidDatabase;
@@ -157,7 +156,7 @@ mod test
 	use crate::util::err::Errors;
 	// use crate::util::err::Error;
 	use crate::util::aliases::DECIMAL_PRECISION;
-	
+
 
 	static DEFAULT_K_VECTOR_BIN : [usize;5]          = [0, 2, 4, 5, 9];
 	static DEFAULT_PAIRS: [StarPair<usize>; 9] = [
@@ -171,7 +170,7 @@ mod test
 		StarPair(0, 7),
 		StarPair(0, 8),
 	];
-	static DEFAULT_CATALOGUE : [Equatorial;9] = 
+	static DEFAULT_CATALOGUE : [Equatorial;9] =
 	[
 		Equatorial{ra: Radians(0.0), dec: Radians(0.0)},
 		Equatorial{ra: Radians(0.1), dec: Radians(0.0)},
@@ -183,11 +182,11 @@ mod test
 		Equatorial{ra: Radians(0.7), dec: Radians(0.0)},
 		Equatorial{ra: Radians(0.8), dec: Radians(0.0)},
 	];
-		
+
 	// Uses the above values to create a database.
-	fn create_database ( ) -> PyramidDatabase
+	fn create_database ( ) -> PyramidDatabase<'static>
 	{
-		let k_vector = KVector::new(DEFAULT_K_VECTOR_BIN.len(), 0.0, 0.8);	
+		let k_vector = KVector::new(DEFAULT_K_VECTOR_BIN.len(), 0.0, 0.8);
 		return PyramidDatabase
 		{
 			fov: DEFAULT_CATALOGUE[8].angle_distance(DEFAULT_CATALOGUE[0]),
@@ -203,7 +202,7 @@ mod test
 //
 //										Find Close Ref
 //
-// fn find_close_ref ( 
+// fn find_close_ref (
 // 			&self, find : Radians, tolerance: Radians, found : &mut dyn List<StarPair<usize>> )
 //
 //###############################################################################################//
@@ -213,12 +212,12 @@ mod test
 fn test_find_close_ref_invalid_angle ( )
 {
 	let database = create_database();
-	
+
 	let find      = Radians(0.9);
 	let tolerance = Radians(0.01);
 	let mut found : Vec<StarPair<usize>> = Vec::new();
 	database.find_close_ref(find, tolerance, &mut found);
-	
+
 	assert_eq!(found.size(), 0);
 }
 
@@ -228,12 +227,12 @@ fn test_find_close_ref_invalid_angle ( )
 fn test_find_close_ref_too_small ( )
 {
 	let database = create_database();
-	
+
 	let find      = Radians(0.0);
 	let tolerance = Radians(10.0);
 	let mut found : ArrayList<StarPair<usize>, 2> = ArrayList::new();
 	database.find_close_ref(find, tolerance, &mut found);
-	
+
 	assert_eq!(2, found.size());
 	assert_eq!(StarPair(0, 0),found.get(0));
 	assert_eq!(StarPair(0, 1),found.get(1));
@@ -245,14 +244,14 @@ fn test_find_close_ref_too_small ( )
 fn test_find_close_ref_valid ( )
 {
 	let database = create_database();
-	
+
 	let mut find      = Radians(0.1);
 	let mut tolerance = Radians(0.01);
 	let mut found : ArrayList<StarPair<usize>, 10> = ArrayList::new();
 	database.find_close_ref(find, tolerance, &mut found);
 	assert_eq!(1, found.size());
 	assert_eq!(StarPair(0, 1), found.get(0));
-	
+
 	find      = Radians(0.1);
 	tolerance = Radians(0.1 + DECIMAL_PRECISION);
 	found = ArrayList::new();
@@ -270,15 +269,15 @@ fn test_find_close_ref_valid ( )
 	assert_eq!(StarPair(0, 6), found.get(0));
 	assert_eq!(StarPair(0, 7), found.get(1));
 	assert_eq!(StarPair(0, 8), found.get(2));
-	
-	
+
+
 	find      = Radians(0.1);
 	tolerance = Radians(2.0);
 	found = ArrayList::new();
 	database.find_close_ref(find, tolerance, &mut found);
 	assert_eq!(9, found.size());
-	
-	
+
+
 	assert_eq!(StarPair(0, 0), found.get(0));
 	assert_eq!(StarPair(0, 1), found.get(1));
 	assert_eq!(StarPair(0, 2), found.get(2));
@@ -344,7 +343,7 @@ fn test_trim_range ( )
 	let mut tolerance = Radians(-1.0);
 	let mut output    = 8..8; // Lower bounds first, everything moves up.
 	assert_eq!(output, database.trim_range(find, tolerance, range.clone()));
-	
+
 	tolerance = Radians(0.000001);
 	output    = 3..4;
 	assert_eq!(output, database.trim_range(find, tolerance, range.clone()));
@@ -352,19 +351,19 @@ fn test_trim_range ( )
 	tolerance = Radians(0.100001);
 	output    = 2..5;
 	assert_eq!(output, database.trim_range(find, tolerance, range.clone()));
-	
+
 	tolerance = Radians(0.200001);
 	output    = 1..6;
 	assert_eq!(output, database.trim_range(find, tolerance, range.clone()));
-	
+
 	tolerance = Radians(0.300001);
 	output    = 0..7;
 	assert_eq!(output, database.trim_range(find, tolerance, range.clone()));
-	
+
 	tolerance = Radians(0.400001);
 	output    = 0..8;
 	assert_eq!(output, database.trim_range(find, tolerance, range.clone()));
-	
+
 	tolerance = Radians(0.500001);
 	output    = 0..9;
 	assert_eq!(output, database.trim_range(find, tolerance, range.clone()));

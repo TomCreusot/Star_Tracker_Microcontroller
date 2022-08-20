@@ -119,7 +119,7 @@ impl <T> List <T> for Vec <T> where T: Clone
     /// Sorts the list
     /// # Arguments
     /// * 'in_order' - A function which returns TRUE if it is in order.
-    fn sort ( &mut self, in_order: fn (& T, & T) -> bool )
+    fn sort_order ( &mut self, in_order: fn (& T, & T) -> bool )
     {
         for ii in 0..self.size()
         {
@@ -134,6 +134,8 @@ impl <T> List <T> for Vec <T> where T: Clone
             self.set(jj, temp).expect("This should be within the bounds.");
         }
     }
+	
+	
 
 
     /// Slots an element into the list so it is in sorted order by shifting everything right.
@@ -372,7 +374,7 @@ mod test
 		lst.push_back(2);
 		lst.push_back(1);
 		lst.push_back(0);
-		lst.sort(sort_ascending);
+		lst.sort_order(sort_ascending);
 		assert_eq!(lst.pop_back(), 2);
 		assert_eq!(lst.pop_back(), 1);
 		assert_eq!(lst.pop_back(), 0);
@@ -385,7 +387,7 @@ mod test
 		lst.push_back(0);
 		lst.push_back(1);
 		lst.push_back(2);
-		lst.sort(sort_descending);
+		lst.sort_order(sort_descending);
 		assert_eq!(lst.pop_back(), 0);
 		assert_eq!(lst.pop_back(), 1);
 		assert_eq!(lst.pop_back(), 2);
@@ -395,7 +397,7 @@ mod test
 	fn test_sort_empty ( )
 	{
 		let mut lst : Vec<i32> = Vec::new();
-		lst.sort(sort_ascending);
+		lst.sort_order(sort_ascending);
 	}
 
 

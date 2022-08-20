@@ -245,11 +245,11 @@ impl<T, const N : usize> List<T> for ArrayList<T, N> where T: Clone
 	/// let mut lst : ArrayList<u32, 2> = ArrayList::new();
 	/// lst.push_back(1);
 	/// lst.push_back(0);
-	/// lst.sort(ascending);
+	/// lst.sort_order(ascending);
 	/// assert_eq!(lst.get(0), 0);
 	/// assert_eq!(lst.get(1), 1);
 	/// ```
-	fn sort ( &mut self, in_order: fn (& T, & T) -> bool )
+	fn sort_order ( &mut self, in_order: fn (& T, & T) -> bool )
 	{
 		for ii in 0..self.size()
 		{
@@ -576,36 +576,36 @@ mod test
 	fn sort_descending ( highest : & i32, lowest : & i32 ) -> bool {return lowest < highest;}
 
 	#[test]
-	fn test_sort_ascending ( )
+	fn test_sort_order_ascending ( )
 	{
 		let mut lst : ArrayList<i32, 3> = ArrayList::new();
 		lst.push_back(2);
 		lst.push_back(1);
 		lst.push_back(0);
-		lst.sort(sort_ascending);
+		lst.sort_order(sort_ascending);
 		assert_eq!(lst.pop_back(), 2);
 		assert_eq!(lst.pop_back(), 1);
 		assert_eq!(lst.pop_back(), 0);
 	}
 
 	#[test]
-	fn test_sort_descending ( )
+	fn test_sort_order_descending ( )
 	{
 		let mut lst : ArrayList<i32, 3> = ArrayList::new();
 		lst.push_back(0);
 		lst.push_back(1);
 		lst.push_back(2);
-		lst.sort(sort_descending);
+		lst.sort_order(sort_descending);
 		assert_eq!(lst.pop_back(), 0);
 		assert_eq!(lst.pop_back(), 1);
 		assert_eq!(lst.pop_back(), 2);
 	}
 
 	#[test]
-	fn test_sort_empty ( )
+	fn test_sort_order_empty ( )
 	{
 		let mut lst : ArrayList<i32, 0> = ArrayList::new();
-		lst.sort(sort_ascending);
+		lst.sort_order(sort_ascending);
 	}
 
 

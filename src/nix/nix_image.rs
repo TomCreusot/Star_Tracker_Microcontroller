@@ -63,7 +63,7 @@ impl NixImage
 		}
 		return Self{img_rgb: img};
 	}
-	
+
 	/// Copies the provided image.
 	/// # Arguments
 	/// * `img` - The image to copy.
@@ -91,10 +91,10 @@ impl NixImage
 		let img = RgbImage::new(size.x as u32, size.y as u32);
 		return Self{img_rgb: img};
 	}
-	
-	
-	
-	
+
+
+
+
 	/// Draws the points onto the image of the specified color.
 	/// # Arguments
 	/// * `px` - The position.
@@ -113,12 +113,12 @@ impl NixImage
 			self.img_rgb.put_pixel(xx, px.y as u32, Rgb{0:color});
 		}
 	}
-	
-	
+
+
 	/// Projects a star onto the image if possible.
 	/// Only draws the star if the star is within the bounds of the sensor.
 	/// Only works with a field of view of or less than 180 degrees.
-	/// 
+	///
 	/// # Arguments
 	/// * `star` - The star in world space to be projected.
 	/// * `size` - The radius of the star.
@@ -128,16 +128,17 @@ impl NixImage
 	///
 	/// # Returns
 	/// True if at least part of the star is visible.
-	pub fn draw_star ( 
+	pub fn draw_star (
 		&mut self,
 		star:      SpaceWorld,
 		size:      Decimal,
 		color:     [u8;3],
-		intrinsic: IntrinsicParameters, 
+		intrinsic: IntrinsicParameters,
 		extrinsic: ExtrinsicParameters  ) -> bool
 	{
 		let mut visible : bool = false;
 		let camera_space : SpaceCamera = extrinsic.to_image(star);
+
 		// Stops any objects projected behind the image from appearing on the image.
 		if 0.0 <= camera_space.0.dot(Vector3{x: 0.0, y: 0.0, z: 1.0})
 		{
@@ -153,17 +154,17 @@ impl NixImage
 					let dist : Decimal = (center - point).magnitude();
 					let x : i32 = point.x as i32;
 					let y : i32 = point.y as i32;
-					if 0 < x && x < self.img_rgb.width() as i32 && 
+					if 0 < x && x < self.img_rgb.width() as i32 &&
 					   0 < y && y < self.img_rgb.height() as i32 &&
 					   dist < size
 					{
 						// need to check that the image is getting brighter.
 						let prev_color = self.img_rgb.get_pixel(x as u32, y as u32);
-						let prev_intens = (prev_color[0] as Decimal + 
-										  prev_color[1] as Decimal + 
+						let prev_intens = (prev_color[0] as Decimal +
+										  prev_color[1] as Decimal +
 										  prev_color[2] as Decimal) / 255.0;
-						let curr_intens = (color[0] as Decimal + 
-										   color[1] as Decimal + 
+						let curr_intens = (color[0] as Decimal +
+										   color[1] as Decimal +
 										   color[2] as Decimal) * (size - dist)/size / 255.0;
 						if prev_intens < curr_intens
 						{

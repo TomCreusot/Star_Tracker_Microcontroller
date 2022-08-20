@@ -185,7 +185,7 @@ pub struct KernelIterator
 /// Either there is no match or less than 3 stars	(None)
 /// There is a match but only 3 supplied stars		(Triangle)
 /// There is a match and more than 4 supplied stars	(Pyramid)
-#[derive(Debug, PartialEq)]
+#[derive(Debug, PartialEq, Copy, Clone)]
 pub enum Constellation
 {
 	Pyramid ( Match<StarPyramid<Equatorial>> ),

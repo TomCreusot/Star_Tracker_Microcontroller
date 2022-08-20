@@ -366,7 +366,7 @@ mod test
 		vec.push_back(StarDatabaseElement{pair: StarPair(0, 4), dist: Radians(40.0)}).expect("");
 		vec.push_back(StarDatabaseElement{pair: StarPair(1, 0), dist: Radians(10.0)}).expect("");
 		
-		vec.sort(StarDatabaseElement::sort);
+		vec.sort_order(StarDatabaseElement::sort);
 		assert_eq!(vec[0].dist.0, 10.0);
 		assert_eq!(vec[1].dist.0, 20.0);
 		assert_eq!(vec[2].dist.0, 30.0);

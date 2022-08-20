@@ -5,10 +5,17 @@ use super::{Degrees, Radians, Hours};
 impl Degrees
 {
 	/// Converts to Radians.
+	#[inline]
  	pub fn to_radians ( &self ) -> Radians
  	{
  		return Radians(self.0 * M_PI / 180.0);
  	}
+	
+	// Constant version of to_radians.
+	pub const fn as_radians ( &self ) -> Radians
+	{
+		return Radians(self.0 * M_PI / 180.0)
+	}
 	
 	/// Converts to Hours.
 	pub fn to_hours ( &self ) -> Hours
@@ -37,6 +44,7 @@ impl Degrees
 impl Radians
 {
 	/// Converts to degrees.
+	#[inline]
  	pub fn to_degrees ( &self ) -> Degrees
  	{
  		return Degrees(self.0 / M_PI * 180.0);
@@ -109,7 +117,16 @@ mod test
 		assert_eq!(Hours(12.0).to_radians(),  Radians(M_PI));
 		assert_eq!(Hours(18.0).to_radians(),  Radians(M_PI * 6.0 / 4.0));
 		assert_eq!(Hours(24.0).to_radians(),  Radians(M_PI * 2.0));
-		
+	}
+
+	#[test]
+	fn as_radians ( )
+	{
+		assert_eq!(Degrees(0.0).as_radians(),   Radians(0.0));
+		assert_eq!(Degrees(45.0).as_radians(),  Radians(M_PI / 4.0));
+		assert_eq!(Degrees(90.0).as_radians(),  Radians(M_PI / 2.0));
+		assert_eq!(Degrees(180.0).as_radians(), Radians(M_PI));
+		assert_eq!(Degrees(360.0).as_radians(), Radians(M_PI * 2.0));
 	}
 
 	#[test]

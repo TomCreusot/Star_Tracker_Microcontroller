@@ -74,6 +74,8 @@ impl ExtrinsicParameters
 		matrix.set(MatPos{row: 2, col: 1}, z_axis.y);
 		matrix.set(MatPos{row: 2, col: 2}, z_axis.z);
 
+		// matrix = matrix.transposed();
+
 		// Translation
 		// matrix.set(MatPos{row: 3, col: 0}, x_axis.dot(center));
 		// matrix.set(MatPos{row: 3, col: 1}, y_axis.dot(center));
@@ -173,79 +175,105 @@ mod test
 
 
 
-
 	#[test]
-	fn test_look_at ( )
+	// Checks if the forward vector is always the center of the output.
+	fn test_look_at_center ( )
 	{
-		let mut rng = rand::thread_rng();
-		for _ in 0..100
-		{
-			let range_ra  = Equatorial::range_ra();
-			let range_dec = Equatorial::range_dec();
+		// Facing Up
+		let mut forward = Equatorial{ra: Degrees(10.0).to_radians(), dec: Degrees(30.0).to_radians()};
+		let mut up = Equatorial{ra: Degrees(190.0).to_radians(), dec: Degrees(60.0).to_radians()};
+		let mut rotation = ExtrinsicParameters::look_at(forward, up).rotation;
+		let mut start_to_end = rotation.multiply(forward.to_vector3());
+		assert_eq!(start_to_end, Vector3{x: 0.0, y: 0.0, z: 1.0});
 
-			let start = Equatorial {
+		// Facing Down
+		forward = Equatorial{ra: Degrees(-10.0).to_radians(), dec: Degrees(40.0).to_radians()};
+		up = Equatorial{ra: Degrees(-10.0).to_radians(), dec: Degrees(50.0).to_radians()};
+		rotation = ExtrinsicParameters::look_at(forward, up).rotation;
+		start_to_end = rotation.multiply(forward.to_vector3());
+		assert_eq!(start_to_end, Vector3{x: 0.0, y: 0.0, z: 1.0});
+
+		// Facing Down More
+		forward = Equatorial{ra: Degrees(20.0).to_radians(), dec: Degrees(-40.0).to_radians()};
+		up = Equatorial{ra: Degrees(200.0).to_radians(), dec: Degrees(-50.0).to_radians()};
+		rotation = ExtrinsicParameters::look_at(forward, up).rotation;
+		start_to_end = rotation.multiply(forward.to_vector3());
+		assert_eq!(start_to_end, Vector3{x: 0.0, y: 0.0, z: 1.0});
+
+		// Facing random directions.
+		let mut rng = rand::thread_rng();
+		let range_ra  = Equatorial::range_ra();
+		let range_dec = Equatorial::range_dec();
+		for _i in 0..100
+		{
+			let forward = Equatorial {
 				ra:  Radians(rng.gen_range(range_ra.start().0..range_ra.end().0)),
 				dec: Radians(rng.gen_range(range_dec.start().0..range_dec.end().0)) };
-
 			let up = Equatorial {
 				ra:  Radians(rng.gen_range(range_ra.start().0..range_ra.end().0)),
 				dec: Radians(rng.gen_range(range_dec.start().0..range_dec.end().0)) };
-
-			let rotation = ExtrinsicParameters::look_at(start, up).rotation;
-			let start_to_end = rotation.multiply(start.to_vector3());
-			assert_eq!(start_to_end, Vector3{x: 0.0, y: 0.0, z: 1.0});
+			rotation = ExtrinsicParameters::look_at(forward, up).rotation;
+			assert_eq!(rotation.multiply(forward.to_vector3()), Vector3{x: 0.0, y: 0.0, z: 1.0});
 		}
 	}
 
 
 	#[test]
-	fn test_look_at_default ( )
+	// Ensures the output is not flipped.
+	// * A point on the axis adjacent to forward and up must be on the correct side after the transform.
+	fn test_look_at_specularity_adjacent_axis ( )
 	{
-		// Facing Up
-		let mut a = Equatorial{ra: Degrees(10.0).to_radians(), dec: Degrees(30.0).to_radians()};
-		let mut up = Equatorial{ra: Degrees(190.0).to_radians(), dec: Degrees(60.0).to_radians()};
-		let mut rotation = ExtrinsicParameters::look_at(a, up).rotation;
-		let mut start_to_end = rotation.multiply(a.to_vector3());
-		assert_eq!(start_to_end, Vector3{x: 0.0, y: 0.0, z: 1.0});
+		let mut rng = rand::thread_rng();
+		let range_ra  = Equatorial::range_ra();
+		let range_dec = Equatorial::range_dec();
 
-		// Facing Down
-		a = Equatorial{ra: Degrees(-10.0).to_radians(), dec: Degrees(40.0).to_radians()};
-		up = Equatorial{ra: Degrees(-10.0).to_radians(), dec: Degrees(50.0).to_radians()};
-		rotation = ExtrinsicParameters::look_at(a, up).rotation;
-		start_to_end = rotation.multiply(a.to_vector3());
-		assert_eq!(start_to_end, Vector3{x: 0.0, y: 0.0, z: 1.0});
+		// Adjacent Axis
+		for _i in 0..100
+		{
+			let forward = Equatorial {
+				ra:  Radians(rng.gen_range(range_ra.start().0..range_ra.end().0)),
+				dec: Radians(rng.gen_range(range_dec.start().0..range_dec.end().0)) };
+			let up = Equatorial {
+				ra:  Radians(rng.gen_range(range_ra.start().0..range_ra.end().0)),
+				dec: Radians(rng.gen_range(range_dec.start().0..range_dec.end().0)) };
 
-		// Facing Down More
-		a = Equatorial{ra: Degrees(20.0).to_radians(), dec: Degrees(-40.0).to_radians()};
-		up = Equatorial{ra: Degrees(200.0).to_radians(), dec: Degrees(-50.0).to_radians()};
-		rotation = ExtrinsicParameters::look_at(a, up).rotation;
-		start_to_end = rotation.multiply(a.to_vector3());
-		assert_eq!(start_to_end, Vector3{x: 0.0, y: 0.0, z: 1.0});
+			let rotation = ExtrinsicParameters::look_at(forward, up).rotation;
+			let left = forward.to_vector3().cross(up.to_vector3()).normalized();
+			// [0 0 1] x [0 1 0] = [-1 0 0]
+			assert_eq!(rotation.multiply(left), Vector3{x: -1.0, y: 0.0, z: 0.0});
+		}
 	}
 
 
-	#[test] // Checks if the output will be flipped
-	fn test_look_at_specularity ( )
+	#[test]
+	// Ensures the output is not flipped.
+	// * A point on the plane of forward and up must be on the correct point after the transform.
+	fn test_look_at_specularity_same_plane ( )
 	{
-		// Facing Up
-		let mut a  = Vector3{x: 1.0, y: 0.0, z: 0.0}.to_equatorial();
-		let mut up = Vector3{x: 0.0, y: 0.0, z: 1.0}.to_equatorial();
-		let mut rotation  = ExtrinsicParameters::look_at(a, up).rotation;
-		let mut point     = Vector3{x: 0.0, y: 0.0, z: 1.0};
-		let mut point_rot = Vector3{x: -1.0, y: 0.0, z: 0.0};
-		assert_eq!(point_rot, rotation.multiply(point));
-		// 
-		// let mut point     = Vector3{x: 0.0, y: 0.0, z: 0.0};
-		// let mut point_rot = Vector3{x: 1.0, y: 0.0, z: 0.0};
-		// assert_eq!(point_rot, rotation.multiply(point));
-		// 
-		// let mut a  = Vector3{x: 1.0, y: 0.0, z: 0.0}.to_equatorial();
-		// let mut up = Vector3{x: 0.0, y: 0.0, z: 1.0}.to_equatorial();
-		// let mut rotation  = ExtrinsicParameters::look_at(a, up).rotation;
-		// let mut point     = Vector3{x: 0.0, y: 1.0, z: 0.0};
-		// let mut point_rot = Vector3{x: 1.0, y: 0.0, z: 0.0};
-		// assert_eq!(point_rot, rotation.multiply(point));
+		let mut rng = rand::thread_rng();
+		let range_ra  = Equatorial::range_ra();
+		let range_dec = Equatorial::range_dec();
+
+		// Same Plane
+		for _i in 0..100
+		{
+			let forward = Equatorial {
+				ra:  Radians(rng.gen_range(range_ra.start().0..range_ra.end().0)),
+				dec: Radians(rng.gen_range(range_dec.start().0..range_dec.end().0)) };
+			let up = Equatorial {
+				ra:  Radians(rng.gen_range(range_ra.start().0..range_ra.end().0)),
+				dec: Radians(rng.gen_range(range_dec.start().0..range_dec.end().0)) };
+
+			let rotation = ExtrinsicParameters::look_at(forward, up).rotation;
+			// forward cross up = -(perpendicular vector).
+			// (perpendicular vector) cross forward = (proper up).
+			// proper up is in the direction of up but with the magnitude of the projected component of up.
+			// find the normalized vector.
+			let proper_up =forward.to_vector3().cross(up.to_vector3()).cross(forward.to_vector3());
+			assert_eq!(rotation.multiply(proper_up).normalized(), Vector3{x: 0.0, y: 1.0, z: 0.0});
+		}
 	}
+
 
 	#[test]
 	#[should_panic]

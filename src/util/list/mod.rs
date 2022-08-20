@@ -79,7 +79,7 @@ pub trait List<T>
 	/// Sorts the list
 	/// # Arguments
 	/// * 'in_order' - A function which returns TRUE if it is in order.
-	fn sort ( &mut self, in_order: fn (& T, & T) -> bool );
+	fn sort_order ( &mut self, in_order: fn (& T, & T) -> bool );
 
 	/// Slots an element into the list so it is in sorted order by shifting everything right.
 	/// # Arguments
@@ -278,7 +278,7 @@ pub trait List<T>
 /// lst.set(0, 3);
 /// assert_eq!(lst.get(0), 3);
 ///
-/// lst.sort(sort_ascending); // 1, 2, 3
+/// lst.sort_order(sort_ascending); // 1, 2, 3
 ///
 /// assert_eq!(lst.pop_back(), 3); // 1, 2 | 3
 /// assert_eq!(lst.pop_back(), 2); // 1    | 2
