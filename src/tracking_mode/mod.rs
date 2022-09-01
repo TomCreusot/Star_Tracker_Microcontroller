@@ -274,7 +274,7 @@ pub trait TriangleConstruct
 	/// # Returns
 	/// * None if there is no more available star triangles with the given parameters.
 	/// * Some(Match{input: observed star triangle, output: database match}) if possible.
-	fn next ( &mut self, stars: &dyn List<Equatorial>, database: &dyn Database
+	fn next ( &mut self, stars: &dyn List<Equatorial>, database: &mut dyn Database
 														) -> Option<Match<StarTriangle<usize>>>;
 
 	/// Prepares the StarTriangleIterator for iterating.

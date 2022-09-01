@@ -186,6 +186,28 @@ impl NixImage
 
 
 
+	pub fn draw_3d_line ( &mut self, color: [u8; 3], pt_1: SpaceWorld, pt_2: SpaceWorld, intrinsic: IntrinsicParameters,extrinsic: ExtrinsicParameters )
+	{
+		let difference = pt_2.0 - pt_1.0;
+		let direction = difference.normalized();
+		let magnitude = difference.magnitude();
+
+		let mut position = pt_1;
+
+		while (position.0-pt_1.0).dot(difference) / magnitude < magnitude
+		{
+			let point = intrinsic.to_image(extrinsic.to_image(position)).0;
+			let pixel = Pixel{x: point.x as usize, y: point.y as usize};
+			if self.valid_pixel(pixel)
+			{
+				self.img_rgb.put_pixel(point.x as u32, point.y as u32, Rgb{0:color});
+			}
+			position.0 = position.0 + direction * 0.01;
+		}
+
+	}
+
+
 	/// Reads in an image as a gray image.
 	/// # Arguments
 	/// * `name` - The location from the cwd, name and extension.

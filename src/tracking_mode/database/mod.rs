@@ -83,27 +83,35 @@ use super::StarPair;
 use crate::util::units::Equatorial;
 use crate::util::units::Radians;
 use crate::util::aliases::Decimal;
-use crate::util::list::List;
+// use crate::util::icosphere::IcoSphere;
+// use crate::util::list::List;
 use crate::util::linear_lookup::LinearLookup;
 
 use crate::util::err::{/*Errors, */Error};
+
+pub use crate::tracking_mode::database::database::Database as Database;
+pub use crate::tracking_mode::database::database::MockDatabase as MockDatabase;
 
 mod k_vector;
 mod star_database_element;
 #[cfg(not(feature = "setup"))]
 pub mod array_database;
 pub mod pyramid_database;
+pub mod regional_database;
 pub mod database_generator;
+pub mod database;
 
 /// Tool to help construct and analyse the database.
 pub struct DatabaseGenerator
 {
 	// The pyramid database can only hold statics.
-	pub k_vector  : Vec<usize>,
+	pub k_vector      : Vec<usize>,
 	// The pyramid database can only hold statics.
-	pub pairs     : Vec<StarPair<usize>>,
+	pub pairs         : Vec<StarPair<usize>>,
 	// The pyramid database can only hold statics.
-	pub catalogue : Vec<Equatorial>,
+	pub pairs_region : Vec<u64>,
+	// The pyramid database can only hold statics.
+	pub catalogue     : Vec<Equatorial>,
 
 	fov : Radians,
 	k_lookup: KVector,
@@ -171,25 +179,22 @@ pub struct PyramidDatabase <'a>
 	pub catalogue: &'a dyn LinearLookup<Equatorial>,
 }
 
-// 
-// pub struct DatabaseRegion
-// {
-// 	database: Database,
-// 	region:
-// }
-//
-//
-// pub struct RegionalDatabase <'a>
-// {
-// 	databases: LinearLookup<PyramidDatabase>,
-// }
 
-
-#[automock]
-pub trait Database
+/// A similar database to the PyramidDatabase, however, when searching for the star pairs, they will be associated with a location.
+/// This will reduce the amount of star pairs which dont form triangles.
+/// This was found to be the most significant peformance hit in the program.
+// #[derive(Clone)]
+pub struct RegionalDatabase <'a>
 {
-	fn find_close_ref ( &self, find : Radians, tolerance: Radians,
-														found : &mut dyn List<StarPair<usize>> );
-	fn find_star ( &self, index: usize ) -> Error<Equatorial>;
-	// fn trim_range ( &self, find: Radians, tolerance: Radians, range: Range<usize> )-> Range<usize>;
+	pub fov:       Radians,
+	pub k_lookup:  KVector,
+	pub k_vector:  &'a dyn LinearLookup<usize>,
+	pub pairs:     &'a dyn LinearLookup<StarPair<usize>>,
+	pub pairs_region: &'a dyn LinearLookup<u64>,
+	pub catalogue: &'a dyn LinearLookup<Equatorial>,
+
+	/// The index of the selected index.
+	/// Using this selector style allows the struct to comply with the trait "Database".
+	pub region_selected: usize,
+	pub num_regions: usize,
 }

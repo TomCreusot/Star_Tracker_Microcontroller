@@ -10,18 +10,18 @@ use util::aliases::Decimal;
 use util::units::Radians;
 use util::units::Degrees;
 use util::units::Equatorial;
-use util::units::Vector3;
+// use util::units::Vector3;
 
 use nix::Star;
 use nix::Io;
 
-use tracking_mode::StarPair;
+// use tracking_mode::StarPair;
 use tracking_mode::Constellation;
 use tracking_mode::StarPyramid;
 use tracking_mode::Specularity;
 use tracking_mode::StarTriangleIterator;
 use tracking_mode::database::DatabaseGenerator;
-use tracking_mode::database::PyramidDatabase;
+// use tracking_mode::database::PyramidDatabase;
 
 use projection::ExtrinsicParameters;
 use projection::SpaceWorld;
@@ -39,8 +39,8 @@ impl TrackingModeConsts for TrackingConstsTest
 	const TRIANGLES_MAX   : usize = 2000;							// Irrelevant, ensure big.
 	// const SPECULARITY_MIN : Decimal = 300.0;						// If the triangle is flipped.
 	const SPECULARITY_MIN : Decimal = 0.0001;						// If the triangle is flipped.
-	const ANGLE_TOLERANCE : Radians = Degrees(0.05).as_radians(); 	// Maximum inaccuracy.
-	// const ANGLE_TOLERANCE : Radians = Degrees(0.1).as_radians(); 	// Maximum inaccuracy.
+	const ANGLE_TOLERANCE : Radians = Degrees(0.1).as_radians(); 	// Maximum inaccuracy.
+	// const ANGLE_TOLERANCE : Radians = Degrees(0.1).as_radians(); // Maximum inaccuracy.
 }
 
 pub fn run ( )
@@ -61,7 +61,7 @@ pub fn run ( )
 
 	// Disrupt input.
 	const VARIATION_MAG         : Decimal = 0.5; // The variation outside of the magnitude range.
-	const VARIATION_POSITION    : Radians = Degrees(0.00001).as_radians(); // Error.
+	const VARIATION_POSITION    : Radians = Degrees(0.001).as_radians(); // Error.
 	const FALSE_STARS 			: usize   = 3; // Maximum number of fake, random stars.
 	const HIDDEN_STARS			: usize   = 3; // Maximum number of real stars to remove.
 
@@ -107,34 +107,41 @@ pub fn run ( )
 	println!(" - {} stars when region reduced.", stars_limit_reg.len());
 	println!();
 
-	let coverage_average     = DatabaseGenerator::sky_coverage(&stars, REGION_SIZE, REGION_NUM);
-	println!(" - {:0.2}% average coverage.", coverage_average * 100.0);
-	let coverage_average_mag = DatabaseGenerator::sky_coverage(&stars_limit_mag, REGION_SIZE, REGION_NUM);
-	println!(" - {:0.2}% average coverage magnitude reduced", coverage_average_mag * 100.0);
-	let coverage_average_reg = DatabaseGenerator::sky_coverage(&stars_limit_reg, REGION_SIZE, REGION_NUM);
-	println!(" - {:0.2}% average coverage region reduced", coverage_average_reg * 100.0);
-	println!();
-	let coverage_worst       = DatabaseGenerator::sky_coverage_worst_case(&stars, REGION_SIZE);
-	println!(" - {} worst coverage.", coverage_worst);
-	let coverage_worst_mag   = DatabaseGenerator::sky_coverage_worst_case(&stars_limit_mag, REGION_SIZE);
-	println!(" - {} worst coverage magnitude reduced", coverage_worst_mag);
-	let coverage_worst_reg   = DatabaseGenerator::sky_coverage_worst_case(&stars_limit_reg, REGION_SIZE);
-	println!(" - {} worst coverage region reduced", coverage_worst_reg);
-	println!();
-	let coverage_best       = DatabaseGenerator::sky_coverage_best_case(&stars, REGION_SIZE);
-	println!(" - {} best coverage.", coverage_best);
-	let coverage_best_mag   = DatabaseGenerator::sky_coverage_best_case(&stars_limit_mag, REGION_SIZE);
-	println!(" - {} best coverage magnitude reduced", coverage_best_mag);
-	let coverage_best_reg   = DatabaseGenerator::sky_coverage_best_case(&stars_limit_reg, REGION_SIZE);
-	println!(" - {} best coverage region reduced", coverage_best_reg);
+	// let coverage_average     = DatabaseGenerator::sky_coverage(&stars, REGION_SIZE, REGION_NUM);
+	// println!(" - {:0.2}% average coverage.", coverage_average * 100.0);
+	// let coverage_average_mag = DatabaseGenerator::sky_coverage(&stars_limit_mag, REGION_SIZE, REGION_NUM);
+	// println!(" - {:0.2}% average coverage magnitude reduced", coverage_average_mag * 100.0);
+	// let coverage_average_reg = DatabaseGenerator::sky_coverage(&stars_limit_reg, REGION_SIZE, REGION_NUM);
+	// println!(" - {:0.2}% average coverage region reduced", coverage_average_reg * 100.0);
+	// println!();
+	// let coverage_worst       = DatabaseGenerator::sky_coverage_worst_case(&stars, REGION_SIZE);
+	// println!(" - {} worst coverage.", coverage_worst);
+	// let coverage_worst_mag   = DatabaseGenerator::sky_coverage_worst_case(&stars_limit_mag, REGION_SIZE);
+	// println!(" - {} worst coverage magnitude reduced", coverage_worst_mag);
+	// let coverage_worst_reg   = DatabaseGenerator::sky_coverage_worst_case(&stars_limit_reg, REGION_SIZE);
+	// println!(" - {} worst coverage region reduced", coverage_worst_reg);
+	// println!();
+	// let coverage_best       = DatabaseGenerator::sky_coverage_best_case(&stars, REGION_SIZE);
+	// println!(" - {} best coverage.", coverage_best);
+	// let coverage_best_mag   = DatabaseGenerator::sky_coverage_best_case(&stars_limit_mag, REGION_SIZE);
+	// println!(" - {} best coverage magnitude reduced", coverage_best_mag);
+	// let coverage_best_reg   = DatabaseGenerator::sky_coverage_best_case(&stars_limit_reg, REGION_SIZE);
+	// println!(" - {} best coverage region reduced", coverage_best_reg);
 
 
 
 	// The official database is based off static arrays to save memory and remove the heap.
 	// When simulating the database, these variables must exist while the database exists.
 
-	let gen : DatabaseGenerator = DatabaseGenerator::gen_database(&stars_limit_reg, FOV, NUM_BINS);
-	let database = gen.get_database();
+	// let gen : DatabaseGenerator = DatabaseGenerator::gen_database(&stars_limit_reg, FOV, NUM_BINS);
+	// let database = gen.get_database();
+	let gen : DatabaseGenerator = DatabaseGenerator::gen_database_regions(&stars_limit_reg, FOV, NUM_BINS);
+	let mut database = gen.get_database_regional();
+
+	// for i in 0..database.pairs_region.size()
+	// {
+		// println!("{}", database.pairs_region.get(i));
+	// }
 
 	println!();
 	println!("Created database");
@@ -156,7 +163,7 @@ pub fn run ( )
 	println!("Performing Lost In Space");
 	println!(" - {} orientations", observation_points);
 	println!();
-	println!("Test\t|\tTime\t\t|\tResult");
+	println!("Test\t|\tStars\t|\tSeparation\t|\tTime\t\t|\tResult");
 
 	let mut test_num           = 0;
 	let mut num_pyramid        = 0;
@@ -218,14 +225,14 @@ pub fn run ( )
 		// Actual Algorithm
 		let timer : std::time::Instant = std::time::Instant::now();
 
-		let mut constellation : Constellation = Constellation::find::<TrackingConstsTest>(
-			&observable, &database,
+		let constellation : Constellation = Constellation::find::<TrackingConstsTest>(
+			&observable, &mut database,
 			&mut StarTriangleIterator::<{TrackingConstsTest::PAIRS_MAX}>::new(),
 			&mut StarPyramid(0,0,0,0), &mut Specularity::Ignore);
 
 		let time = timer.elapsed();
 		avg_time += time.as_millis();
-		match print_result(test_num, time, constellation, rotation)
+		match print_result(test_num, time, constellation, rotation, observable)
 		{
 			Result::Pyramid       => {num_pyramid        +=1;}
 			Result::Triangle      => {num_triangle       +=1;}
@@ -271,7 +278,7 @@ enum Result
 
 
 
-fn print_result ( test_num: usize, time: std::time::Duration, constellation : Constellation, rotation: ExtrinsicParameters ) -> Result
+fn print_result ( test_num: usize, time: std::time::Duration, constellation : Constellation, rotation: ExtrinsicParameters, stars: Vec<Equatorial> ) -> Result
 {
 	let result : Result;
 
@@ -288,7 +295,7 @@ fn print_result ( test_num: usize, time: std::time::Duration, constellation : Co
 	let time_color = if tm < time_good { color_good } else
 		{ if tm < time_ok { color_ok } else { color_bad } };
 
-	print!("{}\t|\t{}{:4.0} ms  ", test_num, time_color, tm);
+	print!("{}\t|\t{}\t|\t{}{:4.0} ms  ", test_num, stars.len(), time_color, tm);
 	print!("{}\t|\t", color_normal);
 
 	match constellation

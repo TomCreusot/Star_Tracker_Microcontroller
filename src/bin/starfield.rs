@@ -1,6 +1,6 @@
 extern crate star_tracker;
 
-use star_tracker::nix::Star;
+// use star_tracker::nix::Star;
 use star_tracker::nix::NixImage;
 // use star_tracker::nix::Color;
 use star_tracker::image_processing::Image;
@@ -9,6 +9,8 @@ use star_tracker::util::units::Pixel;
 use star_tracker::util::units::Equatorial;
 use star_tracker::util::units::Radians;
 use star_tracker::util::units::Degrees;
+use star_tracker::util::icosphere::IcoSphere;
+use star_tracker::util::list::List;
 // use star_tracker::util::units::Vector2;
 
 use star_tracker::nix::Io;
@@ -43,10 +45,10 @@ fn main ( )
 	// Extrinsic Parameters
 	let cutoff_mag : Decimal     = 4.0;
 	// let dir        : Equatorial  = Equatorial{ra: Degrees(90.0).to_radians(), dec: Degrees(-16.0).to_radians()};
-	let dir        : Equatorial  = Equatorial{ra: Degrees(180.0).to_radians(), dec: Degrees(50.0).to_radians()};
+	let dir        : Equatorial  = Equatorial{ra: Degrees(0.0).to_radians(), dec: Degrees(-45.0).to_radians()};
 
 	// Intrinsic Parameters
-	let fov = Degrees(90.0).to_radians();
+	let fov = Degrees(180.0).to_radians();
 
 	// Construct Matrix
 	let extrinsic = ExtrinsicParameters::look_at(dir, Equatorial{ra: Radians(0.0), dec: Degrees(90.0).to_radians()});
@@ -54,7 +56,7 @@ fn main ( )
 	// let transform = Transformation{intrinsic: intrinsic, extrinsic: extrinsic};
 
 
-	let iter = rdr.deserialize();
+/*	let iter = rdr.deserialize();
 	for record in iter
 	{
 		let star : Star = record.expect("Could not decode.");
@@ -64,6 +66,29 @@ fn main ( )
 			let size = cutoff_mag - star.mag;
 			let red = 150_u8.saturating_add((star.mag * 10.0) as u8);
 			img.draw_star(point, size + 3.0, [red, 50, 255], intrinsic, extrinsic);
+		}
+	}*/
+	// for x in 0..img.height()
+	// {
+	// 	for y in 0..img.width()
+	// 	{
+	// 		img.img_rgb.put_pixel(x as u32, y as u32, image::Rgb{0:[255, 255, 255]});
+	// 	}
+	// }
+
+	// let separation = Equatorial::evenly_distribute_points(fov / 5.0);
+	// let points = Equatorial::evenly_distribute(separation);
+	let points = IcoSphere::icosphere(3);
+	let offset = dir.to_vector3() * 2.0;
+
+	for i in 0..points.len()
+	{
+		let point = SpaceWorld(points[i].to_vector3() + offset);
+		// if 0.0 < points[i].to_vector3().dot(dir.to_vector3())
+		{
+			let size = 5.0-point.0.magnitude();
+			// img.draw_star(point, size.powf(3.0), [size as u8 * 51, 50, 255], intrinsic, extrinsic);
+			img.draw_star(point, size.powf(2.0), [255,255,size as u8*50], intrinsic, extrinsic);
 		}
 	}
 

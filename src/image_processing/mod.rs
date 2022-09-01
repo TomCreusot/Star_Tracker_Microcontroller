@@ -107,11 +107,11 @@ pub trait Image
 	/// use star_tracker::util::aliases::Byte;
 	/// let img : BasicImage<16, 16> = BasicImage::new();
 	/// let hist :  [UInt; Byte::max_value() as usize + 1] = [1; Byte::MAX as usize + 1]; // [1, 1, ...]
-	/// assert_eq!(img.novel_threshold(0.5, &hist), Byte::MAX / 2 + 1);
-	/// assert_eq!(img.novel_threshold(0.0, &hist), 0);
-	/// assert_eq!(img.novel_threshold(1.0, &hist), Byte::MAX);
+	/// assert_eq!(img.percent_threshold(0.5, &hist), Byte::MAX / 2 + 1);
+	/// assert_eq!(img.percent_threshold(0.0, &hist), 0);
+	/// assert_eq!(img.percent_threshold(1.0, &hist), Byte::MAX);
 	/// ```
-	fn novel_threshold ( &self, percentage : Decimal, histogram : &[UInt] ) -> Byte
+	fn percent_threshold ( &self, percentage : Decimal, histogram : &[UInt] ) -> Byte
 	{
 		let cutoff: UInt = (percentage * (self.width() * self.height()) as Decimal).ceil() as UInt;
 
@@ -168,9 +168,9 @@ pub trait Image
 /// assert_eq!(hist[200], 2);                            // 2 pixels are at the intensity of 200.
 ///
 /// // Thresholding
-/// assert_eq!(img.novel_threshold(0.5, &hist), 1);      // Finds what is brighter than half the pixels.
-/// assert_eq!(img.novel_threshold(0.0, &hist), 0);      // Finds what is brighter than 0 of the pixels.
-/// assert_eq!(img.novel_threshold(1.0, &hist), 201);    // Finds what is brighter than all of the pixels.
+/// assert_eq!(img.percent_threshold(0.5, &hist), 1);      // Finds what is brighter than half the pixels.
+/// assert_eq!(img.percent_threshold(0.0, &hist), 0);      // Finds what is brighter than 0 of the pixels.
+/// assert_eq!(img.percent_threshold(1.0, &hist), 201);    // Finds what is brighter than all of the pixels.
 /// ```
 pub struct BasicImage <const WIDTH : usize, const HEIGHT : usize>
 {
@@ -332,47 +332,47 @@ mod test
 
 
 	//
-	// novel_threshold ( percentage : Decimal, histogram : &[Byte] )
+	// percent_threshold ( percentage : Decimal, histogram : &[Byte] )
 	//
 	#[test]
-	fn test_novel_threshold_1_bar_0_percent ( )
+	fn test_percent_threshold_1_bar_0_percent ( )
 	{
 		let img : BasicImage<3, 3> = BasicImage::new();
 		let hist : [UInt; 1] = [9];
-		assert_eq!(img.novel_threshold(0.0, &hist), 0);
+		assert_eq!(img.percent_threshold(0.0, &hist), 0);
 	}
 
 	#[test]
-	fn test_novel_threshold_1_bar_1_percent ( )
+	fn test_percent_threshold_1_bar_1_percent ( )
 	{
 		let img : BasicImage<3, 3> = BasicImage::new();
 		let hist : [UInt; 1] = [9];
-		assert_eq!(img.novel_threshold(0.01, &hist), Byte::MAX);
+		assert_eq!(img.percent_threshold(0.01, &hist), Byte::MAX);
 	}
 
 	#[test]
-	fn test_novel_threshold_2_bar_49_percent ( )
+	fn test_perecent_threshold_2_bar_49_percent ( )
 	{
 		let img : BasicImage<2, 2> = BasicImage::new();
 		let hist : [UInt; 2] = [2, 2];
-		assert_eq!(img.novel_threshold(0.49, &hist), 128);
+		assert_eq!(img.percent_threshold(0.49, &hist), 128);
 	}
 
 	#[test]
-	fn test_novel_threshold_2_bar_50_percent ( )
+	fn test_percent_threshold_2_bar_50_percent ( )
 	{
 		let img : BasicImage<2, 2> = BasicImage::new();
 		let hist : [UInt; 2] = [2, 2];
-		assert_eq!(img.novel_threshold(0.6, &hist), Byte::MAX);
+		assert_eq!(img.percent_threshold(0.6, &hist), Byte::MAX);
 	}
 
 	#[test]
-	fn test_novel_threshold_256_bar ( )
+	fn test_percent_threshold_256_bar ( )
 	{
 		let img : BasicImage<16, 16> = BasicImage::new();
 		let hist :  [UInt; Byte::max_value() as usize + 1] = [1; Byte::MAX as usize + 1]; // [1, 1, ...]
-		assert_eq!(img.novel_threshold(0.5, &hist), Byte::MAX / 2 + 1);
-		assert_eq!(img.novel_threshold(0.0, &hist), 0);
-		assert_eq!(img.novel_threshold(1.0, &hist), Byte::MAX);
+		assert_eq!(img.percent_threshold(0.5, &hist), Byte::MAX / 2 + 1);
+		assert_eq!(img.percent_threshold(0.0, &hist), 0);
+		assert_eq!(img.percent_threshold(1.0, &hist), Byte::MAX);
 	}
 }

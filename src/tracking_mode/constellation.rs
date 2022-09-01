@@ -36,7 +36,7 @@ impl Constellation
 /// If a star triangle can be formed: Match{input: Observed Stars, output: Corresponding Database}.
 pub fn find	<T: TrackingModeConsts> (
 										stars    : &dyn List<Equatorial>,
-										database : &dyn Database,
+										database : &mut dyn Database,
 										gen_tri  : &mut dyn TriangleConstruct,
 										gen_pyr  : &mut dyn PyramidConstruct<T>,
 										gen_spec : &mut dyn SpecularityConstruct<T>
@@ -163,7 +163,7 @@ mod test
 	{
 		let a = Equatorial{ra: Radians(0.0), dec: Radians(0.0)};
 		let stars : Vec<Equatorial> = vec![a, a];
-		let mock_d = MockDatabase::new();
+		let mut mock_d = MockDatabase::new();
 		let mut mock_t = MockTriangleConstruct::new();
 		let mut mock_p = MockPyramidConstruct::new();
 		let mut mock_s = MockSpecularityConstruct::new();
@@ -178,7 +178,7 @@ mod test
 
 
 		let result = Constellation::find::<MockConfigBig> (
-					&stars, &mock_d, &mut mock_t, &mut mock_p, &mut mock_s);
+					&stars, &mut mock_d, &mut mock_t, &mut mock_p, &mut mock_s);
 
 		assert_eq!(Constellation::None, result);
 
@@ -221,7 +221,7 @@ mod test
 
 
 		let result = Constellation::find::<MockConfigBig> (
-			&stars, &mock_d, &mut mock_t, &mut mock_p, &mut mock_s);
+			&stars, &mut mock_d, &mut mock_t, &mut mock_p, &mut mock_s);
 
 			assert_eq!(Constellation::None, result);
 	}
@@ -266,7 +266,7 @@ mod test
 		mock_s.expect_same().times(3).returning(|_, _| return false);
 
 		let result = Constellation::find::<MockConfigBig> (
-			&stars, &mock_d, &mut mock_t, &mut mock_p, &mut mock_s);
+			&stars, &mut mock_d, &mut mock_t, &mut mock_p, &mut mock_s);
 
 		assert_eq!(Constellation::None, result);
 	}
@@ -310,7 +310,7 @@ mod test
 		mock_p.expect_find_pilot().times(3).returning(|_,_,_,_| Err(Errors::NoMatch));
 
 		let result = Constellation::find::<MockConfigBig> (
-			&stars, &mock_d, &mut mock_t, &mut mock_p, &mut mock_s);
+			&stars, &mut mock_d, &mut mock_t, &mut mock_p, &mut mock_s);
 
 		assert_eq!(Constellation::None, result);
 	}
@@ -364,7 +364,7 @@ mod test
 			.returning(|_,_,_,_| Ok(Match{input: 1, output: 1, weight: 0.0}));
 
 		let result = Constellation::find::<MockConfigBig> (
-			&stars, &mock_d, &mut mock_t, &mut mock_p, &mut mock_s);
+			&stars, &mut mock_d, &mut mock_t, &mut mock_p, &mut mock_s);
 
 		assert_eq!(Constellation::None, result);
 	}
@@ -405,7 +405,7 @@ mod test
 			.returning(|_,_,_,_| Ok(Match{input: 3, output: 3, weight: 0.0}));
 
 		let result = Constellation::find::<MockConfigBig> (
-			&stars, &mock_d, &mut mock_t, &mut mock_p, &mut mock_s);
+			&stars, &mut mock_d, &mut mock_t, &mut mock_p, &mut mock_s);
 
 		let expect_input = StarPyramid(stars[0], stars[1], stars[2], stars[3]);
 		let expect_output = StarPyramid(
@@ -460,7 +460,7 @@ mod test
 				});
 
 		let result = Constellation::find::<MockConfigBig> (
-			&stars, &mock_d, &mut mock_t, &mut mock_p, &mut mock_s);
+			&stars, &mut mock_d, &mut mock_t, &mut mock_p, &mut mock_s);
 
 		let expect_input = StarPyramid(stars[0], stars[1], stars[2], stars[3]);
 		let expect_output = StarPyramid(

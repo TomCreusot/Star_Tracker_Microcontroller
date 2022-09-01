@@ -22,7 +22,7 @@ impl <const N: usize> TriangleConstruct for StarTriangleIterator<N>
 	/// # Returns
 	/// * None if there is no more available star triangles with the given parameters.
 	/// * Some(Match{input: observed star triangle, output: database match}) if possible.
-	fn next ( &mut self, stars: &dyn List<Equatorial>, database: &dyn Database
+	fn next ( &mut self, stars: &dyn List<Equatorial>, database: &mut dyn Database
 															) -> Option<Match<StarTriangle<usize>>>
 	{
 		let mut tries : Option<Match<StarTriangle<usize>>> = None;
@@ -113,6 +113,8 @@ impl<const N: usize> StarTriangleIterator<N>
 		};
 	}
 
+
+
 	/// Steps the index of a, b and c to get a new value.
 	/// # Returns
 	/// False if the sequence ended.
@@ -165,11 +167,14 @@ impl<const N: usize> StarTriangleIterator<N>
 	/// # Arguments
 	/// * `stars` - The stars in the image.
 	/// * `database` - The database where the stars can be searched.
-	fn prep_new_kernel ( &mut self, stars: &dyn List<Equatorial>, database: &dyn Database ) -> bool
+	fn prep_new_kernel ( &mut self, stars: &dyn List<Equatorial>, database: &mut dyn Database ) -> bool
 	{
-		if !self.kernel.step()
+		if !database.increment_region()
 		{
-			return false;
+			if !self.kernel.step()
+			{
+				return false;
+			}
 		}
 		self.indexing = false;
 
@@ -189,6 +194,9 @@ impl<const N: usize> StarTriangleIterator<N>
 		database.find_close_ref(side_a, self.angle_tolerance, &mut self.pair_a);
 		database.find_close_ref(side_b, self.angle_tolerance, &mut self.pair_b);
 		database.find_close_ref(side_c, self.angle_tolerance, &mut self.pair_c);
+
+		// println!("{}\t{}\t{}", self.pair_a.size(), self.pair_b.size(), self.pair_c.size());
+
 		return true;
 	}
 
@@ -274,8 +282,8 @@ mod test
 
 		let mut database = MockDatabase::new();
 		database.expect_find_close_ref().times(0);
-
-		assert_eq!(None, iterator.next(&stars, &database));
+		database.expect_increment_region().times(1).returning(| | false);
+		assert_eq!(None, iterator.next(&stars, &mut database));
 	}
 
 
@@ -296,9 +304,12 @@ mod test
 
 		let mut database = MockDatabase::new();
 		database.expect_find_close_ref().times(3 * 4).returning(|_,_,_| ());
+		let mut first = true;
+		database.expect_increment_region().times(1 + 4).returning(
+			move | | { let val = first; first = false; return val; } );
 
 		// Should loop until finished
-		assert_eq!(None, iterator.next(&stars, &database));
+		assert_eq!(None, iterator.next(&stars, &mut database));
 	}
 
 
@@ -354,7 +365,7 @@ mod test
 				}
 			);
 
-		let mut actual = iterator.next(&stars, &database);
+		let mut actual = iterator.next(&stars, &mut database);
 		let mut expect = Match{input:StarTriangle(0,1,2),output: StarTriangle(1,0,2), weight: 1.0};
 		assert!(iterator.indexing);
 		assert_eq!(StarTriangle(0,1,2), iterator.input);
@@ -376,17 +387,17 @@ mod test
 		assert_eq!((1, 0, 0), (iterator.index_a, iterator.index_b, iterator.index_c));
 		assert_eq!(Some(expect), actual);
 
-		actual = iterator.next(&stars, &database);
+		actual = iterator.next(&stars, &mut database);
 		expect = Match{input:StarTriangle(0, 1, 2),output: StarTriangle(2, 0, 3),weight:1.0};
 		assert_eq!(Some(expect), actual);
 
-		actual = iterator.next(&stars, &database);
+		actual = iterator.next(&stars, &mut database);
 		expect = Match{input:StarTriangle(0, 1, 2),output: StarTriangle(2, 0, 4),weight: 1.0};
 		assert_eq!(Some(expect), actual);
 
 
 		iterator.kernel.size = 0;
-		actual = iterator.next(&stars, &database);
+		actual = iterator.next(&stars, &mut database);
 		assert_eq!(None, actual);
 
 
@@ -403,7 +414,7 @@ mod test
 			);
 
 
-		actual = iterator.next(&stars, &database);
+		actual = iterator.next(&stars, &mut database);
 		expect = Match{input:StarTriangle(0, 1, 2),output: StarTriangle(1, 0, 2),weight: 1.0};
 		assert_eq!(Some(expect), actual);
 
@@ -522,7 +533,7 @@ mod test
 		let mut database = MockDatabase::new();
 		database.expect_find_close_ref().times(0);
 
-		assert!(!iterator.prep_new_kernel(&stars, &database));
+		assert!(!iterator.prep_new_kernel(&stars, &mut database));
 	}
 
 
@@ -552,7 +563,7 @@ mod test
 			.returning(|angle, _, found| found.push_back(StarPair(0, angle.0 as usize)).expect(""))
 			.withf(|_, tolerance, _| return *tolerance == Radians(0.123) );
 
-		assert!(iterator.prep_new_kernel(&stars, &database));
+		assert!(iterator.prep_new_kernel(&stars, &mut database));
 		assert!(!iterator.indexing);
 		assert_eq!(iterator.kernel.i, iterator.input.0);
 		assert_eq!(iterator.kernel.j, iterator.input.1);

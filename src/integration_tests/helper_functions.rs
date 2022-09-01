@@ -114,7 +114,7 @@ pub fn insert_lens_flare ( image: &mut dyn Image, center: Pixel, intensity: Byte
 // pub fn equatorial_to_pixel ( point: Equatorial, orientation: Quaternion, fov: Radians, dimensions: Pixel ) -> Pixel
 // {
 // 	let pt = point.to_vector3();
-// 	// let 
+// 	// let
 // }
 
 /// Puts a roughly circular blob in the image with the given intensity, size, center + randomness.
@@ -126,30 +126,30 @@ pub fn insert_lens_flare ( image: &mut dyn Image, center: Pixel, intensity: Byte
 /// * `rand_center`    - The randomness of the center position (1 is a pixel verticaly and horizontaly).
 /// * `rand_intensity` - The randomness of the brightness.
 /// * `rand_spread`    - The randomness of the sprad of the star.
-pub fn insert_blob ( image: &mut dyn Image, 
+pub fn insert_blob ( image: &mut dyn Image,
 				mut center: Pixel, intensity: Byte, spread: Pixel,
 				rand_center: Pixel, rand_intensity: Byte, rand_spread: Pixel )
 {
 	let mut rng = rand::thread_rng();
-	
+
 	center.x += (rand_center.x as Decimal * rng.gen::<Decimal>()) as usize;
 	center.y += (rand_center.y as Decimal * rng.gen::<Decimal>()) as usize;
-	
+
 	let mut start_x = center.x as i32 - spread.x as i32;
 	let mut end_x   = center.x as i32 + spread.x as i32;
 	let mut start_y = center.y as i32 - spread.y as i32;
 	let mut end_y   = center.y as i32 + spread.y as i32;
-	
-	start_x += rng.gen_range(-(rand_spread.x as i32)..rand_spread.x as i32); 
+
+	start_x += rng.gen_range(-(rand_spread.x as i32)..rand_spread.x as i32);
 	end_x   += rng.gen_range(-(rand_spread.x as i32)..rand_spread.x as i32);
 	start_y += rng.gen_range(-(rand_spread.y as i32)..rand_spread.y as i32);
 	end_x   += rng.gen_range(-(rand_spread.y as i32)..rand_spread.y as i32);
-	
+
 	start_x = std::cmp::max(start_x, 0);
 	end_x   = std::cmp::min(end_x, image.width() as i32 - 1);
 	start_y = std::cmp::max(start_y, 0);
 	end_y   = std::cmp::min(end_y, image.height() as i32 - 1);
-	
+
 	for xx in start_x..=end_x
 	{
 		for yy in start_y..=end_y
@@ -159,10 +159,10 @@ pub fn insert_blob ( image: &mut dyn Image,
 			let distance = (distance_x * distance_x + distance_y * distance_y).sqrt();
 			let spread_mag = ((spread.x * spread.x + spread.y * spread.y) as Decimal).sqrt();
 			let drop_off = 1.0 / (distance / spread_mag + 1.0);
-			
+
 			let mut brightness = intensity as Decimal * drop_off;
 			brightness += rng.gen::<Decimal>() * rand_intensity as Decimal - rand_intensity as Decimal;
-			brightness = brightness.clamp(0.0, Byte::MAX as Decimal);			
+			brightness = brightness.clamp(0.0, Byte::MAX as Decimal);
 			image.set(Pixel{x: xx as usize, y: yy as usize}, brightness as Byte);
 		}
 	}
@@ -177,22 +177,22 @@ pub fn insert_blob ( image: &mut dyn Image,
 /// # Arguments
 /// * `image`          - The image to perform blob detection on.
 /// * `thresh_percent` - The value that pixels must be above to be a star.
-pub fn get_blobs <const HISTOGRAM_SIZE: usize, const MAX_BLOB_SIZE : usize> 
+pub fn get_blobs <const HISTOGRAM_SIZE: usize, const MAX_BLOB_SIZE : usize>
 									( image: &dyn Image, thresh_percent: Decimal ) -> Vec<Blob>
 {
 	let mut img = NixImage{img_rgb: RgbImage::new(0,0)};
 	img.image_to_dynamic(image);
-	
-	
-	let mut histogram : [u32; HISTOGRAM_SIZE] = [0; HISTOGRAM_SIZE];
-	img.histogram(&mut histogram);	
-	let threshold = img.novel_threshold(thresh_percent, &histogram);
 
-	
+
+	let mut histogram : [u32; HISTOGRAM_SIZE] = [0; HISTOGRAM_SIZE];
+	img.histogram(&mut histogram);
+	let threshold = img.percent_threshold(thresh_percent, &histogram);
+
+
 	let mut blobs : Vec<Blob> = Vec::new();
 	Blob::find_blobs::<MAX_BLOB_SIZE>(threshold, &mut img, &mut blobs);
-	
-	
+
+
 	return blobs;
 }
 
@@ -241,7 +241,7 @@ pub fn generate_catalogue ( num_elements: usize ) -> Vec<Star>
 
 		let star = Star{mag: 0.0, spec: "".to_string(), pos: element, name: "".to_string()};
 		cat.push_back(star).expect("Vecs should not be full");
-	}	
+	}
 	return cat;
 }
 
@@ -282,11 +282,11 @@ pub fn generate_star_pair ( cat: &Vec<Star> ) -> Vec<StarDatabaseElement>
 /// The k-vector equation to be used to reference the bins.
 pub fn create_k_vector ( num_bins : usize, pairs : &Vec<StarDatabaseElement> ) -> KVector
 {
-	let k_vector = KVector::new(num_bins, 
-			pairs[0].dist.0 as Decimal, 
+	let k_vector = KVector::new(num_bins,
+			pairs[0].dist.0 as Decimal,
 			pairs[pairs.size() - 1].dist.0 as Decimal);
 	return k_vector;
-			
+
 }
 
 
@@ -329,14 +329,14 @@ pub fn create_bins ( k_vector: KVector, pairs: &Vec<StarDatabaseElement>  ) -> V
 pub fn gen_angle_distance ( min: Radians, max: Radians ) -> Radians
 {
 	let mut rng = rand::thread_rng();
-	return Radians(rng.gen::<Decimal>()) * (max - min) + min;	
+	return Radians(rng.gen::<Decimal>()) * (max - min) + min;
 }
 
 /// Generates a tolerance value.
 pub fn gen_tolerance ( max: Radians ) -> Radians
 {
 	let mut rng = rand::thread_rng();
-	return Radians(rng.gen::<Decimal>()) * max;	
+	return Radians(rng.gen::<Decimal>()) * max;
 }
 
 
@@ -353,7 +353,7 @@ pub fn find_basic_angles ( angle: Radians, tolerance: Radians, database: &Pyrami
 																			-> Vec<StarPair<usize>>
 {
 	let mut matches : Vec<StarPair<usize>> = Vec::new();
-	
+
 	for ii in 0..database.catalogue.size()
 	{
 		for jj in (ii+1)..database.catalogue.size()
@@ -364,7 +364,7 @@ pub fn find_basic_angles ( angle: Radians, tolerance: Radians, database: &Pyrami
 			}
 		}
 	}
-	
+
 	return matches;
 }
 
@@ -377,7 +377,3 @@ pub fn find_k_vector_angles ( angle: Radians, tolerance: Radians, database: &Pyr
 	database.find_close_ref(angle, tolerance, &mut matches);
 	return matches;
 }
-
-
-
-

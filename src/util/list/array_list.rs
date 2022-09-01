@@ -21,6 +21,36 @@ impl <T, const N: usize> ArrayList <T, N>
 	}
 }
 
+impl <T, const N: usize> ArrayList <T, N> where T: Copy
+{
+	/// Creates an array list from an array.
+	/// # Arguments
+	/// * `array` - The array to copy.
+	/// # Returns
+	/// A copy of the array.
+	/// # Example
+	/// ```
+	/// use star_tracker::util::list::ArrayList;
+	/// let array : [u32; 5] = [2, 4, 6, 8, 10];
+	/// let list : ArrayList<u32, 5> = ArrayList::from_array(&array);
+	/// assert_eq!(list.get(0), 2);
+	/// assert_eq!(list.get(1), 4);
+	/// assert_eq!(list.get(2), 6);
+	/// assert_eq!(list.get(3), 8);
+	/// assert_eq!(list.get(4), 10);
+	/// ```
+	pub fn from_array<const NN: usize> ( array: &[T; NN] ) -> Self
+	{
+		assert!(NN <= N, "Array is bigger than list.");
+		let mut list = ArrayList::new();
+		for i in 0..array.len()
+		{
+			list.push_back(array[i]).expect("Array is bigger than list?");
+		}
+		return list;
+	}
+}
+
 
 
 //###############################################################################################//
@@ -213,11 +243,11 @@ impl<T, const N : usize> List<T> for ArrayList<T, N> where T: Clone
 		self.end -= 1;
 		return self.array[self.end].clone();
 	}
-	
-	
+
+
 	/// Sets the counter to 0 so all elements will be override and the list is essentialy cleared.
 	/// # Example
-	/// ``` 
+	/// ```
 	/// use star_tracker::util::list::{ArrayList, List};
 	/// let mut lst : ArrayList<u32, 2> = ArrayList::new();
 	/// lst.push_back(2);
@@ -232,7 +262,7 @@ impl<T, const N : usize> List<T> for ArrayList<T, N> where T: Clone
 	{
 		self.end = 0;
 	}
-	
+
 
 	/// Sorts the list
 	/// # Arguments
@@ -351,7 +381,18 @@ impl<T, const N : usize> List<T> for ArrayList<T, N> where T: Clone
 
 
 
-
+impl <T, const N: usize> Clone for ArrayList<T, N> where T:Clone
+{
+	fn clone ( &self ) -> Self
+	{
+		let mut list : Self = ArrayList::new();
+		for i in 0..self.size()
+		{
+			list.push_back(self.get(i)).expect("Array is of different size?");
+		}
+		return list;
+	}
+}
 
 
 
@@ -369,6 +410,38 @@ impl<T, const N : usize> List<T> for ArrayList<T, N> where T: Clone
 mod test
 {
 	use crate::util::list::{List, ArrayList};
+
+	#[test]
+	fn test_from_array ( )
+	{
+		let array : [u32; 5] = [2, 4, 6, 8, 10];
+		let list : ArrayList<u32, 5> = ArrayList::from_array(&array);
+		assert_eq!(list.get(0), 2);
+		assert_eq!(list.get(1), 4);
+		assert_eq!(list.get(2), 6);
+		assert_eq!(list.get(3), 8);
+		assert_eq!(list.get(4), 10);
+	}
+
+	#[test]
+	fn test_from_not_enough_elements ( )
+	{
+		let array : [u32; 4] = [2, 4, 6, 8];
+		let list : ArrayList<u32, 5> = ArrayList::from_array(&array);
+		assert_eq!(list.size(), 4);
+		assert_eq!(list.get(0), 2);
+		assert_eq!(list.get(1), 4);
+		assert_eq!(list.get(2), 6);
+		assert_eq!(list.get(3), 8);
+	}
+
+	#[test]
+	#[should_panic]
+	fn test_from_too_many_elements ( )
+	{
+		let array : [u32; 5] = [2, 4, 6, 8, 10];
+		let _list : ArrayList<u32, 4> = ArrayList::from_array(&array);
+	}
 
 	//
 	// capacity ( ) -> const usize
@@ -554,7 +627,7 @@ mod test
 	//
 	// clear ( &mut self )
 	//
-	
+
 	#[test]
 	// Clear should set list to 0 and override any values when pushback occures.
 	fn test_clear ( )

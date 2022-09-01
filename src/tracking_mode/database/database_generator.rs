@@ -1,5 +1,6 @@
 use super::DatabaseGenerator;
 
+use util::icosphere::IcoSphere;
 use util::aliases::Decimal;
 use util::units::Radians;
 use util::units::Equatorial;
@@ -8,6 +9,7 @@ use util::list::List;
 use nix::Star;
 
 use tracking_mode::StarPair;
+use tracking_mode::database::RegionalDatabase;
 use tracking_mode::database::PyramidDatabase;
 use tracking_mode::database::StarDatabaseElement;
 use tracking_mode::database::KVector;
@@ -15,7 +17,7 @@ use tracking_mode::database::KVector;
 
 impl DatabaseGenerator
 {
-	pub fn get_database ( &self ) -> PyramidDatabase
+	pub fn get_database_pyramid ( &self ) -> PyramidDatabase
 	{
 		return PyramidDatabase {
 			fov      : self.fov,
@@ -23,6 +25,20 @@ impl DatabaseGenerator
 			k_vector : &self.k_vector,
 			pairs    : &self.pairs,
 			catalogue: &self.catalogue,
+		};
+	}
+
+	pub fn get_database_regional ( &self ) -> RegionalDatabase
+	{
+		return RegionalDatabase {
+			region_selected: 0,
+			num_regions    : 12,
+			fov            : self.fov,
+			k_lookup       : self.k_lookup,
+			k_vector       : &self.k_vector,
+			pairs          : &self.pairs,
+			pairs_region   : &self.pairs_region,
+			catalogue      : &self.catalogue,
 		};
 	}
 
@@ -63,9 +79,65 @@ impl DatabaseGenerator
 		{
 			k_vector: k_vector,
 			pairs: pairs,
+			pairs_region: Vec::new(),
 			catalogue: catalogue,
 			fov: fov,
-			k_lookup: k_lookup
+			k_lookup: k_lookup,
+		};
+	}
+
+
+
+	pub fn gen_database_regions ( stars: &Vec<Star>, fov: Radians, num_bins: usize ) -> Self
+	{
+		let regions = IcoSphere::icosphere(1);
+
+		let mut pairs_unrefined = StarDatabaseElement::create_list(fov / 2.0, stars);
+		pairs_unrefined.sort();
+
+		let mut pairs_region : Vec<u64> = Vec::new();
+		let mut pairs : Vec<StarPair<usize>> = Vec::new();
+		for i in 0..pairs_unrefined.len()
+		{
+			let ref_a = pairs_unrefined[i].pair.0;
+			let ref_b = pairs_unrefined[i].pair.1;
+			let star_a = stars[ref_a].clone();
+			let star_b = stars[ref_b].clone();
+			pairs.push(StarPair(ref_a, ref_b));
+
+			let mut region_bit : u64 = 0b0000;
+			for jj in 0..regions.size()
+			{
+				let pt = regions.get(jj);
+				let angle = IcoSphere::angle_max(1);
+				let dist_1 = star_a.pos.angle_distance(pt);
+				let dist_2 = star_b.pos.angle_distance(pt);
+				if  dist_1 < angle || dist_2 < angle
+				{
+					region_bit |= 1 << jj;
+				}
+			}
+			pairs_region.push(region_bit);
+		}
+
+		let k_lookup = KVector::new(num_bins, pairs_unrefined[0].dist.0 as Decimal,
+			pairs_unrefined[pairs.len() - 1].dist.0 as Decimal);
+
+		let k_vector = k_lookup.generate_bins(&pairs_unrefined).expect("Database too small.");
+		k_lookup.generate_bins(&pairs_unrefined).expect("Increase the cutoff magnitude.");
+
+		let mut catalogue : Vec<Equatorial> = Vec::new();
+		for i in 0..stars.size() { catalogue.push(stars[i].pos); }
+
+
+		return Self
+		{
+			k_vector: k_vector,
+			pairs: pairs,
+			pairs_region: pairs_region,
+			catalogue: catalogue,
+			fov: fov,
+			k_lookup: k_lookup,
 		};
 	}
 
@@ -319,47 +391,49 @@ mod test
 	// Testing the kvector involves creating a kvector and testing its accuracy.
 	fn test_gen_database ( )
 	{
-		let mut rng = rand::thread_rng();
-		let mut stars : Vec<Star> = Vec::new();
+		panic!("NYI");
 
-		let fov = Degrees(30.0).to_radians();
-		let num_bins = 100;
-		for _i in 0..100
-		{
-			let str = "".to_string();
-			let eq = Equatorial{ra: Degrees(rng.gen::<Decimal>() * 360.0).to_radians(),
-				dec: Degrees(rng.gen::<Decimal>() * 180.0 - 90.0).to_radians()};
-			stars.push(Star{mag: 0.0, pos: eq, spec: str.clone(), name: str.clone()});
-		}
-
-		let gen = DatabaseGenerator::gen_database(&stars, fov, num_bins);
-		let db = gen.get_database();
-
-		let mut count = 0;
-		for ii in 0..stars.len()
-		{
-			for jj in ii+1..stars.len()
-			{
-				let dist = stars[ii].pos.angle_distance(stars[jj].pos);
-				if dist < fov / 2.0 && ii != jj
-				{
-					count += 1;
-					let mut found : Vec<StarPair<usize>> = Vec::new();
-					db.find_close_ref(dist, Radians(0.001), &mut found);
-
-					let mut valid = false;
-					for kk in 0..found.len()
-					{
-						let star_1 = db.find_star(found[kk].0).expect("?");
-						let star_2 = db.find_star(found[kk].1).expect("?");
-						valid |= (star_1.angle_distance(star_2) - dist).abs() < 0.001;
-					}
-					assert!(valid)
-				}
-			}
-		}
-		assert_eq!(count, db.pairs.size());
-		assert_eq!(stars.len(), db.catalogue.size());
+		// let mut rng = rand::thread_rng();
+		// let mut stars : Vec<Star> = Vec::new();
+		//
+		// let fov = Degrees(30.0).to_radians();
+		// let num_bins = 100;
+		// for _i in 0..100
+		// {
+		// 	let str = "".to_string();
+		// 	let eq = Equatorial{ra: Degrees(rng.gen::<Decimal>() * 360.0).to_radians(),
+		// 		dec: Degrees(rng.gen::<Decimal>() * 180.0 - 90.0).to_radians()};
+		// 	stars.push(Star{mag: 0.0, pos: eq, spec: str.clone(), name: str.clone()});
+		// }
+		//
+		// let gen = DatabaseGenerator::gen_database(&stars, fov, num_bins);
+		// let db = gen.get_database();
+		//
+		// let mut count = 0;
+		// for ii in 0..stars.len()
+		// {
+		// 	for jj in ii+1..stars.len()
+		// 	{
+		// 		let dist = stars[ii].pos.angle_distance(stars[jj].pos);
+		// 		if dist < fov / 2.0 && ii != jj
+		// 		{
+		// 			count += 1;
+		// 			let mut found : Vec<StarPair<usize>> = Vec::new();
+		// 			db.find_close_ref(dist, Radians(0.001), &mut found);
+		//
+		// 			let mut valid = false;
+		// 			for kk in 0..found.len()
+		// 			{
+		// 				let star_1 = db.find_star(found[kk].0).expect("?");
+		// 				let star_2 = db.find_star(found[kk].1).expect("?");
+		// 				valid |= (star_1.angle_distance(star_2) - dist).abs() < 0.001;
+		// 			}
+		// 			assert!(valid)
+		// 		}
+		// 	}
+		// }
+		// assert_eq!(count, db.pairs.size());
+		// assert_eq!(stars.len(), db.catalogue.size());
 	}
 
 

@@ -167,7 +167,7 @@ impl Equatorial
 		}
 		return output
 	}
-	
+
 	/// Returns the separation between neighboring points of the `evenly_distribute` function.
 	/// This is not perfectly accurate, give some tolerance when using this.
 	/// # Arguments
@@ -179,7 +179,7 @@ impl Equatorial
 		assert!(99 < number_of_points, "This model is inaccurate below 100 points.");
 		return Radians(3.3255 * (number_of_points as Decimal).powf(-0.4974));
 	}
-	
+
 	/// Returns the number of points required to get a particular angle using `evenly_distribute`.
 	/// This is not perfectly accurate, give some tolerance when using this.
 	/// # Arguments
@@ -187,6 +187,35 @@ impl Equatorial
 	pub fn evenly_distribute_points ( angle_distance: Radians ) -> usize
 	{
 		return (11.2019 * angle_distance.0.powf(-2.0104)) as usize;
+	}
+
+
+	pub fn icosohedron ( ) -> Vec<Equatorial>
+	{
+		let mut points : Vec<Equatorial> = Vec::new();
+		let phi = (1.0 + (5.0 as Decimal).powf(0.5)) / 2.0; // Golden Ratio
+
+		// points:
+		// ( 0,  ±1, ±φ )
+		// ( ±1, ±φ, 0  )
+		// ( ±φ, 0,  ±1 )
+
+		points.push(Vector3{x:  phi, y:  0.0, z:  1.0}.to_equatorial());
+		points.push(Vector3{x:  phi, y:  0.0, z: -1.0}.to_equatorial());
+		points.push(Vector3{x: -phi, y:  0.0, z:  1.0}.to_equatorial());
+		points.push(Vector3{x: -phi, y:  0.0, z: -1.0}.to_equatorial());
+
+		points.push(Vector3{x:  0.0, y:  1.0, z:  phi}.to_equatorial());
+		points.push(Vector3{x:  0.0, y:  1.0, z: -phi}.to_equatorial());
+		points.push(Vector3{x:  0.0, y: -1.0, z:  phi}.to_equatorial());
+		points.push(Vector3{x:  0.0, y: -1.0, z: -phi}.to_equatorial());
+
+		points.push(Vector3{x:  1.0, y:  phi, z: 0.0}.to_equatorial());
+		points.push(Vector3{x:  1.0, y: -phi, z: 0.0}.to_equatorial());
+		points.push(Vector3{x: -1.0, y:  phi, z: 0.0}.to_equatorial());
+		points.push(Vector3{x: -1.0, y: -phi, z: 0.0}.to_equatorial());
+
+		return points;
 	}
 }
 
@@ -564,8 +593,8 @@ mod test
 			}
 		}
 	}
-	
-	
+
+
 	#[test]
 	fn test_evenly_distribute_angle ( )
 	{
@@ -580,15 +609,15 @@ mod test
 		assert!((method(8000)  - Degrees( 2.18 ).to_radians()).abs() < 0.1 );
 		assert!((method(10000) - Degrees( 1.971).to_radians()).abs() < 0.1 );
 	}
-	
+
 	#[test]
 	#[should_panic]
 	fn test_evenly_distribute_angle_panic ( )
 	{
 		Equatorial::evenly_distribute_angle(99);
 	}
-	
-	
+
+
 	#[test]
 	fn test_evenly_distribute_angle_points ( )
 	{
@@ -606,5 +635,5 @@ mod test
 	// Numbers used for golden circle calibration.
 	// 1.533 1.039 0.666 0.471 0.336 0.3 0.214 0.1524 0.107 0.076 0.054 0.038 0.034
 	// 5 10 25 50 100 125 250 500 1000 2000 4000 8000 10000
-	
+
 }

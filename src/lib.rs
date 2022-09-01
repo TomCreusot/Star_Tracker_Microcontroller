@@ -9,6 +9,10 @@
 #![feature(const_evaluatable_checked)]		// Allows generic struct variables.
 #![feature(associated_type_defaults)]		// Allows list to implement iterator.
 
+
+#![feature(const_fn_floating_point_arithmetic)] // allows constant Degrees.as_radians() function.
+
+
 // #![allow(unused_must_use)]
 
 extern crate curl;

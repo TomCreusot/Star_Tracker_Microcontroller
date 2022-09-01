@@ -40,7 +40,7 @@ use star_tracker::tracking_mode::StarTriangleIterator;
 // use star_tracker::tracking_mode::StarTriangle;
 use star_tracker::tracking_mode::Match;
 use star_tracker::tracking_mode::StarPair;
-use star_tracker::tracking_mode::database::PyramidDatabase;
+use star_tracker::tracking_mode::database::RegionalDatabase;
 // use star_tracker::tracking_mode::database::KVector;
 // use star_tracker::tracking_mode::database::array_database;
 // use star_tracker::tracking_mode::database::StarDatabaseElement;
@@ -96,7 +96,7 @@ fn main ( )
 	println!("\nCreating Native Database \t\t...");
 	let gen : DatabaseGenerator = DatabaseGenerator::gen_database(&stars_region, FOV, BINS_NUM);
 
-	let database : PyramidDatabase = gen.get_database();
+	let mut database : RegionalDatabase = gen.get_database_regional();
 
 
 	println!("   * k_vector size:                  {}", database.k_vector.size());
@@ -152,7 +152,7 @@ fn main ( )
 		image.histogram(&mut histogram);
 
 		let threshold_percent = 0.999;
-		let threshold : Byte = image.novel_threshold(threshold_percent, &histogram);
+		let threshold : Byte = image.percent_threshold(threshold_percent, &histogram);
 
 		let mut blobs : Vec<Blob> = Vec::new();
 		Blob::find_blobs::<BLOB_SIZE>(threshold, &mut image, &mut blobs);
@@ -178,7 +178,7 @@ fn main ( )
 		println!("Finding Constellation      \t\t...");
 		let constellation : Constellation = Constellation::find::<TrackingModeConstsStruct>(
 			&points,
-			&database,
+			&mut database,
 			&mut StarTriangleIterator::<{TrackingModeConstsStruct::PAIRS_MAX}>::new(),
 			&mut star_tracker::tracking_mode::StarPyramid(0,0,0,0),
 			&mut star_tracker::tracking_mode::Specularity::Ignore);
