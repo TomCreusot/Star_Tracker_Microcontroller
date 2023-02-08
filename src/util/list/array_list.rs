@@ -1,7 +1,9 @@
-//! The implementation of ArrayList.
+//! Implementation of [ArrayList](crate::util::list::ArrayList).
+use crate::util::list::ArrayList;
+use crate::util::list::List;
 
-use super::{List, ArrayList};
-use util::err::{Error, Errors};
+use crate::util::err::Error;
+use crate::util::err::Errors;
 
 //###############################################################################################//
 //								---	ArrayList Constructor ---
@@ -10,6 +12,14 @@ use util::err::{Error, Errors};
 impl <T, const N: usize> ArrayList <T, N>
 {
 	/// Constructor
+	/// Use `new` or `from_array` to ensure the list is correctly setup.  
+	/// This will create a new list with the given capacity and type with zero size.  
+	/// # Examples 
+	/// ```
+	/// use star_tracker::util::list::ArrayList;
+	///
+	/// let list: ArrayList<u8, 10> = ArrayList::new(); // Creates a list of size 0, capacity 10.
+	/// ```
 	pub fn new ( ) -> ArrayList<T, N>
 	{
 		use std::mem::{MaybeUninit};
@@ -27,27 +37,33 @@ impl <T, const N: usize> ArrayList <T, N> where T: Copy
 	/// # Arguments
 	/// * `array` - The array to copy.
 	/// # Returns
-	/// A copy of the array.
-	/// # Example
+	/// Array < Capacity  A copy of the array.  
+	/// Array > Capacity  Errors::InvalidSize  
+	/// # Examples
 	/// ```
 	/// use star_tracker::util::list::ArrayList;
-	/// let array : [u32; 5] = [2, 4, 6, 8, 10];
-	/// let list : ArrayList<u32, 5> = ArrayList::from_array(&array);
+	/// use star_tracker::util::list::List;
+	///
+	/// let array: [u32; 5] = [2, 4, 6, 8, 10];
+	/// let list: ArrayList<u32, 5> = ArrayList::from_array(&array).expect("within range.");
 	/// assert_eq!(list.get(0), 2);
 	/// assert_eq!(list.get(1), 4);
 	/// assert_eq!(list.get(2), 6);
 	/// assert_eq!(list.get(3), 8);
 	/// assert_eq!(list.get(4), 10);
 	/// ```
-	pub fn from_array<const NN: usize> ( array: &[T; NN] ) -> Self
+	pub fn from_array<const NN: usize> ( array: &[T; NN] ) -> Error<Self>
 	{
-		assert!(NN <= N, "Array is bigger than list.");
+		if N < NN
+		{
+			return Err(Errors::InvalidSize);
+		}
 		let mut list = ArrayList::new();
 		for i in 0..array.len()
 		{
-			list.push_back(array[i]).expect("Array is bigger than list?");
+			let _ = list.push_back(array[i]);
 		}
-		return list;
+		return Ok(list);
 	}
 }
 
@@ -56,17 +72,19 @@ impl <T, const N: usize> ArrayList <T, N> where T: Copy
 //###############################################################################################//
 //								---	ListIterator Implementation ---
 //###############################################################################################//
-/*impl<'a, T, const N : usize> IntoIterator for &'a ArrayList<T, N> where T: Clone {
-    type Item = T;
-    type IntoIter = ListIterator<'a, T>;
+// Why did I comment this???
+// Document your code kids :P
+/*impl<'a, T, const N: usize> IntoIterator for &'a ArrayList<T, N> where T: Clone {
+	type Item = T;
+	type IntoIter = ListIterator<'a, T>;
 
 	/// Creates an iterator for arraylist.
-    fn into_iter(self) -> Self::IntoIter {
-        ListIterator {
-            list: self,
-            index: 0,
-        }
-    }
+	fn into_iter(self) -> Self::IntoIter {
+		ListIterator {
+			list: self,
+			index: 0,
+		}
+	}
 }*/
 
 
@@ -75,20 +93,23 @@ impl <T, const N: usize> ArrayList <T, N> where T: Copy
 //###############################################################################################//
 //								---	ArrayList Implementation ---
 //###############################################################################################//
-impl<T, const N : usize> List<T> for ArrayList<T, N> where T: Clone
+impl<T, const N: usize> List<T> for ArrayList<T, N> where T: Clone
 {
 
 	/// Finds the max number of elements that can be stored in the list.
-	/// # Example
+	/// # Examples
 	/// ```
-	/// use star_tracker::util::list::{ArrayList, List};
-	/// let lst : ArrayList<u32, 10> = ArrayList::new();
-	/// assert_eq!(lst.capacity(), 10);
-	/// //unsafe
-	/// //{
-	/// //	const size : usize = lst.capacity() as const usize;
-	/// //	let lst2 : ArrayList<u32, size> = ArrayList::new();
-	/// //}
+	/// use star_tracker::util::list::ArrayList;
+	/// use star_tracker::util::list::List;
+	/// use star_tracker::util::err::Errors;
+	///
+	/// const max_capacity: usize = 2;
+	/// let mut lst: ArrayList<u32, max_capacity> = ArrayList::new();
+	/// assert_eq!(lst.capacity(), max_capacity);
+	///
+	/// lst.push_back(1);
+	/// lst.push_back(2);
+	/// assert!(lst.push_back(3).is_err()); // The capacity is 2, cannot add another element.
 	/// ```
 	fn capacity ( &self ) -> usize
 	{
@@ -97,16 +118,17 @@ impl<T, const N : usize> List<T> for ArrayList<T, N> where T: Clone
 
 
 	/// Finds how many elements are in the list.
-	/// # Returns
-	/// The size.
 	///
-	/// # Example
+	/// # Examples
 	/// ```
-	/// use star_tracker::util::list::{ArrayList, List};
-	/// let mut lst : ArrayList<u32, 10> = ArrayList::new();
+	/// use star_tracker::util::list::ArrayList;
+	/// use star_tracker::util::list::List;
+	///
+	/// let mut lst: ArrayList<u32, 10> = ArrayList::new();
 	/// assert_eq!(0, lst.size());
 	/// lst.push_back(1);
 	/// assert_eq!(1, lst.size());
+	///
 	/// lst.push_back(1);
 	/// assert_eq!(2, lst.size());
 	/// ```
@@ -116,16 +138,18 @@ impl<T, const N : usize> List<T> for ArrayList<T, N> where T: Clone
 	}
 
 
-	/// Checks if the ArrayList is at maximum capacity.
-	/// # Returns
-	/// True if full.
+	/// Checks if the ArrayList is at maximum capacity.  
+	/// Returns true when full.  
 	///
-	/// # Example
+	/// # Examples
 	/// ```
-	/// use star_tracker::util::list::{ArrayList, List};
-	/// let mut lst : ArrayList<u32, 2> = ArrayList::new();
+	/// use star_tracker::util::list::ArrayList;
+	/// use star_tracker::util::list::List;
+	///
+	/// let mut lst: ArrayList<u32, 2> = ArrayList::new();
 	/// lst.push_back(1);
 	/// assert!(!lst.is_full());
+	///
 	/// lst.push_back(2);
 	/// assert!(lst.is_full());
 	/// ```
@@ -135,15 +159,17 @@ impl<T, const N : usize> List<T> for ArrayList<T, N> where T: Clone
 	}
 
 
-	/// Checks if the ArrayList is at maximum capacity.
-	/// # Returns
-	/// True if full.
+	/// Checks if the ArrayList contains no elements.  
+	/// Returns true if the array size is 0.  
 	///
-	/// # Example
+	/// # Examples
 	/// ```
-	/// use star_tracker::util::list::{ArrayList, List};
-	/// let mut lst : ArrayList<i32, 2> = ArrayList::new();
+	/// use star_tracker::util::list::ArrayList;
+	/// use star_tracker::util::list::List;
+	///
+	/// let mut lst: ArrayList<i32, 2> = ArrayList::new();
 	/// assert!(lst.is_empty());
+	///
 	/// lst.push_back(1);
 	/// assert!(!lst.is_empty());
 	/// ```
@@ -152,67 +178,69 @@ impl<T, const N : usize> List<T> for ArrayList<T, N> where T: Clone
 		return self.end == 0;
 	}
 
-	/// Gets the element at the specified index.
-	/// # Arguments
-	///	* `index` - The index of the
-	/// # Returns
-	/// The value at the index.
+	/// Returns the element at the specified index.  
+	/// Equivalent to `array[index];`  
+	/// There are no safety checks as it is expected you know how to index an array.  
 	///
-	/// # Example
+	/// # Examples
 	/// ```
-	/// use star_tracker::util::list::{ArrayList, List};
-	/// let mut lst : ArrayList<i32, 2> = ArrayList::new();
+	/// use star_tracker::util::list::ArrayList;
+	/// use star_tracker::util::list::List;
+	///
+	/// let mut lst: ArrayList<i32, 2> = ArrayList::new();
 	/// lst.push_back(1);
 	/// assert_eq!(1, lst.get(0));
 	/// ```
-	fn get ( &self, index : usize ) -> T
+	fn get ( &self, index: usize ) -> T
 	{
-		assert!(index < self.end, "Out of bounds");
+		assert!(index < self.size(), "Out of Bounds");
 		return self.array[index].clone();
 	}
 
-	/// Sets the element at the specified index.
-	/// # Arguments
-	///	* `index` - The index of the element to receive.
-	/// * `value` - The value to assign.
+	/// Sets the element at the specified index.  
+	/// Equivalent to `array[index] = value;`  
+	///  
+	/// # Examples
+	/// ```
+	/// use star_tracker::util::list::ArrayList;
+	/// use star_tracker::util::list::List;
+	/// use star_tracker::util::err::Errors;
 	///
-	/// # Example
-	/// ```
-	/// use star_tracker::util::list::{ArrayList, List};
-	/// let mut lst : ArrayList<i32, 2> = ArrayList::new();
+	/// let mut lst: ArrayList<i32, 2> = ArrayList::new();
 	/// lst.push_back(0);
-	/// lst.push_back(1);
 	/// lst.set(0, 10);
-	/// lst.set(1, 5);
 	/// assert_eq!(10, lst.get(0));
-	/// assert_eq!(5, lst.get(1));
+	/// assert_eq!(lst.set(1, 10), Err(Errors::OutOfBounds)); // Out of bounds.
 	/// ```
-	fn set ( &mut self, index : usize, value : T ) -> Error<()>
-    {
+	fn set ( &mut self, index: usize, value: T ) -> Error<()>
+	{
 		if self.size() <= index
 		{
 			return Err(Errors::OutOfBounds);
 		}
-        self.array[index] = value;
+		self.array[index] = value;
 		return Ok(());
-    }
+	}
 
 
-	/// Adds an element to the end of the list.
-	/// # Arguments
-	/// * `value` - the value to add to the end.
-	///
-	/// # Example
+	/// Adds an element to the end of the list with the provided value.  
+	/// # Returns
+	/// If is_full() Errors::InvalidSize  
+	/// else         Ok(())  
+	/// # Examples
 	/// ```
-	/// use star_tracker::util::list::{ArrayList, List};
-	/// let mut lst : ArrayList<u32, 2> = ArrayList::new();
+	/// use star_tracker::util::list::ArrayList;
+	/// use star_tracker::util::list::List;
+	/// use star_tracker::util::err::Errors;
+	/// 
+	/// let mut lst: ArrayList<u32, 2> = ArrayList::new();
 	/// lst.push_back(2);
 	/// lst.push_back(1);
+	/// assert_eq!(lst.push_back(1), Err(Errors::InvalidSize)); // Full
 	/// assert_eq!(lst.get(0), 2);
 	/// assert_eq!(lst.get(1), 1);
-	/// assert!(lst.is_full());
 	/// ```
-	fn push_back ( &mut self, value : T ) -> Error<()>
+	fn push_back ( &mut self, value: T ) -> Error<()>
 	{
 		if self.capacity() <= self.size()
 		{
@@ -223,40 +251,47 @@ impl<T, const N : usize> List<T> for ArrayList<T, N> where T: Clone
 		return Ok(());
 	}
 
-	/// Removes an element from the end of the list.
+	/// Removes an element from the end of the list.  
 	/// # Returns
-	/// The value removed.
-	///
-	/// # Example
+	/// If is_empty() The value removed.  
+	/// else          Errors::InvalidSize.  
+	/// # Examples
 	/// ```
-	/// use star_tracker::util::list::{ArrayList, List};
-	/// let mut lst : ArrayList<u32, 2> = ArrayList::new();
+	/// use star_tracker::util::list::ArrayList;
+	/// use star_tracker::util::list::List;
+	/// use star_tracker::util::err::Errors;
+	///
+	/// let mut lst: ArrayList<u32, 2> = ArrayList::new();
 	/// lst.push_back(2);
 	/// lst.push_back(1);
-	/// assert_eq!(lst.pop_back(), 1);
-	/// assert_eq!(lst.pop_back(), 2);
-	/// assert!(lst.is_empty());
+	/// assert_eq!(lst.pop_back(), Ok(1));
+	/// assert_eq!(lst.pop_back(), Ok(2));
+	/// assert_eq!(lst.pop_back(), Err(Errors::InvalidSize));
 	/// ```
-	fn pop_back ( &mut self ) -> T
+	fn pop_back ( &mut self ) -> Error<T>
 	{
-		assert!(!self.is_empty(), "List is empty");
+		if self.is_empty()
+		{
+			return Err(Errors::InvalidSize);
+		}
 		self.end -= 1;
-		return self.array[self.end].clone();
+		return Ok(self.array[self.end].clone());
 	}
 
 
 	/// Sets the counter to 0 so all elements will be override and the list is essentialy cleared.
-	/// # Example
+	/// # Examples
 	/// ```
-	/// use star_tracker::util::list::{ArrayList, List};
-	/// let mut lst : ArrayList<u32, 2> = ArrayList::new();
+	/// use star_tracker::util::list::ArrayList;
+	/// use star_tracker::util::list::List;
+	///
+	/// let mut lst: ArrayList<u32, 2> = ArrayList::new();
 	/// lst.push_back(2);
 	/// lst.push_back(1);
+	///
+	/// // The list is now empty.
 	/// lst.clear();
 	/// assert_eq!(0, lst.size());
-	/// lst.push_back(10);
-	/// assert_eq!(1, lst.size());
-	/// assert_eq!(10, lst.get(0));
 	/// ```
 	fn clear ( &mut self )
 	{
@@ -264,28 +299,33 @@ impl<T, const N : usize> List<T> for ArrayList<T, N> where T: Clone
 	}
 
 
-	/// Sorts the list
+	/// Sorts the list.  
+	/// VERY SLOW!!!  
 	/// # Arguments
-	/// * `in_order` - A function which returns TRUE if it is in order.
+	/// * `in_order` - A function which returns TRUE if it is in order.  
+	///  
+	/// This means that the first argument is a smaller index than the second.
 	///
-	/// # Example
+	/// # Examples
 	/// ```
-	/// use star_tracker::util::list::{ArrayList, List};
-	/// fn ascending ( small : & u32, large : & u32 ) -> bool { return small < large; }
-	/// let mut lst : ArrayList<u32, 2> = ArrayList::new();
-	/// lst.push_back(1);
-	/// lst.push_back(0);
+	/// use star_tracker::util::list::ArrayList;
+	/// use star_tracker::util::list::List;
+	/// fn ascending ( small: & u32, large: & u32 ) -> bool { return small < large; }
+	///
+	/// let mut lst: ArrayList<u32, 2> = ArrayList::new();
+	/// lst.push_back(1);          // 1
+	/// lst.push_back(0);          // 1 0
 	/// lst.sort_order(ascending);
 	/// assert_eq!(lst.get(0), 0);
-	/// assert_eq!(lst.get(1), 1);
+	/// assert_eq!(lst.get(1), 1); // 0 1
 	/// ```
 	fn sort_order ( &mut self, in_order: fn (& T, & T) -> bool )
 	{
 		for ii in 0..self.size()
 		{
-			let mut jj : usize = ii;
+			let mut jj: usize = ii;
 
-			let mut temp : T = self.array[jj].clone();
+			let mut temp: T = self.array[jj].clone();
 			while jj > 0 && in_order(&mut temp, &mut self.array[jj - 1])
 			{
 				self.array[jj] = self.array[jj - 1].clone();
@@ -298,56 +338,53 @@ impl<T, const N : usize> List<T> for ArrayList<T, N> where T: Clone
 	/// Slots an element into the list so it is in sorted order by shifting everything right.
 	/// # Arguments
 	/// * `to_slot` - The element to add.
-	/// * `in_order` - The ordering method.
+	/// * `in_order` - A function which returns TRUE if it is in order.
+	///  
+	/// This means that the first argument is a smaller index than the second.
 	///
 	/// # Returns
 	/// True if inserted, false if there is no space and it will trail the last element
 	///
-	/// # Example
+	/// # Examples
 	/// ```
-	/// use star_tracker::util::list::{ArrayList, List};
-	///	fn sort_ascending ( small : & i32, large : & i32 ) -> bool { return small < large; }
-	/// let mut input : ArrayList<i32, 6> = ArrayList::new();
+	/// use star_tracker::util::list::ArrayList;
+	/// use star_tracker::util::list::List;
+	///	fn sort_ascending ( small: & i32, large: & i32 ) -> bool { return small < large; }
 	///
+	/// let mut input: ArrayList<i32, 6> = ArrayList::new();
+	///
+	/// // The list is not full, elements will be added until it is full.
 	/// let mut to_slot = 0;
-	/// assert!(input.slot(to_slot, sort_ascending));
+	/// assert!(input.slot(to_slot, sort_ascending)); // 0
 	/// to_slot = 2;
-	/// assert!(input.slot(to_slot, sort_ascending));
+	/// assert!(input.slot(to_slot, sort_ascending)); // 0 2
 	/// to_slot = 3;
-	/// assert!(input.slot(to_slot, sort_ascending));
+	/// assert!(input.slot(to_slot, sort_ascending)); // 0 2 3
 	/// to_slot = 1;
-	/// assert!(input.slot(to_slot, sort_ascending));
+	/// assert!(input.slot(to_slot, sort_ascending)); // 0 1 2 3
 	/// to_slot = 4;
-	/// assert!(input.slot(to_slot, sort_ascending));
+	/// assert!(input.slot(to_slot, sort_ascending)); // 0 1 2 3 4
 	/// to_slot = 5;
-	/// assert!(input.slot(to_slot, sort_ascending));
+	/// assert!(input.slot(to_slot, sort_ascending)); // 0 1 2 3 4 5
 	///
-	/// assert_eq!(input.size(), 6);
-	/// // Full, 0, 1, 2, 3, 4, 5
+	/// // The list is full, every element added now will push an element out of the list.
 	/// to_slot = -1;
-	/// assert!(input.slot(to_slot, sort_ascending));//-1, 0, 1, 2, 3, 4
+	/// assert!(input.slot(to_slot, sort_ascending)); // -1 0 1 2 3 4  | 5
 	/// to_slot = -2;
-	/// assert!(input.slot(to_slot, sort_ascending));//-2, -1, 0, 1, 2, 3
+	/// assert!(input.slot(to_slot, sort_ascending)); // -2 -1 0 1 2 3 | 4
 	/// to_slot = 1;
-	/// assert!(input.slot(to_slot, sort_ascending));//-2, -1, 0, 1, 1, 2
-	/// to_slot = 10;
-	/// assert!(!input.slot(to_slot, sort_ascending));//-2, -1, 0, 1, 1, 2
-	///
-	/// assert_eq!(input.get(0), -2);
-	/// assert_eq!(input.get(1), -1);
-	/// assert_eq!(input.get(2), 0);
-	/// assert_eq!(input.get(3), 1);
-	/// assert_eq!(input.get(4), 1);
-	/// assert_eq!(input.get(5), 2);
+	/// assert!(input.slot(to_slot, sort_ascending)); // -2 -1 0 1 1 2 | 3
+	/// to_slot = 10; // Too big to fit
+	/// assert!(!input.slot(to_slot, sort_ascending));// -2 -1 0 1 1 2 | 10
 	/// ```
-	fn slot ( &mut self, to_slot : T, in_order: fn (& T, & T) -> bool ) -> bool
+	fn slot ( &mut self, to_slot: T, in_order: fn (& T, & T) -> bool ) -> bool
 	{
 		for ii in 0..self.size()
 		{
 			// If must slot in the middle.
 			if in_order(&to_slot, &self.get(ii))
 			{
-				let mut to_move : T;
+				let mut to_move: T;
 				let mut to_insert = to_slot.clone();
 				let mut jj = ii;
 				while jj < self.size()
@@ -385,7 +422,7 @@ impl <T, const N: usize> Clone for ArrayList<T, N> where T:Clone
 {
 	fn clone ( &self ) -> Self
 	{
-		let mut list : Self = ArrayList::new();
+		let mut list: Self = ArrayList::new();
 		for i in 0..self.size()
 		{
 			list.push_back(self.get(i)).expect("Array is of different size?");
@@ -409,150 +446,222 @@ impl <T, const N: usize> Clone for ArrayList<T, N> where T:Clone
 #[allow(unused_must_use)]
 mod test
 {
-	use crate::util::list::{List, ArrayList};
+	use crate::util::list::List;
+	use crate::util::list::ArrayList;
+	use crate::util::err::Errors;
+	use crate::util::err::Error;
+
+
+//###############################################################################################//
+//
+//										Constructors
+// pub fn new ( ) -> Self
+// pub fn from_array ( &[T; N] ) -> Error<Self>
+//
+//###############################################################################################//
 
 	#[test]
-	fn test_from_array ( )
+	// A newely constructed array list should have 0 size.
+	fn test_new ( )
 	{
-		let array : [u32; 5] = [2, 4, 6, 8, 10];
-		let list : ArrayList<u32, 5> = ArrayList::from_array(&array);
+		let list: ArrayList<u32, 10> = ArrayList::new();
+		assert_eq!(list.end, 0);
+		assert_eq!(list.array.len(), 10);
+	}
+
+	#[test]
+	// Test if the array is filling the whole array list.
+	// Every value should be assigned in the list.
+	fn test_from_array ( ) -> Error<()>
+	{
+		let array: [u32; 5] = [2, 4, 6, 8, 10];
+		let list: ArrayList<u32, 5> = ArrayList::from_array(&array)?;
 		assert_eq!(list.get(0), 2);
 		assert_eq!(list.get(1), 4);
 		assert_eq!(list.get(2), 6);
 		assert_eq!(list.get(3), 8);
 		assert_eq!(list.get(4), 10);
+		return Ok(());
 	}
 
 	#[test]
-	fn test_from_not_enough_elements ( )
+	// Test if the array is smaller than the array list.
+	// Only a few elements in the list should be filled.
+	fn test_from_not_enough_elements ( ) -> Error<()>
 	{
-		let array : [u32; 4] = [2, 4, 6, 8];
-		let list : ArrayList<u32, 5> = ArrayList::from_array(&array);
+		let array: [u32; 4] = [2, 4, 6, 8];
+		let list: ArrayList<u32, 5> = ArrayList::from_array(&array)?;
 		assert_eq!(list.size(), 4);
 		assert_eq!(list.get(0), 2);
 		assert_eq!(list.get(1), 4);
 		assert_eq!(list.get(2), 6);
 		assert_eq!(list.get(3), 8);
+		return Ok(());
 	}
 
 	#[test]
-	#[should_panic]
-	fn test_from_too_many_elements ( )
+	// SHOULD FAIL.
+	// Test if the is too big.
+	// On calling the function, InvalidSize should be called as the list cant accomidate the array.
+	fn test_from_array_too_many_elements ( )
 	{
-		let array : [u32; 5] = [2, 4, 6, 8, 10];
-		let _list : ArrayList<u32, 4> = ArrayList::from_array(&array);
+		let array: [u32; 5] = [2, 4, 6, 8, 10];
+		let list: Error<ArrayList<u32, 4>> = ArrayList::from_array(&array);
+		if let Err(e) = list
+		{
+			assert_eq!(e, Errors::InvalidSize);
+			return;
+		}
+		assert!(false);
 	}
 
-	//
-	// capacity ( ) -> const usize
-	//
+//###############################################################################################//
+//
+//										Basic Accessors
+//
+// pub fn capacity  ( &self ) -> usize
+// pub fn size      ( &self ) -> usize
+// pub fn is_full   ( &self ) -> bool
+// pub fn is_empty  ( &self ) -> bool
+//
+// pub fn get       ( &self, index: usize ) -> T
+// pub fn set       ( &mut self, index: usize, value: T ) -> Error<()>
+// pub fn push_back ( &mut self, value: T ) -> Error<()>
+// pub fn pop_back  ( &mut self, value: T ) -> Error<T>
+//
+//###############################################################################################//
+//										~ capacity ~											 //
 	#[test]
+	// Capacity will always return the input size of the array list.
 	fn test_capacity ( )
 	{
-		let lst : ArrayList<u32, 10> = ArrayList::new();
+		let lst: ArrayList<u32, 10> = ArrayList::new();
 		assert_eq!(lst.capacity(), 10);
 	}
 
-
-
-//
-// size ( ) -> usize
-//
+//										~ size ~												 //
 	#[test]
+	// Size will return the number of elements in the array.
 	fn test_size ( )
 	{
-		let mut lst : ArrayList<i32, 2> = ArrayList::new();
+		let mut lst: ArrayList<i32, 2> = ArrayList::new();
 		assert_eq!(lst.size(), 0);
 		lst.push_back(1);
 		assert_eq!(lst.size(), 1);
 		lst.push_back(2);
 		assert_eq!(lst.size(), 2);
 	}
-//
-//	is_full ( ) -> bool
-//
+	
+	
+//										~ is_full ~												 //
 	#[test]
+	// If the list has 0 capacity, it is always full.
 	fn test_is_full_size_0 ( )
 	{
-		let lst : ArrayList<i32, 0> = ArrayList::new();
+		let lst: ArrayList<i32, 0> = ArrayList::new();
 		assert!(lst.is_full());
 	}
+	
 	#[test]
+	// If the list has N capacity, it is only full when there is no room left.
 	fn test_is_full_size_1 ( )
 	{
-		let mut lst : ArrayList<f32, 1> = ArrayList::new();
-		assert!(!lst.is_full());
+		let mut lst: ArrayList<f32, 1> = ArrayList::new();
 		lst.push_back(0.1);
 		assert!(lst.is_full());
 	}
-
-
-
-
-//
-// is_empty ( ) -> bool
-//
+	
 	#[test]
-	fn test_is_empty_size_0 ( )
+	// If the list has N capacity, it will not be full unless there is no room.
+	fn test_is_full_size_1_empty ( )
 	{
-		let lst : ArrayList<u32, 0> = ArrayList::new();
-		assert!(lst.is_empty());
+		let lst: ArrayList<f32, 1> = ArrayList::new();
+		assert!(!lst.is_full());
 	}
 
-/* FAILING???
-*/
+
+//										~ is_empty ~											 //
 	#[test]
+	// If the list has no capacity, it is empty.
+	fn test_is_empty_size_0 ( )
+	{
+		let lst: ArrayList<u32, 0> = ArrayList::new();
+		assert!(lst.is_empty());
+	}
+	
+	#[test]
+	// If the list has N capacity, it is empty when there are no elements.
 	fn test_is_empty_size_1 ( )
 	{
-		let mut lst : ArrayList<u32, 1> = ArrayList::new();
+		let lst: ArrayList<u32, 1> = ArrayList::new();
 		assert!(lst.is_empty());
-		lst.push_back(22);
+	}
+	
+	#[test]
+	// If the list has N capacity, it is not empty when there are elements contained.
+	fn test_is_empty_size_1_full ( )
+	{
+		let mut lst: ArrayList<u32, 1> = ArrayList::new();
+		lst.push_back(1);
 		assert!(!lst.is_empty());
 	}
 
 
-//
-// get(usize index) -> T
-//
+//										~ get ~													 //
 	#[test]
-	fn test_get_read ( )
+	// If the get tries to access an element inside of the bounds, it should access it.
+	fn test_get_valid ( )
 	{
-		let mut lst : ArrayList<u32, 2> = ArrayList::new();
+		let mut lst: ArrayList<u32, 2> = ArrayList::new();
 		lst.push_back(0);
 		lst.push_back(1);
-		let mut  first = lst.get(0);
+		let first  = lst.get(0);
 		let second = lst.get(1);
 		assert_eq!(first, 0);
 		assert_eq!(second, 1);
-
-		// Test removal of ownership.
-		first = 10;
-		assert!(first != lst.get(0));
 	}
-
+	
 	#[test]
-	#[should_panic = "Out of bounds"]
+	// The array must own a copy of the values it creates.
+	fn test_get_ownership ( )
+	{
+		let mut lst: ArrayList<u32, 1> = ArrayList::new();
+		let mut val = 2;
+		lst.push_back(val);
+		
+		// Test removal of ownership.
+		val = 10;
+		assert!(val != lst.get(0));
+	}
+	
+	#[test]
+	#[should_panic = "Out of Bounds"]
+	// get() is core to everything, it was deemed too difficult to do error checking.
+	// Error checking would also slow the program.
 	fn test_get_not_enough_elements ( )
 	{
-		let lst : ArrayList<u32, 10> = ArrayList::new();
+		let lst: ArrayList<u32, 0> = ArrayList::new();
 		lst.get(1);
 	}
+	
 	#[test]
-	#[should_panic = "Out of bounds"]
+	#[should_panic = "Out of Bounds"]
+	// get() is core to everything, it was deemed too difficult to do error checking.
+	// Error checking would also slow the program.
 	fn test_get_out_of_bounds ( )
 	{
-		let lst : ArrayList<u32, 10> = ArrayList::new();
+		let lst: ArrayList<u32, 10> = ArrayList::new();
 		lst.get(11);
 	}
 
 
-//
-// set ( T )
-//
+//										~ set ~													 //
 	#[test]
+	// Should correctly set elements in the list.
+	// Elements should be persistant.
 	fn test_set_valid ( )
 	{
-		let mut lst : ArrayList<u32, 2> = ArrayList::new();
+		let mut lst: ArrayList<u32, 2> = ArrayList::new();
 		lst.push_back(0);
 		lst.push_back(1);
 		lst.set(0, 10);
@@ -560,79 +669,89 @@ mod test
 		assert_eq!(lst.get(0), 10);
 		assert_eq!(lst.get(1), 22);
 	}
-
+	
 	#[test]
+	// SHOULD FAIL.
+	// If there is no elements in the list, an error is returned.
 	fn test_set_not_enough_elements ( )
 	{
-		let mut lst : ArrayList<u32, 1> = ArrayList::new();
+		let mut lst: ArrayList<u32, 1> = ArrayList::new();
 		assert!(lst.set(0, 0).is_err());
 	}
 
 	#[test]
+	// SHOULD FAIL.
+	// If there is no elements in the list, an error is returned.
 	fn test_set_out_of_bounds ( )
 	{
-		let mut lst : ArrayList<u32, 0> = ArrayList::new();
+		let mut lst: ArrayList<u32, 0> = ArrayList::new();
 		assert!(lst.set(0, 0).is_err());
 	}
 
 
 
-//
-//  pop_back ( T )
-//
+//										~ push_back ~											 //
 	#[test]
+	// When there is room, the array list can add elements to the first available slot.
 	fn test_push_back_valid ( )
 	{
-		let mut lst : ArrayList<u32, 2> = ArrayList::new();
-		lst.push_back(0);
-		lst.push_back(1);
-		assert_eq!(lst.pop_back(), 1);
-		assert_eq!(lst.pop_back(), 0);
+		let mut lst: ArrayList<u32, 2> = ArrayList::new();
+		assert_eq!(lst.push_back(1), Ok(()));
+		assert_eq!(lst.push_back(2), Ok(()));
+		assert_eq!(lst.get(0), 1);
+		assert_eq!(lst.get(1), 2);
 	}
 
 	#[test]
-	#[should_panic = "List is empty"]
+	// When there is no room, the list should output an error.
 	fn test_push_back_invalid ( )
 	{
-		let mut lst : ArrayList<u32, 0> = ArrayList::new();
-		lst.pop_back();
+		let mut lst: ArrayList<u32, 0> = ArrayList::new();
+		assert_eq!(lst.push_back(1), Err(Errors::InvalidSize));
 	}
 
 
 
-//
-//  pop_back ( )
-//
+//										~ pop_back ~											 //
 	#[test]
+	// When there is at least one element, the list should be able to pop the element off the end.
+	// The returned value should be this value.
 	fn test_pop_back_valid ( )
 	{
-		let mut lst : ArrayList<u32, 2> = ArrayList::new();
+		let mut lst: ArrayList<u32, 2> = ArrayList::new();
 		lst.push_back(0);
 		lst.push_back(1);
-		assert_eq!(lst.pop_back(), 1);
-		assert_eq!(lst.pop_back(), 0);
+		assert_eq!(lst.pop_back(), Ok(1));
+		assert_eq!(lst.pop_back(), Ok(0));
 	}
 
 	#[test]
-	#[should_panic = "List is empty"]
+	// When there is no elements left to be popped, an error should be output.
 	fn test_pop_back_invalid ( )
 	{
-		let mut lst : ArrayList<u32, 0> = ArrayList::new();
-		lst.pop_back();
+		let mut lst: ArrayList<u32, 0> = ArrayList::new();
+		assert_eq!(lst.pop_back(), Err(Errors::InvalidSize));
 	}
 
 
 
 
-	//
-	// clear ( &mut self )
-	//
+//###############################################################################################//
+//
+//										Extra Functionality
+//
+// pub fn clear      ( &mut self );
+// pub fn sort_order ( &mut self, fn (&T, &T) -> bool );
+// pub fn slot       ( &mut self, T, fn (&T, &T) -> bool ) -> bool
+//
+//###############################################################################################//
 
+//										~ clear ~												 //
 	#[test]
 	// Clear should set list to 0 and override any values when pushback occures.
 	fn test_clear ( )
 	{
-		let mut lst : ArrayList<u32, 2> = ArrayList::new();
+		let mut lst: ArrayList<u32, 2> = ArrayList::new();
 		lst.push_back(2);
 		lst.push_back(1);
 		lst.clear();
@@ -642,79 +761,88 @@ mod test
 		assert_eq!(10, lst.get(0));
 	}
 
-//
-// sort ( fn ( &mut T, &mut T ) -> bool )
-//
-	fn sort_ascending ( lowest : & i32, highest : & i32 ) -> bool {return lowest < highest;}
-	fn sort_descending ( highest : & i32, lowest : & i32 ) -> bool {return lowest < highest;}
+//										~ sort ~												 //
+	fn sort_ascending ( lowest: & i32, highest: & i32 ) -> bool {return lowest < highest;}
+	fn sort_descending ( highest: & i32, lowest: & i32 ) -> bool {return lowest < highest;}
 
 	#[test]
+	// All elements should be in sorted ascending order after being passed through the function.
 	fn test_sort_order_ascending ( )
 	{
-		let mut lst : ArrayList<i32, 3> = ArrayList::new();
+		let mut lst: ArrayList<i32, 3> = ArrayList::new();
 		lst.push_back(2);
 		lst.push_back(1);
 		lst.push_back(0);
 		lst.sort_order(sort_ascending);
-		assert_eq!(lst.pop_back(), 2);
-		assert_eq!(lst.pop_back(), 1);
-		assert_eq!(lst.pop_back(), 0);
+		assert_eq!(lst.pop_back(), Ok(2));
+		assert_eq!(lst.pop_back(), Ok(1));
+		assert_eq!(lst.pop_back(), Ok(0));
 	}
-
+	
 	#[test]
+	// All elements should be in sorted descending order after being passed through the function.
 	fn test_sort_order_descending ( )
 	{
-		let mut lst : ArrayList<i32, 3> = ArrayList::new();
+		let mut lst: ArrayList<i32, 3> = ArrayList::new();
 		lst.push_back(0);
 		lst.push_back(1);
 		lst.push_back(2);
 		lst.sort_order(sort_descending);
-		assert_eq!(lst.pop_back(), 0);
-		assert_eq!(lst.pop_back(), 1);
-		assert_eq!(lst.pop_back(), 2);
+		assert_eq!(lst.pop_back(), Ok(0));
+		assert_eq!(lst.pop_back(), Ok(1));
+		assert_eq!(lst.pop_back(), Ok(2));
 	}
-
+	
 	#[test]
+	// Nothing should go wrong.
 	fn test_sort_order_empty ( )
 	{
-		let mut lst : ArrayList<i32, 0> = ArrayList::new();
+		let mut lst: ArrayList<i32, 0> = ArrayList::new();
 		lst.sort_order(sort_ascending);
 	}
 
 
 
 
-//
-// slot ( to_slot : T, fn ( &mut T, &mut T ) -> bool ) -> bool
-//
+
+//										~ slot ~												 //
 	#[test]
-	fn test_slot_ascending ( )
+	// When the list is not full, the elements should fill in sorted order.
+	fn test_slot_ascending_not_full ( )
 	{
-		let mut input : ArrayList<i32, 6> = ArrayList::new();
+		let mut input: ArrayList<i32, 6> = ArrayList::new();
 
 		let mut to_slot = 0;
-		assert!(input.slot(to_slot, sort_ascending));
+		assert!(input.slot(to_slot, sort_ascending)); // 0
 		to_slot = 2;
-		assert!(input.slot(to_slot, sort_ascending));
+		assert!(input.slot(to_slot, sort_ascending)); // 0 2
 		to_slot = 3;
-		assert!(input.slot(to_slot, sort_ascending));
+		assert!(input.slot(to_slot, sort_ascending)); // 0 2 3
 		to_slot = 1;
-		assert!(input.slot(to_slot, sort_ascending));
-		to_slot = 4;
-		assert!(input.slot(to_slot, sort_ascending));
+		assert!(input.slot(to_slot, sort_ascending)); // 0 1 2 3
 		to_slot = 5;
-		assert!(input.slot(to_slot, sort_ascending));
+		assert!(input.slot(to_slot, sort_ascending)); // 0 1 2 3 5
+		to_slot = 4;
+		assert!(input.slot(to_slot, sort_ascending)); // 0 1 2 3 4 5
 
 		assert_eq!(input.size(), 6);
-		// Full, 0, 1, 2, 3, 4, 5
-		to_slot = -1;
-		assert!(input.slot(to_slot, sort_ascending));//-1, 0, 1, 2, 3, 4
+	}
+	
+	#[test]
+	// Once full, the list should kick the highest value out.
+	// If the value to add is kicked, the function should return false.
+	fn test_slot_ascending_full ( )
+	{ 
+		let mut input: ArrayList<i32, 6> = ArrayList::from_array(&[0, 1, 2, 3, 4, 5]).expect("");
+
+		let mut to_slot = -1;
+		assert!(input.slot(to_slot, sort_ascending));// -1  0  1  2  3  4
 		to_slot = -2;
-		assert!(input.slot(to_slot, sort_ascending));//-2, -1, 0, 1, 2, 3
+		assert!(input.slot(to_slot, sort_ascending));// -2 -1  0  1  2  3
 		to_slot = 1;
-		assert!(input.slot(to_slot, sort_ascending));//-2, -1, 0, 1, 1, 2
+		assert!(input.slot(to_slot, sort_ascending));// -2 -1  0  1  1  2
 		to_slot = 10;
-		assert!(!input.slot(to_slot, sort_ascending));//-2, -1, 0, 1, 1, 2
+		assert!(!input.slot(to_slot, sort_ascending));//-2 -1  0  1  1  2
 
 		assert_eq!(input.get(0), -2);
 		assert_eq!(input.get(1), -1);
@@ -724,27 +852,37 @@ mod test
 		assert_eq!(input.get(5), 2);
 	}
 
+
 	#[test]
-	fn test_slot_descending ( )
+	// When the list is not full, the elements should fill in sorted order.
+	fn test_slot_descending_not_full ( )
 	{
-		let mut input : ArrayList<i32, 6> = ArrayList::new();
+		let mut input: ArrayList<i32, 6> = ArrayList::new();
 
 		let mut to_slot = -1;
-		assert!(input.slot(to_slot, sort_descending));
+		assert!(input.slot(to_slot, sort_descending)); // -1
 		to_slot = 0;
-		assert!(input.slot(to_slot, sort_descending));
+		assert!(input.slot(to_slot, sort_descending)); // 0  -1
 		to_slot = 1;
-		assert!(input.slot(to_slot, sort_descending));
+		assert!(input.slot(to_slot, sort_descending)); // 1   0  -1
 		to_slot = 2;
-		assert!(input.slot(to_slot, sort_descending));
+		assert!(input.slot(to_slot, sort_descending)); // 2   1   0   -1
 		to_slot = 3;
-		assert!(input.slot(to_slot, sort_descending));
+		assert!(input.slot(to_slot, sort_descending)); // 3   2   1   0  -1
 		to_slot = 100;
-		assert!(input.slot(to_slot, sort_descending));
-
+		assert!(input.slot(to_slot, sort_descending)); // 100 3   2   1   0   -1
+	}
+	
+	#[test]
+	// Once full, the list should kick the lowest value out.
+	// If the value to add is kicked, the function should return false.
+	fn test_slot_descending_full ( )
+	{
+		let mut input: ArrayList<i32, 6> = ArrayList::from_array(&[100,3,2, 1, 0, -1]).expect("");
+		
 		assert_eq!(input.size(), 6);
 		// Full, 100, 3, 2, 1, 0, -1
-		to_slot = -1;
+		let mut to_slot = -1;
 		assert!(!input.slot(to_slot, sort_descending)); // 100, 3, 2, 1, 0, -1
 		to_slot = 5;
 		assert!(input.slot(to_slot, sort_descending)); // 100, 5, 3, 2, 1, 0

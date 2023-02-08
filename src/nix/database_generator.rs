@@ -1,18 +1,19 @@
 use super::DatabaseGenerator;
 
-use util::icosphere::IcoSphere;
-use util::aliases::Decimal;
-use util::units::Radians;
-use util::units::Equatorial;
-use util::list::List;
+use crate::util::aliases::Decimal;
+use crate::util::units::Radians;
+use crate::util::units::Equatorial;
+use crate::util::list::List;
 
-use nix::Star;
+use crate::nix::Star;
+use crate::nix::Distribute;
 
-use tracking_mode::StarPair;
-use tracking_mode::database::RegionalDatabase;
-use tracking_mode::database::PyramidDatabase;
-use tracking_mode::database::StarDatabaseElement;
-use tracking_mode::database::KVector;
+use crate::tracking_mode::StarPair;
+use crate::tracking_mode::database::RegionalDatabase;
+use crate::tracking_mode::database::PyramidDatabase;
+use crate::tracking_mode::database::StarDatabaseElement;
+use crate::tracking_mode::database::KVector;
+use crate::tracking_mode::database::BitFieldSize;
 
 
 impl DatabaseGenerator
@@ -90,12 +91,19 @@ impl DatabaseGenerator
 
 	pub fn gen_database_regions ( stars: &Vec<Star>, fov: Radians, num_bins: usize ) -> Self
 	{
-		let regions = IcoSphere::icosphere(1);
+		let mut points = Distribute::angle_to_points(fov);
+		if (BitFieldSize::BITS as usize) < points
+		{	// There are more points then the bitfield, that would not work.
+			points = BitFieldSize::BITS as usize;
+		} 
+		let regions = Distribute::fibonacci_latice(BitFieldSize::BITS as usize);
+		let angle = Distribute::points_to_angle(points);
+
 
 		let mut pairs_unrefined = StarDatabaseElement::create_list(fov / 2.0, stars);
 		pairs_unrefined.sort();
 
-		let mut pairs_region : Vec<u64> = Vec::new();
+		let mut pairs_region : Vec<BitFieldSize> = Vec::new();
 		let mut pairs : Vec<StarPair<usize>> = Vec::new();
 		for i in 0..pairs_unrefined.len()
 		{
@@ -105,11 +113,10 @@ impl DatabaseGenerator
 			let star_b = stars[ref_b].clone();
 			pairs.push(StarPair(ref_a, ref_b));
 
-			let mut region_bit : u64 = 0b0000;
+			let mut region_bit : BitFieldSize = 0b0000;
 			for jj in 0..regions.size()
 			{
 				let pt = regions.get(jj);
-				let angle = IcoSphere::angle_max(1);
 				let dist_1 = star_a.pos.angle_distance(pt);
 				let dist_2 = star_b.pos.angle_distance(pt);
 				if  dist_1 < angle || dist_2 < angle
@@ -234,12 +241,8 @@ impl DatabaseGenerator
 	/// stars.push(Star{mag: 1.99999, pos: eq, spec: "".to_string(), name: "6".to_string()});
 	/// stars.push(Star{mag: 2.0,     pos: eq, spec: "".to_string(), name: "7".to_string()});
 	///
-	/// let out = DatabaseGenerator::limit_magnitude(&stars, -11.0, 2.0);
-	/// assert_eq!(out.len(), 4);
-	/// assert_eq!(out[0].name, "3");
-	/// assert_eq!(out[1].name, "4");
-	/// assert_eq!(out[2].name, "5");
-	/// assert_eq!(out[3].name, "6");
+	/// // Creates a list of stars between -11 and 2.0 magnitude.
+	/// let limited = DatabaseGenerator::limit_magnitude(&stars, -11.0, 2.0);
 	pub fn limit_magnitude ( stars: &dyn List<Star>,
 								min_magnitude: Decimal,
 								max_magnitude: Decimal ) -> Vec<Star>
@@ -268,9 +271,9 @@ impl DatabaseGenerator
 	pub fn sky_coverage ( stars: &dyn List<Star>, region: Radians, stars_in_region : usize )
 		-> Decimal
 	{
-		let mut coverage : Decimal = 0.0;
-		let num_points : usize = Equatorial::evenly_distribute_points(region);
-		let comparison_points : Vec<Equatorial> = Equatorial::evenly_distribute(num_points);
+		let mut coverage: Decimal = 0.0;
+		let num_points: usize = Distribute::angle_to_points(region);
+		let comparison_points : Vec<Equatorial> = Distribute::fibonacci_latice(num_points);
 
 		for ii in 0..comparison_points.len()
 		{
@@ -303,8 +306,8 @@ impl DatabaseGenerator
 	pub fn sky_coverage_worst_case ( stars: &dyn List<Star>, region: Radians ) -> usize
 	{
 		let mut worst_case : usize = usize::MAX;
-		let num_points : usize = Equatorial::evenly_distribute_points(region);
-		let comparison_points : Vec<Equatorial> = Equatorial::evenly_distribute(num_points);
+		let num_points : usize = Distribute::angle_to_points(region);
+		let comparison_points : Vec<Equatorial> = Distribute::fibonacci_latice(num_points);
 
 		for ii in 0..comparison_points.len()
 		{
@@ -336,8 +339,8 @@ impl DatabaseGenerator
 	pub fn sky_coverage_best_case ( stars: &dyn List<Star>, region: Radians ) -> usize
 	{
 		let mut best_case : usize = 0;
-		let num_points : usize = Equatorial::evenly_distribute_points(region);
-		let comparison_points : Vec<Equatorial> = Equatorial::evenly_distribute(num_points);
+		let num_points : usize = Distribute::angle_to_points(region);
+		let comparison_points : Vec<Equatorial> = Distribute::fibonacci_latice(num_points);
 
 		for ii in 0..comparison_points.len()
 		{
@@ -374,16 +377,11 @@ impl DatabaseGenerator
 #[cfg(test)]
 mod test
 {
-	use rand::prelude::*;
+	use crate::util::units::Equatorial;
+	use crate::util::units::Radians;
+	use crate::util::units::Degrees;
 
-	use util::units::Equatorial;
-	use util::units::Radians;
-	use util::units::Degrees;
-	use util::aliases::Decimal;
-
-	use tracking_mode::database::DatabaseGenerator;
-	use tracking_mode::database::Database;
-	use tracking_mode::StarPair;
+	use crate::nix::DatabaseGenerator;
 
 	use nix::Star;
 

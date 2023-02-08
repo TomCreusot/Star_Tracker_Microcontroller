@@ -1,17 +1,20 @@
-//! Implementation for matrix.
-use crate::util::aliases::Decimal;
-use crate::util::units::MatPos;
-use crate::util::units::Vector3;
-use crate::util::units::Quaternion;
-// use crate::util::err::{Error, Errors};
-use super::Matrix;
-
+//! Implementation of [Matrix](crate::util::units::Matrix).
 use std::fmt;
 use std::ops::Mul;
 use std::ops::Div;
 use std::ops::Add;
 
-impl <const ROW : usize, const COLUMN : usize> Matrix <ROW, COLUMN>
+use super::Matrix;
+
+use crate::util::aliases::Decimal;
+use crate::util::units::Quaternion;
+use crate::util::units::Vector3;
+use crate::util::units::MatPos;
+use crate::util::err::Errors;
+use crate::util::err::Error;
+
+
+impl <const ROW: usize, const COLUMN: usize> Matrix <ROW, COLUMN>
 {
 	/// Default Constructor.
 	/// Initializes matrix to 0.
@@ -19,18 +22,39 @@ impl <const ROW : usize, const COLUMN : usize> Matrix <ROW, COLUMN>
 	/// # Example
 	/// ```
 	/// use star_tracker::util::units::Matrix;
-	/// let mat3x4 : Matrix<3, 4> = Matrix::new(); // Matrix with 3 rows and 4 columns
+	///
+	/// let mat3x4: Matrix<3, 4> = Matrix::new(); // Matrix with 3 rows and 4 columns
 	/// ```
 	pub fn new ( ) -> Matrix<ROW, COLUMN>
 	{
  		return Matrix { matrix: [[0.0; COLUMN]; ROW] };
 	}
+}
 
+	
+impl <const S: usize> Matrix<S, S>
+{
+	/// Contructs an identity matrix.
+	pub fn identity ( ) -> Matrix<S, S>
+	{
+		let mut mat: Matrix<S, S> = Matrix::new();
+		for i in 0..S
+		{
+			mat.set(MatPos{row: i, col: i}, 1.0);
+		}
+		return mat;
+	}
+}
+
+
+impl <const ROW: usize, const COLUMN: usize> Matrix <ROW, COLUMN>
+{
 	/// Returns the width of the matrix.
 	/// # Example
 	/// ```
 	/// use star_tracker::util::units::Matrix;
-	/// let mat3x4 : Matrix<3, 4> = Matrix::new();
+	///
+	/// let mat3x4: Matrix<3, 4> = Matrix::new();
 	/// assert_eq!(mat3x4.width(), 4);
 	/// ```
 	pub fn width  ( &self ) -> usize	{	return COLUMN;	}
@@ -39,7 +63,8 @@ impl <const ROW : usize, const COLUMN : usize> Matrix <ROW, COLUMN>
 	/// # Example
 	/// ```
 	/// use star_tracker::util::units::Matrix;
-	/// let mat3x4 : Matrix<3, 4> = Matrix::new();
+	///
+	/// let mat3x4: Matrix<3, 4> = Matrix::new();
 	/// assert_eq!(mat3x4.height(), 3);
 	/// ```
 	pub fn height ( &self ) -> usize	{	return ROW;	}
@@ -50,7 +75,8 @@ impl <const ROW : usize, const COLUMN : usize> Matrix <ROW, COLUMN>
 	/// use star_tracker::util::err::Errors;
 	/// use star_tracker::util::units::Matrix;
 	/// use star_tracker::util::units::MatPos;
-	/// let mut mat3x4 : Matrix<3, 4> = Matrix::new();
+	///
+	/// let mut mat3x4: Matrix<3, 4> = Matrix::new();
 	/// mat3x4.set(MatPos{row: 1, col: 2}, 3.12);
 	/// mat3x4.set(MatPos{row: 2, col: 3}, 5.23);
 	/// assert_eq!(mat3x4.get(MatPos{row: 1, col: 2}), 3.12);
@@ -68,7 +94,8 @@ impl <const ROW : usize, const COLUMN : usize> Matrix <ROW, COLUMN>
 	/// use star_tracker::util::err::Errors;
 	/// use star_tracker::util::units::Matrix;
 	/// use star_tracker::util::units::MatPos;
-	/// let mut mat3x4 : Matrix<3, 4> = Matrix::new();
+	///
+	/// let mut mat3x4: Matrix<3, 4> = Matrix::new();
 	/// mat3x4.set(MatPos{row: 1, col: 2}, 3.12);
 	/// mat3x4.set(MatPos{row: 2, col: 3}, 5.23);
 	/// assert_eq!(mat3x4.get(MatPos{row: 1, col: 2}), 3.12);
@@ -88,7 +115,8 @@ impl <const ROW : usize, const COLUMN : usize> Matrix <ROW, COLUMN>
 	/// ```
 	/// use star_tracker::util::units::Matrix;
 	/// use star_tracker::util::units::MatPos;
-	/// let mut mat3x4 : Matrix<3,4> = Matrix::new();
+	///
+	/// let mut mat3x4: Matrix<3,4> = Matrix::new();
 	/// mat3x4.set(MatPos{row: 0, col: 0}, 0.0);
 	/// mat3x4.set(MatPos{row: 0, col: 1}, 0.1);
 	/// mat3x4.set(MatPos{row: 1, col: 0}, 1.0);
@@ -105,7 +133,7 @@ impl <const ROW : usize, const COLUMN : usize> Matrix <ROW, COLUMN>
 	/// ```
 	pub fn transposed ( &self ) -> Matrix<COLUMN, ROW>
 	{
-		let mut trans : Matrix<COLUMN, ROW> = Matrix::new();
+		let mut trans: Matrix<COLUMN, ROW> = Matrix::new();
 		for x in 0..self.width()
 		{
 			for y in 0..self.height()
@@ -126,13 +154,18 @@ impl <const ROW : usize, const COLUMN : usize> Matrix <ROW, COLUMN>
 
 
 	/// Inserts the matrix into the specified location on this matrix.
+	/// # Returns
+	/// Ok(()) if the matrix fits.  
+	/// Err(Errors::InvalidSize) if the matrix does not fit at the location specified.  
+	/// On failure, the matrix is not inserted.  
 	///
 	/// # Example
 	/// ```
 	/// use star_tracker::util::units::Matrix;
 	/// use star_tracker::util::units::MatPos;
-	/// let mut mat4x4 : Matrix<4,4> = Matrix::new();
-	/// let mut insert : Matrix<3,2> = Matrix::new();
+	///
+	/// let mut mat4x4: Matrix<4,4> = Matrix::new();
+	/// let mut insert: Matrix<3,2> = Matrix::new();
 	///
 	/// insert.set(MatPos{row: 0, col: 0}, 1.0);
 	/// insert.set(MatPos{row: 0, col: 1}, 2.0);
@@ -153,8 +186,12 @@ impl <const ROW : usize, const COLUMN : usize> Matrix <ROW, COLUMN>
 	/// ```
 	pub fn insert
 		<const C_2: usize, const R_2: usize>
-		( &mut self, pos: MatPos, other: &Matrix<C_2, R_2> )
+		( &mut self, pos: MatPos, other: &Matrix<C_2, R_2> ) -> Error<()>
 	{
+		if self.height() < pos.row + other.height() || self.width() < pos.col + other.width()
+		{
+			return Err(Errors::InvalidSize);
+		}
 		for x in 0..other.width()
 		{
 			for y in 0..other.height()
@@ -164,36 +201,22 @@ impl <const ROW : usize, const COLUMN : usize> Matrix <ROW, COLUMN>
 			}
 		}
 
-		// return Ok(());
+		return Ok(());
 	}
 }
 
 // Square Matrices
 impl <const S: usize> Matrix<S, S>
 {
-	/// Contructs an identity matrix.
-	pub fn identity ( ) -> Matrix<S, S>
-	{
-		let mut mat : Matrix<S, S> = Matrix::new();
-		for i in 0..S
-		{
-			mat.set(MatPos{row: i, col: i}, 1.0);
-		}
-		return mat;
-	}
-
-
 	/// Finds the trace of the matrix (sum of diagonal).
 	/// Must be a square matrix.
-	///
-	/// # Returns
-	/// The sum of the diagonal (trace) or Errors::InvalidSize.
 	///
 	/// # Example
 	/// ```
 	/// use star_tracker::util::units::Matrix;
 	/// use star_tracker::util::units::MatPos;
-	/// let mut mat4x4 : Matrix<4,4> = Matrix::new();
+	///
+	/// let mut mat4x4: Matrix<4,4> = Matrix::new();
 	/// mat4x4.set(MatPos{row: 0, col: 0}, 1.0);
 	/// mat4x4.set(MatPos{row: 1, col: 1}, 2.0);
 	/// mat4x4.set(MatPos{row: 2, col: 2}, 4.0);
@@ -220,16 +243,18 @@ impl <const S: usize> Matrix<S, S>
 impl Matrix <1, 1>
 {
 	/// Converts the current value to a matrix.
+	///
 	/// # Example
 	/// ```
 	/// use star_tracker::util::units::Matrix;
 	/// use star_tracker::util::units::MatPos;
-	/// let mat1x1 : Matrix<1,1> = Matrix::from_decimal(100.0);
+	///
+	/// let mat1x1: Matrix<1,1> = Matrix::from_decimal(100.0);
 	/// assert_eq!(mat1x1.get(MatPos{row: 0, col: 0}), 100.0);
 	/// ```
-	pub fn from_decimal ( val : Decimal ) -> Matrix<1,1>
+	pub fn from_decimal ( val: Decimal ) -> Matrix<1,1>
 	{
-		let mut mat : Matrix<1, 1> = Matrix::new();
+		let mut mat: Matrix<1, 1> = Matrix::new();
 		mat.set(MatPos{row: 0, col: 0}, val);
 		return mat;
 	}
@@ -239,7 +264,8 @@ impl Matrix <1, 1>
 	/// ```
 	/// use star_tracker::util::units::Matrix;
 	/// use star_tracker::util::units::MatPos;
-	/// let mut mat1x1 : Matrix<1,1> = Matrix::new();
+	///
+	/// let mut mat1x1: Matrix<1,1> = Matrix::new();
 	/// mat1x1.set(MatPos{row: 0, col: 0}, 100.0);
 	/// assert_eq!(mat1x1.to_decimal(), 100.0);
 	/// ```
@@ -254,8 +280,9 @@ impl Matrix <1, 1>
 	/// # Example
 	/// ```
 	/// use star_tracker::util::units::Matrix;
+	///
 	/// use star_tracker::util::units::MatPos;
-	/// let mut mat1x1 : Matrix<1,1> = Matrix::new();
+	/// let mut mat1x1: Matrix<1,1> = Matrix::new();
 	/// mat1x1.set(MatPos{row: 0, col: 0}, 10.0);
 	/// assert_eq!(mat1x1.determinate(), 10.0);
 	/// ```
@@ -273,7 +300,8 @@ impl Matrix <2, 2>
 	/// ```
 	/// use star_tracker::util::units::Matrix;
 	/// use star_tracker::util::units::MatPos;
-	/// let mut mat2x2 : Matrix<2,2> = Matrix::new();
+	///
+	/// let mut mat2x2: Matrix<2,2> = Matrix::new();
 	/// mat2x2.set(MatPos{row: 0, col: 0}, 2.0);
 	/// mat2x2.set(MatPos{row: 1, col: 0}, 3.0);
 	/// mat2x2.set(MatPos{row: 0, col: 1}, 4.0);
@@ -296,7 +324,8 @@ impl Matrix <3, 3>
 	/// ```
 	/// use star_tracker::util::units::Matrix;
 	/// use star_tracker::util::units::MatPos;
-	///	let mut mat3x3 : Matrix<3,3> = Matrix::new();
+	///
+	///	let mut mat3x3: Matrix<3,3> = Matrix::new();
 	/// mat3x3.set(MatPos{row: 0, col: 0}, 5.0);
 	/// mat3x3.set(MatPos{row: 0, col: 1}, 4.0);
 	/// mat3x3.set(MatPos{row: 0, col: 2}, 3.0);
@@ -314,7 +343,7 @@ impl Matrix <3, 3>
 		for i in 0..3
 		{
 			let multiplier = self.get(MatPos{row: 0, col: i});
-			let mut sub_mat : Matrix<2,2> = Matrix::new();
+			let mut sub_mat: Matrix<2,2> = Matrix::new();
 			for col in 0..3
 			{
 				let sub_col = if col <= i { col } else { col - 1 };
@@ -345,7 +374,8 @@ impl Matrix <3, 3>
 	/// ```
 	/// use star_tracker::util::units::Matrix;
 	/// use star_tracker::util::units::MatPos;
-	///	let mut mat3x3 : Matrix<3,3> = Matrix::new();
+	///
+	///	let mut mat3x3: Matrix<3,3> = Matrix::new();
 	/// mat3x3.set(MatPos{row: 0, col: 0}, 5.0);
 	/// mat3x3.set(MatPos{row: 0, col: 1}, 4.0);
 	/// mat3x3.set(MatPos{row: 0, col: 2}, 3.0);
@@ -356,7 +386,7 @@ impl Matrix <3, 3>
 	/// mat3x3.set(MatPos{row: 2, col: 1}, 2.0);
 	/// mat3x3.set(MatPos{row: 2, col: 2}, 6.0);
 	///
-	/// let mut res : Matrix<3,3> = Matrix::new();
+	/// let mut res: Matrix<3,3> = Matrix::new();
 	/// res.set(MatPos{row: 0, col: 0}, 34.0);
 	/// res.set(MatPos{row: 0, col: 1}, 952.0);
 	/// res.set(MatPos{row: 0, col: 2}, -884.0);
@@ -371,12 +401,12 @@ impl Matrix <3, 3>
 	///
 	pub fn adjoint ( &self ) -> Matrix<3,3>
 	{
-		let mut adj : Matrix<3,3> = Matrix::new();
+		let mut adj: Matrix<3,3> = Matrix::new();
 		for r in 0..3
 		{
 			for c in 0..3
 			{
-				let mut sub_mat : Matrix<2,2> = Matrix::new();
+				let mut sub_mat: Matrix<2,2> = Matrix::new();
 
 				// create matrix
 				for row in 0..3
@@ -393,7 +423,7 @@ impl Matrix <3, 3>
 						}
 					}
 				}
-				let val = if (r+c) % 2 == 0 { sub_mat.determinate() }else{ -sub_mat.determinate() };
+				let val = if (r+c)%2 == 0 { sub_mat.determinate() }else{ -sub_mat.determinate() };
 				adj.set(MatPos{row: r, col: c}, val);
 			}
 		}
@@ -409,7 +439,8 @@ impl Matrix <4, 4>
 	/// ```
 	/// use star_tracker::util::units::Matrix;
 	/// use star_tracker::util::units::MatPos;
-	/// let mut mat4x4 : Matrix<4,4> = Matrix::new();
+	///
+	/// let mut mat4x4: Matrix<4,4> = Matrix::new();
 	///
 	/// mat4x4.set(MatPos{row: 0, col: 0}, 5.0);
 	/// mat4x4.set(MatPos{row: 0, col: 1}, 10.0);
@@ -439,7 +470,7 @@ impl Matrix <4, 4>
 		for i in 0..4
 		{
 			let multiplier = self.get(MatPos{row: 0, col: i});
-			let mut sub_mat : Matrix<3,3> = Matrix::new();
+			let mut sub_mat: Matrix<3,3> = Matrix::new();
 			for col in 0..4
 			{
 				let sub_col = if col <= i { col } else { col - 1 };
@@ -477,7 +508,8 @@ impl Matrix <3, 1>
 	/// use star_tracker::util::units::Matrix;
 	/// use star_tracker::util::units::MatPos;
 	/// use star_tracker::util::units::Vector3;
-	/// let mut mat3x1 : Matrix<3,1> = Matrix::new();
+	///
+	/// let mut mat3x1: Matrix<3,1> = Matrix::new();
 	/// mat3x1.set(MatPos{row: 0, col: 0}, 1.0);
 	/// mat3x1.set(MatPos{row: 1, col: 0}, 2.0);
 	/// mat3x1.set(MatPos{row: 2, col: 0}, 3.0);
@@ -501,7 +533,8 @@ impl Matrix <4, 1>
 	/// use star_tracker::util::units::Matrix;
 	/// use star_tracker::util::units::MatPos;
 	/// use star_tracker::util::units::Vector3;
-	/// let mut mat4x1 : Matrix<4,1> = Matrix::new();
+	///
+	/// let mut mat4x1: Matrix<4,1> = Matrix::new();
 	/// mat4x1.set(MatPos{row: 0, col: 0}, 1.0);
 	/// mat4x1.set(MatPos{row: 1, col: 0}, 2.0);
 	/// mat4x1.set(MatPos{row: 2, col: 0}, 3.0);
@@ -533,7 +566,7 @@ impl Matrix <3,3>
 	/// ```
 	pub fn to_quaternion ( &self ) -> Quaternion
 	{
-		let trace : Decimal = self.trace();
+		let trace: Decimal = self.trace();
 		if trace > 0.0
 		{
 			println!("Case 1");
@@ -604,9 +637,6 @@ impl Matrix <3,3>
 impl Matrix <3, 3>
 {
 	/// Multiplies this matrix by the provided vector.
-	/// # Arguments
-	/// * `rhs` - The point to transform by this matrix.
-	///
 	/// # Example
 	/// ```
 	/// use star_tracker::util::units::Vector3;
@@ -614,7 +644,7 @@ impl Matrix <3, 3>
 	/// use star_tracker::util::units::MatPos;
 	///
 	///	let pt = Vector3{x: 1.0, y: 2.0, z: 3.0};
-	///	let mut mat3x3 : Matrix<3,3> = Matrix::new();
+	///	let mut mat3x3: Matrix<3,3> = Matrix::new();
 	///
 	///	// x is the addition of all.
 	///	mat3x3.set(MatPos{row: 0, col: 0}, 1.0);
@@ -641,7 +671,7 @@ impl Matrix <3, 3>
 	/// ```
 	pub fn multiply ( &self, rhs: Vector3 ) -> Vector3
 	{
-		let mut pt : Matrix<3, 1> = Matrix::new();
+		let mut pt: Matrix<3, 1> = Matrix::new();
 		pt.set(MatPos{row: 0, col: 0}, rhs.x);
 		pt.set(MatPos{row: 1, col: 0}, rhs.y);
 		pt.set(MatPos{row: 2, col: 0}, rhs.z);
@@ -659,9 +689,6 @@ impl Matrix <3, 3>
 impl Matrix <3, 4>
 {
 	/// Multiplies this matrix by the provided vector.
-	/// # Arguments
-	/// * `rhs` - The point to transform by this matrix.
-	///
 	/// # Example
 	/// ```
 	/// use star_tracker::util::units::Vector3;
@@ -669,7 +696,7 @@ impl Matrix <3, 4>
 	/// use star_tracker::util::units::MatPos;
 	///
 	///	let pt = Vector3{x: 1.0, y: 2.0, z: 3.0};
-	///	let mut mat4x4 : Matrix<3,4> = Matrix::new();
+	///	let mut mat4x4: Matrix<3,4> = Matrix::new();
 	///
 	///	// x is the addition of all + 1.
 	///	mat4x4.set(MatPos{row: 0, col: 0}, 1.0);
@@ -699,7 +726,7 @@ impl Matrix <3, 4>
 	/// ```
 	pub fn multiply ( &self, rhs: Vector3 ) -> Vector3
 	{
-		let mut pt : Matrix<4, 1> = Matrix::new();
+		let mut pt: Matrix<4, 1> = Matrix::new();
 		pt.set(MatPos{row: 0, col: 0}, rhs.x);
 		pt.set(MatPos{row: 1, col: 0}, rhs.y);
 		pt.set(MatPos{row: 2, col: 0}, rhs.z);
@@ -718,8 +745,6 @@ impl Matrix <3, 4>
 impl Matrix <4, 4>
 {
 	/// Multiplies this matrix by the provided vector.
-	/// # Arguments
-	/// * `rhs` - The point to transform by this matrix.
 	/// # Example
 	/// ```
 	/// use star_tracker::util::units::Vector3;
@@ -727,7 +752,7 @@ impl Matrix <4, 4>
 	/// use star_tracker::util::units::MatPos;
 	///
 	/// let pt = Vector3{x: 1.0, y: 2.0, z: 3.0};
-	/// let mut mat3x4 : Matrix<4,4> = Matrix::new();
+	/// let mut mat3x4: Matrix<4,4> = Matrix::new();
 	///
 	/// // x is the addition of all.
 	/// mat3x4.set(MatPos{row: 0, col: 0}, 1.0);
@@ -764,7 +789,7 @@ impl Matrix <4, 4>
 	/// ```
 	pub fn multiply ( &self, rhs: Vector3 ) -> Vector3
 	{
-		let mut pt : Matrix<4, 1> = Matrix::new();
+		let mut pt: Matrix<4, 1> = Matrix::new();
 		pt.set(MatPos{row: 0, col: 0}, rhs.x);
 		pt.set(MatPos{row: 1, col: 0}, rhs.y);
 		pt.set(MatPos{row: 2, col: 0}, rhs.z);
@@ -787,7 +812,7 @@ impl Matrix <4, 4>
 
 
 impl <const ROW: usize, const COLUMN: usize> fmt::Display for Matrix<ROW, COLUMN> {
-    fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result
+	fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result
 	{
 		write!(f, "\n")?;
 		for yy in 0..self.height()
@@ -801,7 +826,6 @@ impl <const ROW: usize, const COLUMN: usize> fmt::Display for Matrix<ROW, COLUMN
 				{
 					write!(f, ",\t")?;
 				}
-
 			}
 			write!(f, "\t|")?;
 			write!(f, "\n")?;
@@ -812,7 +836,7 @@ impl <const ROW: usize, const COLUMN: usize> fmt::Display for Matrix<ROW, COLUMN
 
 
 impl <const ROW: usize, const COLUMN: usize> fmt::Debug for Matrix<ROW, COLUMN> {
-    fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result
+	fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result
 	{
 		write!(f, "\n")?;
 		for yy in 0..self.height()
@@ -826,13 +850,12 @@ impl <const ROW: usize, const COLUMN: usize> fmt::Debug for Matrix<ROW, COLUMN> 
 				{
 					write!(f, ",\t")?;
 				}
-
 			}
 			write!(f, "\t|")?;
 			write!(f, "\n")?;
 		}
 		return Ok(());
-    }
+	}
 }
 
 //###############################################################################################//
@@ -845,12 +868,12 @@ impl <const M: usize, const N: usize, const P: usize> Mul<Matrix<N, P>> for Matr
 	type Output = Matrix<M, P>;
     fn mul(self, rhs: Matrix<N, P>) -> Matrix<M, P>
 	{
-		let mut mat : Matrix<M, P> = Matrix::new();
+		let mut mat: Matrix<M, P> = Matrix::new();
 		for y in 0..M				// OUT matrix row
 		{
 			for x in 0..P			// OUT matrix column
 			{
-				let mut output : Decimal = 0.0;
+				let mut output: Decimal = 0.0;
 				for i in 0..N		// IN matrix (lhs x, rhs y)
 				{
 					output +=
@@ -870,7 +893,7 @@ impl <const ROW: usize, const COLUMN: usize> Add<Matrix<ROW, COLUMN>> for Matrix
 	type Output = Matrix<ROW, COLUMN>;
 	fn add ( self, rhs: Matrix<ROW, COLUMN> ) -> Matrix<ROW, COLUMN>
 	{
-		let mut mat : Matrix<ROW, COLUMN> = Matrix::new();
+		let mut mat: Matrix<ROW, COLUMN> = Matrix::new();
 		for row in 0..ROW
 		{
 			for col in 0..COLUMN
@@ -892,9 +915,9 @@ impl <const ROW: usize, const COLUMN: usize> Add<Matrix<ROW, COLUMN>> for Matrix
 
 impl <const ROW: usize, const COLUMN: usize> Mul<Decimal> for Matrix<ROW, COLUMN> {
 	type Output = Self;
-    fn mul(self, rhs: Decimal) -> Self
+	fn mul(self, rhs: Decimal) -> Self
 	{
-		let mut mat : Matrix<ROW, COLUMN> = Matrix::new();
+		let mut mat: Matrix<ROW, COLUMN> = Matrix::new();
 		for xx in 0..COLUMN
 		{
 			for yy in 0..ROW
@@ -909,8 +932,8 @@ impl <const ROW: usize, const COLUMN: usize> Mul<Decimal> for Matrix<ROW, COLUMN
 
 // Multiply Scalar by Matrix
 impl <const ROW: usize, const COLUMN: usize> Mul<Matrix<ROW, COLUMN>> for Decimal {
-    type Output = Matrix<ROW, COLUMN>;
-    fn mul(self, rhs: Matrix<ROW, COLUMN>) -> Matrix<ROW, COLUMN> {	return rhs * self;	}
+	type Output = Matrix<ROW, COLUMN>;
+	fn mul(self, rhs: Matrix<ROW, COLUMN>) -> Matrix<ROW, COLUMN> {	return rhs * self;	}
 }
 
 
@@ -919,7 +942,7 @@ impl <const ROW: usize, const COLUMN: usize> Div <Decimal> for Matrix<ROW, COLUM
 	type Output = Self;
     fn div(self, rhs: Decimal) -> Self
 	{
-		let mut mat : Matrix<ROW, COLUMN> = Matrix::new();
+		let mut mat: Matrix<ROW, COLUMN> = Matrix::new();
 		for xx in 0..COLUMN
 		{
 			for yy in 0..ROW
@@ -972,38 +995,73 @@ mod test
 {
 	use rand::prelude::*;
 	use util::aliases::Decimal;
+	use util::units::Vector3;
 	use util::units::Matrix;
 	use util::units::MatPos;
-	use util::units::Vector3;
-	// use util::err::Errors;
+	use util::err::Errors;
 
+	
+//###############################################################################################//
+//
+//									Constructors/Accessors
+//
+// pub fn new      ( ) -> Self
+// pub fn identity ( ) -> Self
+// pub fn width    ( &self ) -> usize
+// pub fn height   ( &self ) -> usize
+// pub fn get      ( &self ) -> Decimal
+// pub fn set      ( &self, Decimal ) -> Decimal
+//
+//###############################################################################################//
+//										~ new ~													 //
 	#[test]
 	fn test_new ( )
 	{
-		let mat3x4 : Matrix<3, 4> = Matrix::new();
+		let mat3x4: Matrix<3, 4> = Matrix::new();
 		assert_eq!( mat3x4.matrix.len(), 3);
 		assert_eq!( mat3x4.matrix[0].len(), 4);
 	}
 
+//										~ identity ~											 //
+	#[test]
+	fn test_identity ( )
+	{
+		let _mat_0: Matrix<0, 0> = Matrix::identity();
+		let mat_1: Matrix<1, 1> = Matrix::identity();
+		let mat_2: Matrix<2, 2> = Matrix::identity();
+
+		assert_eq!(mat_1.get(MatPos{row: 0, col: 0}), 1.0);
+
+		assert_eq!(mat_2.get(MatPos{row: 0, col: 0}), 1.0);
+		assert_eq!(mat_2.get(MatPos{row: 1, col: 0}), 0.0);
+		assert_eq!(mat_2.get(MatPos{row: 0, col: 1}), 0.0);
+		assert_eq!(mat_2.get(MatPos{row: 1, col: 1}), 1.0);
+	}
+
+
+
+//										~ width ~												 //
 	#[test]
 	fn test_width ( )
 	{
-		let mat3x4 : Matrix<3, 4> = Matrix::new();
+		let mat3x4: Matrix<3, 4> = Matrix::new();
 		assert_eq!( mat3x4.width(), 4);
 	}
 
+//										~ height ~												 //
 	#[test]
 	fn test_height ( )
 	{
-		let mat3x4 : Matrix<3, 4> = Matrix::new();
+		let mat3x4: Matrix<3, 4> = Matrix::new();
 		assert_eq!( mat3x4.height(), 3);
 	}
 
 
+//										~ get ~													 //
 	#[test]
 	fn test_get ( )
 	{
-		let mut mat3x4 : Matrix<3, 4> = Matrix::new();
+		let mut mat3x4: Matrix<3, 4> = Matrix::new();
 		mat3x4.matrix[1][2] = 3.12;
 		mat3x4.matrix[2][3] = 5.23;
 		assert_eq!(mat3x4.get(MatPos{row: 1, col: 2}), 3.12);
@@ -1011,10 +1069,11 @@ mod test
 		assert_eq!(mat3x4.get(MatPos{row: 0, col: 0}), 0.0);
 	}
 
+//										~ set ~													 //
 	#[test]
 	fn test_set ( )
 	{
-		let mut mat3x4 : Matrix<3, 4> = Matrix::new();
+		let mut mat3x4: Matrix<3, 4> = Matrix::new();
 		mat3x4.set(MatPos{row: 1, col: 2}, 3.12);
 		mat3x4.set(MatPos{row: 2, col: 3}, 5.23);
 		assert_eq!(mat3x4.matrix[1][2], 3.12);
@@ -1027,16 +1086,22 @@ mod test
 
 
 
-
-
-	//
-	// fn transposed ( &self ) -> Matrix<H, W>
-	//
-
+//###############################################################################################//
+//
+//									Transformations
+//
+// pub fn transposed ( &self ) -> Self
+// pub fn insert     ( &self, &MatPos, &Matrix) ->4
+// pub fn height ( &self ) -> usize
+// pub fn get    ( &self ) -> Decimal
+// pub fn set    ( &self, Decimal ) -> Decimal
+//
+//###############################################################################################//
+//										~ transposed ~											 //
 	#[test]
 	fn test_transposed_empty ( )
 	{
-		let mat0x0 : Matrix<0,0> = Matrix::new();
+		let mat0x0: Matrix<0,0> = Matrix::new();
 		let matt0x0 = mat0x0.transposed();
 		assert_eq!(matt0x0.width(), 0);
 		assert_eq!(matt0x0.height(), 0);
@@ -1045,7 +1110,7 @@ mod test
 	#[test]
 	fn test_transposed_square ( )
 	{
-		let mut mat4x4 : Matrix<4, 4> = Matrix::new();
+		let mut mat4x4: Matrix<4, 4> = Matrix::new();
 		for x in 0..mat4x4.width()
 		{
 			for y in 0..mat4x4.height()
@@ -1054,7 +1119,7 @@ mod test
 			}
 		}
 
-		let matt4x4 : Matrix<4, 4> = mat4x4.transposed();
+		let matt4x4: Matrix<4, 4> = mat4x4.transposed();
 		assert_eq!(matt4x4.height(), 4);
 		assert_eq!(matt4x4.width(), 4);
 		for x in 0..mat4x4.width()
@@ -1071,7 +1136,7 @@ mod test
 	#[test]
 	fn test_transposed_rectangle ( )
 	{
-		let mut mat3x4 : Matrix<3, 4> = Matrix::new();
+		let mut mat3x4: Matrix<3, 4> = Matrix::new();
 		for x in 0..mat3x4.width()
 		{
 			for y in 0..mat3x4.height()
@@ -1081,7 +1146,7 @@ mod test
 		}
 		println!("BEFORE");
 
-		let matt4x3 : Matrix<4, 3> = mat3x4.transposed();
+		let matt4x3: Matrix<4, 3> = mat3x4.transposed();
 
 		println!("AFTER");
 
@@ -1099,17 +1164,13 @@ mod test
 	}
 
 
-
-
-	//
-	// fn insert <C_2, R_2> ( &self, pos MatPos, Matrix<C_2, R_2> )
-	//
-
+//										~ insert ~												 //
 	#[test]
+	// If the matrix fits.
 	fn test_insert_valid ( )
 	{
-		let mut mat4x4 : Matrix<4,4> = Matrix::new();
-		let mut insert : Matrix<3,2> = Matrix::new();
+		let mut mat4x4: Matrix<4,4> = Matrix::new();
+		let mut insert: Matrix<3,2> = Matrix::new();
 
 		insert.set(MatPos{row: 0, col: 0}, 1.0);
 		insert.set(MatPos{row: 0, col: 1}, 2.0);
@@ -1118,8 +1179,7 @@ mod test
 		insert.set(MatPos{row: 2, col: 0}, 5.0);
 		insert.set(MatPos{row: 2, col: 1}, 6.0);
 
-		mat4x4.insert(MatPos{row: 1, col: 2}, &insert);//.ok();
-
+		mat4x4.insert(MatPos{row: 1, col: 2}, &insert).expect("should fit.");
 
 		assert_eq!(mat4x4.get(MatPos{row: 0, col: 0}), 0.0); // first element is 1,2
 		assert_eq!(mat4x4.get(MatPos{row: 1, col: 2}), 1.0);
@@ -1129,71 +1189,79 @@ mod test
 		assert_eq!(mat4x4.get(MatPos{row: 3, col: 2}), 5.0);
 		assert_eq!(mat4x4.get(MatPos{row: 3, col: 3}), 6.0);
 	}
-
-
-	// #[test]
-	// fn test_insert_invalid_y ( )
-	// {
-	// 	let mut mat4x4 : Matrix<4,4> = Matrix::new();
-	// 	let i_3 : Matrix<3,2> = Matrix::new();
-	// 	let i_4 : Matrix<4,2> = Matrix::new();
-	// 	let i_5 : Matrix<5,2> = Matrix::new();
-	//
-	// 	assert_eq!(mat4x4.insert(MatPos{row: 2, col: 2}, &i_3), Err(Errors::OutOfBoundsY));
-	// 	assert_eq!(mat4x4.insert(MatPos{row: 1, col: 2}, &i_4), Err(Errors::OutOfBoundsY));
-	// 	assert_eq!(mat4x4.insert(MatPos{row: 0, col: 2}, &i_5), Err(Errors::OutOfBoundsY));
-	// }
-	//
-	//
-	// #[test]
-	// fn test_insert_invalid_x ( )
-	// {
-	// 	let mut mat4x4 : Matrix<4,4> = Matrix::new();
-	// 	let i_3 : Matrix<1,3> = Matrix::new();
-	// 	let i_4 : Matrix<1,4> = Matrix::new();
-	// 	let i_5 : Matrix<1,5> = Matrix::new();
-	//
-	// 	assert_eq!(mat4x4.insert(MatPos{row: 0, col: 2}, &i_3), Err(Errors::OutOfBoundsX));
-	// 	assert_eq!(mat4x4.insert(MatPos{row: 0, col: 1}, &i_4), Err(Errors::OutOfBoundsX));
-	// 	assert_eq!(mat4x4.insert(MatPos{row: 0, col: 0}, &i_5), Err(Errors::OutOfBoundsX));
-	// }
-
-
-	//
-	// fn identity (  ) -> Matrix<S, S>
-	//
-
+	
 	#[test]
-	fn test_identity ( )
+	// If the matrix is too wide...
+	fn test_insert_invalid_size_width ( )
 	{
-		let _mat_0 : Matrix<0, 0> = Matrix::identity();
-		let mat_1 : Matrix<1, 1> = Matrix::identity();
-		let mat_2 : Matrix<2, 2> = Matrix::identity();
-
-		assert_eq!(mat_1.get(MatPos{row: 0, col: 0}), 1.0);
-
-		assert_eq!(mat_2.get(MatPos{row: 0, col: 0}), 1.0);
-		assert_eq!(mat_2.get(MatPos{row: 1, col: 0}), 0.0);
-		assert_eq!(mat_2.get(MatPos{row: 0, col: 1}), 0.0);
-		assert_eq!(mat_2.get(MatPos{row: 1, col: 1}), 1.0);
+		let mut mat_safe: Matrix<2,2> = Matrix::new();
+		let mut mat_fail: Matrix<2,1> = Matrix::new();
+		let insert: Matrix<1,2> = Matrix::new();
+		assert!(   mat_safe.insert(MatPos{row: 0, col: 0}, &insert).is_ok());
+		assert_eq!(mat_fail.insert(MatPos{row: 0, col: 0}, &insert), Err(Errors::InvalidSize));
+	}
+	
+	#[test]
+	// If the matrix is too tall...
+	fn test_insert_invalid_size_height ( )
+	{
+		let mut mat_safe: Matrix<2,2> = Matrix::new();
+		let mut mat_fail: Matrix<1,2> = Matrix::new();
+		let insert: Matrix<2,1> = Matrix::new();
+		assert!(   mat_safe.insert(MatPos{row: 0, col: 0}, &insert).is_ok());
+		assert_eq!(mat_fail.insert(MatPos{row: 0, col: 0}, &insert), Err(Errors::InvalidSize));
+	}
+	
+	#[test]
+	// If the matrix is too tall...
+	fn test_insert_invalid_position_wide ( )
+	{
+		let mut mat_safe: Matrix<2,2> = Matrix::new();
+		let mut mat_fail: Matrix<2,1> = Matrix::new();
+		let insert: Matrix<1,1> = Matrix::new();
+		assert!(   mat_safe.insert(MatPos{row: 0, col: 1}, &insert).is_ok());
+		assert_eq!(mat_fail.insert(MatPos{row: 0, col: 1}, &insert), Err(Errors::InvalidSize));
+	}
+	
+	#[test]
+	// If the matrix is too tall...
+	fn test_insert_invalid_position_high ( )
+	{
+		let mut mat_safe: Matrix<2,2> = Matrix::new();
+		let mut mat_fail: Matrix<1,2> = Matrix::new();
+		let insert: Matrix<1,1> = Matrix::new();
+		assert!(   mat_safe.insert(MatPos{row: 1, col: 0}, &insert).is_ok());
+		assert_eq!(mat_fail.insert(MatPos{row: 1, col: 0}, &insert), Err(Errors::InvalidSize));
 	}
 
 
-	//
-	// fn trace ( &self ) -> Decimal
-	//
 
+//###############################################################################################//
+//
+//									Conversions
+//
+// pub fn trace         ( &self )   -> Decimal
+// pub fn from_decimal  ( Decimal ) -> Self
+// pub fn to_decimal    ( &self )   -> Decimal
+// pub fn determinate   ( &self )   -> Decimal    <1,1> <2,2> <3,3> <4,4>
+// pub fn adjoint       ( &self )   -> Matrix     <3,3>
+// pub fn to_vector3    ( &self )   -> Vector3    <3,1> <4,1>
+// pub fn to_quaternion ( &self )   -> Quaternion <3,3>
+
+//
+//###############################################################################################//
+//										~ trace ~											 	 //
 	#[test]
 	fn test_trace_empty ( )
 	{
-		let mat0x0 : Matrix<0,0> = Matrix::new();
+		let mat0x0: Matrix<0,0> = Matrix::new();
 		assert_eq!(mat0x0.trace(), 0.0);
 	}
 
 	#[test]
 	fn test_trace_normal ( )
 	{
-		let mut mat4x4 : Matrix<4,4> = Matrix::new();
+		let mut mat4x4: Matrix<4,4> = Matrix::new();
 		for x in 0..mat4x4.width()
 		{
 			for y in 0..mat4x4.height()
@@ -1205,42 +1273,29 @@ mod test
 	}
 
 
-	///
-	/// fn from_decimal ( Decimal ) -> Matrix<1,1>
-	///
-
+//										~ from_decimal ~									 	 //
 	#[test]
 	fn test_from_decimal_1x1 ( )
 	{
-		let mat1x1 : Matrix<1,1> = Matrix::from_decimal(100.0);
+		let mat1x1: Matrix<1,1> = Matrix::from_decimal(100.0);
 		assert_eq!(mat1x1.get(MatPos{row: 0, col: 0}), 100.0);
 	}
 
 
-
-	//
-	// fn to_decimal ( &self ) -> Decimal
-	//
+//										~ to_decimal ~										 	 //
 	#[test]
 	fn test_to_decimal_1x1 ( )
 	{
-		let mut mat1x1 : Matrix<1,1> = Matrix::new();
+		let mut mat1x1: Matrix<1,1> = Matrix::new();
 		mat1x1.set(MatPos{row: 0, col: 0}, 100.0);
 		assert_eq!(mat1x1.to_decimal(), 100.0);
 	}
 
-	//
-	// fn determinate ( &self ) -> Decimal
-	// For:
-	// <1,1>
-	// <2,2>
-	// <3,3>
-	// <4,4>
-
+//										~ determinate ~										 	 //
 	#[test]
 	fn test_determinate_1x1 ( )
 	{
-		let mut mat1x1 : Matrix<1,1> = Matrix::new();
+		let mut mat1x1: Matrix<1,1> = Matrix::new();
 		mat1x1.set(MatPos{row: 0, col: 0}, 23.3);
 		assert_eq!(mat1x1.determinate(), 23.3);
 	}
@@ -1248,7 +1303,7 @@ mod test
 	#[test]
 	fn test_determinate_2x2 ( )
 	{
-		let mut mat2x2 : Matrix<2,2> = Matrix::new();
+		let mut mat2x2: Matrix<2,2> = Matrix::new();
 		mat2x2.set(MatPos{row: 0, col: 0}, 2.0);
 		mat2x2.set(MatPos{row: 1, col: 0}, 3.0);
 		mat2x2.set(MatPos{row: 0, col: 1}, 4.0);
@@ -1260,7 +1315,7 @@ mod test
 	#[test]
 	fn test_determinate_3x3 ( )
 	{
-		let mut mat3x3 : Matrix<3,3> = Matrix::new();
+		let mut mat3x3: Matrix<3,3> = Matrix::new();
 		mat3x3.set(MatPos{row: 0, col: 0}, 5.0);
 		mat3x3.set(MatPos{row: 0, col: 1}, 4.0);
 		mat3x3.set(MatPos{row: 0, col: 2}, 3.0);
@@ -1277,7 +1332,7 @@ mod test
 	#[test]
 	fn test_determinate_4x4 ( )
 	{
-		let mut mat4x4 : Matrix<4,4> = Matrix::new();
+		let mut mat4x4: Matrix<4,4> = Matrix::new();
 
 		mat4x4.set(MatPos{row: 0, col: 0}, 5.0);
 		mat4x4.set(MatPos{row: 0, col: 1}, 10.0);
@@ -1303,16 +1358,12 @@ mod test
 	}
 
 
-	//
-	// fn adjoint ( &self ) -> Decimal
-	// For:
-	// <3,3>
 
-
+//										~ adjoint ~											 	 //
 	#[test]
 	fn test_adjoint ( )
 	{
-		let mut mat3x3 : Matrix<3,3> = Matrix::new();
+		let mut mat3x3: Matrix<3,3> = Matrix::new();
 		mat3x3.set(MatPos{row: 0, col: 0}, 5.0);
 		mat3x3.set(MatPos{row: 0, col: 1}, 4.0);
 		mat3x3.set(MatPos{row: 0, col: 2}, 3.0);
@@ -1323,7 +1374,7 @@ mod test
 		mat3x3.set(MatPos{row: 2, col: 1}, 2.0);
 		mat3x3.set(MatPos{row: 2, col: 2}, 6.0);
 
-		let mut res : Matrix<3,3> = Matrix::new();
+		let mut res: Matrix<3,3> = Matrix::new();
 		res.set(MatPos{row: 0, col: 0}, 34.0);
 		res.set(MatPos{row: 0, col: 1}, 952.0);
 		res.set(MatPos{row: 0, col: 2}, -884.0);
@@ -1341,19 +1392,11 @@ mod test
 
 
 
-
-
-
-	//
-	// fn to_vector3 ( ) -> Vector3
-	// For:
-	// <3, 1>, <4, 1>
-	//
-
+//										~ to_vector3 ~										 	 //
 	#[test]
 	fn test_to_vector3_3x1 ( )
 	{
-		let mut mat3x1 : Matrix<3,1> = Matrix::new();
+		let mut mat3x1: Matrix<3,1> = Matrix::new();
 		mat3x1.set(MatPos{row: 0, col: 0}, 1.0);
 		mat3x1.set(MatPos{row: 1, col: 0}, 2.0);
 		mat3x1.set(MatPos{row: 2, col: 0}, 3.0);
@@ -1365,7 +1408,7 @@ mod test
 	#[test]
 	fn test_to_vector3_4x1 ( )
 	{
-		let mut mat4x1 : Matrix<4,1> = Matrix::new();
+		let mut mat4x1: Matrix<4,1> = Matrix::new();
 		mat4x1.set(MatPos{row: 0, col: 0}, 1.0);
 		mat4x1.set(MatPos{row: 1, col: 0}, 2.0);
 		mat4x1.set(MatPos{row: 2, col: 0}, 3.0);
@@ -1380,17 +1423,13 @@ mod test
 
 
 
-	//
-	// fn to_quaternion ( ) -> Quaternion
-	// for: <3,3>
-	//
-
+//										~ to_quaternion ~									 	 //
 	#[test] // Case 1: trace > 0
 	fn test_to_quaternion_case_1 ( )
 	{
 		let mut rng = rand::thread_rng();
 		let pt = Vector3{x: 0.1, y: 0.2, z: 0.3};
-		let mut rotation : Matrix<3,3> = Matrix::identity() * 11.0;
+		let mut rotation: Matrix<3,3> = Matrix::identity() * 11.0;
 
 		for _i in 0..100
 		{
@@ -1413,7 +1452,7 @@ mod test
 	{
 		let mut rng = rand::thread_rng();
 		let pt = Vector3{x: 0.1, y: 0.2, z: 0.3};
-		let mut rotation : Matrix<3,3> = Matrix::new();
+		let mut rotation: Matrix<3,3> = Matrix::new();
 
 		for _i in 0..100
 		{
@@ -1442,7 +1481,7 @@ mod test
 	{
 		let mut rng = rand::thread_rng();
 		let pt = Vector3{x: 0.1, y: 0.2, z: 0.3};
-		let mut rotation : Matrix<3,3> = Matrix::new();
+		let mut rotation: Matrix<3,3> = Matrix::new();
 
 		for _i in 0..100
 		{
@@ -1471,7 +1510,7 @@ mod test
 	{
 		let mut rng = rand::thread_rng();
 		let pt = Vector3{x: 0.1, y: 0.2, z: 0.3};
-		let mut rotation : Matrix<3,3> = Matrix::new();
+		let mut rotation: Matrix<3,3> = Matrix::new();
 
 		for _i in 0..100
 		{
@@ -1499,19 +1538,25 @@ mod test
 
 
 
-
-
-
-	//
-	// fn multiply
-	// <3, 3> <3, 4> <4, 4>
-	//
-
+//###############################################################################################//
+//
+//									Operatiors
+//
+// pub fn multiply      ( &self, Vector3 ) -> Vector3  <3,3> <3,4> <4,4>
+// pub Mat * Mat -> Mat
+// pub Mat + Mat -> Mat
+// pub Mat * Decimal -> Mat
+// pub Mat / Decimal -> Mat
+// pub Mat == Mat
+// pub Mat != Mat
+//
+//###############################################################################################//
+//										~ multiply ~										 	 //
 	#[test]
 	fn test_multiply_3x3 ( )
 	{
 		let pt = Vector3{x: 1.0, y: 2.0, z: 3.0};
-		let mut mat3x3 : Matrix<3,3> = Matrix::new();
+		let mut mat3x3: Matrix<3,3> = Matrix::new();
 
 		// x is the addition of all.
 		mat3x3.set(MatPos{row: 0, col: 0}, 1.0);
@@ -1541,7 +1586,7 @@ mod test
 	fn test_multiply_3x4 ( )
 	{
 		let pt = Vector3{x: 1.0, y: 2.0, z: 3.0};
-		let mut mat3x4 : Matrix<3,4> = Matrix::new();
+		let mut mat3x4: Matrix<3,4> = Matrix::new();
 
 		// x is the addition of all + 1.
 		mat3x4.set(MatPos{row: 0, col: 0}, 1.0);
@@ -1574,7 +1619,7 @@ mod test
 	fn test_multiply_4x4 ( )
 	{
 		let pt = Vector3{x: 1.0, y: 2.0, z: 3.0};
-		let mut mat4x4 : Matrix<4,4> = Matrix::new();
+		let mut mat4x4: Matrix<4,4> = Matrix::new();
 
 		// x is the addition of all.
 		mat4x4.set(MatPos{row: 0, col: 0}, 1.0);
@@ -1611,39 +1656,19 @@ mod test
 	}
 
 
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
+//										~ Mut(ltiply) ~										 	 //
 	#[test]
 	fn test_mul_mat_zero ( )
 	{
-		let mat0x0 : Matrix<0,0> = Matrix::new();
+		let mat0x0: Matrix<0,0> = Matrix::new();
 		assert_eq!(mat0x0 * mat0x0, mat0x0);
 	}
 
 	#[test]
 	fn test_mul_mat_square ( )
 	{
-		let mut mat3x3_1 : Matrix<3,3> = Matrix::new();
-		let mut mat3x3_2 : Matrix<3,3> = Matrix::new();
+		let mut mat3x3_1: Matrix<3,3> = Matrix::new();
+		let mut mat3x3_2: Matrix<3,3> = Matrix::new();
 
 		for x in 0..3
 		{
@@ -1653,7 +1678,7 @@ mod test
 				mat3x3_2.set(MatPos{col: x, row: y}, (x + y * 3 + 9) as Decimal);
 			}
 		}
-		let output : Matrix<3,3> = mat3x3_1 * mat3x3_2;
+		let output: Matrix<3,3> = mat3x3_1 * mat3x3_2;
 
 		assert_eq!(output.get(MatPos{col:0, row:0}), 42.0);
 		assert_eq!(output.get(MatPos{col:1, row:0}), 45.0);
@@ -1671,9 +1696,9 @@ mod test
 	#[test]
 	fn test_mul_mat_odd ( )
 	{
-		let mut mat1x3 : Matrix<1,3> = Matrix::new();
-		let mut mat3x1 : Matrix<3,1> = Matrix::new();
-		let mut mat3x2 : Matrix<3,2> = Matrix::new();
+		let mut mat1x3: Matrix<1,3> = Matrix::new();
+		let mut mat3x1: Matrix<3,1> = Matrix::new();
+		let mut mat3x2: Matrix<3,2> = Matrix::new();
 
 		for ii in 0..3
 		{
@@ -1685,9 +1710,9 @@ mod test
 				mat3x2.set(MatPos{row: ii, col: jj}, (ii * 2 + jj + 3) as Decimal);
 			}
 		}
-		let output_1 : Matrix<1,1> = mat1x3 * mat3x1;
-		let output_2 : Matrix<1,2> = mat1x3 * mat3x2;
-		let output_3 : Matrix<3,3> = mat3x1 * mat1x3;
+		let output_1: Matrix<1,1> = mat1x3 * mat3x1;
+		let output_2: Matrix<1,2> = mat1x3 * mat3x2;
+		let output_3: Matrix<3,3> = mat3x1 * mat1x3;
 
 		assert_eq!(output_1.get(MatPos{col:0, row:0}), 14.0);
 
@@ -1707,12 +1732,12 @@ mod test
 
 
 
-
+//										~ Add ~												 	 //
 	#[test]
 	fn test_add_mat ( )
 	{
-		let mut mat_a : Matrix<3, 2> = Matrix::new();
-		let mut mat_b : Matrix<3, 2> = Matrix::new();
+		let mut mat_a: Matrix<3, 2> = Matrix::new();
+		let mut mat_b: Matrix<3, 2> = Matrix::new();
 
 		mat_a.set(MatPos{row: 0, col: 0}, 1.0);
 		mat_a.set(MatPos{row: 1, col: 0}, 2.0);
@@ -1740,11 +1765,11 @@ mod test
 
 
 
-
+//										~ Mut(iply) ~										 	 //
 	#[test]
 	fn test_mul_scalar ( )
 	{
-		let mut mat3x4 : Matrix<3,4> = Matrix::new();
+		let mut mat3x4: Matrix<3,4> = Matrix::new();
 		mat3x4.matrix[2][1] = 12.0;
 		mat3x4.matrix[2][3] = 23.0;
 		mat3x4 = mat3x4 * 2.0;
@@ -1755,10 +1780,11 @@ mod test
 		assert_eq!(mat3x4.matrix[2][3], 23.0);
 	}
 
+//										~ Div ~												 	 //
 	#[test]
 	fn test_div_scalar ( )
 	{
-		let mut mat3x4 : Matrix<3,4> = Matrix::new();
+		let mut mat3x4: Matrix<3,4> = Matrix::new();
 		mat3x4.matrix[2][1] = 24.0;
 		mat3x4.matrix[2][3] = 46.0;
 		mat3x4 = mat3x4 / 2.0;
@@ -1773,11 +1799,12 @@ mod test
 
 
 
+//										~ Eq(uality) ~										 	 //
 	#[test]
 	fn test_eq_matrix ( )
 	{
-		let mut mat3x4    : Matrix<3,4> = Matrix::new();
-		let mut mat_other : Matrix<3,4> = Matrix::new();
+		let mut mat3x4   : Matrix<3,4> = Matrix::new();
+		let mut mat_other: Matrix<3,4> = Matrix::new();
 		assert!(mat3x4 == mat_other);
 		mat3x4.matrix[2][1] = 12.0;
 		mat3x4.matrix[2][3] = 32.0;

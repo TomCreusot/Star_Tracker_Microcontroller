@@ -1,8 +1,17 @@
-//! The implementation of Vector3.
+//! Implementation for [Vector3](crate::util::units::Vector3).
 use std::fmt;
+
+use crate::util::aliases::DECIMAL_PRECISION;
 use crate::util::aliases::Decimal;
 use crate::util::aliases::M_PI;
-use super::{Equatorial, Vector3, Vector2, Radians, Matrix, MatPos};
+use crate::util::err::Errors;
+use crate::util::err::Error;
+use crate::util::units::Equatorial;
+use crate::util::units::Vector3;
+use crate::util::units::Vector2;
+use crate::util::units::Radians;
+use crate::util::units::Matrix;
+use crate::util::units::MatPos;
 
 impl Vector3
 {
@@ -11,6 +20,7 @@ impl Vector3
 	/// ```
 	/// use star_tracker::util::units::Vector3;
 	/// use star_tracker::util::test::TestEqual;
+	///
 	/// let c = Vector3{x: 10.3, y: 23.1, z: 12.3};
 	/// assert!(c.magnitude().test_close(&28.124544440, 0.00001));
 	/// ```
@@ -21,50 +31,58 @@ impl Vector3
 
 
 	/// Normalizes the vector so the magnitude is 1.
+	/// Returns Errors::NaN magnitude is 0.
 	/// # Example
 	/// ```
 	/// use star_tracker::util::units::Vector3;
 	/// use star_tracker::util::test::TestEqual;
+	///
 	/// let mut c = Vector3{x: 10.3, y: 23.1, z: 12.3};
 	/// let c_out = Vector3{x: 0.366228, y: 0.8213466, z: 0.43734};
-	/// c.normalize();
+	/// c.normalize().expect("Will return Errors::NaN if magnitude is 0.");
 	/// assert!(c.test_close(&c_out, 0.0001));
 	/// ```
-	pub fn normalize ( &mut self )
+	pub fn normalize ( &mut self ) -> Error<()>
 	{
 		let magnitude  = self.magnitude();
+		if magnitude < DECIMAL_PRECISION
+		{
+			return Err(Errors::NaN);
+		}
 		self.x /= magnitude;
 		self.y /= magnitude;
 		self.z /= magnitude;
+		return Ok(());
 	}
 
 
 	/// Returns a new normalized vector of the current direction.
+	/// Returns Errors::NaN magnitude is 0.
 	/// # Example
 	/// ```
 	/// use star_tracker::util::units::Vector3;
 	/// use star_tracker::util::test::TestEqual;
+	///
 	/// let mut c = Vector3{x: 10.3, y: 23.1, z: 12.3};
 	/// let c_out = Vector3{x: 0.366228, y: 0.8213466, z: 0.43734};
-	/// assert!(c.normalized().test_close(&c_out, 0.0001));
+	/// assert!(c.normalized().expect("NaN if magnitude is 0.").test_close(&c_out, 0.0001));
 	/// ```
-	pub fn normalized ( &self ) -> Self
+	pub fn normalized ( &self ) -> Error<Self>
 	{
 		let magnitude  = self.magnitude();
-		return Vector3{x: self.x/magnitude, y: self.y/magnitude, z: self.z/magnitude};
+		if magnitude < DECIMAL_PRECISION
+		{
+			return Err(Errors::NaN);
+		}
+		return Ok(Vector3{x: self.x/magnitude, y: self.y/magnitude, z: self.z/magnitude});
 	}
 
 
 	/// Finds the cross product between self and the input object.
-	/// # Arguments
-	/// * `other` - The other cartesian3d.
-	///
-	/// # Returns
-	/// The cross product.
-	///
 	/// # Example
 	/// ```
 	/// use star_tracker::util::units::Vector3;
+	///
 	/// let a = Vector3 { x: -1.0, y: 2.0, z: 10.0 };
 	/// let b = Vector3 { x: 9.0, y: 3.0, z: -4.0 };
 	/// assert_eq!(a.cross(b), Vector3{x: -38.0, y: 86.0, z: -21.0});
@@ -80,16 +98,11 @@ impl Vector3
 		};
 	}
 
-	/// Finds the dot product between the cartesian3D points.
-	/// # Arguments
-	/// * `other` - The other cartesian3D.
-	///
-	/// # Returns
-	/// The dot product.
-	///
+	/// Finds the dot product between the Vector3 points.
 	/// # Example
 	/// ```
 	/// use star_tracker::util::units::Vector3;
+	///
 	/// let a = Vector3 { x: 2.0, y: 3.0, z: 4.0 };
 	/// let b = Vector3 { x: 5.0, y: 6.0, z: 7.0 };
 	/// assert_eq!(a.dot(b), 56.0);
@@ -100,10 +113,13 @@ impl Vector3
 
 
 
-	/// Finds the angle between the 2 points on a sphere.
+	/// Finds the angle between the 2 points on a sphere.  
+	/// The great circle distance.  
 	/// # Example
 	/// ```
-	/// use star_tracker::util::units::{Vector3, Degrees};
+	/// use star_tracker::util::units::Vector3;
+	/// use star_tracker::util::units::Degrees;
+	///
 	/// let mut car1 = Vector3 { x: 0.0, y: 1.0, z: 0.0 };
 	/// let mut car2 = Vector3 { x: 1.0, y: 0.0, z: 0.0 };
 	/// assert_eq!(car1.angle_distance(car2), Degrees(90.0).to_radians());
@@ -133,15 +149,16 @@ impl Vector3
 	/// use star_tracker::util::units::Vector3;
 	/// use star_tracker::util::units::Matrix;
 	/// use star_tracker::util::units::MatPos;
+	///
 	/// let c = Vector3 {x: 1.0, y: 2.0, z: 3.0};
-	/// let m : Matrix<3,1> = c.to_matrix_column();
+	/// let m: Matrix<3,1> = c.to_matrix_column();
 	/// assert_eq!(c.x, m.get(MatPos{row: 0, col: 0}));
 	/// assert_eq!(c.y, m.get(MatPos{row: 1, col: 0}));
 	/// assert_eq!(c.z, m.get(MatPos{row: 2, col: 0}));
 	/// ```
 	pub fn to_matrix_column ( &self ) -> Matrix<3,1>
 	{
-		let mut mat : Matrix<3,1> = Matrix::new();
+		let mut mat: Matrix<3,1> = Matrix::new();
 		mat.set(MatPos{row: 0, col: 0}, self.x);
 		mat.set(MatPos{row: 1, col: 0}, self.y);
 		mat.set(MatPos{row: 2, col: 0}, self.z);
@@ -154,15 +171,16 @@ impl Vector3
 	/// use star_tracker::util::units::Vector3;
 	/// use star_tracker::util::units::Matrix;
 	/// use star_tracker::util::units::MatPos;
+	///
 	/// let c = Vector3 {x: 1.0, y: 2.0, z: 3.0};
-	/// let m : Matrix<1,3> = c.to_matrix_row();
+	/// let m: Matrix<1,3> = c.to_matrix_row();
 	/// assert_eq!(c.x, m.get(MatPos{row: 0, col: 0}));
 	/// assert_eq!(c.y, m.get(MatPos{row: 0, col: 1}));
 	/// assert_eq!(c.z, m.get(MatPos{row: 0, col: 2}));
 	/// ```
 	pub fn to_matrix_row ( &self ) -> Matrix<1,3>
 	{
-		let mut mat : Matrix<1,3> = Matrix::new();
+		let mut mat: Matrix<1,3> = Matrix::new();
 		mat.set(MatPos{row: 0, col: 0}, self.x);
 		mat.set(MatPos{row: 0, col: 1}, self.y);
 		mat.set(MatPos{row: 0, col: 2}, self.z);
@@ -177,8 +195,9 @@ impl Vector3
 	/// use star_tracker::util::units::Vector3;
 	/// use star_tracker::util::units::Matrix;
 	/// use star_tracker::util::units::MatPos;
+	///
 	/// let c = Vector3 {x: 1.0, y: 2.0, z: 3.0};
-	/// let m : Matrix<4,1> = c.to_matrix_column_homo();
+	/// let m: Matrix<4,1> = c.to_matrix_column_homo();
 	/// assert_eq!(c.x, m.get(MatPos{row: 0, col: 0}));
 	/// assert_eq!(c.y, m.get(MatPos{row: 1, col: 0}));
 	/// assert_eq!(c.z, m.get(MatPos{row: 2, col: 0}));
@@ -186,7 +205,7 @@ impl Vector3
 	/// ```
 	pub fn to_matrix_column_homo ( &self ) -> Matrix<4,1>
 	{
-		let mut mat : Matrix<4,1> = Matrix::new();
+		let mut mat: Matrix<4,1> = Matrix::new();
 		mat.set(MatPos{row: 0, col: 0}, self.x);
 		mat.set(MatPos{row: 1, col: 0}, self.y);
 		mat.set(MatPos{row: 2, col: 0}, self.z);
@@ -200,6 +219,7 @@ impl Vector3
 	/// ```
 	/// use star_tracker::util::units::Vector3;
 	/// use star_tracker::util::units::Vector2;
+	///
 	/// let vec_3 = Vector3{x: 12.3, y: 23.4, z: 34.5};
 	/// let vec_2 = vec_3.to_vector2();
 	/// assert_eq!(vec_2.x, vec_3.x);
@@ -211,18 +231,14 @@ impl Vector3
 	}
 
 
-	/// Converts cartesian3D to equatorial coordinates.
-	/// # Arguments
-	/// * `c` - The cartesian coordinates in Decimal format as a unit vector.
-	/// # Returns
-	/// The equatorial equivalent of the unit vector.
-	///
+	/// Converts Vector3 to Equatorial coordinates.
 	/// # Example
 	/// ```
 	/// use star_tracker::util::aliases::M_PI;
 	/// use star_tracker::util::units::{Equatorial, Vector3, Radians};
 	/// use star_tracker::util::aliases::Decimal;
 	/// use star_tracker::util::test::TestEqual;
+	///
 	/// let mut c = Vector3 { x: 0.5, y: 0.5, z: -0.7071067812 };
 	/// let mut e = c.to_equatorial();
 	/// let mut compare = Equatorial{ra: Radians(M_PI / 4.0), dec: Radians(-M_PI / 4.0)};
@@ -263,7 +279,7 @@ impl Vector3
 
 
 impl fmt::Display for Vector3 {
-    fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result
+	fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result
 	{
 		write!(f, "Vector3({:.3}, {:.3}, {:.3})", self.x, self.y, self.z)?;
 		return Ok(());
@@ -272,11 +288,11 @@ impl fmt::Display for Vector3 {
 
 
 impl fmt::Debug for Vector3 {
-    fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result
+	fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result
 	{
 		write!(f, "Vector3(x: {}, y: {}, z: {})", self.x, self.y, self.z)?;
 		return Ok(());
-    }
+	}
 }
 
 
@@ -294,24 +310,31 @@ mod test
 {
 	use rand::prelude::*;
 
-	use util::units::Vector3;
-	use util::units::Matrix;
-	use util::units::MatPos;
-	use util::units::Equatorial;
-	use util::units::Radians;
-	use util::units::Degrees;
-	use util::units::Decimal;
-	use util::aliases::M_PI;
-	use util::test::TestEqual;
-
+	use crate::util::units::Vector3;
+	use crate::util::units::Matrix;
+	use crate::util::units::MatPos;
+	use crate::util::units::Equatorial;
+	use crate::util::units::Radians;
+	use crate::util::units::Degrees;
+	use crate::util::units::Decimal;
+	use crate::util::aliases::M_PI;
+	use crate::util::test::TestEqual;
+	use crate::util::err::Errors;
+	use crate::util::err::Error;
 
 //###############################################################################################//
-//										---	Equatorial ---
+//
+//										Features
+//
+// pub fn magnitude      ( &self )        -> Decimal
+// pub fn normalize      ( &mut self )    -> Error<()>
+// pub fn normalized     ( &self )        -> Error<Self>
+// pub fn cross          ( &self, &Self ) -> Vector3
+// pub fn dot            ( &self, &Self ) -> Decimal
+// pub fn angle_distance ( &self, &Self ) -> Radians
+//
 //###############################################################################################//
-
-	//
-	// magnitude ( &self ) -> Decimal
-	//
+//										~ magnitude ~											 //
 	#[test]
 	fn test_magnitude ( )
 	{
@@ -320,32 +343,43 @@ mod test
 	}
 
 
-	//
-	// normalize ( &self )
-	//
+//										~ normalize ~											 //
 	#[test]
+	// If the magnitude is not 0, the object should be normalized.
 	fn test_normalize ( )
 	{
 		let mut c = Vector3{x: 10.3, y: 23.1, z: 12.3};
 		let c_out = Vector3{x: 0.366228, y: 0.8213466, z: 0.43734};
-		c.normalize();
+		c.normalize().expect("This is fine.");
 		assert!(c.test_close(&c_out, 0.00001));
 	}
+	
+	#[test]
+	// If the magnitude is not 0, the object should be normalized.
+	fn test_normalize_error ( )
+	{
+		let mut c = Vector3{x: 0.0, y: 0.0, z: 0.0};
+		assert_eq!(c.normalize(), Err(Errors::NaN));
+	}
 
-	//
-	// normalized ( &self )
-	//
+//										~ normalized ~											 //
 	#[test]
 	fn test_normalized ( )
 	{
 		let c = Vector3{x: 10.3, y: 23.1, z: 12.3};
 		let c_out = Vector3{x: 0.366228, y: 0.8213466, z: 0.43734};
-		assert!(c.normalized().test_close(&c_out, 0.00001));
+		assert!(c.normalized().expect("Not 0 vector").test_close(&c_out, 0.00001));
 	}
 
-	//
-	// cross ( &Vector3 ) -> Vector3
-	//
+	#[test]
+	// If the magnitude is not 0, the object should be normalized.
+	fn test_normalized_error ( )
+	{
+		let mut c = Vector3{x: 0.0, y: 0.0, z: 0.0};
+		assert_eq!(c.normalize(), Err(Errors::NaN));
+	}
+	
+//										~ cross ~												 //
 	#[test]
 	fn test_cross_zero ( )
 	{
@@ -392,9 +426,7 @@ mod test
 	}
 
 
-	//
-	// dot ( &Vector3 ) -> Decimal
-	//
+//										~ dot ~													 //
 	#[test]
 	fn test_dot ( )
 	{
@@ -416,17 +448,7 @@ mod test
 	}
 
 
-
-
-
-
-
-
-
-	//
-	// angular_distance ( Vector3 ) -> Radians
-	//
-
+//										~ angle_distance ~										 //
 	#[test]
 	fn test_angle_distance ( )
 	{
@@ -447,38 +469,45 @@ mod test
 
 
 
-
-
-
-	//
-	// to_matrix ( &self ) -> Matrix<1,3>
-	//
-
+//###############################################################################################//
+//
+//										Matrix
+//
+// pub fn to_matrix_column      ( &self ) -> Matrix<3,1> 
+// pub fn to_matrix_row         ( &self ) -> Matrix<1,3> 
+// pub fn to_matrix_column_homo ( &self ) -> Matrix<4,1> 
+// pub fn to_vector2            ( &self ) -> Vector2 
+// pub fn to_equatorial         ( &self ) -> Equatorial 
+//
+//###############################################################################################//
+//										~ to_matrix_column ~									 //
 	#[test]
 	fn test_to_matrix_column ( )
 	{
 		let c = Vector3 {x: 1.0, y: 2.0, z: 3.0};
-		let m : Matrix<3,1> = c.to_matrix_column();
+		let m: Matrix<3,1> = c.to_matrix_column();
 		assert_eq!(c.x, m.get(MatPos{row: 0, col: 0}));
 		assert_eq!(c.y, m.get(MatPos{row: 1, col: 0}));
 		assert_eq!(c.z, m.get(MatPos{row: 2, col: 0}));
 	}
 
+//										~ to_matrix_row ~										 //
 	#[test]
 	fn test_to_matrix_row ( )
 	{
 		let c = Vector3 {x: 1.0, y: 2.0, z: 3.0};
-		let m : Matrix<1,3> = c.to_matrix_row();
+		let m: Matrix<1,3> = c.to_matrix_row();
 		assert_eq!(c.x, m.get(MatPos{row: 0, col: 0}));
 		assert_eq!(c.y, m.get(MatPos{row: 0, col: 1}));
 		assert_eq!(c.z, m.get(MatPos{row: 0, col: 2}));
 	}
 
+//										~ to_matrix_column_homo ~								 //
 	#[test]
 	fn test_to_matrix_column_homo ( )
 	{
 		let c = Vector3 {x: 1.0, y: 2.0, z: 3.0};
-		let m : Matrix<4,1> = c.to_matrix_column_homo();
+		let m: Matrix<4,1> = c.to_matrix_column_homo();
 		assert_eq!(c.x, m.get(MatPos{row: 0, col: 0}));
 		assert_eq!(c.y, m.get(MatPos{row: 1, col: 0}));
 		assert_eq!(c.z, m.get(MatPos{row: 2, col: 0}));
@@ -486,6 +515,7 @@ mod test
 	}
 
 
+//										~ to_vector2 ~											 //
 	#[test]
 	fn test_to_vector_2 ( )
 	{
@@ -498,9 +528,7 @@ mod test
 
 
 
-	//
-	//  to_equatorial ( ) -> Equatorial
-	//
+//										~ to_equatorial ~										 //
 	#[test]
 	fn test_to_equatorial ( )
 	{
@@ -513,15 +541,6 @@ mod test
 		compare = Equatorial{ra: Radians(0.927295218), dec: Radians(0.78539816)};
 		assert!(e.test_close(&compare, 0.000001));
 	}
-
-	// #[test]
-	// fn test_to_equatorial_z_zero ( )
-	// {
-	// 	let c = Vector3 { x: 0.5, y: 0.5, z: 0.0 };
-	// 	let e = c.to_equatorial();
-	// 	assert_eq!(e.ra,  Radians(M_PI / 4.0));
-	// 	assert_eq!(e.dec, Radians(0.0));
-	// }
 
 	#[test]
 	fn test_to_equatorial_z_full ( )
@@ -537,39 +556,40 @@ mod test
 	}
 
 	#[test]
-	fn test_to_equatorial_on_ra ( )
+	fn test_to_equatorial_on_ra ( ) -> Error<()>
 	{
 		let mut c = Vector3 { x: 1.0, y: 0.0, z: 0.0 }; // x is 0
 		let mut e = c.to_equatorial();
 		assert_eq!(e.ra,  Degrees(0.0).to_radians());
 		
-		c = Vector3{ x: 1.0, y: 1.0, z: 0.0 }.normalized();
+		c = Vector3{ x: 1.0, y: 1.0, z: 0.0 }.normalized()?;
 		e = c.to_equatorial();
 		assert_eq!(e.ra,  Degrees(45.0).to_radians());
 		
-		c = Vector3{ x: 0.0, y: 1.0, z: 0.0 }.normalized();
+		c = Vector3{ x: 0.0, y: 1.0, z: 0.0 }.normalized()?;
 		e = c.to_equatorial();
 		assert_eq!(e.ra,  Degrees(90.0).to_radians());
 		
-		c = Vector3{ x: -1.0, y: 1.0, z: 0.0 }.normalized();
+		c = Vector3{ x: -1.0, y: 1.0, z: 0.0 }.normalized()?;
 		e = c.to_equatorial();
 		assert_eq!(e.ra,  Degrees(135.0).to_radians());
 		
-		c = Vector3{ x: -1.0, y: 0.0, z: 0.0 }.normalized();
+		c = Vector3{ x: -1.0, y: 0.0, z: 0.0 }.normalized()?;
 		e = c.to_equatorial();
 		assert_eq!(e.ra,  Degrees(180.0).to_radians());
 		
-		c = Vector3{ x: -1.0, y: -1.0, z: 0.0 }.normalized();
+		c = Vector3{ x: -1.0, y: -1.0, z: 0.0 }.normalized()?;
 		e = c.to_equatorial();
 		assert_eq!(e.ra,  Degrees(225.0).to_radians());
 		
-		c = Vector3{ x: 0.0, y: -1.0, z: 0.0 }.normalized();
+		c = Vector3{ x: 0.0, y: -1.0, z: 0.0 }.normalized()?;
 		e = c.to_equatorial();
 		assert_eq!(e.ra,  Degrees(270.0).to_radians());
 		
-		c = Vector3{ x: 1.0, y: -1.0, z: 0.0 }.normalized();
+		c = Vector3{ x: 1.0, y: -1.0, z: 0.0 }.normalized()?;
 		e = c.to_equatorial();
 		assert_eq!(e.ra,  Degrees(315.0).to_radians());
+		return Ok(());
 	}
 
 
@@ -590,20 +610,6 @@ mod test
 	#[test]
 	fn test_to_equatorial_random ( )
 	{
-		// let mut c = Vector3 { x: -1.0, y: 0.1, z: -1.0 };
-		// for i in 0..20
-		// {
-		// 	// c.z += 0.1;
-		// 	c.x += 0.1;
-		// 	println!("{:?} \t\t {:?}", c, c.to_equatorial());
-		// }
-		// let mut e = Equatorial { ra: Radians(0.0), dec: Radians(0.0)};//-M_PI / 2.0) };
-		// for i in 0..20
-		// {
-		// 	e.ra.0 += M_PI / 10.0;
-		// 	println!("{:?} \t\t {:?}", e, e.to_vector3());
-		// }
-		// panic!("");
 		let mut rng = rand::thread_rng();
 		for _i in 0..100
 		{

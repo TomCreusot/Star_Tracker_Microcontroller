@@ -48,6 +48,10 @@ rustup default nightly-2021-08-20-x86_64-unknown-linux-gnu
 ```
 Any version between 2021-03-20 and 2021-08-31 should work.
 
+## Documentation
+reset;clear;cargo doc --no-deps --lib
+
+
 ## Contributing
 
 ## Authors

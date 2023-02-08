@@ -1,13 +1,16 @@
-//! Due to limitations with lifetimes and types, the default ToIterator trait cannot be used.
-//! Instead the iterator statically creates a new iterator from an input list.
-use super::{List, ListIterator};
+//! Implementation of [ListIterator](crate::util::list::list_iterator).  
+//! Due to limitations with lifetimes and types, the default ToIterator trait cannot be used.  
+//! Instead the iterator statically creates a new iterator from an input list.  
 use std::iter::Iterator;
 
+use super::ListIterator;
+use super::List;
 
 
-impl<'a, T> ListIterator<'a, T> 
+
+impl<'a, T> ListIterator<'a, T>
 {
-	pub fn new ( list : &'a dyn List<T> ) -> ListIterator<'a, T>
+	pub fn new ( list: &'a dyn List<T> ) -> ListIterator<'a, T>
 	{
 		return ListIterator{ list: list, index: 0 };
 	}
@@ -28,19 +31,19 @@ impl<'a, T> ListIterator<'a, T>
 }
 
 impl <'a, T> Iterator for ListIterator<'a, T> {
-    
+
 	type Item = T;
-	
-    fn next ( &mut self ) -> Option<T> 
+
+	fn next ( &mut self ) -> Option<T>
 	{
-        if self.index < self.list.size()
+		if self.index < self.list.size()
 		{
 			let val = Some(self.list.get(self.index));
 			self.index += 1;
 			return val;
 		}
 		return None;
-    }
+	}
 }
 
 
@@ -60,19 +63,22 @@ impl <'a, T> Iterator for ListIterator<'a, T> {
 #[allow(unused_must_use)]
 mod test
 {
-	use crate::util::list::{List, ArrayList, ListIterator};
-	
+	use crate::util::list::List;
+	use crate::util::list::ArrayList;
+	use crate::util::list::ListIterator;
+
 	#[test]
+	// All functionallity of list_iterator for arraylist will be tested together.
 	fn test_iter_array_list ( )
 	{
-		let mut list : ArrayList<u32, 5> = ArrayList::new();
+		let mut list: ArrayList<u32, 5> = ArrayList::new();
 		list.push_back(0);
 		list.push_back(1);
 		list.push_back(2);
 		list.push_back(3);
 		list.push_back(4);
-		
-		let mut iter : ListIterator<u32> = ListIterator::new(&list);
+
+		let mut iter: ListIterator<u32> = ListIterator::new(&list);
 		assert_eq!(iter.next(), Some(0));
 		assert_eq!(iter.next(), Some(1));
 		assert_eq!(iter.next(), Some(2));
@@ -84,16 +90,17 @@ mod test
 
 
 	#[test]
+	// All functionallity of list_iterator for vec will be tested together.
 	fn test_iter_vec ( )
 	{
-		let mut list : Vec<u32> = Vec::new();
+		let mut list: Vec<u32> = Vec::new();
 		list.push_back(0);
 		list.push_back(1);
 		list.push_back(2);
 		list.push_back(3);
 		list.push_back(4);
-		
-		let mut iter : ListIterator<u32> = ListIterator::new(&list);
+
+		let mut iter: ListIterator<u32> = ListIterator::new(&list);
 		assert_eq!(iter.next(), Some(0));
 		assert_eq!(iter.next(), Some(1));
 		assert_eq!(iter.next(), Some(2));
@@ -102,19 +109,19 @@ mod test
 		assert_eq!(iter.next(), None);
 		assert_eq!(iter.next(), None);
 	}
-	
-	
+
+
 	// #[test]
 	// fn test_remove_array_list ( )
 	// {
-	// 	let mut list : ArrayList<u32, 5> = ArrayList::new();
+	// 	let mut list: ArrayList<u32, 5> = ArrayList::new();
 	// 	list.push_back(0);
 	// 	list.push_back(1);
 	// 	list.push_back(2);
 	// 	list.push_back(3);
 	// 	list.push_back(4);
-	// 
-	// 	let mut iter : ListIterator<u32> = ListIterator::new(&list);
+	//
+	// 	let mut iter: ListIterator<u32> = ListIterator::new(&list);
 	// 	iter.remove();
 	// 	assert_eq!(iter.next(), Some(1));
 	// 	assert_eq!(iter.next(), Some(2));
@@ -124,5 +131,5 @@ mod test
 	// 	iter.remove(); // Should not crash.
 	// 	assert_eq!(iter.next(), None);
 	// }
-	
+
 }

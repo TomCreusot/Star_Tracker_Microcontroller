@@ -131,19 +131,19 @@ mod test
 		{
 			let mut input = Vector3
 			{ x: rng.gen::<Decimal>(), y: rng.gen::<Decimal>(), z: rng.gen::<Decimal>() };
-			input.normalize();
+			input.normalize().expect("Error if 0,0,0");
 
 			let angle = rotation.angle + Radians(rng.gen::<Decimal>() - 0.5) * variation.angle;
 			let mut axis = rotation.axis;
 			axis.x += variation.axis.x * (rng.gen::<Decimal>() - 0.5);
 			axis.y += variation.axis.y * (rng.gen::<Decimal>() - 0.5);
 			axis.z += variation.axis.z * (rng.gen::<Decimal>() - 0.5);
-			axis.normalize();
+			axis.normalize().expect("Error if 0,0,0");
 			let output = (AngleAxis{angle: angle, axis: axis}.to_quaternion()).rotate_point(input);
 			let weight = var_weight + rng.gen::<Decimal>();
 			let element : Match<Vector3> = Match{input: input, output: output, weight: weight};
 
-			coords.push_back(element).expect("HELLO");
+			coords.push_back(element).expect("already did error check?");
 		}
 		return coords;
 	}

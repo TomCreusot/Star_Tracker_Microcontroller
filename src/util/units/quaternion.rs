@@ -1,42 +1,22 @@
-//! This is the implementation of Quaternion.
-use super::{Quaternion, Vector3, AngleAxis, Radians};
-use util::aliases::Decimal;
+//! Implementation of [Quaternion](crate::util::units::Quaternion).
+use super::Quaternion;
+use super::Vector3;
+use super::AngleAxis;
+use super::Radians;
+use crate::util::aliases::Decimal;
 
 impl Quaternion
-{
-	/// Creates an angle axis from this quaternion
-	/// # Example
-	/// ```
-	/// use star_tracker::util::units::{Quaternion, Vector3, Radians, AngleAxis};
-	/// use star_tracker::util::aliases::M_PI;
-	/// let angle = Radians(M_PI / 2.0);
-	/// let axis = Vector3{x: 1.0, y: 0.0, z: 0.0};
-	/// let angle_axis = AngleAxis{angle: angle, axis: axis};
-	/// let q = angle_axis.to_quaternion();
-	/// assert_eq!(angle_axis, q.to_angle_axis());
-	/// ```
-	pub fn to_angle_axis ( &self ) -> AngleAxis
-	{
-		let angle = Radians(2.0 * self.w.acos());
-		let axis = Vector3
-		{
-			x: self.x / (1.0-self.w*self.w).sqrt(),
-			y: self.y / (1.0-self.w*self.w).sqrt(),
-			z: self.z / (1.0-self.w*self.w).sqrt(),
-		};
-		return AngleAxis { angle: angle, axis: axis };
-	}
-
+{	
 	/// Rotates a point around this quaternion.
-	/// # Arguments
-	/// The point to rotate.
-	/// # Returns
-	/// The rotated point.
 	///
 	/// # Example
 	/// ```
-	/// use star_tracker::util::units::{Quaternion, Vector3, Radians, AngleAxis};
+	/// use star_tracker::util::units::Quaternion;
+	/// use star_tracker::util::units::Vector3;
+	/// use star_tracker::util::units::Radians;
+	/// use star_tracker::util::units::AngleAxis;
 	/// use star_tracker::util::aliases::M_PI;
+	///
 	/// // Rotates point around the z axis where the point is 10 degrees x of z
 	/// let axis = Vector3{x: 0.0, y: 0.0, z: 1.0};
 	/// let angle = Radians(M_PI / 4.0); // 45 degrees
@@ -60,13 +40,38 @@ impl Quaternion
 		return Vector3{x: rotation.x, y: rotation.y, z: rotation.z};
 	}
 
-
-	/// Finds the conjugate of this quaternion.
-	/// # Returns
-	/// The conjugate of the current quaternion.
+	/// Creates an angle axis from this quaternion.
 	/// # Example
 	/// ```
 	/// use star_tracker::util::units::Quaternion;
+	/// use star_tracker::util::units::Vector3;
+	/// use star_tracker::util::units::Radians;
+	/// use star_tracker::util::units::AngleAxis;
+	/// use star_tracker::util::aliases::M_PI;
+	///
+	/// let angle = Radians(M_PI / 2.0);
+	/// let axis = Vector3{x: 1.0, y: 0.0, z: 0.0};
+	/// let angle_axis = AngleAxis{angle: angle, axis: axis};
+	/// let q = angle_axis.to_quaternion();
+	/// assert_eq!(angle_axis, q.to_angle_axis());
+	/// ```
+	pub fn to_angle_axis ( &self ) -> AngleAxis
+	{
+		let angle = Radians(2.0 * self.w.acos());
+		let axis = Vector3
+		{
+			x: self.x / (1.0-self.w*self.w).sqrt(),
+			y: self.y / (1.0-self.w*self.w).sqrt(),
+			z: self.z / (1.0-self.w*self.w).sqrt(),
+		};
+		return AngleAxis { angle: angle, axis: axis };
+	}
+
+
+	/// Finds the conjugate of this quaternion.
+	/// ```
+	/// use star_tracker::util::units::Quaternion;
+	//
 	/// let q = Quaternion{w: 1.0, x: 2.0, y: 3.0, z: 4.0};
 	///	assert_eq!(q.conjugate(), Quaternion{w: 1.0, x: -2.0, y: -3.0, z: -4.0});
 	/// ```
@@ -82,11 +87,9 @@ impl Quaternion
 
 
 
-	/// Finds the dot product of the quaternions.
-	/// Useful for comparing.
-	/// # Returns
-	/// The dot product of the quaternion.
-	///
+	/// Finds the dot product of the quaternions.  
+	/// This is a useful way of comparing 2 rotations without worrying about a singularity.  
+	/// If the values are close, the rotated vector will be in the same location.  
 	/// # Example
 	/// ```
 	/// use star_tracker::util::units::Vector3;
@@ -129,22 +132,33 @@ impl Quaternion
 mod test
 {
 
-	use util::aliases::{M_PI};
-	use util::units::{Quaternion, Vector3, Radians, AngleAxis};
+	use crate::util::aliases::M_PI;
+	use crate::util::units::Quaternion;
+	use crate::util::units::Vector3;
+	use crate::util::units::Radians;
+	use crate::util::units::AngleAxis;
 
+//###############################################################################################//
+//
+//									Basics
+//
+// pub fn to_angle_axis ( &self ) -> AngleAxis
+// pub fn conjugate     ( &self ) -> Self
+// pub fn dot           ( &self, Self ) -> Decimal
+//
+//###############################################################################################//
+//										~ to_angle_axis ~									 	 //
 	#[test]
 	pub fn test_to_angle_axis ( )
 	{
 		let mut axis : Vector3 = Vector3{x: 1.0, y: 2.0, z: 3.0};
 		let angle = Radians(M_PI / 3.1);
-		axis.normalize();
+		axis.normalize().expect("not 0 vector");
 		let angle_axis : AngleAxis = AngleAxis{angle: angle, axis: axis};
 		assert_eq!(angle_axis, angle_axis.to_quaternion().to_angle_axis());
 	}
 
-	//
-	//	conjugate ( &self ) -> Quaternion
-	//
+//										~ conjugate ~										 	 //
 	#[test]
 	fn test_conjugate ( )
 	{
@@ -153,15 +167,35 @@ mod test
 	}
 
 
-	//
-	//	mul ( &self, rhs: &Self ) -> Self
-	//
+//										~ dot ~												 	 //
 	#[test]
-    fn mul_quaternion() {
-        let q = Quaternion{w: 1.0, x: 2.0, y: 3.0, z: 4.0};
-        let r = Quaternion{w: 4.0, x: 3.0, y: 2.0, z: 1.0};
-        assert_eq!(q * r, Quaternion{w: -12.0, x: 6.0, y: 24.0, z: 12.0});
-    }
+	// Standard dot product.
+	fn test_dot ( )
+	{
+		let q_1 = Quaternion{w: 0.1, x: 2.0, y: 30.0, z: 400.0};
+		let q_2 = Quaternion{w: 1.1, x: 0.02, y: 0.003, z: 0.0004};
+		
+		assert_eq!(q_1.dot(q_2), 0.4);
+	}
+
+	#[test]
+	// Angle axis has a singularity.
+	// A positive axis with a positive angle is the same as a negative axis with a negative angle.
+	// They are the same value and therefore must result in the same value. 
+	fn test_dot_usecase_singularity_angle_axis ( )
+	{
+		//Compares 2 quaternions which are identical but are represented incorrectly as angle axis.
+		let a_1 = AngleAxis{angle: Radians(90.000001), axis: Vector3{x: 1.0, y: 0.0, z: 0.0}};
+		let a_2 = AngleAxis{angle: Radians(-90.0001), axis: Vector3{x: -1.0, y: 0.0, z: 0.0}};
+		let a_3 = AngleAxis{angle: Radians(-90.0001), axis: Vector3{x: 0.0, y: 1.0, z: 0.0}};
+
+		let q_1 = a_1.to_quaternion();
+		let q_2 = a_2.to_quaternion();
+		let q_3 = a_3.to_quaternion();
+
+		assert!(1.0 - q_1.dot(q_2).abs() < 0.00001);
+		assert!(0.00001 < 1.0 - q_1.dot(q_3).abs());
+	}
 
 
 
@@ -169,18 +203,22 @@ mod test
 
 
 
-	//           +y
-	//           |
-	//           |
-	//          /--------- +z
-	//         /
-	//       +x
-
-
-
-	//
-	// rotate_point ( Vector3 ) -> Vector3
-	//
+//###############################################################################################//
+//
+//									Purpose
+//
+// pub fn rotate_point ( &self, Vector3 ) -> Vector3
+//
+//           +y
+//           |
+//           |
+//          /--------- +z
+//         /
+//       +x
+//	(left hand axis)
+//
+//###############################################################################################//
+//										~ rotate_point ~									 	 //
 	#[test]
 	fn test_rotate_point_x ( )
 	{
@@ -290,35 +328,5 @@ mod test
 						y: (offset_angle).0.sin() * (Radians(M_PI/2.0) + angle_axis.angle).0.cos(),
 						z: pt.z};
 		assert_eq!(expected, rotated);
-	}
-
-
-
-
-
-	#[test]
-	fn test_dot_usecase_singularity_angle_axis ( )
-	{
-		//Compares 2 quaternions which are identical but are represented incorrectly as angle axis.
-		let a_1 = AngleAxis{angle: Radians(90.000001), axis: Vector3{x: 1.0, y: 0.0, z: 0.0}};
-		let a_2 = AngleAxis{angle: Radians(-90.0001), axis: Vector3{x: -1.0, y: 0.0, z: 0.0}};
-		let a_3 = AngleAxis{angle: Radians(-90.0001), axis: Vector3{x: 0.0, y: 1.0, z: 0.0}};
-
-		let q_1 = a_1.to_quaternion();
-		let q_2 = a_2.to_quaternion();
-		let q_3 = a_3.to_quaternion();
-
-		assert!(1.0 - q_1.dot(q_2).abs() < 0.00001);
-		assert!(0.00001 < 1.0 - q_1.dot(q_3).abs());
-	}
-
-
-	#[test]
-	fn test_dot ( )
-	{
-		let q_1 = Quaternion{w: 0.1, x: 2.0, y: 30.0, z: 400.0};
-		let q_2 = Quaternion{w: 1.1, x: 0.02, y: 0.003, z: 0.0004};
-
-		assert_eq!(q_1.dot(q_2), 0.4);
 	}
 }

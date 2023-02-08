@@ -1,57 +1,58 @@
-//! This provides specifics of errors.
-//! Instead of using `Result<T, E>`, use `Error<T>` as a more specific error will be provided.
+//! This provides specifics of errors.  
+//! Instead of using `Result<T, E>`, use `Error<T>` as a more specific error will be provided.  
+//! # Example
+//! ```
+//! use star_tracker::util::err::Error;
+//! use star_tracker::util::err::Errors;
+//! fn function ( error: bool ) -> Error<bool>
+//! {
+//! 	return if error { Err(Errors::NoMatch) } else { Ok(error) }
+//! }
+//!
+//! assert!(function(true).is_err());
+//! assert!(function(false).is_ok());
+//! ```
 
 
-/// An error of a specified size.
+
+//###############################################################################################//
+//									---	Error ---
+//###############################################################################################//
+/// An easier way to write `Result<T, Errors>`.
+/// # Example
+/// ```
+/// use star_tracker::util::err::Error;
+/// use star_tracker::util::err::Errors;
+/// fn function ( error: bool ) -> Error<bool> { return Err(Errors::NoMatch); }
+/// ```
 pub type Error<T> = Result<T, Errors>;
 
 
-/// A storage of multiple errors to select from.
-/// # Errors
-/// ## Out Of Bounds
-/// When an index to a list/array is provided and is out of the initialized range.
-///
-/// ## Invalid Size
-/// An array is of an invalid size to be used.
-///
-/// ## Invalid Value
-/// The value is not useful in the given circumstance.
-#[derive(Debug,Copy,Clone,PartialEq)]
+
+//###############################################################################################//
+//									---	Errors ---
+//###############################################################################################//
+
+/// A set of multiple errors to select from.
+#[derive(Debug, Copy, Clone, PartialEq)]
 pub enum Errors
 {
+	/// The index exceeds a linear datastructures size.  
+	/// This could be get() or set() from a list.  
 	OutOfBounds,
+	/// The current action will make a datastructure exceed its allocated size.  
+	/// This could be trying to push an element into a full ArrayList.  
 	InvalidSize,
+	/// The provided value is not valid in the given context.
 	InvalidValue,
+	/// For 2d objects (matrix, image), if the provided point is outside of the x bounds.
 	OutOfBoundsX,
+	/// For 2d objects (matrix, image), if the provided point is outside of the y bounds.
 	OutOfBoundsY,
+	/// A core part of the algorithm failed and the a star match was not found.
 	NoMatch,
+	/// Not actual number.  
+	/// Divide by 0.  
+	/// A mathematical instance is not valid to be expressed after undergoing the edit.
+	NaN,
 }
-
-/*
-impl fmt::Debug for Errors
-{
-	fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result 
-	{
-		match self
-		{
-			OutOfBounds => write!("Array Out of Bounds Error: An index provided to List/Array is out of the bounds."),
-			InvalidSize => write!("Invalid Size Error: The size of the array provided is {}, where the expected range is {} to {} (inclusive)", self.unwrap().actual, self.unwrap().low, self.unwrap.high),
-			InvalidValue => write!("Invalid Value Error: The provided value is {}, the expaected values are ." ),
-		}
-		
-		return Ok();
-	}
-}
-
-impl ToString for Errors
-{
-	fn to_string ( &self ) -> String
-	{
-		match self
-		{
-			OutOfBounds => return "Out Of Bounds Error",
-			InvalidSize => return "Invalid Size Error",
-			InvalidValue => return "Invalid Value Error",
-		}
-	}
-}*/

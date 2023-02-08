@@ -77,9 +77,9 @@ pub fn find_sigma ( b: &Matrix<3,3> ) -> Decimal
 pub fn find_k ( z: &Matrix<3, 1>, s: &Matrix<3, 3>, sigma: Decimal ) -> Matrix<4,4>
 {
 	let mut k : Matrix<4,4> = Matrix::new();
-	k.insert(MatPos{row: 1, col: 0}, &z);
-	k.insert(MatPos{row: 0, col: 1}, &z.transposed());
-	k.insert(MatPos{row: 1, col: 1}, &s);
+	k.insert(MatPos{row: 1, col: 0}, &z).expect("Cannot Fail (constant)");
+	k.insert(MatPos{row: 0, col: 1}, &z.transposed()).expect("Cannot Fail (constant)");
+	k.insert(MatPos{row: 1, col: 1}, &s).expect("Cannot Fail (constant)");
 
 	k.set(MatPos{row: 0, col: 0}, k.get(MatPos{row: 0, col: 0}) + sigma);
 	k.set(MatPos{row: 1, col: 1}, k.get(MatPos{row: 1, col: 1}) - sigma);

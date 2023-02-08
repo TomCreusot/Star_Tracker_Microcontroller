@@ -122,9 +122,8 @@ impl Blob
 				println!("ERROR: Stack has 0 capacity");
 			}
 		}
-		while 0 < stack.size()
+		while let Ok(cur) = stack.pop_back()
 		{
-			let cur = stack.pop_back();
 			if img.get(cur) != 0 // If Reinserted in list.
 			{
 				// Add to list
@@ -338,7 +337,7 @@ mod test
 	{
 		if (a - b).abs() > DECIMAL_PRECISION_TEST
 		{
-			panic!("\n\nassert_close failed: \n\tleft: `{}`\n\tright: `{}`\n\n", a, b);
+			assert!(false, "\n\nassert_close failed: \n\tleft: `{}`\n\tright: `{}`\n\n", a, b);
 		}
 	}
 

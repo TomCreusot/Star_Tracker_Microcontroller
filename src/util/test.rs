@@ -2,9 +2,8 @@
 
 use std::fmt::Debug;
 
-
-use util::aliases::DECIMAL_PRECISION;
-use util::aliases::Decimal;
+use crate::util::aliases::DECIMAL_PRECISION;
+use crate::util::aliases::Decimal;
 
 
 /// When testing something close to the precision of Decimal which can be slightly inaccurate.
@@ -20,15 +19,15 @@ pub trait TestEqual
 	/// * `precision`	- The tolerance.
 	/// # Returns
 	/// True if equal.
-	fn test_close ( &self, other : &Self, precision: Decimal ) -> bool;
-	
-	
+	fn test_close ( &self, other: &Self, precision: Decimal ) -> bool;
+
+
 	/// Auto implemented function which calls test_equal with precision of DECIMAL_PRECISION_TEST.
 	/// # Arguments
 	/// * `other`		- The element to compare to.
 	/// # Returns
 	/// True if equal.
-	fn test_equal ( &self, other : &Self ) -> bool where Self: Debug
+	fn test_equal ( &self, other: &Self ) -> bool where Self: Debug
 	{
 		println!("left: {:?} \t\t right: {:?}", self, other);
 		return self.test_close(other, DECIMAL_PRECISION_TEST);
@@ -40,9 +39,8 @@ pub trait TestEqual
 	/// * `other`		- The element to compare to.
 	/// # Returns
 	/// True if equal.
-	fn test_equal ( &self, other : &Self ) -> bool
+	fn test_equal ( &self, other: &Self ) -> bool
 	{
 		return self.test_close(other, DECIMAL_PRECISION_TEST);
 	}*/
 }
-

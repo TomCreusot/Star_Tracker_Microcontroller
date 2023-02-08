@@ -44,7 +44,7 @@ sudo apt-get install libclang-dev -y
 
 printf ${HEADER}"\n \n \n \n ---------- UPGRADING RUST TO RECOMMENDED VERSION ---------\n\n"${BODY}
 # new resources required
-rustup default nightly-2021-08-20-x86_64-unknown-linux-gnu
+rustup default nightly
 
 
 

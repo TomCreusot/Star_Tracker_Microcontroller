@@ -3,10 +3,13 @@ use super::ExtrinsicParameters;
 use super::SpaceWorld;
 use super::SpaceCamera;
 
-use util::units::Matrix;
-use util::units::MatPos;
-use util::units::Equatorial;
-use util::units::Vector3;
+use crate::util::units::Matrix;
+use crate::util::units::MatPos;
+use crate::util::units::Equatorial;
+use crate::util::units::Vector3;
+
+use crate::util::err::Errors;
+use crate::util::err::Error;
 
 impl ExtrinsicParameters
 {
@@ -47,19 +50,26 @@ impl ExtrinsicParameters
 	///
 	/// # Returns
 	/// An ExtrinsicParameter based on the looking direction of the camera.
+	/// If forward is equal to up, Errors::InvalidValue will be produced. 
 	///
 	/// # Asserts
 	/// forward != up
-	pub fn look_at ( forward: Equatorial, up: Equatorial ) -> Self
+	pub fn look_at ( forward: Equatorial, up: Equatorial ) -> Error<Self>
 	{
-		assert_ne!(forward,up,"forward cannot be up as there is no way to know the orientation.");
+		if forward == up
+		{
+			return Err(Errors::InvalidValue);
+		}
 
 		let mut matrix : Matrix<3, 3> = Matrix::new();
 
 		// Matrix parameters.
-		let z_axis = forward.to_vector3();		      			// Z axis goes through the center of the frame.
-		let x_axis = up.to_vector3().cross(z_axis).normalized();// X axis rotation applied as axis angle adjacent to z.
-		let y_axis = z_axis.cross(x_axis).normalized();   		// Same logic as x.
+		// Z axis goes through the center of the frame.
+		let z_axis = forward.to_vector3(); 
+		// X axis rotation applied as axis angle adjacent to z.
+		let x_axis = up.to_vector3().cross(z_axis).normalized().expect("Already checked.");
+		// Same logic as x.
+		let y_axis = z_axis.cross(x_axis).normalized().expect("Already checked.");
 
 		// Rotation
 		matrix.set(MatPos{row: 0, col: 0}, x_axis.x);
@@ -83,7 +93,7 @@ impl ExtrinsicParameters
 
 		// Homogeneous identity
 		// matrix.set(MatPos{row: 3, col: 3}, 1.0);
-		return Self{rotation: matrix, translation: Vector3{x: 0.0, y: 0.0, z: 0.0}};
+		return Ok(Self{rotation: matrix, translation: Vector3{x: 0.0, y: 0.0, z: 0.0}});
 	}
 }
 
@@ -102,20 +112,29 @@ mod test
 {
 	use rand::prelude::*;
 
-	use projection::ExtrinsicParameters;
-	use projection::SpaceWorld;
-	use projection::SpaceCamera;
-	use util::units::MatPos;
-	use util::units::Matrix;
-	use util::units::Degrees;
-	use util::units::Radians;
-	// use util::units::AngleAxis;
-	use util::units::Equatorial;
-	use util::units::Vector3;
+	use crate::projection::ExtrinsicParameters;
+	use crate::projection::SpaceWorld;
+	use crate::projection::SpaceCamera;
 
-	// use util::aliases::M_PI;
+	use crate::util::units::Equatorial;
+	use crate::util::units::Vector3;
+	use crate::util::units::Degrees;
+	use crate::util::units::Radians;
+	use crate::util::units::MatPos;
+	use crate::util::units::Matrix;
 
+	use crate::util::err::Errors;
+	use crate::util::err::Error;
 
+//###############################################################################################//
+//
+//										Rotations
+//
+// pub fn to_image   ( &self, SpaceWorld  ) -> SpaceCamera
+// pub fn from_image ( &self, SpaceCamera ) -> SpaceWorld
+//
+//###############################################################################################//
+//										~ to_image ~											 //
 	#[test]
 	fn test_to_image ( )
 	{
@@ -141,6 +160,7 @@ mod test
 		assert_eq!(param.to_image(initial), expected);
 	}
 
+//										~ from_image ~											 //
 	#[test]
 	fn test_from_image ( )
 	{
@@ -173,30 +193,39 @@ mod test
 
 
 
-
+//###############################################################################################//
+//
+//										Constructors
+//
+// pub fn look_at ( Equatoria, Equaorial ) -> Error<Self>
+//
+//###############################################################################################//
 
 	#[test]
 	// Checks if the forward vector is always the center of the output.
-	fn test_look_at_center ( )
+	fn test_look_at_center ( ) -> Error<()>
 	{
 		// Facing Up
-		let mut forward = Equatorial{ra: Degrees(10.0).to_radians(), dec: Degrees(30.0).to_radians()};
-		let mut up = Equatorial{ra: Degrees(190.0).to_radians(), dec: Degrees(60.0).to_radians()};
-		let mut rotation = ExtrinsicParameters::look_at(forward, up).rotation;
+		let mut forward = 
+			Equatorial{ra: Degrees(10.0).to_radians(), dec: Degrees(30.0).to_radians()};
+		let mut up = 
+			Equatorial{ra: Degrees(190.0).to_radians(), dec: Degrees(60.0).to_radians()};
+		let mut rotation = 
+			ExtrinsicParameters::look_at(forward, up)?.rotation;
 		let mut start_to_end = rotation.multiply(forward.to_vector3());
 		assert_eq!(start_to_end, Vector3{x: 0.0, y: 0.0, z: 1.0});
 
 		// Facing Down
 		forward = Equatorial{ra: Degrees(-10.0).to_radians(), dec: Degrees(40.0).to_radians()};
 		up = Equatorial{ra: Degrees(-10.0).to_radians(), dec: Degrees(50.0).to_radians()};
-		rotation = ExtrinsicParameters::look_at(forward, up).rotation;
+		rotation = ExtrinsicParameters::look_at(forward, up)?.rotation;
 		start_to_end = rotation.multiply(forward.to_vector3());
 		assert_eq!(start_to_end, Vector3{x: 0.0, y: 0.0, z: 1.0});
 
 		// Facing Down More
 		forward = Equatorial{ra: Degrees(20.0).to_radians(), dec: Degrees(-40.0).to_radians()};
 		up = Equatorial{ra: Degrees(200.0).to_radians(), dec: Degrees(-50.0).to_radians()};
-		rotation = ExtrinsicParameters::look_at(forward, up).rotation;
+		rotation = ExtrinsicParameters::look_at(forward, up)?.rotation;
 		start_to_end = rotation.multiply(forward.to_vector3());
 		assert_eq!(start_to_end, Vector3{x: 0.0, y: 0.0, z: 1.0});
 
@@ -212,16 +241,18 @@ mod test
 			let up = Equatorial {
 				ra:  Radians(rng.gen_range(range_ra.start().0..range_ra.end().0)),
 				dec: Radians(rng.gen_range(range_dec.start().0..range_dec.end().0)) };
-			rotation = ExtrinsicParameters::look_at(forward, up).rotation;
+			rotation = ExtrinsicParameters::look_at(forward, up)?.rotation;
 			assert_eq!(rotation.multiply(forward.to_vector3()), Vector3{x: 0.0, y: 0.0, z: 1.0});
 		}
+
+		return Ok(());
 	}
 
 
 	#[test]
 	// Ensures the output is not flipped.
 	// * A point on the axis adjacent to forward and up must be on the correct side after the transform.
-	fn test_look_at_specularity_adjacent_axis ( )
+	fn test_look_at_specularity_adjacent_axis ( ) -> Error<()>
 	{
 		let mut rng = rand::thread_rng();
 		let range_ra  = Equatorial::range_ra();
@@ -237,18 +268,20 @@ mod test
 				ra:  Radians(rng.gen_range(range_ra.start().0..range_ra.end().0)),
 				dec: Radians(rng.gen_range(range_dec.start().0..range_dec.end().0)) };
 
-			let rotation = ExtrinsicParameters::look_at(forward, up).rotation;
-			let left = forward.to_vector3().cross(up.to_vector3()).normalized();
+			let rotation = 
+				ExtrinsicParameters::look_at(forward, up)?.rotation;
+			let left = forward.to_vector3().cross(up.to_vector3()).normalized()?;
 			// [0 0 1] x [0 1 0] = [-1 0 0]
 			assert_eq!(rotation.multiply(left), Vector3{x: -1.0, y: 0.0, z: 0.0});
 		}
+		return Ok(());
 	}
 
 
 	#[test]
 	// Ensures the output is not flipped.
 	// * A point on the plane of forward and up must be on the correct point after the transform.
-	fn test_look_at_specularity_same_plane ( )
+	fn test_look_at_specularity_same_plane ( ) -> Error<()>
 	{
 		let mut rng = rand::thread_rng();
 		let range_ra  = Equatorial::range_ra();
@@ -264,24 +297,25 @@ mod test
 				ra:  Radians(rng.gen_range(range_ra.start().0..range_ra.end().0)),
 				dec: Radians(rng.gen_range(range_dec.start().0..range_dec.end().0)) };
 
-			let rotation = ExtrinsicParameters::look_at(forward, up).rotation;
+			let rotation = 
+				ExtrinsicParameters::look_at(forward, up).expect("inputs are not equal").rotation;
 			// forward cross up = -(perpendicular vector).
 			// (perpendicular vector) cross forward = (proper up).
 			// proper up is in the direction of up but with the magnitude of the projected component of up.
 			// find the normalized vector.
 			let proper_up =forward.to_vector3().cross(up.to_vector3()).cross(forward.to_vector3());
-			assert_eq!(rotation.multiply(proper_up).normalized(), Vector3{x: 0.0, y: 1.0, z: 0.0});
+			assert_eq!(rotation.multiply(proper_up).normalized()?,Vector3{x: 0.0, y: 1.0, z: 0.0});
 		}
+		return Ok(());
 	}
 
 
 	#[test]
-	#[should_panic]
-	#[allow(unused_variables)]
-	fn test_look_at_panic ( )
+	// Errors::InvalidValue should be returned if the inputs are equal.
+	fn test_look_at_error ( )
 	{
 		let a = Equatorial{ra: Radians(0.0), dec: Radians(0.0)};
-		ExtrinsicParameters::look_at(a,a);
+		assert_eq!(ExtrinsicParameters::look_at(a,a), Err(Errors::InvalidValue));
 	}
 
 }

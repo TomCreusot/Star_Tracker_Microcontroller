@@ -1,158 +1,172 @@
-use super::List;
-use util::err::{Errors, Error};
+//! Implementation of [List](crate::util::list::List)
+use crate::util::list::List;
 
-
-
-//###############################################################################################//
-//								---	ListIterator Implementation ---
-//###############################################################################################//
-/*impl<'a, T> IntoIterator for &'a dyn List<T> where T: Clone {
-    type Item = T;
-    type IntoIter = ListIterator<'a, T>;
-
-}*/
-
-
+use crate::util::err::Errors;
+use crate::util::err::Error;
 
 impl <T> List <T> for Vec <T> where T: Clone
-{	
-    /// Finds the max number of elements that can be stored in the list.
-    fn capacity ( &self ) -> usize
-    {
-        return usize::max_value();//Vec::capacity(&self);//(isize::max_value() - 1) as usize;
-    }
+{
+	/// Returns usize::max_value().  
+	/// A Vec will not exceed capacity as it will dynamically resize.  
+	/// This conflicts with Vec, to use, follow the example.
+	/// # Example
+	/// ```
+	/// use star_tracker::util::list::List;
+	/// let vec: Vec<usize> = Vec::new();
+	/// List::capacity(&vec); // This is how to call conflicting packages.
+	/// ```
+	fn capacity ( &self ) -> usize
+	{
+		return usize::max_value();
+	}
 
-    /// Finds how many elements are in the list.
-    /// # Returns
-    /// The size.
-    fn size ( &self ) -> usize
-    {
-        return self.len() as usize;
-    }
+	/// Finds how many elements are in the list.  
+	/// Equivalent to [Vec.len()](https://doc.rust-lang.org/std/vec/struct.Vec.html#method.len).
+	fn size ( &self ) -> usize
+	{
+		return self.len() as usize;
+	}
 
-    /// Checks if the List is at maximum capacity.
-    /// # Returns
-    /// True if full.
-    fn is_full ( &self ) -> bool
-    {
-        return false;
-    }
+	/// Returns false.  
+	/// A vec is never full as it will dynamically resize.  
+	fn is_full ( &self ) -> bool
+	{
+		return false;
+	}
 
-    /// Checks if the List is empty.
-    /// # Returns
-    /// True if empty.
-    ///
-    /// # Example
-    /// lst : ArrayList<UInt, 2> = ArrayList::new();
-    fn is_empty ( &self ) -> bool
-    {
-        return self.len() == 0;
-    }
+	/// Returns true if empty.  
+	/// Equivalent to [Vec::is_empty()](https://doc.rust-lang.org/std/vec/struct.Vec.html#method.is_empty).
+	fn is_empty ( &self ) -> bool
+	{
+		return self.len() == 0;
+	}
 
-    /// Gets the element at the specified index.
-    /// # Arguments
-    ///	* 'index' - The index of the element to receive.
-    /// # Returns
-    /// The value at the index.
-    fn get ( &self, index : usize ) -> T
-    {
-        assert!(index < self.len(), "Out of bounds");
+	/// Gets the element at the specified index.  
+	/// Equivalent to `vec[index];`
+	fn get ( &self, index: usize ) -> T
+	{
 		return self[index].clone();
-    }
+	}
 
-    /// Sets the element at the specified index.
-    /// # Arguments
-    ///	* 'index' - The index of the element to receive.
-    /// * 'value' - The value to assign.
-    fn set ( &mut self, index : usize, value : T ) -> Error<()>
-    {
+	/// Sets the element at the specified index.
+	/// Equivalent to `vec[index] = value;`
+	fn set ( &mut self, index: usize, value: T ) -> Error<()>
+	{
 		if index < self.size()
 		{
 			self[index] = value;
 			return Ok(());
 		}
 		return Err(Errors::OutOfBounds);
-    }
+	}
 
-    /// Adds an element to the end of the list.
-    /// # Arguments
-    /// * 'value' - the value to add to the end.
-    fn push_back ( &mut self, value : T ) -> Error<()>
-    {
+	/// Adds an element to the end of the list.
+	/// Equivalent to [vec.push(value)](https://doc.rust-lang.org/std/vec/struct.Vec.html#method.push).
+	fn push_back ( &mut self, value: T ) -> Error<()>
+	{
 		if self.size() < (self as &dyn List<T>).capacity()
 		{
 			self.push(value);
 			return Ok(());
 		}
 		return Err(Errors::InvalidSize);
-    }
+	}
 
 
-    /// Removes an element from the end of the list.
-    /// # Returns
-    /// The value removed.
-    fn pop_back ( &mut self ) -> T
-    {
-        assert!(!self.is_empty(), "List is empty");
-        return self.pop().unwrap();
-    }
-	
-	
+	/// Removes an element from the end of the list.
+	/// Equivalent to [vec.pop()](https://doc.rust-lang.org/std/vec/struct.Vec.html#method.pop).
+	fn pop_back ( &mut self ) -> Error<T>
+	{
+		if self.is_empty()
+		{
+			return Err(Errors::InvalidSize);
+		}
+		return Ok(self.pop().unwrap());
+	}
+
+
 	/// Sets the counter to 0 so all elements will be override and the list is essentialy cleared.
-	/// # Example
-	/// ``` 
-	/// use star_tracker::util::list::List;
-	/// let mut lst : Vec<u32> = Vec::new();
-	/// lst.push_back(2);
-	/// lst.push_back(1);
-	/// lst.clear();
-	/// assert_eq!(0, lst.size());
-	/// lst.push_back(10);
-	/// assert_eq!(1, lst.size());
-	/// assert_eq!(10, lst.get(0));
-	/// ```
+	/// Equivalent to [vec.clear()](https://doc.rust-lang.org/std/vec/struct.Vec.html#method.clear).
 	fn clear ( &mut self )
 	{
 		self.clear();
 	}
 
-    /// Sorts the list
-    /// # Arguments
-    /// * 'in_order' - A function which returns TRUE if it is in order.
-    fn sort_order ( &mut self, in_order: fn (& T, & T) -> bool )
-    {
-        for ii in 0..self.size()
-        {
-            let mut jj : usize = ii;
+	/// Sorts list based on the input function.  
+	/// VERY SLOW!!!
+	/// The list uses the same logic as the array list.
+	/// # Arguments
+	/// * 'in_order' - A function which returns TRUE if it is in order.
+	/// # Examples
+	/// ```
+	/// use star_tracker::util::list::List;
+	/// fn ascending ( small: & u32, large: & u32 ) -> bool { return small < large; }
+	///
+	/// let mut lst: Vec<u32> = Vec::new();
+	/// lst.push_back(1);          // 1
+	/// lst.push_back(0);          // 1 0
+	/// lst.sort_order(ascending);
+	/// assert_eq!(lst.get(0), 0);
+	/// assert_eq!(lst.get(1), 1); // 0 1
+	/// ```
+	fn sort_order ( &mut self, in_order: fn (& T, & T) -> bool )
+	{
+		for ii in 0..self.size()
+		{
+			let mut jj: usize = ii;
 
-            let mut temp : T = self.get(jj).clone();
-            while jj > 0 && in_order(&mut temp, &mut self.get(jj - 1))
-            {
-                self.set(jj, self.get(jj - 1)).expect("This should be within the bounds.");
-                jj -= 1;
-            }
-            self.set(jj, temp).expect("This should be within the bounds.");
-        }
-    }
-	
-	
+			let mut temp: T = self.get(jj).clone();
+			while jj > 0 && in_order(&mut temp, &mut self.get(jj - 1))
+			{
+				self.set(jj, self.get(jj - 1)).expect("This should be within the bounds.");
+				jj -= 1;
+			}
+			self.set(jj, temp).expect("This should be within the bounds.");
+		}
+	}
 
 
-    /// Slots an element into the list so it is in sorted order by shifting everything right.
-    /// # Arguments
-    /// * `to_slot` - The element to add.
-    /// * `in_order` - The ordering method.
-    ///
-    /// # Returns
-    /// True if inserted, false if there is no space and it will trail the last element.
-    fn slot ( &mut self, to_slot : T, in_order: fn (& T, & T) -> bool ) -> bool
-    {
+
+
+	/// Slots an element into the list so it is in sorted order by shifting everything right.
+	/// # Arguments
+	/// * `to_slot` - The element to add.
+	/// * `in_order` - A function which returns TRUE if it is in order.
+	///  
+	/// This means that the first argument is a smaller index than the second.
+	///
+	/// # Returns
+	/// True if inserted, false if there is no space and it will trail the last element
+	///
+	/// # Examples
+	/// ```
+	/// use star_tracker::util::list::List;
+	///	fn sort_ascending ( small: & i32, large: & i32 ) -> bool { return small < large; }
+	///
+	/// let mut input: Vec<i32> = Vec::new();
+	///
+	/// // The list is not full, elements will be added until it is full.
+	/// let mut to_slot = 0;
+	/// assert!(input.slot(to_slot, sort_ascending)); // 0
+	/// to_slot = 2;
+	/// assert!(input.slot(to_slot, sort_ascending)); // 0 2
+	/// to_slot = 3;
+	/// assert!(input.slot(to_slot, sort_ascending)); // 0 2 3
+	/// to_slot = 1;
+	/// assert!(input.slot(to_slot, sort_ascending)); // 0 1 2 3
+	/// to_slot = 5;
+	/// assert!(input.slot(to_slot, sort_ascending)); // 0 1 2 3 5
+	/// to_slot = 4;
+	/// assert!(input.slot(to_slot, sort_ascending)); // 0 1 2 3 4 5
+	/// ```
+	fn slot ( &mut self, to_slot: T, in_order: fn (& T, & T) -> bool ) -> bool
+	{
 		for ii in 0..self.size()
 		{
 			// If must slot in the middle.
 			if in_order(&to_slot, &self.get(ii))
 			{
-				let mut to_move : T;
+				let mut to_move: T;
 				let mut to_insert = to_slot.clone();
 				let mut jj = ii;
 				while jj < self.size()
@@ -168,14 +182,9 @@ impl <T> List <T> for Vec <T> where T: Clone
 			}
 		}
 		self.push_back(to_slot).expect("Vec should not run out of space.");
-        return true;
-    }
+		return true;
+	}
 }
-
-
-
-
-
 
 
 
@@ -199,94 +208,157 @@ impl <T> List <T> for Vec <T> where T: Clone
 #[allow(unused_must_use)]
 mod test
 {
-	use crate::util::list::{List};
-
-	//
-	// capacity ( ) -> const usize
-	//
-	// #[test]
-	// fn test_capacity ( )
-	// {
-	// 	let size = (isize::MAX - 1) as usize;
-	// 	let lst : Vec<u32> = Vec::with_capacity(1);
-	// //	assert_eq!(lst.capacity(), size);
-	// }
+	use crate::util::list::List;
+	use crate::util::err::Errors;
 
 
-
+//###############################################################################################//
 //
-// size ( ) -> usize
+//										Basic Accessors
 //
+// pub fn capacity  ( &self ) -> usize
+// pub fn size      ( &self ) -> usize
+// pub fn is_full   ( &self ) -> bool
+// pub fn is_empty  ( &self ) -> bool
+//
+// pub fn get       ( &self, index: usize ) -> T
+// pub fn set       ( &mut self, index: usize, value: T ) -> Error<()>
+// pub fn push_back ( &mut self, value: T ) -> Error<()>
+// pub fn pop_back  ( &mut self, value: T ) -> Error<T>
+//
+//###############################################################################################//
+//										~ capacity ~											 //
 	#[test]
+	// Capacity in a vec is near infinite.
+	fn test_capacity ( )
+	{
+		let lst: Vec<u32> = Vec::new();
+		assert_eq!(List::capacity(&lst), usize::max_value());
+	}
+
+//										~ size ~												 //
+	#[test]
+	// Size will return the number of elements in the array.
 	fn test_size ( )
 	{
-		let mut lst : Vec<i32> = Vec::new();
+		let mut lst: Vec<i32> = Vec::new();
 		assert_eq!(lst.size(), 0);
 		lst.push_back(1);
 		assert_eq!(lst.size(), 1);
 		lst.push_back(2);
 		assert_eq!(lst.size(), 2);
 	}
-//
-//	is_full ( ) -> bool
-//
+	
+	
+//										~ is_full ~												 //
 	#[test]
-	fn test_is_full_size ( )
+	// The list is never full.
+	fn test_is_full_size_0 ( )
 	{
-		let lst : Vec<i32> = Vec::new();
+		let lst: Vec<i32> = Vec::new();
+		assert!(!lst.is_full());
+	}
+	
+	#[test]
+	// The list is never full.
+	fn test_is_full_size_1 ( )
+	{
+		let mut lst: Vec<f32> = Vec::new();
+		lst.push_back(0.1);
+		assert!(!lst.is_full());
+	}
+	
+	#[test]
+	// The list is never full.
+	fn test_is_full_size_1_empty ( )
+	{
+		let lst: Vec<f32> = Vec::new();
 		assert!(!lst.is_full());
 	}
 
 
-
-//
-// is_empty ( ) -> bool
-//
+//										~ is_empty ~											 //
 	#[test]
+	// If the list has no capacity, it is empty.
 	fn test_is_empty_size_0 ( )
 	{
-        let mut lst : Vec<i32> = Vec::new();
+		let lst: Vec<u32> = Vec::new();
 		assert!(lst.is_empty());
-        lst.push_back(22);
-        assert!(!lst.is_empty());
+	}
+	
+	#[test]
+	// If the list has N capacity, it is empty when there are no elements.
+	fn test_is_empty_size_1 ( )
+	{
+		let lst: Vec<u32> = Vec::new();
+		assert!(lst.is_empty());
+	}
+	
+	#[test]
+	// If the list has N capacity, it is not empty when there are elements contained.
+	fn test_is_empty_size_1_full ( )
+	{
+		let mut lst: Vec<u32> = Vec::new();
+		lst.push_back(1);
+		assert!(!lst.is_empty());
 	}
 
-//
-// get(usize index) -> T
-//
+
+//										~ get ~													 //
 	#[test]
-	fn test_get_read ( )
+	// If the get tries to access an element inside of the bounds, it should access it.
+	fn test_get_valid ( )
 	{
-		let mut lst : Vec<u32> = Vec::new();
-		println!("{:?}", lst.push_back(0));
+		let mut lst: Vec<u32> = Vec::new();
+		lst.push_back(0);
 		lst.push_back(1);
-		let mut first = lst.get(0);
+		let first  = lst.get(0);
 		let second = lst.get(1);
 		assert_eq!(first, 0);
 		assert_eq!(second, 1);
-
-		// Test removal of ownership.
-		first = 10;
-		assert!(first != lst.get(0));
 	}
-
+	
 	#[test]
-	#[should_panic = "Out of bounds"]
+	// The array must own a copy of the values it creates.
+	fn test_get_ownership ( )
+	{
+		let mut lst: Vec<u32> = Vec::new();
+		let mut val = 2;
+		lst.push_back(val);
+		
+		// Test removal of ownership.
+		val = 10;
+		assert!(val != lst.get(0));
+	}
+	
+	#[test]
+	#[should_panic]
+	// get() is core to everything, it was deemed too difficult to do error checking.
+	// Error checking would also slow the program.
 	fn test_get_not_enough_elements ( )
 	{
-		let lst : Vec<u32> = Vec::new();
+		let lst: Vec<u32> = Vec::new();
 		lst.get(1);
+	}
+	
+	#[test]
+	#[should_panic]
+	// get() is core to everything, it was deemed too difficult to do error checking.
+	// Error checking would also slow the program.
+	fn test_get_out_of_bounds ( )
+	{
+		let lst: Vec<u32> = Vec::new();
+		lst.get(11);
 	}
 
 
-
-//
-// set ( T )
-//
+//										~ set ~													 //
 	#[test]
+	// Should correctly set elements in the list.
+	// Elements should be persistant.
 	fn test_set_valid ( )
 	{
-		let mut lst : Vec<u32> = Vec::new();
+		let mut lst: Vec<u32> = Vec::new();
 		lst.push_back(0);
 		lst.push_back(1);
 		lst.set(0, 10);
@@ -294,62 +366,82 @@ mod test
 		assert_eq!(lst.get(0), 10);
 		assert_eq!(lst.get(1), 22);
 	}
-
+	
 	#[test]
+	// SHOULD FAIL.
+	// If there is no elements in the list, an error is returned.
 	fn test_set_not_enough_elements ( )
 	{
-		let mut lst : Vec<u32> = Vec::new();
+		let mut lst: Vec<u32> = Vec::new();
+		assert!(lst.set(0, 0).is_err());
+	}
+
+	#[test]
+	// SHOULD FAIL.
+	// If there is no elements in the list, an error is returned.
+	fn test_set_out_of_bounds ( )
+	{
+		let mut lst: Vec<u32> = Vec::new();
 		assert!(lst.set(0, 0).is_err());
 	}
 
 
-//
-//  push_back ( T )
-//
+
+//										~ push_back ~											 //
 	#[test]
+	// There is room, the array list can add elements to the first available slot.
 	fn test_push_back_valid ( )
 	{
-		let mut lst : Vec<u32> = Vec::new();
-		lst.push_back(0);
-		lst.push_back(1);
-		assert_eq!(lst.pop_back(), 1);
-		assert_eq!(lst.pop_back(), 0);
+		let mut lst: Vec<u32> = Vec::new();
+		assert_eq!(lst.push_back(1), Ok(()));
+		assert_eq!(lst.push_back(2), Ok(()));
+		assert_eq!(lst.get(0), 1);
+		assert_eq!(lst.get(1), 2);
 	}
 
 
 
 
-//
-//  pop_back ( )
-//
+//										~ pop_back ~											 //
 	#[test]
+	// When there is at least one element, the list should be able to pop the element off the end.
+	// The returned value should be this value.
 	fn test_pop_back_valid ( )
 	{
-		let mut lst : Vec<u32> = Vec::new();
+		let mut lst: Vec<u32> = Vec::new();
 		lst.push_back(0);
 		lst.push_back(1);
-		assert_eq!(lst.pop_back(), 1);
-		assert_eq!(lst.pop_back(), 0);
+		assert_eq!(lst.pop_back(), Ok(1));
+		assert_eq!(lst.pop_back(), Ok(0));
 	}
 
 	#[test]
-	#[should_panic = "List is empty"]
+	// When there is no elements left to be popped, an error should be output.
 	fn test_pop_back_invalid ( )
 	{
-		let mut lst : Vec<u32> = Vec::new();
-		lst.pop_back();
+		let mut lst: Vec<u32> = Vec::new();
+		assert_eq!(lst.pop_back(), Err(Errors::InvalidSize));
 	}
 
 
-	//
-	// clear ( &mut self )
-	//
-	
+
+
+//###############################################################################################//
+//
+//										Extra Functionality
+//
+// pub fn clear      ( &mut self );
+// pub fn sort_order ( &mut self, fn (&T, &T) -> bool );
+// pub fn slot       ( &mut self, T, fn (&T, &T) -> bool ) -> bool
+//
+//###############################################################################################//
+
+//										~ clear ~												 //
 	#[test]
 	// Clear should set list to 0 and override any values when pushback occures.
 	fn test_clear ( )
 	{
-		let mut lst : Vec<u32> = Vec::new();
+		let mut lst: Vec<u32> = Vec::new();
 		lst.push_back(2);
 		lst.push_back(1);
 		lst.clear();
@@ -359,133 +451,88 @@ mod test
 		assert_eq!(10, lst.get(0));
 	}
 
-
-
-//
-// sort ( fn ( &mut T, &mut T ) -> bool )
-//
-	fn sort_ascending ( lowest : & i32, highest : & i32 ) -> bool {return lowest < highest;}
-	fn sort_descending ( highest : & i32, lowest : & i32 ) -> bool {return lowest < highest;}
+//										~ sort ~												 //
+	fn sort_ascending ( lowest: & i32, highest: & i32 ) -> bool {return lowest < highest;}
+	fn sort_descending ( highest: & i32, lowest: & i32 ) -> bool {return lowest < highest;}
 
 	#[test]
-	fn test_sort_ascending ( )
+	// All elements should be in sorted ascending order after being passed through the function.
+	fn test_sort_order_ascending ( )
 	{
-		let mut lst : Vec<i32> = Vec::new();
+		let mut lst: Vec<i32> = Vec::new();
 		lst.push_back(2);
 		lst.push_back(1);
 		lst.push_back(0);
 		lst.sort_order(sort_ascending);
-		assert_eq!(lst.pop_back(), 2);
-		assert_eq!(lst.pop_back(), 1);
-		assert_eq!(lst.pop_back(), 0);
+		assert_eq!(lst.pop_back(), Ok(2));
+		assert_eq!(lst.pop_back(), Ok(1));
+		assert_eq!(lst.pop_back(), Ok(0));
 	}
-
 	#[test]
-	fn test_sort_descending ( )
+	// All elements should be in sorted descending order after being passed through the function.
+	fn test_sort_order_descending ( )
 	{
-		let mut lst : Vec<i32> = Vec::new();
+		let mut lst: Vec<i32> = Vec::new();
 		lst.push_back(0);
 		lst.push_back(1);
 		lst.push_back(2);
 		lst.sort_order(sort_descending);
-		assert_eq!(lst.pop_back(), 0);
-		assert_eq!(lst.pop_back(), 1);
-		assert_eq!(lst.pop_back(), 2);
+		assert_eq!(lst.pop_back(), Ok(0));
+		assert_eq!(lst.pop_back(), Ok(1));
+		assert_eq!(lst.pop_back(), Ok(2));
 	}
-
 	#[test]
-	fn test_sort_empty ( )
+	// Nothing should go wrong.
+	fn test_sort_order_empty ( )
 	{
-		let mut lst : Vec<i32> = Vec::new();
+		let mut lst: Vec<i32> = Vec::new();
 		lst.sort_order(sort_ascending);
 	}
 
 
 
 
-//
-// slot ( to_slot : T, fn ( &mut T, &mut T ) -> bool ) -> bool
-//
+
+//										~ slot ~												 //
 	#[test]
-	fn test_slot_ascending ( )
+	// A vec is never full, the elements should fill in sorted order.
+	fn test_slot_ascending_not_full ( )
 	{
-		let mut input : Vec<i32> = Vec::new();
+		let mut input: Vec<i32> = Vec::new();
 
 		let mut to_slot = 0;
-		assert!(input.slot(to_slot, sort_ascending));
+		assert!(input.slot(to_slot, sort_ascending)); // 0
 		to_slot = 2;
-		assert!(input.slot(to_slot, sort_ascending));
+		assert!(input.slot(to_slot, sort_ascending)); // 0 2
 		to_slot = 3;
-		assert!(input.slot(to_slot, sort_ascending));
+		assert!(input.slot(to_slot, sort_ascending)); // 0 2 3
 		to_slot = 1;
-		assert!(input.slot(to_slot, sort_ascending));
-		to_slot = 4;
-		assert!(input.slot(to_slot, sort_ascending));
+		assert!(input.slot(to_slot, sort_ascending)); // 0 1 2 3
 		to_slot = 5;
-		assert!(input.slot(to_slot, sort_ascending));
+		assert!(input.slot(to_slot, sort_ascending)); // 0 1 2 3 5
+		to_slot = 4;
+		assert!(input.slot(to_slot, sort_ascending)); // 0 1 2 3 4 5
 
 		assert_eq!(input.size(), 6);
-		// Full, 0, 1, 2, 3, 4, 5
-		to_slot = -1;
-		assert!(input.slot(to_slot, sort_ascending));//-1, 0, 1, 2, 3, 4, 5
-		to_slot = -2;
-		assert!(input.slot(to_slot, sort_ascending));//-2, -1, 0, 1, 2, 3, 4, 5
-		to_slot = 1;
-		assert!(input.slot(to_slot, sort_ascending));//-2, -1, 0, 1, 1, 2, 3, 4, 5
-		to_slot = 10;
-		assert!(input.slot(to_slot, sort_ascending));//-2, -1, 0, 1, 1, 2, 3, 4, 5, 10
-
-		assert_eq!(input.get(0), -2);
-		assert_eq!(input.get(1), -1);
-		assert_eq!(input.get(2), 0);
-		assert_eq!(input.get(3), 1);
-		assert_eq!(input.get(4), 1);
-		assert_eq!(input.get(5), 2);
-		assert_eq!(input.get(6), 3);
-		assert_eq!(input.get(7), 4);
-		assert_eq!(input.get(8), 5);
-		assert_eq!(input.get(9), 10);
 	}
 
 	#[test]
-	fn test_slot_descending ( )
+	// A vec is never full, the elements should fill in sorted order.
+	fn test_slot_descending_not_full ( )
 	{
-		let mut input : Vec<i32> = Vec::new();
+		let mut input: Vec<i32> = Vec::new();
 
 		let mut to_slot = -1;
-		assert!(input.slot(to_slot, sort_descending));
+		assert!(input.slot(to_slot, sort_descending)); // -1
 		to_slot = 0;
-		assert!(input.slot(to_slot, sort_descending));
+		assert!(input.slot(to_slot, sort_descending)); // 0  -1
 		to_slot = 1;
-		assert!(input.slot(to_slot, sort_descending));
+		assert!(input.slot(to_slot, sort_descending)); // 1   0  -1
 		to_slot = 2;
-		assert!(input.slot(to_slot, sort_descending));
+		assert!(input.slot(to_slot, sort_descending)); // 2   1   0   -1
 		to_slot = 3;
-		assert!(input.slot(to_slot, sort_descending));
+		assert!(input.slot(to_slot, sort_descending)); // 3   2   1   0  -1
 		to_slot = 100;
-		assert!(input.slot(to_slot, sort_descending));
-
-		assert_eq!(input.size(), 6);
-		// Full, 100, 3, 2, 1, 0, -1
-		to_slot = -1;
-		assert!(input.slot(to_slot, sort_descending)); // 100, 3, 2, 1, 0, -1
-		to_slot = 5;
-		assert!(input.slot(to_slot, sort_descending)); // 100, 5, 3, 2, 1, 0, -1
-		to_slot = 1;
-		assert!(input.slot(to_slot, sort_descending)); // 100, 5, 3, 2, 1, 1, 0, -1
-		to_slot = 101;
-		assert!(input.slot(to_slot, sort_descending)); // 101, 100, 5, 3, 2, 1, 1, 0, -1
-		to_slot = -100;
-		assert!(input.slot(to_slot, sort_descending)); // 101, 100, 5, 3, 2, 1, 1, 0, -1
-
-		assert_eq!(input.get(0), 101);
-		assert_eq!(input.get(1), 100);
-		assert_eq!(input.get(2), 5);
-		assert_eq!(input.get(3), 3);
-		assert_eq!(input.get(4), 2);
-		assert_eq!(input.get(5), 1);
-		assert_eq!(input.get(6), 1);
-		assert_eq!(input.get(7), 0);
-		assert_eq!(input.get(8), -1);
+		assert!(input.slot(to_slot, sort_descending)); // 100 3   2   1   0   -1
 	}
 }

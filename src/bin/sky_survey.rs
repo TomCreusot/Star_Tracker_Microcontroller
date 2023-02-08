@@ -7,6 +7,7 @@ use star_tracker::config::NixConstsStruct;
 use star_tracker::config::NixConsts;
 
 use star_tracker::util::units::Equatorial;
+use star_tracker::nix::Distribute;
 // use star_tracker::util::units::Radians;
 use star_tracker::util::aliases::Decimal;
 use star_tracker::util::aliases::M_PI;
@@ -31,7 +32,7 @@ fn main (  )
 		NixConstsStruct::HYG_DATABASE_FILE,
 		NixConstsStruct::HYG_DATABASE_URL );
 
-	let comparison_points : Vec<Equatorial> = Equatorial::evenly_distribute(1000);
+	let comparison_points : Vec<Equatorial> = Distribute::fibonacci_latice(1000);
 	let mut database_stars : Vec<Star> = Vec::with_capacity(1000);
 	let mut magnitude_stars : Vec<Equatorial> = Vec::with_capacity(1000);
 

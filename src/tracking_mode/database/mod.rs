@@ -83,7 +83,6 @@ use super::StarPair;
 use crate::util::units::Equatorial;
 use crate::util::units::Radians;
 use crate::util::aliases::Decimal;
-// use crate::util::icosphere::IcoSphere;
 // use crate::util::list::List;
 use crate::util::linear_lookup::LinearLookup;
 
@@ -98,24 +97,7 @@ mod star_database_element;
 pub mod array_database;
 pub mod pyramid_database;
 pub mod regional_database;
-pub mod database_generator;
 pub mod database;
-
-/// Tool to help construct and analyse the database.
-pub struct DatabaseGenerator
-{
-	// The pyramid database can only hold statics.
-	pub k_vector      : Vec<usize>,
-	// The pyramid database can only hold statics.
-	pub pairs         : Vec<StarPair<usize>>,
-	// The pyramid database can only hold statics.
-	pub pairs_region : Vec<u64>,
-	// The pyramid database can only hold statics.
-	pub catalogue     : Vec<Equatorial>,
-
-	fov : Radians,
-	k_lookup: KVector,
-}
 
 /// The database equation which points to the star pair database.
 ///
@@ -180,6 +162,13 @@ pub struct PyramidDatabase <'a>
 }
 
 
+
+/// The size of the bitfield to be used for the regional database.
+/// Having more bits makes the triangle identification faster.
+/// Having a bit field too big will impact performance on systems of a smaller bit size.
+pub type BitFieldSize = u32;
+
+
 /// A similar database to the PyramidDatabase, however, when searching for the star pairs, they will be associated with a location.
 /// This will reduce the amount of star pairs which dont form triangles.
 /// This was found to be the most significant peformance hit in the program.
@@ -190,7 +179,7 @@ pub struct RegionalDatabase <'a>
 	pub k_lookup:  KVector,
 	pub k_vector:  &'a dyn LinearLookup<usize>,
 	pub pairs:     &'a dyn LinearLookup<StarPair<usize>>,
-	pub pairs_region: &'a dyn LinearLookup<u64>,
+	pub pairs_region: &'a dyn LinearLookup<BitFieldSize>,
 	pub catalogue: &'a dyn LinearLookup<Equatorial>,
 
 	/// The index of the selected index.

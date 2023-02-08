@@ -1,13 +1,10 @@
 use crate::image_processing::Image;
-use crate::nix::NixImage;
-use image::io::Reader as ImageReader;
-use image::{RgbImage, Rgb};
-use crate::util::aliases::Byte;
+use crate::nix::Color;
+
 use crate::util::aliases::Decimal;
 use crate::util::units::Pixel;
 use crate::util::units::Vector2;
 use crate::util::units::Vector3;
-use std::env;
 
 use projection::SpaceWorld;
 use projection::SpaceCamera;
@@ -15,104 +12,56 @@ use projection::SpaceImage;
 use projection::IntrinsicParameters;
 use projection::ExtrinsicParameters;
 
-
-impl Image for NixImage
+pub trait NixImage: Image
 {
-	/// Image impl for getting the value of a pixel.
-	fn get ( &self, px: Pixel ) -> Byte
-	{ return self.img_rgb.get_pixel(px.x as u32, px.y as u32).0[0]; }
-
-	/// Image impl for setting the value of a pixel.
-	fn set ( &mut self, px: Pixel, value : Byte )
-	{
-		let color = Rgb{0: [value, value, value]};
-		return self.img_rgb.put_pixel(px.x as u32, px.y as u32, color);
-	}
-
-
-	/// Returns the width of the image.
-	///	# Returns
-	///	The width of the image.
-	fn width ( &self ) -> usize { return self.img_rgb.width() as usize; }
-
-	/// Returns the height of the image.
-	///	# Returns
-	///	The height of the image.
-	fn height ( &self ) -> usize { return self.img_rgb.height() as usize; }
-}
-
-
-
-
-impl NixImage
-{
-	/// Copies the provided image.
+	/// Saves the image to the specified location.
+	/// Creates directory if does not exist.
 	/// # Arguments
-	/// * `img` - The image to copy.
-	pub fn clone ( &self ) -> Self
+	/// * `name` - The path, name and extension of the image.
+	 fn save ( &self, name: &str );
+
+	/// Gets the pixel as a coloured value.
+	/// # Arguments
+	/// * `px` - The pixel to get.
+	fn get ( &self, px: Pixel ) -> Color;
+
+	/// Sets the pixel as a coloured value.
+	/// # Arguments
+	/// * `px` - The pixel to set.
+	/// * `value` - The color to set at the specified position.
+	fn set ( &mut self, px: Pixel, value: Color );
+
+	/// Sets all the pixels to the specified color.
+	/// (Allows you to reuse the same image).
+	fn reset_color ( &mut self, color: Color )
 	{
-		let mut img = RgbImage::new(self.width() as u32, self.height() as u32);
-		for y in 0..self.height()
+		for xx in 0..self.width()
 		{
-			for x in 0..self.width()
+			for yy in 0..self.height()
 			{
-				let val = self.get(Pixel{x: x, y: y});
-				let px_value = Rgb{0:[val, val, val]};
-				img.put_pixel(x as u32, y as u32, px_value);
+				NixImage::set(self, Pixel{x: xx, y: yy}, color);
 			}
 		}
-		return Self{img_rgb: img};
 	}
 
-	/// Copies the provided image.
+	/// Draws marker onto the image, exludes the center pixel so you can analyse it.
 	/// # Arguments
-	/// * `img` - The image to copy.
-	pub fn duplicate ( image : &dyn Image ) -> Self
-	{
-		let mut img = RgbImage::new(image.width() as u32, image.height() as u32);
-		for y in 0..image.height()
-		{
-			for x in 0..image.width()
-			{
-				let val = image.get(Pixel{x: x, y: y});
-				let px_value = Rgb{0:[val, val, val]};
-				img.put_pixel(x as u32, y as u32, px_value);
-			}
-		}
-		return Self{img_rgb: img};
-	}
-
-
-	/// Copies the provided image.
-	/// # Arguments
-	/// * `size` - The size of the image.
-	pub fn new ( size : Pixel ) -> Self
-	{
-		let img = RgbImage::new(size.x as u32, size.y as u32);
-		return Self{img_rgb: img};
-	}
-
-
-
-
-	/// Draws the points onto the image of the specified color.
-	/// # Arguments
-	/// * `px` - The position.
-	/// * `size` - The size of the crosshair.
-	/// * `color` - The color to draw.
+	/// * `px`		- The position.
+	/// * `size`	- The size of the crosshair.
+	/// * `color`	- The color to draw.
 	/// * `img_rgb` - the image to draw on.
-
-	pub fn draw_points ( &mut self, px: Pixel, size : u32, color : [u8; 3])
+	fn draw_point ( &mut self, px: Pixel, size: usize, color: Color)
 	{
-		for yy in (px.y as u32 + 1)..std::cmp::min(px.y as u32 + size, self.img_rgb.height())
+		for yy in (px.y as usize + 1)..std::cmp::min(px.y as usize + size, self.height())
 		{
-			self.img_rgb.put_pixel(px.x as u32, yy, Rgb{0:color});
+			NixImage::set(self, Pixel{x: px.x, y: yy}, color);
 		}
-		for xx in (px.x as u32 + 1)..std::cmp::min(px.x as u32 + size, self.img_rgb.width())
+		for xx in (px.x as usize + 1)..std::cmp::min(px.x as usize + size, self.width())
 		{
-			self.img_rgb.put_pixel(xx, px.y as u32, Rgb{0:color});
+			NixImage::set(self, Pixel{x: xx, y: px.y}, color);
 		}
 	}
+
 
 
 	/// Projects a star onto the image if possible.
@@ -128,11 +77,11 @@ impl NixImage
 	///
 	/// # Returns
 	/// True if at least part of the star is visible.
-	pub fn draw_star (
+	 fn draw_star_projection (
 		&mut self,
 		star:      SpaceWorld,
 		size:      Decimal,
-		color:     [u8;3],
+		color:     Color,
 		intrinsic: IntrinsicParameters,
 		extrinsic: ExtrinsicParameters  ) -> bool
 	{
@@ -144,115 +93,97 @@ impl NixImage
 		{
 			let image_space : SpaceImage   = intrinsic.to_image(camera_space);
 			let center      : Vector2      = image_space.0;
-			let mut xx = center.x - size - 1.0;
-			while xx < center.x + size + 1.0
-			{
-				let mut yy = center.y - size - 1.0;
-				while yy < center.y + size + 1.0
-				{
-					let point : Vector2 = Vector2{x: xx.round(), y: yy.round()};
-					let dist : Decimal = (center - point).magnitude();
-					let x : i32 = point.x as i32;
-					let y : i32 = point.y as i32;
-					if 0 < x && x < self.img_rgb.width() as i32 &&
-					   0 < y && y < self.img_rgb.height() as i32 &&
-					   dist < size
-					{
-						// need to check that the image is getting brighter.
-						let prev_color = self.img_rgb.get_pixel(x as u32, y as u32);
-						let prev_intens = (prev_color[0] as Decimal +
-										  prev_color[1] as Decimal +
-										  prev_color[2] as Decimal) / 255.0;
-						let curr_intens = (color[0] as Decimal +
-										   color[1] as Decimal +
-										   color[2] as Decimal) * (size - dist)/size / 255.0;
-						if prev_intens < curr_intens
-						{
-							let c=[
-								(color[0] as Decimal * curr_intens) as u8,
-								(color[1] as Decimal * curr_intens) as u8,
-								(color[2] as Decimal * curr_intens) as u8];
-							self.img_rgb.put_pixel(x as u32, y as u32, Rgb{0:c});
-						}
-						visible = true;
-					}
-					yy+=1.0;
-				}
-				xx+=1.0;
-			}
+
+			visible = self.draw_star(size, color, SpaceImage(center));
 		}
 		return visible;
 	}
 
 
+	/// Draws a star in Image Space
+	/// # Arguments
+	/// * `color` - The color of the star.
+	/// * `pt` - The center of the image.
+	/// # Returns
+	/// True if atleast part of the image is visible.
+	 fn draw_star ( &mut self, size: Decimal, color: Color, pt: SpaceImage ) -> bool
+	{
+		let color_ideal = color.get_color();
+		let mut visible : bool = false;
+		let mut xx = pt.0.x - size - 1.0;
+		while xx < pt.0.x + size + 1.0
+		{
+			let mut yy = pt.0.y - size - 1.0;
+			while yy < pt.0.y + size + 1.0
+			{
+				let point : Vector2 = Vector2{x: xx.round(), y: yy.round()};
+				let dist : Decimal = (pt.0 - point).magnitude();
+				let x : i32 = point.x as i32;
+				let y : i32 = point.y as i32;
+				if 0 < x && x < self.width() as i32 &&
+					0 < y && y < self.height() as i32 &&
+					dist < size
+				{
+					// Add the previous color to the new color.
+					let px = Pixel{x: x as usize, y: y as usize};
+					let intensity  = (size - dist) / size; // 0 to 1.
+					let prev_color = NixImage::get(self, px).get_color();
+					let curr_color =
+						[(intensity * color_ideal[0] as Decimal) as u8,
+						 (intensity * color_ideal[1] as Decimal) as u8,
+						 (intensity * color_ideal[2] as Decimal) as u8];
 
-	pub fn draw_3d_line ( &mut self, color: [u8; 3], pt_1: SpaceWorld, pt_2: SpaceWorld, intrinsic: IntrinsicParameters,extrinsic: ExtrinsicParameters )
+					let c=[
+						prev_color[0].saturating_add(curr_color[0]),
+						prev_color[1].saturating_add(curr_color[1]),
+						prev_color[2].saturating_add(curr_color[2])];
+						NixImage::set(self, px, Color::Custom(c[0], c[1], c[2]));
+					visible = true;
+				}
+				yy+=1.0;
+			}
+			xx+=1.0;
+		}
+		return visible;
+	}
+
+
+	/// Draws a line between 2 points in 3d.
+	/// The line will be projected.
+	/// This is a very basic method which draws a set of points along the path.
+	/// # Arguments
+	/// * `color` - The color of the line to draw.
+	/// * `pt_1`  - The first point of the line.
+	/// * `pt_2`  - The other point.
+	/// * `intrinsic` - How the line should be projected onto the lens.
+	/// * `extrinsic` - Where the camera is looking.
+	 fn draw_3d_line (
+		&mut self,
+		color: Color,
+		pt_1: SpaceWorld,
+		pt_2: SpaceWorld,
+		intrinsic: IntrinsicParameters,
+		extrinsic: ExtrinsicParameters )
 	{
 		let difference = pt_2.0 - pt_1.0;
-		let direction = difference.normalized();
-		let magnitude = difference.magnitude();
-
-		let mut position = pt_1;
-
-		while (position.0-pt_1.0).dot(difference) / magnitude < magnitude
+		let direction_result = difference.normalized();
+		if let Ok(direction) = direction_result
 		{
-			let point = intrinsic.to_image(extrinsic.to_image(position)).0;
-			let pixel = Pixel{x: point.x as usize, y: point.y as usize};
-			if self.valid_pixel(pixel)
+			let magnitude = difference.magnitude();
+
+			let mut position = pt_1;
+
+			while (position.0-pt_1.0).dot(difference) / magnitude < magnitude
 			{
-				self.img_rgb.put_pixel(point.x as u32, point.y as u32, Rgb{0:color});
-			}
-			position.0 = position.0 + direction * 0.01;
-		}
-
-	}
-
-
-	/// Reads in an image as a gray image.
-	/// # Arguments
-	/// * `name` - The location from the cwd, name and extension.
-	///
-	/// # Returns
-	/// A RGB image matching the specifications.
-	pub fn read_image ( name : &str ) -> NixImage
-	{
-		let mut dir = env::current_dir().unwrap();
-		dir.push(name);
-		let rdr = ImageReader::open(dir);
-		let rdr2 = rdr.unwrap();
-		let decoded = rdr2.decode();
-
-		return NixImage{img_rgb: decoded.unwrap().to_rgb8()};
-	}
-
-
-	/// Converts a RGB dynamic into an Image.
-	/// # Arguments
-	/// * `name` - The location from the cwd, name and extension.
-	/// * `img` - The image to copy across.
-	pub fn dynamic_to_image ( &self, img : &mut dyn Image )
-	{
-		for y in 0..self.img_rgb.height() as usize
-		{
-			for x in 0..self.img_rgb.width() as usize
-			{
-				let px = self.img_rgb.get_pixel(x as u32, y as u32);
-				let px_value = ((px[0] as u32 + px[1] as u32 + px[2] as u32) / 3) as u8;
-				img.set(Pixel{x: x as usize, y: y as usize}, px_value);
+				let point = intrinsic.to_image(extrinsic.to_image(position)).0;
+				let pixel = Pixel{x: point.x as usize, y: point.y as usize};
+				if self.valid_pixel(pixel)
+				{
+					NixImage::set(self, pixel, color);
+				}
+				position.0 = position.0 + direction * 0.01;
 			}
 		}
 	}
 
-
-	/// Converts an Image to a RGB dynamic.
-	/// # Arguments
-	/// * `img` - The image to copy across.
-	///
-	/// # Returns
-	/// The image.
-	pub fn image_to_dynamic ( &mut self, img : &dyn Image ) -> &RgbImage
-	{
-		self.img_rgb = NixImage::duplicate(img).img_rgb;
-		return &self.img_rgb;
-	}
 }

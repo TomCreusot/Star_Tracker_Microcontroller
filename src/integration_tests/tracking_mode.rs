@@ -20,7 +20,8 @@ use tracking_mode::Constellation;
 use tracking_mode::StarPyramid;
 use tracking_mode::Specularity;
 use tracking_mode::StarTriangleIterator;
-use tracking_mode::database::DatabaseGenerator;
+use nix::DatabaseGenerator;
+use nix::Distribute;
 // use tracking_mode::database::PyramidDatabase;
 
 use projection::ExtrinsicParameters;
@@ -29,6 +30,20 @@ use projection::SpaceWorld;
 use config::NixConstsStruct;
 use config::NixConsts;
 use config::TrackingModeConsts;
+
+
+/// DELETE >
+use util::units::Pixel;
+use nix::CVImage;
+use projection::IntrinsicParameters;
+use nix::Color;
+use std::io::stdin;
+use image_processing::image::Image;
+use nix::nix_image::NixImage;
+
+/// DELETE <
+
+
 
 
 // Defines how the tracking algorithm should perform.
@@ -51,8 +66,8 @@ pub fn run ( )
 	const MAGNITUDE_MIN: Decimal = -20.0;
 	const MAGNITUDE_MAX: Decimal = 5.8;
 
-	const REGION_SIZE  : Radians = Degrees(6.0).as_radians(); // An area smaller than FOV.
-	const REGION_NUM   : usize   = 5; // Should not be more than 1 redundant star in a region.
+	const REGION_SIZE  : Radians = Degrees(10.0).as_radians(); // An area smaller than FOV.
+	const REGION_NUM   : usize   = 7; // Should not be more than 1 redundant star in a region.
 
 	// To create the database.
 	const NUM_BINS     : usize   = 2000; // Refer to `src/tracking_mode/database/mod.rs`.
@@ -60,12 +75,12 @@ pub fn run ( )
 
 
 	// Disrupt input.
-	const VARIATION_MAG         : Decimal = 0.5; // The variation outside of the magnitude range.
-	const VARIATION_POSITION    : Radians = Degrees(0.001).as_radians(); // Error.
-	const FALSE_STARS 			: usize   = 3; // Maximum number of fake, random stars.
-	const HIDDEN_STARS			: usize   = 3; // Maximum number of real stars to remove.
+	const VARIATION_MAG         : Decimal = 0.1; // The variation outside of the magnitude range.
+	const VARIATION_POSITION    : Radians = Degrees(0.06).as_radians(); // Error.
+	const FALSE_STARS 			: usize   = 5; // Maximum number of fake, random stars.
+	const HIDDEN_STARS			: usize   = 0; // Maximum number of real stars to remove.
 
-	const CAP_STARS             : usize   = 10; // Max stars in image.
+	const CAP_STARS             : usize   = 15; // Max stars in image.
 
 //###############################################################################################//
 //
@@ -107,26 +122,26 @@ pub fn run ( )
 	println!(" - {} stars when region reduced.", stars_limit_reg.len());
 	println!();
 
-	// let coverage_average     = DatabaseGenerator::sky_coverage(&stars, REGION_SIZE, REGION_NUM);
-	// println!(" - {:0.2}% average coverage.", coverage_average * 100.0);
-	// let coverage_average_mag = DatabaseGenerator::sky_coverage(&stars_limit_mag, REGION_SIZE, REGION_NUM);
-	// println!(" - {:0.2}% average coverage magnitude reduced", coverage_average_mag * 100.0);
-	// let coverage_average_reg = DatabaseGenerator::sky_coverage(&stars_limit_reg, REGION_SIZE, REGION_NUM);
-	// println!(" - {:0.2}% average coverage region reduced", coverage_average_reg * 100.0);
-	// println!();
-	// let coverage_worst       = DatabaseGenerator::sky_coverage_worst_case(&stars, REGION_SIZE);
-	// println!(" - {} worst coverage.", coverage_worst);
-	// let coverage_worst_mag   = DatabaseGenerator::sky_coverage_worst_case(&stars_limit_mag, REGION_SIZE);
-	// println!(" - {} worst coverage magnitude reduced", coverage_worst_mag);
-	// let coverage_worst_reg   = DatabaseGenerator::sky_coverage_worst_case(&stars_limit_reg, REGION_SIZE);
-	// println!(" - {} worst coverage region reduced", coverage_worst_reg);
-	// println!();
-	// let coverage_best       = DatabaseGenerator::sky_coverage_best_case(&stars, REGION_SIZE);
-	// println!(" - {} best coverage.", coverage_best);
-	// let coverage_best_mag   = DatabaseGenerator::sky_coverage_best_case(&stars_limit_mag, REGION_SIZE);
-	// println!(" - {} best coverage magnitude reduced", coverage_best_mag);
-	// let coverage_best_reg   = DatabaseGenerator::sky_coverage_best_case(&stars_limit_reg, REGION_SIZE);
-	// println!(" - {} best coverage region reduced", coverage_best_reg);
+	let coverage_average     = DatabaseGenerator::sky_coverage(&stars, REGION_SIZE, REGION_NUM);
+	println!(" - {:0.2}% average coverage.", coverage_average * 100.0);
+	let coverage_average_mag = DatabaseGenerator::sky_coverage(&stars_limit_mag, REGION_SIZE, REGION_NUM);
+	println!(" - {:0.2}% average coverage magnitude reduced", coverage_average_mag * 100.0);
+	let coverage_average_reg = DatabaseGenerator::sky_coverage(&stars_limit_reg, REGION_SIZE, REGION_NUM);
+	println!(" - {:0.2}% average coverage region reduced", coverage_average_reg * 100.0);
+	println!();
+	let coverage_worst       = DatabaseGenerator::sky_coverage_worst_case(&stars, REGION_SIZE);
+	println!(" - {} worst coverage.", coverage_worst);
+	let coverage_worst_mag   = DatabaseGenerator::sky_coverage_worst_case(&stars_limit_mag, REGION_SIZE);
+	println!(" - {} worst coverage magnitude reduced", coverage_worst_mag);
+	let coverage_worst_reg   = DatabaseGenerator::sky_coverage_worst_case(&stars_limit_reg, REGION_SIZE);
+	println!(" - {} worst coverage region reduced", coverage_worst_reg);
+	println!();
+	let coverage_best       = DatabaseGenerator::sky_coverage_best_case(&stars, REGION_SIZE);
+	println!(" - {} best coverage.", coverage_best);
+	let coverage_best_mag   = DatabaseGenerator::sky_coverage_best_case(&stars_limit_mag, REGION_SIZE);
+	println!(" - {} best coverage magnitude reduced", coverage_best_mag);
+	let coverage_best_reg   = DatabaseGenerator::sky_coverage_best_case(&stars_limit_reg, REGION_SIZE);
+	println!(" - {} best coverage region reduced", coverage_best_reg);
 
 
 
@@ -138,10 +153,6 @@ pub fn run ( )
 	let gen : DatabaseGenerator = DatabaseGenerator::gen_database_regions(&stars_limit_reg, FOV, NUM_BINS);
 	let mut database = gen.get_database_regional();
 
-	// for i in 0..database.pairs_region.size()
-	// {
-		// println!("{}", database.pairs_region.get(i));
-	// }
 
 	println!();
 	println!("Created database");
@@ -158,12 +169,12 @@ pub fn run ( )
 //
 //###############################################################################################//
 
-	let observation_points = Equatorial::evenly_distribute_points(REGION_SIZE);
-	let observation = Equatorial::evenly_distribute(observation_points);
+	let observation_points = Distribute::angle_to_points(REGION_SIZE);
+	let observation = Distribute::fibonacci_latice(observation_points);
 	println!("Performing Lost In Space");
 	println!(" - {} orientations", observation_points);
 	println!();
-	println!("Test\t|\tStars\t|\tSeparation\t|\tTime\t\t|\tResult");
+	println!("Test\t|\tStars\t|\tSeparation\t|\tTime\t\t|\tResult\t|\tLocation");
 
 	let mut test_num           = 0;
 	let mut num_pyramid        = 0;
@@ -179,7 +190,8 @@ pub fn run ( )
 		// Uses look_at to set center to +z.
 		// This is how the image will present the information to the algorithm.
 		let up = Equatorial{ra: Radians(0.0), dec: Degrees(90.0).to_radians()};
-		let rotation = ExtrinsicParameters::look_at(center, up);
+		let rotation = 
+			ExtrinsicParameters::look_at(center, up).expect("Up and forward can be the same");
 
 		let mut i = 0;
 		// Gets stars in observed center, uses main database to add some variation.
@@ -220,6 +232,32 @@ pub fn run ( )
 			let eq = Equatorial{ra: ra, dec: dec};
 			observable.push(eq);
 		}
+		// //////////////////////////*************************************//////////////////////////
+		// DELETE
+		
+		let img_size = Pixel{x: 1000, y: 1000};
+		let mut img = CVImage::new(img_size);
+		
+		// Intrinsic Parameters
+		let fov = Degrees(180.0).to_radians();
+		
+		// Construct Matrix
+		let intrinsic = IntrinsicParameters::from_fov(fov, img.height() as Decimal);
+		// let transform = Transformation{intrinsic: intrinsic, extrinsic: extrinsic};
+		
+		for record in observable.clone()
+		{
+			let star : Equatorial = record;
+			println!("{}", star.print_standard());
+			let point = SpaceWorld(star.to_vector3());
+			img.draw_star_projection(point, 10.0, Color::Custom(255, 255, 255), intrinsic, rotation);
+		}
+		
+		let mut val = "".to_string();
+		img.save("test.png");
+		stdin().read_line(&mut val);
+		// DELETE
+		// ///////////////////////////////////////////////////
 
 		//
 		// Actual Algorithm
@@ -232,7 +270,7 @@ pub fn run ( )
 
 		let time = timer.elapsed();
 		avg_time += time.as_millis();
-		match print_result(test_num, time, constellation, rotation, observable)
+		match print_result(test_num, time, constellation, center, rotation, observable)
 		{
 			Result::Pyramid       => {num_pyramid        +=1;}
 			Result::Triangle      => {num_triangle       +=1;}
@@ -240,6 +278,11 @@ pub fn run ( )
 			Result::ErrorPyramid  => {num_error_pyramid  +=1;}
 			Result::ErrorTriangle => {num_error_triangle +=1;}
 		}
+		
+		
+		
+
+		
 		test_num+=1;
 	}
 
@@ -278,7 +321,7 @@ enum Result
 
 
 
-fn print_result ( test_num: usize, time: std::time::Duration, constellation : Constellation, rotation: ExtrinsicParameters, stars: Vec<Equatorial> ) -> Result
+fn print_result ( test_num: usize, time: std::time::Duration, constellation : Constellation, location: Equatorial, rotation: ExtrinsicParameters, stars: Vec<Equatorial> ) -> Result
 {
 	let result : Result;
 
@@ -311,7 +354,7 @@ fn print_result ( test_num: usize, time: std::time::Duration, constellation : Co
 			let rotated_out_4 = rotation.to_image(SpaceWorld(pyramid.output.3.to_vector3()));
 			let dist_4 = rotated_out_4.0.angle_distance(pyramid.input.3.to_vector3()).to_degrees();
 
-			let max_dist : Degrees = Degrees(0.01);
+			let max_dist : Degrees = Degrees(0.1);
 			let v_1 = dist_1 < max_dist;
 			let v_2 = dist_2 < max_dist;
 			let v_3 = dist_3 < max_dist;
@@ -324,7 +367,9 @@ fn print_result ( test_num: usize, time: std::time::Duration, constellation : Co
 			}
 			else
 			{
-				print!("{}FAILED Pyramid\t{} {} {} {}", color_very_bad, v_1,v_2,v_3,v_4);
+				let t_1 = print_true(v_1); let t_2 = print_true(v_2);
+				let t_3 = print_true(v_3); let t_4 = print_true(v_4);
+				print!("{}FAILED Pyramid\t{} {} {} {}", color_very_bad, t_1,t_2,t_3,t_4);
 				result = Result::ErrorPyramid;
 			}
 		}
@@ -337,7 +382,7 @@ fn print_result ( test_num: usize, time: std::time::Duration, constellation : Co
 			let rotated_out_3 = rotation.to_image(SpaceWorld(triangle.output.2.to_vector3()));
 			let dist_3 = rotated_out_3.0.angle_distance(triangle.input.2.to_vector3()).to_degrees();
 
-			let max_dist : Degrees = Degrees(0.01);
+			let max_dist : Degrees = Degrees(0.1);
 			let v_1 = dist_1 < max_dist;
 			let v_2 = dist_2 < max_dist;
 			let v_3 = dist_3 < max_dist;
@@ -350,7 +395,8 @@ fn print_result ( test_num: usize, time: std::time::Duration, constellation : Co
 			}
 			else
 			{
-				print!("{}FAILED Triangle\t{} {} {}", color_very_bad, v_1, v_2, v_3);
+				let t_1 = print_true(v_1); let t_2 = print_true(v_2); let t_3 = print_true(v_3);
+				print!("{}FAILED Triangle\t{} {} {}", color_very_bad, t_1, t_2, t_3);
 				result = Result::ErrorTriangle;
 			}
 		}
@@ -360,6 +406,14 @@ fn print_result ( test_num: usize, time: std::time::Duration, constellation : Co
 			result = Result::Error;
 		}
 	}
-	println!("{}", color_normal);
+	println!("{}\t\t|\t{}", color_normal, location.print_standard());
 	return result;
+}
+
+// Nice formatting for True
+fn print_true ( val : bool ) -> String
+{
+	let color = if !val {"\x1B[41;1m"} else {"\x1B[0m\x1B[1;32m"};
+	let text = if val { "T" } else { "F" };
+	return format!("{}{}\x1B[0m", color, text);
 }

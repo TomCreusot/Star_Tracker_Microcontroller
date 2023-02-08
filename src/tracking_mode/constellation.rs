@@ -11,7 +11,6 @@ use crate::tracking_mode::database::Database;
 
 use crate::util::units::Equatorial;
 use crate::util::list::List;
-use crate::util::list::ArrayList;
 use crate::util::err::Error;
 
 use crate::config::TrackingModeConsts;
@@ -42,7 +41,7 @@ pub fn find	<T: TrackingModeConsts> (
 										gen_spec : &mut dyn SpecularityConstruct<T>
 									) -> Constellation
 		where T: 'static + TrackingModeConsts,
-		ArrayList<(), {T::PAIRS_MAX}> : Sized,
+		// ArrayList<(), {T::PAIRS_MAX}> : Sized,
 {
 	gen_tri.begin(T::ANGLE_TOLERANCE, stars);
 
