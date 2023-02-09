@@ -32,20 +32,6 @@ use config::NixConsts;
 use config::TrackingModeConsts;
 
 
-/// DELETE >
-use util::units::Pixel;
-use nix::CVImage;
-use projection::IntrinsicParameters;
-use nix::Color;
-use std::io::stdin;
-use image_processing::image::Image;
-use nix::nix_image::NixImage;
-
-/// DELETE <
-
-
-
-
 // Defines how the tracking algorithm should perform.
 pub struct TrackingConstsTest ( );
 impl TrackingModeConsts for TrackingConstsTest
@@ -122,26 +108,26 @@ pub fn run ( )
 	println!(" - {} stars when region reduced.", stars_limit_reg.len());
 	println!();
 
-	let coverage_average     = DatabaseGenerator::sky_coverage(&stars, REGION_SIZE, REGION_NUM);
-	println!(" - {:0.2}% average coverage.", coverage_average * 100.0);
-	let coverage_average_mag = DatabaseGenerator::sky_coverage(&stars_limit_mag, REGION_SIZE, REGION_NUM);
-	println!(" - {:0.2}% average coverage magnitude reduced", coverage_average_mag * 100.0);
-	let coverage_average_reg = DatabaseGenerator::sky_coverage(&stars_limit_reg, REGION_SIZE, REGION_NUM);
-	println!(" - {:0.2}% average coverage region reduced", coverage_average_reg * 100.0);
-	println!();
-	let coverage_worst       = DatabaseGenerator::sky_coverage_worst_case(&stars, REGION_SIZE);
-	println!(" - {} worst coverage.", coverage_worst);
-	let coverage_worst_mag   = DatabaseGenerator::sky_coverage_worst_case(&stars_limit_mag, REGION_SIZE);
-	println!(" - {} worst coverage magnitude reduced", coverage_worst_mag);
-	let coverage_worst_reg   = DatabaseGenerator::sky_coverage_worst_case(&stars_limit_reg, REGION_SIZE);
-	println!(" - {} worst coverage region reduced", coverage_worst_reg);
-	println!();
-	let coverage_best       = DatabaseGenerator::sky_coverage_best_case(&stars, REGION_SIZE);
-	println!(" - {} best coverage.", coverage_best);
-	let coverage_best_mag   = DatabaseGenerator::sky_coverage_best_case(&stars_limit_mag, REGION_SIZE);
-	println!(" - {} best coverage magnitude reduced", coverage_best_mag);
-	let coverage_best_reg   = DatabaseGenerator::sky_coverage_best_case(&stars_limit_reg, REGION_SIZE);
-	println!(" - {} best coverage region reduced", coverage_best_reg);
+	// let coverage_average     = DatabaseGenerator::sky_coverage(&stars, REGION_SIZE, REGION_NUM);
+	// println!(" - {:0.2}% average coverage.", coverage_average * 100.0);
+	// let coverage_average_mag = DatabaseGenerator::sky_coverage(&stars_limit_mag, REGION_SIZE, REGION_NUM);
+	// println!(" - {:0.2}% average coverage magnitude reduced", coverage_average_mag * 100.0);
+	// let coverage_average_reg = DatabaseGenerator::sky_coverage(&stars_limit_reg, REGION_SIZE, REGION_NUM);
+	// println!(" - {:0.2}% average coverage region reduced", coverage_average_reg * 100.0);
+	// println!();
+	// let coverage_worst       = DatabaseGenerator::sky_coverage_worst_case(&stars, REGION_SIZE);
+	// println!(" - {} worst coverage.", coverage_worst);
+	// let coverage_worst_mag   = DatabaseGenerator::sky_coverage_worst_case(&stars_limit_mag, REGION_SIZE);
+	// println!(" - {} worst coverage magnitude reduced", coverage_worst_mag);
+	// let coverage_worst_reg   = DatabaseGenerator::sky_coverage_worst_case(&stars_limit_reg, REGION_SIZE);
+	// println!(" - {} worst coverage region reduced", coverage_worst_reg);
+	// println!();
+	// let coverage_best       = DatabaseGenerator::sky_coverage_best_case(&stars, REGION_SIZE);
+	// println!(" - {} best coverage.", coverage_best);
+	// let coverage_best_mag   = DatabaseGenerator::sky_coverage_best_case(&stars_limit_mag, REGION_SIZE);
+	// println!(" - {} best coverage magnitude reduced", coverage_best_mag);
+	// let coverage_best_reg   = DatabaseGenerator::sky_coverage_best_case(&stars_limit_reg, REGION_SIZE);
+	// println!(" - {} best coverage region reduced", coverage_best_reg);
 
 
 
@@ -183,6 +169,8 @@ pub fn run ( )
 	let mut num_error_pyramid  = 0;
 	let mut num_error_triangle = 0;
 	let mut avg_time = 0;
+	
+	// let center = Equatorial{ra: Radians(0.0), dec: Degrees(40.0).to_radians()};
 	for center in observation
 	{
 		let mut observable : Vec<Equatorial> = Vec::new();
@@ -226,38 +214,17 @@ pub fn run ( )
 		// Adds fake stars.
 		for _i in 0..FALSE_STARS
 		{
-			let magnitude = 1.41421356; // divide by this just in-case ra and dec are max.
-			let ra = Radians(rng.gen_range(-1.0..1.0) * FOV.0 / magnitude);
-			let dec = Radians(rng.gen_range(-1.0..1.0) * FOV.0 / magnitude);
+			let ninty_deg = Degrees(90.0).to_radians();
+			let ra = Radians(rng.gen_range(0.0..1.0) * 6.28);
+			let dec = Radians(rng.gen_range((ninty_deg.0 - FOV.0)..ninty_deg.0));
 			let eq = Equatorial{ra: ra, dec: dec};
 			observable.push(eq);
 		}
-		// //////////////////////////*************************************//////////////////////////
-		// DELETE
 		
-		let img_size = Pixel{x: 1000, y: 1000};
-		let mut img = CVImage::new(img_size);
-		
-		// Intrinsic Parameters
-		let fov = Degrees(180.0).to_radians();
-		
-		// Construct Matrix
-		let intrinsic = IntrinsicParameters::from_fov(fov, img.height() as Decimal);
-		// let transform = Transformation{intrinsic: intrinsic, extrinsic: extrinsic};
-		
-		for record in observable.clone()
+		for star in observable.clone()
 		{
-			let star : Equatorial = record;
 			println!("{}", star.print_standard());
-			let point = SpaceWorld(star.to_vector3());
-			img.draw_star_projection(point, 10.0, Color::Custom(255, 255, 255), intrinsic, rotation);
 		}
-		
-		let mut val = "".to_string();
-		img.save("test.png");
-		stdin().read_line(&mut val);
-		// DELETE
-		// ///////////////////////////////////////////////////
 
 		//
 		// Actual Algorithm
@@ -278,11 +245,6 @@ pub fn run ( )
 			Result::ErrorPyramid  => {num_error_pyramid  +=1;}
 			Result::ErrorTriangle => {num_error_triangle +=1;}
 		}
-		
-		
-		
-
-		
 		test_num+=1;
 	}
 
