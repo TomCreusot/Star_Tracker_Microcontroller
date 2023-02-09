@@ -45,11 +45,21 @@
 //! 	- Solution
 //! 		- If there is enough stars, instead of making a pyramid, make a 5 point pentahedron.
 //!
-//! - [Tracking Mode](tracking_mode::Constellation::find) has never created a triangle in integration tests.
-//! 	- Problem
-//! 		- Code may not be working properly.
-//! 	- Solution
-//! 		- Check if it should work.
+//! - [Tracking Mode](tracking_mode::Constellation::find) triangle unsafe:
+//!		- Problem
+//!			- Currently when a pyramid cannot be made but a triangle can be, the final triangle gets priority.
+//!			- The priority should be with a weighted number of how accurate the sides are.
+//!		- Solution
+//!			- In the [iterator](tracking_mode::StarTriangleIterator::next), return a weighting based on accuracy.
+//!
+//! - [Tracking Mode](tracking_mode::StarPyramid::find_pilot) fails on northern hemisphere.
+//!		- Problem
+//!			- In the [Integration Test](integration_tests::tracking_mode::run), the northern hemisphere consistantly fails.
+//!		- Solution
+//!			- The pyramid is not generated from StarPyramid::find_pilot.
+//!			- Its probably somewhere there.
+//!
+//!
 //!
 //! - [Regional Database](tracking_mode::database::RegionalDatabase) maxes out at 8, 32, 64, 128 values.
 //! 	- Problem

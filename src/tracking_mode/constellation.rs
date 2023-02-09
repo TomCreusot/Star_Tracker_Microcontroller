@@ -43,25 +43,37 @@ pub fn find	<T: TrackingModeConsts> (
 		where T: 'static + TrackingModeConsts,
 		// ArrayList<(), {T::PAIRS_MAX}> : Sized,
 {
+	let mut fallback = Constellation::None; // If a pyramid cannot be made, can a triangle be made?
 	gen_tri.begin(T::ANGLE_TOLERANCE, stars);
-
+	
+	// Loop through every possible combination of star combination using the kernel_iterator.
+	// Using star_triangle_iterator to find triangle matches in the database.
 	while let Some(iter) = gen_tri.next(stars, database)
 	{
+		// input and output both make triangles of the same length.
 		let input : Error<StarTriangle<Equatorial>> = iter.input.search_list(stars);
 		let output : Error<StarTriangle<Equatorial>> = iter.output.search_database(database);
 
 
 		// ~~~~~~~~~~~~~~~~~~~~~~~~~	 A valid match was found.		~~~~~~~~~~~~~~~~~~~~
+		// If the stars can be found in the database and the observed list (bug if not),
+		// The code can continue.
 		if input.is_ok() && output.is_ok()
 		{
 			let input = input.unwrap();
 			let output = output.unwrap();
 
 			// ~~~~~~~~~~~~~~~~~~~~~	 The speculariy in/out match	~~~~~~~~~~~~~~~~~~~~
+			// If the triangles are not flipped, the code can continue.
 			if gen_spec.same(&input.to_vector3(), &output.to_vector3())
 			{
 				let result = gen_pyr.find_pilot(stars, database, iter.input, iter.output);
+				
+				// If a pyramid cannot be found.
+				fallback = Constellation::Triangle(Match{input: input, output: output, weight: 1.0});
+				
 				// ~~~~~~~~~~~~~	A match is found.				~~~~~~~~~~~~~~~~~~~~
+				// A pilot was found.
 				if let Ok(found) = result
 				{
 					// ~~~~~~~~~	Get the star from the database.	~~~~~~~~~~~~~~~~~~~~
@@ -79,7 +91,7 @@ pub fn find	<T: TrackingModeConsts> (
 			}
 		}
 	}
-	return Constellation::None;
+	return fallback;
 }
 }
 

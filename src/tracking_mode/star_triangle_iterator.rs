@@ -28,6 +28,8 @@ impl <const N: usize> TriangleConstruct for StarTriangleIterator<N>
 		let mut tries : Option<Match<StarTriangle<usize>>> = None;
 		'_outer: loop // This is the correct use of a do while loop.
 		{
+			// Once all possiblities for a single kernal step are exhausted.
+			// The kernal will step, new stars will be chosen and a list of database matches are generated.
 			while !self.step()
 			{
 				if !self.prep_new_kernel(stars, database)
@@ -35,11 +37,13 @@ impl <const N: usize> TriangleConstruct for StarTriangleIterator<N>
 					break '_outer; // Rust implementation of a do while loop.
 				}
 			}
+			
 			let a = self.pair_a.get(self.index_a);
 			let b = self.pair_b.get(self.index_b);
 			let c = self.pair_c.get(self.index_c);
 			let triangle = StarTriangle::construct_triangle(a, b, c);
 
+			// Leaves the loop if a, b and c sides of the database are connected.
 			if triangle.is_some()
 			{
 				tries = Some(Match{input: self.input, output: triangle.unwrap(), weight: 1.0});
@@ -163,7 +167,9 @@ impl<const N: usize> StarTriangleIterator<N>
 
 
 
-	/// Iterates the kernel and searches the database.
+	/// When a new kernal step is required:
+	/// - Finds the angle distance between the stars.
+	/// - Finds a long list of matches from the database to compare with.
 	/// # Arguments
 	/// * `stars` - The stars in the image.
 	/// * `database` - The database where the stars can be searched.
