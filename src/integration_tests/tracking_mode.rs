@@ -55,8 +55,8 @@ pub fn run ( )
 	// The fov of each sample of the sky (make it close to region size to get a reliable test).
 	const SAMPLE_FOV   : Radians = Degrees(5.0).as_radians();
 
-	const REGION_SIZE  : Radians = Degrees(30.0).as_radians(); // An area smaller than FOV.
-	const REGION_NUM   : usize   = 20; // Should not be more than 1 redundant star in a region.
+	const REGION_SIZE  : Radians = Degrees(14.0).as_radians(); // An area smaller than FOV.
+	const REGION_NUM   : usize   = 8; // Should not be more than 1 redundant star in a region.
 
 	// To create the database.
 	const NUM_BINS     : usize   = 2000; // Refer to `src/tracking_mode/database/mod.rs`.
