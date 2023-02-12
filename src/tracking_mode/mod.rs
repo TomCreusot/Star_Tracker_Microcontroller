@@ -45,6 +45,7 @@ use mockall::predicate::*;
 use mockall::*;
 
 use crate::tracking_mode::database::Database;
+use crate::tracking_mode::database::SearchResult;
 
 use crate::config::TrackingModeConsts;
 
@@ -52,6 +53,7 @@ use crate::util::aliases::Decimal;
 use crate::util::units::Vector3;
 use crate::util::units::Equatorial;
 use crate::util::units::Radians;
+use crate::util::units::BitField;
 use crate::util::list::List;
 use crate::util::list::ArrayList;
 use crate::util::err::Error;
@@ -84,6 +86,7 @@ pub struct Match <T>
 	pub weight: Decimal,
 }
 
+
 /// A set of 2 stars in equatorial space, this represents a line / angle.
 #[derive(Clone, Copy, PartialEq, Debug)]
 pub struct StarPair<T>		( pub T, pub T );
@@ -96,6 +99,20 @@ pub struct StarTriangle<T>	( pub T, pub T, pub T );
 
 
 
+
+/// The result from the star triangle iterator.
+#[derive(Debug, Clone, Copy, PartialEq)]
+pub struct IterationResult
+{
+	/// The location of the stars in the found list.
+	pub input:  StarTriangle<usize>,
+	/// The location of the stars in the database.
+	pub output:  StarTriangle<usize>,
+	/// The lower this number, the more likely it is valid.
+	pub error:   Decimal,
+	/// What regions were searched through.
+	pub regions: BitField,
+}
 
 /// By finding every potential StarTriangle before testing their valid is bad for performance.
 /// At 3 stars, there is one triangle.
@@ -112,11 +129,12 @@ pub struct StarTriangleIterator <const N_MAX_MATCHES: usize>
 	input:  StarTriangle<usize>,
 
 	/// All found elements from the database when searched by the star pairs constructing input.
-	pair_a: ArrayList<StarPair<usize>, {N_MAX_MATCHES}>,
+	pair_a: ArrayList<SearchResult, {N_MAX_MATCHES}>,
 	/// All found elements from the database when searched by the star pairs constructing input.
-	pair_b: ArrayList<StarPair<usize>, {N_MAX_MATCHES}>,
+	pair_b: ArrayList<SearchResult, {N_MAX_MATCHES}>,
 	/// All found elements from the database when searched by the star pairs constructing input.
-	pair_c: ArrayList<StarPair<usize>, {N_MAX_MATCHES}>,
+	pair_c: ArrayList<SearchResult, {N_MAX_MATCHES}>,
+
 
 	/// The index sequence has begun.
 	indexing: bool,
@@ -128,6 +146,13 @@ pub struct StarTriangleIterator <const N_MAX_MATCHES: usize>
 	index_c: usize,
 
 	angle_tolerance: Radians,
+	
+	/// A counting value specifying what region to investigate.
+	/// * 0 : 0
+	/// * 1 : 1
+	/// * 2 : 10
+	/// * 3 : 100
+	region_index: usize,
 }
 
 
@@ -232,6 +257,7 @@ pub trait PyramidConstruct <T: 'static>
 				database : &dyn Database,
 				input : StarTriangle<usize>,
 				output : StarTriangle<usize>,
+				regions: BitField
 			) -> Error<Match<usize>>;
 
 
@@ -275,7 +301,7 @@ pub trait TriangleConstruct
 	/// * None if there is no more available star triangles with the given parameters.
 	/// * Some(Match{input: observed star triangle, output: database match}) if possible.
 	fn next ( &mut self, stars: &dyn List<Equatorial>, database: &mut dyn Database
-														) -> Option<Match<StarTriangle<usize>>>;
+	) -> Option<IterationResult>;
 
 	/// Prepares the StarTriangleIterator for iterating.
 	/// # Arguments

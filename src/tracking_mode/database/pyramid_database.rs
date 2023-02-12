@@ -22,20 +22,6 @@ impl <'a> Database for PyramidDatabase <'a>
 	/// If PyramidDatabase, 1 will be returned.
 	fn num_regions ( &self ) -> usize  { return 1; }
 
-	/// For find_close_ref.
-	/// Checks if the region is the same as the pair.
-	/// # Argument
-	/// * `index_pairs` - The index of the star pair to investigate.
-	fn is_correct_region ( &self, _: usize ) -> bool           { return true;                  }
-
-	/// Returns false.
-	/// Not usefull for the standard PyramidDatabase.
-	/// # Returns
-	/// False if selected region returns to 0.
-	fn increment_region ( &mut self ) -> bool
-	{
-		return false;
-	}
 
 	/// Gets the star pair at the index in the array.
 	/// Used for any trait implementations bellow.

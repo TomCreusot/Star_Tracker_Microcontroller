@@ -11,6 +11,8 @@ use crate::tracking_mode::database::Database;
 use crate::config::TrackingModeConsts;
 
 use crate::util::units::Equatorial;
+use crate::util::units::BitField;
+use crate::util::units::BitCompare;
 use crate::util::list::ArrayList;
 use crate::util::list::List;
 use crate::util::err::Errors;
@@ -28,6 +30,7 @@ impl <T: 'static> PyramidConstruct <T>  for StarPyramid<usize>
 	/// * `database` - The database to lookup.
 	/// * `input` - The star triangle from the input (what stars are being used).
 	/// * `output` - The star triangle from the output in the same order as input.
+	/// * `regions`- Where to search.
 	/// # Returns
 	/// Ok(pilot) if valid.
 	fn find_pilot (	
@@ -36,6 +39,7 @@ impl <T: 'static> PyramidConstruct <T>  for StarPyramid<usize>
 				database : &dyn Database, 
 				input    : StarTriangle<usize>,
 				output   : StarTriangle<usize>,
+				regions  : BitField
 			) -> Error<Match<usize>>
 	{
 		for ii in 0..stars.size()
@@ -51,10 +55,12 @@ impl <T: 'static> PyramidConstruct <T>  for StarPyramid<usize>
 				let mut sides_b: ArrayList<StarPair<usize>, {T::PAIRS_MAX}> = ArrayList::new();
 				let mut sides_c: ArrayList<StarPair<usize>, {T::PAIRS_MAX}> = ArrayList::new();
 				
+				let region = BitCompare::Any(regions);
+				
 				// Find the side angles to the pilot, if same for each star, it is the pilot.
-				database.find_close_ref(side_a, T::ANGLE_TOLERANCE, &mut sides_a);
-				database.find_close_ref(side_b, T::ANGLE_TOLERANCE, &mut sides_b);
-				database.find_close_ref(side_c, T::ANGLE_TOLERANCE, &mut sides_c);
+				database.find_close_ref_pair(side_a, T::ANGLE_TOLERANCE, region, &mut sides_a);
+				database.find_close_ref_pair(side_b, T::ANGLE_TOLERANCE, region, &mut sides_b);
+				database.find_close_ref_pair(side_c, T::ANGLE_TOLERANCE, region, &mut sides_c);
 
 				let pilot = self.confirm_pilot(output, &mut sides_a, &sides_b, &sides_c);
 				if pilot.is_some()

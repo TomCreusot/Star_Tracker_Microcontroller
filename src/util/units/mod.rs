@@ -9,6 +9,7 @@ pub mod equatorial;
 pub mod crp;
 pub mod matrix;
 pub mod angle_axis;
+pub mod bit_field;
 
 use super::aliases::Decimal;
 
@@ -374,4 +375,22 @@ pub struct MatPos
 {
 	pub row: usize,
 	pub col: usize,
+}
+
+
+
+
+//###############################################################################################//
+//										---	BitField ---
+//###############################################################################################//
+/// Stores a bit field and can do bit operations easily.
+#[derive(Copy, Clone, PartialEq, Debug)]
+pub struct BitField ( pub u32 );
+
+/// Specifies how to compare bit fields.
+#[derive(Copy, Clone, PartialEq, Debug)]
+pub enum BitCompare
+{
+	Any(BitField),
+	All(BitField),
 }

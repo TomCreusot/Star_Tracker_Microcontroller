@@ -2,6 +2,10 @@
 use super::StarPair;
 use util::list::List;
 
+// use crate::tracking_mode::database::SearchSave;
+
+
+
 impl <T> StarPair <T> where T : PartialEq + Copy + std::fmt::Debug
 {
 	/// Finds the element which is unique to both pairs.
@@ -179,6 +183,16 @@ impl StarPair<usize>
 		return None;
 	}
 }
+
+
+// impl SearchSave for StarPair<usize>
+// {
+// 	/// Call to return the constructed requested type.
+// 	fn Save ( result: StarPair<usize>, region: BitField, error: Decimal ) -> Self
+// 	{
+// 		return result;
+// 	}
+// }
 
 
 

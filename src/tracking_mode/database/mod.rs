@@ -82,6 +82,7 @@ use super::StarPair;
 
 use crate::util::units::Equatorial;
 use crate::util::units::Radians;
+use crate::util::units::BitField;
 use crate::util::aliases::Decimal;
 // use crate::util::list::List;
 use crate::util::linear_lookup::LinearLookup;
@@ -139,6 +140,22 @@ pub trait KVectorSearch
 }
 
 
+
+/// The result for querying for a close match star pair.
+/// Used in Database::find_close_ref.
+#[derive(Debug, Copy, Clone)]
+pub struct SearchResult
+{
+	/// The catalogue location for both stars.
+	pub result:   StarPair<usize>,
+	/// The regions the pairs occupy.
+	pub region:   BitField,
+	/// How reliable the search result is.  
+	/// The smaller the number the closer the result is to be true.  
+	pub error:    Decimal,
+}
+
+
 /// An element with all the details required to insert into the database.
 #[derive(Clone, Copy, Debug)]
 pub struct StarDatabaseElement
@@ -179,11 +196,8 @@ pub struct RegionalDatabase <'a>
 	pub k_lookup:  KVector,
 	pub k_vector:  &'a dyn LinearLookup<usize>,
 	pub pairs:     &'a dyn LinearLookup<StarPair<usize>>,
-	pub pairs_region: &'a dyn LinearLookup<BitFieldSize>,
+	pub pairs_region: &'a dyn LinearLookup<BitField>,
 	pub catalogue: &'a dyn LinearLookup<Equatorial>,
 
-	/// The index of the selected index.
-	/// Using this selector style allows the struct to comply with the trait "Database".
-	pub region_selected: usize,
 	pub num_regions: usize,
 }

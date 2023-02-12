@@ -5,9 +5,13 @@ use std::ops::Add;
 use std::ops::Sub;
 use std::ops::Div;
 use std::ops::Neg;
+use std::ops::BitAnd;
+use std::ops::BitOr;
+use std::ops::BitAndAssign;
+use std::ops::BitOrAssign;
 use super::{
 	Degrees, Radians, Hours,
-	Quaternion, Vector3, Equatorial, AngleAxis, Pixel, Vector2, super::aliases::Decimal};
+	Quaternion, Vector3, Equatorial, AngleAxis, Pixel, Vector2, super::aliases::Decimal, BitField};
 
 use util::test::TestEqual;
 use util::aliases::DECIMAL_PRECISION;
@@ -370,8 +374,32 @@ impl TestEqual for Vector3 {
 }
 
 
+//###############################################################################################//
+//									--- Regions ---
+//###############################################################################################//
+
+impl BitAnd<BitField> for BitField
+{
+	type Output = Self;
+	fn bitand ( self, rhs: BitField ) -> BitField {
+		return BitField(self.0 & rhs.0); }}
 
 
+impl BitOr<BitField> for BitField
+{
+	type Output = Self;
+	fn bitor ( self, rhs: BitField ) -> BitField {
+		return BitField(self.0 | rhs.0); }}
+
+
+impl BitAndAssign<BitField> for BitField
+{
+	fn bitand_assign ( &mut self, rhs: BitField ) { *self = *self & rhs; }}
+
+
+impl BitOrAssign<BitField> for BitField
+{
+	fn bitor_assign ( &mut self, rhs: BitField ) { *self = *self | rhs; }}
 
 //###############################################################################################//
 //###############################################################################################//

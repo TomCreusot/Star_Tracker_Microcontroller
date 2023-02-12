@@ -6,6 +6,7 @@ use crate::tracking_mode::database::KVector;
 use crate::tracking_mode::StarPair;
 
 use crate::util::units::Equatorial;
+use crate::util::units::BitField;
 // use crate::util::err::Errors;
 // use crate::util::err::Error;
 
@@ -18,32 +19,11 @@ impl <'a> Database for RegionalDatabase <'a>
 	/// If PyramidDatabase, 1 will be returned.
 	fn num_regions ( &self ) -> usize    {   return self.num_regions;  }
 
-
-	/// For find_close_ref.
-	/// Checks if the region is the same as the pair.
-	/// # Argument
-	/// * `index_pairs` - The index of the star pair to investigate.
-	fn is_correct_region ( &self, index_pairs: usize ) -> bool
+	/// Gets what regions a pair occupies.  
+	fn get_region ( &self, pair_index: usize ) -> BitField
 	{
-		return self.pairs_region.get(index_pairs) & (1 << self.region_selected ) != 0;
+		return self.pairs_region.get(pair_index);
 	}
-
-	/// Moves the database to the next database.
-	/// Useful for RegionalDatabase.
-	/// Not usefull for the standard PyramidDatabase.
-	/// # Returns
-	/// False if selected region returns to 0.
-	fn increment_region ( &mut self ) -> bool
-	{
-		if self.region_selected < self.num_regions()
-		{
-			self.region_selected += 1;
-			return true;
-		}
-		self.region_selected = 0;
-		return false;
-	}
-
 
 	/// Gets the star pair at the index in the array.
 	/// Used for any trait implementations bellow.

@@ -3,6 +3,7 @@ use super::DatabaseGenerator;
 use crate::util::aliases::Decimal;
 use crate::util::units::Radians;
 use crate::util::units::Equatorial;
+use crate::util::units::BitField;
 use crate::util::list::List;
 
 use crate::nix::Star;
@@ -31,8 +32,12 @@ impl DatabaseGenerator
 
 	pub fn get_database_regional ( &self ) -> RegionalDatabase
 	{
+		// let mut highest bit = 
+		// for i in self.pairs_region
+		// {
+		// 
+		// }
 		return RegionalDatabase {
-			region_selected: 0,
 			num_regions    : 12,
 			fov            : self.fov,
 			k_lookup       : self.k_lookup,
@@ -89,21 +94,23 @@ impl DatabaseGenerator
 
 
 
-	pub fn gen_database_regions ( stars: &Vec<Star>, fov: Radians, num_bins: usize ) -> Self
+	pub fn gen_database_regions ( stars: &Vec<Star>, fov: Radians, fov_regions: Radians, num_bins: usize ) -> Self
 	{
 		let mut points = Distribute::angle_to_points(fov);
+		println!("pts: {}", points);
 		if (BitFieldSize::BITS as usize) < points
 		{	// There are more points then the bitfield, that would not work.
 			points = BitFieldSize::BITS as usize;
 		} 
 		let regions = Distribute::fibonacci_latice(BitFieldSize::BITS as usize);
+		println!("NUM REGIONS____: {}", regions.len());
 		let angle = Distribute::points_to_angle(points);
 
 
 		let mut pairs_unrefined = StarDatabaseElement::create_list(fov / 2.0, stars);
 		pairs_unrefined.sort();
 
-		let mut pairs_region : Vec<BitFieldSize> = Vec::new();
+		let mut pairs_region : Vec<BitField> = Vec::new();
 		let mut pairs : Vec<StarPair<usize>> = Vec::new();
 		for i in 0..pairs_unrefined.len()
 		{
@@ -113,7 +120,7 @@ impl DatabaseGenerator
 			let star_b = stars[ref_b].clone();
 			pairs.push(StarPair(ref_a, ref_b));
 
-			let mut region_bit : BitFieldSize = 0b0000;
+			let mut region_bit : BitField = BitField(0);
 			for jj in 0..regions.size()
 			{
 				let pt = regions.get(jj);
@@ -121,7 +128,7 @@ impl DatabaseGenerator
 				let dist_2 = star_b.pos.angle_distance(pt);
 				if  dist_1 < angle || dist_2 < angle
 				{
-					region_bit |= 1 << jj;
+					region_bit.set(jj, true);
 				}
 			}
 			pairs_region.push(region_bit);
@@ -136,7 +143,7 @@ impl DatabaseGenerator
 		let mut catalogue : Vec<Equatorial> = Vec::new();
 		for i in 0..stars.size() { catalogue.push(stars[i].pos); }
 
-
+		println!("regions: {}", pairs_region.size());
 		return Self
 		{
 			k_vector: k_vector,

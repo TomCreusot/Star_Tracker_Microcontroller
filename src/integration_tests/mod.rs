@@ -8,8 +8,11 @@ pub mod k_vector;
 pub mod image_processing;
 pub mod tracking_mode;
 
+use std::env;
+
 pub fn run()
 {
+	env::set_var("RUST_BACKTRACE", "1");
 	println!("\n\n\n~~~~~~~~~~~~~~~~~~~~~~~~~\n K-VECTOR TEST\n~~~~~~~~~~~\n");
 	// k_vector::run();
 	

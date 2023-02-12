@@ -14,6 +14,8 @@ use crate::util::aliases::Decimal;
 use crate::util::units::Equatorial;
 use crate::util::units::Radians;
 use crate::util::units::Degrees;
+use crate::util::units::BitField;
+use crate::util::units::BitCompare;
 use crate::util::list::List;
 
 //###############################################################################################//
@@ -188,6 +190,6 @@ pub fn find_k_vector_angles ( angle: Radians, tolerance: Radians, database: &Pyr
 																			-> Vec<StarPair<usize>>
 {
 	let mut matches : Vec<StarPair<usize>> = Vec::new();
-	database.find_close_ref(angle, tolerance, &mut matches);
+	database.find_close_ref_pair(angle, tolerance, BitCompare::Any(BitField::ALL), &mut matches);
 	return matches;
 }
