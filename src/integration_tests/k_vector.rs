@@ -32,6 +32,7 @@ use crate::integration_tests::helper_functions::*;
 
 use crate::tracking_mode::database::StarDatabaseElement;
 use crate::tracking_mode::database::PyramidDatabase;
+use crate::tracking_mode::database::SearchResult;
 // use crate::tracking_mode::database::Database;
 use crate::tracking_mode::database::KVector;
 
@@ -101,7 +102,7 @@ pub fn run ( )
 		
 		// This is the correct method where an advanced method is used to trim the excess stars.
 		timer = std::time::Instant::now();
-		let k_vector_angles       : Vec<StarPair<usize>> 
+		let k_vector_angles       : Vec<SearchResult> 
 										= find_k_vector_angles(angle, tolerance, &database);
 										// = find_k_vector_angles(k_vector.max_value, tolerance, &database);
 										// = find_k_vector_angles(k_vector.min_value, tolerance, &database);
@@ -116,7 +117,7 @@ pub fn run ( )
 			let mut contains = false;
 			for jj in 0..k_vector_angles.size()
 			{
-				contains |= StarPair::are_same(&basic_angles[ii], &k_vector_angles[jj]);
+				contains |= StarPair::are_same(&basic_angles[ii], &k_vector_angles[jj].result);
 			}
 			assert!(contains, "k_vector_angles is missing some valid StarPairs.");
 		}
@@ -125,7 +126,7 @@ pub fn run ( )
 			let mut contains = false;
 			for ii in 0..basic_angles.size()
 			{
-				contains |= StarPair::are_same(&basic_angles[jj], &k_vector_angles[ii]);
+				contains |= StarPair::are_same(&basic_angles[jj], &k_vector_angles[ii].result);
 			}
 			assert!(contains, "k_vector_angles has extra invalid StarPairs.");
 		}

@@ -2,6 +2,7 @@ use rand::prelude::*;
 
 use crate::tracking_mode::database::StarDatabaseElement;
 use crate::tracking_mode::database::PyramidDatabase;
+use crate::tracking_mode::database::SearchResult;
 use crate::tracking_mode::database::Database;
 use crate::tracking_mode::database::KVector;
 
@@ -14,8 +15,6 @@ use crate::util::aliases::Decimal;
 use crate::util::units::Equatorial;
 use crate::util::units::Radians;
 use crate::util::units::Degrees;
-use crate::util::units::BitField;
-use crate::util::units::BitCompare;
 use crate::util::list::List;
 
 //###############################################################################################//
@@ -187,9 +186,9 @@ pub fn find_basic_angles ( angle: Radians, tolerance: Radians, database: &Pyrami
 
 
 pub fn find_k_vector_angles ( angle: Radians, tolerance: Radians, database: &PyramidDatabase )
-																			-> Vec<StarPair<usize>>
+																		-> Vec<SearchResult>
 {
-	let mut matches : Vec<StarPair<usize>> = Vec::new();
-	database.find_close_ref_pair(angle, tolerance, BitCompare::Any(BitField::ALL), &mut matches);
+	let mut matches : Vec<SearchResult> = Vec::new();
+	database.find_close_ref(angle, tolerance, &mut matches);
 	return matches;
 }

@@ -5,14 +5,14 @@ use crate::tracking_mode::IterationResult;
 use crate::tracking_mode::KernelIterator;
 use crate::tracking_mode::StarTriangle;
 
-use crate::tracking_mode::database::Database;
+use crate::tracking_mode::database::DatabaseIterator;
 
 use crate::util::list::ArrayList;
 use crate::util::list::List;
 use crate::util::units::Equatorial;
 use crate::util::units::Radians;
-use crate::util::units::BitField;
-use crate::util::units::BitCompare;
+// use crate::util::units::BitField;
+// use crate::util::units::BitCompare;
 
 
 impl <const N: usize> TriangleConstruct for StarTriangleIterator<N>
@@ -24,7 +24,7 @@ impl <const N: usize> TriangleConstruct for StarTriangleIterator<N>
 	/// # Returns
 	/// * None if there is no more available star triangles with the given parameters.
 	/// * Some(Match{input: observed star triangle, output: database match}) if possible.
-	fn next ( &mut self, stars: &dyn List<Equatorial>, database: &mut dyn Database
+	fn next ( &mut self, stars: &dyn List<Equatorial>, database: &mut dyn DatabaseIterator
 																	) -> Option<IterationResult>
 	{
 		let mut tries : Option<IterationResult> = None;
@@ -51,11 +51,9 @@ impl <const N: usize> TriangleConstruct for StarTriangleIterator<N>
 				let input  = self.input;
 				let output = triangle.unwrap();
 				let error  = a.error + b.error + c.error;
-				let region = a.region & b.region & c.region;
-				tries = Some(IterationResult{input: input, output: output, error: error, regions: region});
+				tries = Some(IterationResult{input: input, output: output, error: error});
 				break '_outer; // Rust implementation of a do while loop.
 			}
-			// println!("NEXT");
 		}
 		return tries;
 	}
@@ -120,7 +118,6 @@ impl<const N: usize> StarTriangleIterator<N>
 			index_c: 0,
 			input: StarTriangle(0,0,0),
 			angle_tolerance: Radians(0.0),
-			region_index: 0,
 		};
 	}
 
@@ -180,11 +177,14 @@ impl<const N: usize> StarTriangleIterator<N>
 	/// # Arguments
 	/// * `stars` - The stars in the image.
 	/// * `database` - The database where the stars can be searched.
-	fn prep_new_kernel ( &mut self, stars: &dyn List<Equatorial>, database: &mut dyn Database ) -> bool
+	fn prep_new_kernel ( &mut self, stars: &dyn List<Equatorial>, database: &mut dyn DatabaseIterator ) -> bool
 	{
-		if self.region_index == 32//database.num_regions()
+		// Steps to the next region.
+		// If at final region, steps to next kernal.
+		// If at final kernal, aborts iteration.
+		if !database.next()
 		{
-			self.region_index = 0;
+			database.begin();
 			if !self.kernel.step()
 			{
 				return false;
@@ -205,14 +205,13 @@ impl<const N: usize> StarTriangleIterator<N>
 		self.pair_c.clear();
 
 		// Bit field ensures every region around the triangle is searched.
-		let mut field = BitField(1 << self.region_index);
+		// let mut field = BitField(1 << self.region_index);
 		// println!("{:020b}\t{}", field.0, database.num_regions());
 		// Search the database for each side.
-		field |= database.find_close_ref(side_a, self.angle_tolerance, BitCompare::Any(field), &mut self.pair_a);
-		field |= database.find_close_ref(side_b, self.angle_tolerance, BitCompare::Any(field), &mut self.pair_b);
-		database.find_close_ref(side_c, self.angle_tolerance, BitCompare::Any(field), &mut self.pair_c);
-
-		self.region_index += 1;
+		database.find_close_ref_region(side_a, self.angle_tolerance, &mut self.pair_a);
+		database.find_close_ref_region(side_b, self.angle_tolerance, &mut self.pair_b);
+		database.find_close_ref_region(side_c, self.angle_tolerance, &mut self.pair_c);
+		
 		return true;
 	}
 

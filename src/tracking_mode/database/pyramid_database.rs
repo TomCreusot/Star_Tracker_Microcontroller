@@ -47,6 +47,10 @@ impl <'a> Database for PyramidDatabase <'a>
 	/// Gets the k_vector lookup equation.
 	/// Used for any trait implementations bellow.
 	fn get_k_lookup  ( &self ) -> KVector                      { return self.k_lookup;         }
+	
+	
+	/// Gets the field of view the database was created for.
+	fn get_fov            ( &self ) -> Radians                 { return self.fov;              }
 }
 
 

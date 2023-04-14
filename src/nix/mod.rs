@@ -64,6 +64,8 @@ pub struct DatabaseGenerator
 	// The pyramid database can only hold statics.
 	pub catalogue     : Vec<Equatorial>,
 
+	pub num_regions   : usize,
+
 	fov : Radians,
 	k_lookup: KVector,
 }

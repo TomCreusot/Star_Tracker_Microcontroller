@@ -32,13 +32,13 @@ impl DatabaseGenerator
 
 	pub fn get_database_regional ( &self ) -> RegionalDatabase
 	{
-		// let mut highest bit = 
+		// let mut highest bit =
 		// for i in self.pairs_region
 		// {
-		// 
+		//
 		// }
 		return RegionalDatabase {
-			num_regions    : 12,
+			num_regions    : self.num_regions,
 			fov            : self.fov,
 			k_lookup       : self.k_lookup,
 			k_vector       : &self.k_vector,
@@ -88,22 +88,22 @@ impl DatabaseGenerator
 			pairs_region: Vec::new(),
 			catalogue: catalogue,
 			fov: fov,
+			num_regions: 0,
 			k_lookup: k_lookup,
 		};
 	}
 
 
 
-	pub fn gen_database_regions ( stars: &Vec<Star>, fov: Radians, fov_regions: Radians, num_bins: usize ) -> Self
+	pub fn gen_database_regions ( stars: &Vec<Star>, fov: Radians, _fov_regions: Radians, num_bins: usize ) -> Self
 	{
 		let mut points = Distribute::angle_to_points(fov);
 		println!("pts: {}", points);
 		if (BitFieldSize::BITS as usize) < points
 		{	// There are more points then the bitfield, that would not work.
 			points = BitFieldSize::BITS as usize;
-		} 
+		}
 		let regions = Distribute::fibonacci_latice(BitFieldSize::BITS as usize);
-		println!("NUM REGIONS____: {}", regions.len());
 		let angle = Distribute::points_to_angle(points);
 
 
@@ -151,6 +151,7 @@ impl DatabaseGenerator
 			pairs_region: pairs_region,
 			catalogue: catalogue,
 			fov: fov,
+			num_regions: regions.len(),
 			k_lookup: k_lookup,
 		};
 	}
@@ -265,6 +266,37 @@ impl DatabaseGenerator
 		return s;
 	}
 
+
+	/// Removes any stars which are in the same location such as double stars.
+	/// # Arguments
+	/// * `stars` - The stars to observe.
+	/// * `tolerance` - How close until the stars are considered double stars.
+	///
+	/// # Returns
+	/// A reduced list of stars excluding the double stars.
+	pub fn limit_double_stars ( stars: &dyn List<Star>, tolerance: Radians ) -> Vec<Star>
+	{
+		let mut stars_added : Vec<Star> = Vec::with_capacity(stars.size());
+		for i in 0..stars.size()
+		{
+			stars_added.push(stars.get(i));
+		}
+
+		for ii in 0..stars_added.size()
+		{
+			let mut jj = ii + 1;
+			while jj < stars_added.size()
+			{
+				if stars_added[ii].pos.angle_distance(stars_added[jj].pos) < tolerance
+				{
+					stars_added.remove(jj);
+					jj-=1;
+				}
+				jj+=1;
+			}
+		}
+		return stars_added;
+	}
 
 
 	/// Finds the percentage of sky covered by the specified number of stars.

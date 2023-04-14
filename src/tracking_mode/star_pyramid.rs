@@ -6,13 +6,12 @@ use super::StarPyramid;
 use super::StarPair;
 use super::Match;
 
-use crate::tracking_mode::database::Database;
+use crate::tracking_mode::database::DatabaseIterator;
+use crate::tracking_mode::database::SearchResult;
 
 use crate::config::TrackingModeConsts;
 
 use crate::util::units::Equatorial;
-use crate::util::units::BitField;
-use crate::util::units::BitCompare;
 use crate::util::list::ArrayList;
 use crate::util::list::List;
 use crate::util::err::Errors;
@@ -36,10 +35,9 @@ impl <T: 'static> PyramidConstruct <T>  for StarPyramid<usize>
 	fn find_pilot (	
 				&mut self,
 				stars    : &dyn List<Equatorial>, 
-				database : &dyn Database, 
+				database : &dyn DatabaseIterator, 
 				input    : StarTriangle<usize>,
 				output   : StarTriangle<usize>,
-				regions  : BitField
 			) -> Error<Match<usize>>
 	{
 		for ii in 0..stars.size()
@@ -51,16 +49,16 @@ impl <T: 'static> PyramidConstruct <T>  for StarPyramid<usize>
 				let side_b = stars.get(input.1).angle_distance(star);
 				let side_c = stars.get(input.2).angle_distance(star);
 				
-				let mut sides_a: ArrayList<StarPair<usize>, {T::PAIRS_MAX}> = ArrayList::new();
-				let mut sides_b: ArrayList<StarPair<usize>, {T::PAIRS_MAX}> = ArrayList::new();
-				let mut sides_c: ArrayList<StarPair<usize>, {T::PAIRS_MAX}> = ArrayList::new();
-				
-				let region = BitCompare::Any(regions);
+				let mut sides_a: ArrayList<SearchResult, {T::PAIRS_MAX}> = ArrayList::new();
+				let mut sides_b: ArrayList<SearchResult, {T::PAIRS_MAX}> = ArrayList::new();
+				let mut sides_c: ArrayList<SearchResult, {T::PAIRS_MAX}> = ArrayList::new();
+
 				
 				// Find the side angles to the pilot, if same for each star, it is the pilot.
-				database.find_close_ref_pair(side_a, T::ANGLE_TOLERANCE, region, &mut sides_a);
-				database.find_close_ref_pair(side_b, T::ANGLE_TOLERANCE, region, &mut sides_b);
-				database.find_close_ref_pair(side_c, T::ANGLE_TOLERANCE, region, &mut sides_c);
+				
+				database.find_close_ref_region(side_a, T::ANGLE_TOLERANCE, &mut sides_a);
+				database.find_close_ref_region(side_b, T::ANGLE_TOLERANCE, &mut sides_b);
+				database.find_close_ref_region(side_c, T::ANGLE_TOLERANCE, &mut sides_c);
 
 				let pilot = self.confirm_pilot(output, &mut sides_a, &sides_b, &sides_c);
 				if pilot.is_some()
@@ -88,19 +86,19 @@ impl PyramidConstructBackEnd for StarPyramid<usize>
 	fn confirm_pilot ( 
 					&mut self,
 					output: StarTriangle<usize>, 
-					sides_a: &mut dyn List<StarPair<usize>>, 
-					sides_b: &dyn List<StarPair<usize>>, 
-					sides_c: &dyn List<StarPair<usize>> ) -> Option<usize>
+					sides_a: &mut dyn List<SearchResult>, 
+					sides_b: &dyn List<SearchResult>, 
+					sides_c: &dyn List<SearchResult> ) -> Option<usize>
 	{
 		// After removing, the remaining star is the pilot and hopefuly the star 0.
-		sides_a.remove_diff(sides_b, StarPair::has_same);
-		sides_a.remove_diff(sides_c, StarPair::has_same);
+		sides_a.remove_diff(sides_b, SearchResult::has_same_pair);
+		sides_a.remove_diff(sides_c, SearchResult::has_same_pair);
 		
 		// Look through all the potential (a, pilot) pairs.
 		for i in 0..sides_a.size()
 		{
 			// The pilot is the opposite to a.
-			let a_pilot = sides_a.get(i);
+			let a_pilot = sides_a.get(i).result;
 			let pilot_wrapped = a_pilot.find_not(output.0);
 			
 			if let Some(pilot) = pilot_wrapped {
@@ -109,9 +107,9 @@ impl PyramidConstructBackEnd for StarPyramid<usize>
 				let c_pilot = StarPair(output.2, pilot);
 				
 				let connected_a = 
-					output.has(sides_a.get(i).0) || output.has(sides_a.get(i).1);
-				let connected_b = StarPair::index_of(b_pilot, sides_b).is_some();
-				let connected_c = StarPair::index_of(c_pilot, sides_c).is_some();
+					output.has(sides_a.get(i).result.0) || output.has(sides_a.get(i).result.1);
+				let connected_b = SearchResult::index_of_pair(b_pilot, sides_b).is_some();
+				let connected_c = SearchResult::index_of_pair(c_pilot, sides_c).is_some();
 				
 				if connected_a && connected_b && connected_c
 				{							

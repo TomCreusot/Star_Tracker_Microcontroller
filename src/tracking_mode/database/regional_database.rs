@@ -7,6 +7,7 @@ use crate::tracking_mode::StarPair;
 
 use crate::util::units::Equatorial;
 use crate::util::units::BitField;
+use crate::util::units::Radians;
 // use crate::util::err::Errors;
 // use crate::util::err::Error;
 
@@ -48,4 +49,7 @@ impl <'a> Database for RegionalDatabase <'a>
 	/// Gets the k_vector lookup equation.
 	/// Used for any trait implementations bellow.
 	fn get_k_lookup  ( &self ) -> KVector                      { return self.k_lookup;         }
+	
+	/// Gets the field of view the database was created for.
+	fn get_fov            ( &self ) -> Radians                 { return self.fov;              }
 }
