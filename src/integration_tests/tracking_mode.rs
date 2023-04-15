@@ -63,7 +63,7 @@ pub fn run ( )
 	const SAMPLE_FOV   : Radians = Degrees(5.0).as_radians();
 
 	// Region Reduction
-	const REGION_SIZE  : Radians = Degrees(10.0).as_radians(); // An area smaller than FOV.
+	const REGION_SIZE  : Radians = Degrees(15.0).as_radians(); // An area smaller than FOV.
 	const REGION_NUM   : usize   = 8; // Should not be more than 1 redundant star in a region.
 
 	// If stars are this close, one is excluded.
@@ -71,7 +71,7 @@ pub fn run ( )
 
 	// To create the database.
 	const NUM_BINS     : usize   = 2000; // Refer to `src/tracking_mode/database/mod.rs`.
-	const FOV          : Radians = Degrees(20.0).as_radians();
+	const FOV          : Radians = Degrees(35.0).as_radians();
 
 
 	// Disrupt input.
@@ -182,8 +182,8 @@ pub fn run ( )
 	// let mut database_iterator = PyramidIterator::new(&database);
 	// let mut database_iterator = RegionalIterator::new(&database);
 	// let mut database_iterator = BoundedDeclinationIterator::new(&database, 0.7);
-	// let mut database_iterator = BoundedEquatorialIterator::new(&database, 2.0);
-	let mut database_iterator = RegionalCrunchIterator::new(&database, 1.5);
+	let mut database_iterator = BoundedEquatorialIterator::new(&database, 1.3);
+	// let mut database_iterator = RegionalCrunchIterator::new(&database, 1.5);
 
 
 

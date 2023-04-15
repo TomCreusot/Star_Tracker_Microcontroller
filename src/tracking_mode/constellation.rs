@@ -43,6 +43,8 @@ pub fn find	<T: TrackingModeConsts> (
 									) -> Constellation
 		where T: 'static + TrackingModeConsts,
 {
+	let timer : std::time::Instant = std::time::Instant::now();
+	
 	database.begin();
 	let mut fallback = Constellation::None; // If a pyramid cannot be made, can a triangle be made?
 	let mut lowest_error = Decimal::MAX;
@@ -52,6 +54,7 @@ pub fn find	<T: TrackingModeConsts> (
 	// Using star_triangle_iterator to find triangle matches in the database.
 	while let Some(iter) = gen_tri.next(stars, database)
 	{
+		if 60 < timer.elapsed().as_millis() { return fallback; }
 		// input and output both make triangles of the same length.
 		let input  : Error<StarTriangle<Equatorial>> = iter.input.search_list(stars);
 		let output : Error<StarTriangle<Equatorial>> = iter.output.search_database(database.get_database());

@@ -135,10 +135,6 @@ impl <'a> DatabaseIterator for RegionalCrunchIterator <'a>
 		{
 			self.started = false;
 		}
-		if self.index < self.latice.len()
-		{
-		println!("{}", self.latice[self.index]);
-		}
 		return self.index < self.latice.len(); 
 	}
 	
