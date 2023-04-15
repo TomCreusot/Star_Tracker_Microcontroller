@@ -9,14 +9,13 @@ use crate::util::list::List;
 use crate::util::units::Equatorial;
 use crate::util::units::Radians;
 use crate::util::units::BitField;
-use crate::util::units::BitCompare;
+// use crate::util::units::BitCompare;
 use crate::util::err::Errors;
 use crate::util::err::Error;
 
 use crate::tracking_mode::StarPair;
 use crate::tracking_mode::database::KVector;
 use crate::tracking_mode::database::KVectorSearch;
-// use crate::tracking_mode::database::SearchSave;
 use crate::tracking_mode::database::SearchResult;
 
 
@@ -42,57 +41,30 @@ pub trait Database
 	/// The an element of the star pair reference can be inserted into `find_star` to get the actual location.
 	/// # Arguments
 	/// * `find` - The angular separation between the found stars to find in the database.
+	/// * `region_compare` - The index of the star pair is input, this function returns true if the pair is valid.
 	/// * `found` - The closest matches to the provided `find`.
 	/// # Returns
-	/// The fields at the end of each pair.  
+	/// The fields at the end of each pair.
 	/// Use this information so that when finding multiple pairs connected, they can span multiple regions.
-	fn find_close_ref ( &self, find : Radians, tolerance: Radians, regions: BitCompare,
-									found : &mut dyn List<SearchResult> ) -> BitField
+	fn find_close_ref ( &self, find: Radians, tolerance: Radians, found: &mut dyn List<SearchResult> )
 	{
-		let mut field = BitField(0);
-		let range_k_vec_wrapped = self.get_k_lookup().get_bins(find, tolerance);
-		if range_k_vec_wrapped.is_ok()
+		let range = self.find_close_ref_range(find, tolerance);
+		for i in range.clone()
 		{
-			let range_k_vec = range_k_vec_wrapped.unwrap();
-			let mut end_range = range_k_vec.end;
-			if self.get_k_vector_size() <= end_range
+			let pair   = self.get_pairs(i);
+			let error  = 1.0;//(if i < mid { i } else { range.end - i } - range.start) as Decimal / range.len() as Decimal;
+			if !found.is_full()
 			{
-				end_range -= 1; // sometimes the upper value is stored in the bin above.
-			}
-			let mut range = self.get_k_vector(range_k_vec.start)..self.get_k_vector(end_range);
-			range = self.trim_range(find, tolerance, range);
-			let mid = range.end - range.start;
-			for i in range.clone()
-			{
-				let pair   = self.get_pairs(i);
-				let region = self.get_region(i);
-				// let error  = (if i < mid { i } else { range.end - i } - range.start) as Decimal / range.len() as Decimal;
-				let error = 1.0;
-				if !found.is_full() && region.compare(regions)
-				{
-					let result = SearchResult{result: pair, region: region, error: error };
-					found.push_back(result).expect("?");
-					field &= region;
-				}
+				let result = SearchResult{result: pair, region: None, error: error };
+				found.push_back(result).expect("database::find_close_ref: Already checked if found full?");
 			}
 		}
-		return field; 
 	}
 	
-	/// Mockall wont support generics.  
-	/// Finds close matches to the provided angular separation and returns the star pair reference.
-	/// The an element of the star pair reference can be inserted into `find_star` to get the actual location.
-	/// # Arguments
-	/// * `find` - The angular separation between the found stars to find in the database.
-	/// * `found` - The closest matches to the provided `find`.
-	/// # Returns
-	/// The fields at the end of each pair.  
-	/// Use this information so that when finding multiple pairs connected, they can span multiple regions.
-	fn find_close_ref_pair ( &self, find : Radians, tolerance: Radians, regions: BitCompare,
-									found : &mut dyn List<StarPair<usize>> ) -> BitField
-												
+	
+	/// Finds all elements within the tolerance.
+	fn find_close_ref_range ( &self, find: Radians, tolerance: Radians ) -> Range<usize>
 	{
-		let mut field = BitField(0);
 		let range_k_vec_wrapped = self.get_k_lookup().get_bins(find, tolerance);
 		if range_k_vec_wrapped.is_ok()
 		{
@@ -102,22 +74,10 @@ pub trait Database
 			{
 				end_range -= 1; // sometimes the upper value is stored in the bin above.
 			}
-			let mut range = self.get_k_vector(range_k_vec.start)..self.get_k_vector(end_range);
-			range = self.trim_range(find, tolerance, range);
-			
-			for i in range
-			{
-				let pair   = self.get_pairs(i);
-				let region = self.get_region(i);
-				if !found.is_full() && region.compare(regions)
-				{
-					// let result = SearchResult{result: pair, region: region, error: };
-					found.push_back(pair).expect("?");
-					field &= region;
-				}
-			}
+			let range = self.get_k_vector(range_k_vec.start)..self.get_k_vector(end_range);
+			return self.trim_range(find, tolerance, range);
 		}
-		return field; 
+		return 0..0;
 	}
 
 
@@ -125,9 +85,9 @@ pub trait Database
 	/// If PyramidDatabase, 1 will be returned.
 	fn num_regions ( &self ) -> usize;
 
-	/// Gets what regions a pair occupies.  
+	/// Gets what regions a pair occupies.
 	/// The trait implementation specifies every region is satisfied incase the database does not use regions.
-	fn get_region ( &self, pair_index: usize ) -> BitField
+	fn get_region ( &self, _pair_index: usize ) -> BitField
 	{
 		return BitField::ALL; // Every bit.
 	}
@@ -155,8 +115,11 @@ pub trait Database
 	fn get_k_vector_size  ( &self ) -> usize;
 
 	/// Gets the k_vector lookup equation.
-	/// Used for any trait implementations bellow.
+	/// Used for any trait implementations below.
 	fn get_k_lookup       ( &self ) -> KVector;
+	
+	/// Gets the field of view the database was created for.
+	fn get_fov            ( &self ) -> Radians;
 
 
 	/// Trims the range provided by the k-vector so that every value is within the tolerance.

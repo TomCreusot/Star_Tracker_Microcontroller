@@ -84,12 +84,11 @@ use crate::util::units::Equatorial;
 use crate::util::units::Radians;
 use crate::util::units::BitField;
 use crate::util::aliases::Decimal;
-// use crate::util::list::List;
 use crate::util::linear_lookup::LinearLookup;
-
-use crate::util::err::{/*Errors, */Error};
+use crate::util::err::Error;
 
 pub use crate::tracking_mode::database::database::Database as Database;
+pub use crate::tracking_mode::database::database_iterator::DatabaseIterator as DatabaseIterator;
 pub use crate::tracking_mode::database::database::MockDatabase as MockDatabase;
 
 mod k_vector;
@@ -99,7 +98,8 @@ pub mod array_database;
 pub mod pyramid_database;
 pub mod regional_database;
 pub mod database;
-
+pub mod database_iterator;
+pub mod search_result;
 /// The database equation which points to the star pair database.
 ///
 ///
@@ -149,9 +149,9 @@ pub struct SearchResult
 	/// The catalogue location for both stars.
 	pub result:   StarPair<usize>,
 	/// The regions the pairs occupy.
-	pub region:   BitField,
-	/// How reliable the search result is.  
-	/// The smaller the number the closer the result is to be true.  
+	pub region:   Option<usize>,
+	/// How reliable the search result is.
+	/// The smaller the number the closer the result is to be true.
 	pub error:    Decimal,
 }
 
@@ -178,8 +178,6 @@ pub struct PyramidDatabase <'a>
 	pub catalogue: &'a dyn LinearLookup<Equatorial>,
 }
 
-
-
 /// The size of the bitfield to be used for the regional database.
 /// Having more bits makes the triangle identification faster.
 /// Having a bit field too big will impact performance on systems of a smaller bit size.
@@ -201,3 +199,72 @@ pub struct RegionalDatabase <'a>
 
 	pub num_regions: usize,
 }
+
+
+/// Manually calculate the angular separation during runtime.
+pub struct RegionalCrunchIterator <'a>
+{
+	latice : Vec<Equatorial>,
+	index: usize,
+	reach_multiplier: Decimal,
+	database: &'a dyn Database,
+	started: bool
+}
+
+/// Manages iterating through the pyramid database.
+#[derive(Clone, Copy)]
+pub struct PyramidIterator <'a>
+{
+	database: &'a dyn Database,
+}
+
+#[derive(Clone, Copy)]
+pub struct RegionalIterator <'a>
+{
+	index: usize,
+	database: &'a RegionalDatabase<'a>
+}
+
+
+pub struct BoundedDeclinationIterator <'a>
+{
+	database: &'a dyn Database,
+	dec: Range<Radians>,
+	num:   usize,
+	interval: Radians,
+	index: usize,
+}
+
+// #[derive(Clone, Copy)]
+pub struct BoundedEquatorialIterator <'a>
+{
+	/// How many declination (vertical bands) have been covered.
+	index_dec: usize,
+	/// How many declination (vertical bands) have been covered.
+	index_ra: usize,
+	
+	///
+	database: &'a dyn Database,
+	
+	/// The jump for each declination region.
+	interval_dec: Radians,
+	
+	/// The jump for right ascension for each declination band. 
+	interval_ra:  Radians,
+	
+	/// The max/min range for the current declination.
+	dec:      Range<Radians>,
+	
+	/// The max/min range for the current right ascension.
+	ra:       Range<Radians>,
+	
+	///
+	num_dec:  usize,
+	
+	/// Number of right ascension perspectives in the current declination.
+	num_ra:   usize,
+	
+	region_size: Equatorial,
+}
+
+

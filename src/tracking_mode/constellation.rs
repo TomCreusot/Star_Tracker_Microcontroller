@@ -6,11 +6,10 @@ use super::Constellation;
 use super::StarTriangle;
 use super::StarPyramid;
 use super::Match;
-use crate::tracking_mode::database::Database;
+use crate::tracking_mode::database::DatabaseIterator;
 // use crate::tracking_mode::StarTriangleIterator;
 
 use crate::util::units::Equatorial;
-use crate::util::units::BitField;
 use crate::util::list::List;
 use crate::util::aliases::Decimal;
 use crate::util::err::Error;
@@ -37,14 +36,16 @@ impl Constellation
 /// If a star triangle can be formed: Match{input: Observed Stars, output: Corresponding Database}.
 pub fn find	<T: TrackingModeConsts> (
 										stars    : &dyn List<Equatorial>,
-										database : &mut dyn Database,
+										database : &mut dyn DatabaseIterator,
 										gen_tri  : &mut dyn TriangleConstruct,
 										gen_pyr  : &mut dyn PyramidConstruct<T>,
 										gen_spec : &mut dyn SpecularityConstruct<T>
 									) -> Constellation
 		where T: 'static + TrackingModeConsts,
-		// ArrayList<(), {T::PAIRS_MAX}> : Sized,
 {
+	let timer : std::time::Instant = std::time::Instant::now();
+	
+	database.begin();
 	let mut fallback = Constellation::None; // If a pyramid cannot be made, can a triangle be made?
 	let mut lowest_error = Decimal::MAX;
 	gen_tri.begin(T::ANGLE_TOLERANCE, stars);
@@ -53,11 +54,11 @@ pub fn find	<T: TrackingModeConsts> (
 	// Using star_triangle_iterator to find triangle matches in the database.
 	while let Some(iter) = gen_tri.next(stars, database)
 	{
+		if 60 < timer.elapsed().as_millis() { return fallback; }
 		// input and output both make triangles of the same length.
 		let input  : Error<StarTriangle<Equatorial>> = iter.input.search_list(stars);
-		let output : Error<StarTriangle<Equatorial>> = iter.output.search_database(database);
-		let error  : Decimal  = iter.error;
-		let regions: BitField = iter.regions;
+		let output : Error<StarTriangle<Equatorial>> = iter.output.search_database(database.get_database());
+		let error  : Decimal = iter.error;
 
 
 		// ~~~~~~~~~~~~~~~~~~~~~~~~~	 A valid match was found.		~~~~~~~~~~~~~~~~~~~~
@@ -72,8 +73,7 @@ pub fn find	<T: TrackingModeConsts> (
 			// If the triangles are not flipped, the code can continue.
 			if gen_spec.same(&input.to_vector3(), &output.to_vector3())
 			{
-				// println!("{},  \t{},\t  {}", output.0.print_standard(), output.1.print_standard(), output.2.print_standard());
-				let result = gen_pyr.find_pilot(stars, database, iter.input, iter.output, regions);
+				let result = gen_pyr.find_pilot(stars, database, iter.input, iter.output);
 				
 				// If a pyramid cannot be found.
 				if error < lowest_error
@@ -89,7 +89,7 @@ pub fn find	<T: TrackingModeConsts> (
 				{
 					// ~~~~~~~~~	Get the star from the database.	~~~~~~~~~~~~~~~~~~~~
 					let pil_in = stars.get(found.input);
-					let pil_out = database.find_star(found.output);
+					let pil_out = database.get_database().find_star(found.output);
 
 					if let Ok(out) = pil_out
 					{
