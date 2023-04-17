@@ -7,23 +7,20 @@ pub mod helper_functions;
 pub mod k_vector;
 pub mod image_processing;
 pub mod tracking_mode;
-pub mod iterator_test;
 
 use std::env;
 
 pub fn run()
 {
-	// env::set_var("RUST_BACKTRACE", "1");
-	// println!("\n\n\n~~~~~~~~~~~~~~~~~~~~~~~~~\n K-VECTOR TEST\n~~~~~~~~~~~\n");
+	env::set_var("RUST_BACKTRACE", "1");
+	println!("\n\n\n~~~~~~~~~~~~~~~~~~~~~~~~~\n K-VECTOR TEST\n~~~~~~~~~~~\n");
 	// k_vector::run();
-
-
-	// println!("\n\n\n~~~~~~~~~~~~~~~~~~~~~~~~~\n IMAGE PROCESSING TEST\n~~~~~~~~~~~\n");
-	 // image_processing::run();
-
-
-	// println!("\n\n\n~~~~~~~~~~~~~~~~~~~~~~~~~\n TRACKING MODE TEST\n~~~~~~~~~~~\n");
-	// tracking_mode::run();
-	iterator_test::run()
-
+	
+	
+	println!("\n\n\n~~~~~~~~~~~~~~~~~~~~~~~~~\n IMAGE PROCESSING TEST\n~~~~~~~~~~~\n");
+	// image_processing::run();
+	
+	
+	println!("\n\n\n~~~~~~~~~~~~~~~~~~~~~~~~~\n TRACKING MODE TEST\n~~~~~~~~~~~\n");
+	tracking_mode::run();
 }

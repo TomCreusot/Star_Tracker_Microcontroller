@@ -3,23 +3,20 @@ use super::DatabaseGenerator;
 use crate::util::aliases::Decimal;
 use crate::util::units::Radians;
 use crate::util::units::Equatorial;
-use crate::util::units::BitField;
 use crate::util::list::List;
 
 use crate::nix::Star;
 use crate::nix::Distribute;
 
 use crate::tracking_mode::StarPair;
-use crate::tracking_mode::database::RegionalDatabase;
 use crate::tracking_mode::database::PyramidDatabase;
 use crate::tracking_mode::database::StarDatabaseElement;
 use crate::tracking_mode::database::KVector;
-use crate::tracking_mode::database::BitFieldSize;
 
 
 impl DatabaseGenerator
 {
-	pub fn get_database_pyramid ( &self ) -> PyramidDatabase
+	pub fn get_database ( &self ) -> PyramidDatabase
 	{
 		return PyramidDatabase {
 			fov      : self.fov,
@@ -27,24 +24,6 @@ impl DatabaseGenerator
 			k_vector : &self.k_vector,
 			pairs    : &self.pairs,
 			catalogue: &self.catalogue,
-		};
-	}
-
-	pub fn get_database_regional ( &self ) -> RegionalDatabase
-	{
-		// let mut highest bit =
-		// for i in self.pairs_region
-		// {
-		//
-		// }
-		return RegionalDatabase {
-			num_regions    : self.num_regions,
-			fov            : self.fov,
-			k_lookup       : self.k_lookup,
-			k_vector       : &self.k_vector,
-			pairs          : &self.pairs,
-			pairs_region   : &self.pairs_region,
-			catalogue      : &self.catalogue,
 		};
 	}
 
@@ -85,76 +64,13 @@ impl DatabaseGenerator
 		{
 			k_vector: k_vector,
 			pairs: pairs,
-			pairs_region: Vec::new(),
 			catalogue: catalogue,
 			fov: fov,
-			num_regions: 0,
 			k_lookup: k_lookup,
 		};
 	}
 
 
-
-	pub fn gen_database_regions ( stars: &Vec<Star>, fov: Radians, _fov_regions: Radians, num_bins: usize ) -> Self
-	{
-		let mut points = Distribute::angle_to_points(fov);
-		println!("pts: {}", points);
-		if (BitFieldSize::BITS as usize) < points
-		{	// There are more points then the bitfield, that would not work.
-			points = BitFieldSize::BITS as usize;
-		}
-		let regions = Distribute::fibonacci_latice(BitFieldSize::BITS as usize);
-		let angle = Distribute::points_to_angle(points);
-
-
-		let mut pairs_unrefined = StarDatabaseElement::create_list(fov / 2.0, stars);
-		pairs_unrefined.sort();
-
-		let mut pairs_region : Vec<BitField> = Vec::new();
-		let mut pairs : Vec<StarPair<usize>> = Vec::new();
-		for i in 0..pairs_unrefined.len()
-		{
-			let ref_a = pairs_unrefined[i].pair.0;
-			let ref_b = pairs_unrefined[i].pair.1;
-			let star_a = stars[ref_a].clone();
-			let star_b = stars[ref_b].clone();
-			pairs.push(StarPair(ref_a, ref_b));
-
-			let mut region_bit : BitField = BitField(0);
-			for jj in 0..regions.size()
-			{
-				let pt = regions.get(jj);
-				let dist_1 = star_a.pos.angle_distance(pt);
-				let dist_2 = star_b.pos.angle_distance(pt);
-				if  dist_1 < angle || dist_2 < angle
-				{
-					region_bit.set(jj, true);
-				}
-			}
-			pairs_region.push(region_bit);
-		}
-
-		let k_lookup = KVector::new(num_bins, pairs_unrefined[0].dist.0 as Decimal,
-			pairs_unrefined[pairs.len() - 1].dist.0 as Decimal);
-
-		let k_vector = k_lookup.generate_bins(&pairs_unrefined).expect("Database too small.");
-		k_lookup.generate_bins(&pairs_unrefined).expect("Increase the cutoff magnitude.");
-
-		let mut catalogue : Vec<Equatorial> = Vec::new();
-		for i in 0..stars.size() { catalogue.push(stars[i].pos); }
-
-		println!("regions: {}", pairs_region.size());
-		return Self
-		{
-			k_vector: k_vector,
-			pairs: pairs,
-			pairs_region: pairs_region,
-			catalogue: catalogue,
-			fov: fov,
-			num_regions: regions.len(),
-			k_lookup: k_lookup,
-		};
-	}
 
 
 	/// Returns a set of stars which achieves the maximum star coverage with the least overlaps.

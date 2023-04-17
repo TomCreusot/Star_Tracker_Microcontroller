@@ -4,11 +4,7 @@
 //! This also provides a step by step guide to use the tracking mode algorithm.
 
 use rand::prelude::*;
-// use rand::SeedableRng;
-// use rand::distributions::Standard;
-// use rand::distributions::Distribution;
 
-// use util::aliases::M_PI;
 use util::aliases::Decimal;
 use util::units::Radians;
 use util::units::Degrees;
@@ -17,19 +13,15 @@ use util::units::Equatorial;
 use nix::Star;
 use nix::Io;
 
-// use tracking_mode::StarPair;
 use tracking_mode::Constellation;
 use tracking_mode::StarPyramid;
 use tracking_mode::Specularity;
 use tracking_mode::StarTriangleIterator;
-use tracking_mode::database::RegionalIterator;
-use tracking_mode::database::PyramidIterator;
-use tracking_mode::database::BoundedEquatorialIterator;
-use tracking_mode::database::BoundedDeclinationIterator;
-use tracking_mode::database::RegionalCrunchIterator;
+use tracking_mode::database::ChunkIteratorNone;
+use tracking_mode::database::ChunkIteratorEquatorial;
+
 use nix::DatabaseGenerator;
 use nix::Distribute;
-// use tracking_mode::database::PyramidDatabase;
 
 use projection::ExtrinsicParameters;
 use projection::SpaceWorld;
@@ -62,21 +54,19 @@ pub fn run ( )
 	// The separation of the sample points, make this smaller than the FOV so you can test more edge cases.
 	const SAMPLE_FOV   : Radians = Degrees(5.0).as_radians();
 
-<<<<<<< HEAD
-	const REGION_SIZE  : Radians = Degrees(14.0).as_radians(); // An area smaller than FOV.
-	const REGION_NUM   : usize   = 8; // Should not be more than 1 redundant star in a region.
-=======
+
 	// Region Reduction
-	const REGION_SIZE  : Radians = Degrees(15.0).as_radians(); // An area smaller than FOV.
-	const REGION_NUM   : usize   = 8; // Should not be more than 1 redundant star in a region.
+	const REGION_SIZE  : Radians = Degrees(11.0).as_radians(); // An area smaller than FOV.
+	const REGION_NUM   : usize   = 8;   // Should not be more than 1 redundant star in a region.
+	const CHUNK_STEP   : Decimal = 2.0; // Distance * FOV between each chunk.
+	const CHUNK_REACH  : Decimal = 1.1; // Overlap multiplier for each chunl.
 
 	// If stars are this close, one is excluded.
 	const DOUBLE_STAR_TOLERANCE : Radians = Degrees(0.2).as_radians();
->>>>>>> 5a5c08d
 
 	// To create the database.
 	const NUM_BINS     : usize   = 2000; // Refer to `src/tracking_mode/database/mod.rs`.
-	const FOV          : Radians = Degrees(35.0).as_radians();
+	const FOV          : Radians = Degrees(20.0).as_radians();
 
 
 	// Disrupt input.
@@ -169,26 +159,10 @@ pub fn run ( )
 
 
 
-	// The official database is based off static arrays to save memory and remove the heap.
-	// When simulating the database, these variables must exist while the database exists.
-	// Choose between the pyramid database (old) and the regional database (new) to get a comparison.
-
-	// let gen : DatabaseGenerator = DatabaseGenerator::gen_database(&stars_limit_reg, FOV, NUM_BINS);
-	// let mut database = gen.get_database_pyramid();
-	
-	let gen : DatabaseGenerator = DatabaseGenerator::gen_database_regions(&stars_limit_reg, FOV, FOV * 1.5, NUM_BINS);
-	let database = gen.get_database_pyramid();
-	// let database = gen.get_database_regional();
-	
-	// let gen : DatabaseGenerator = DatabaseGenerator::gen_database(&stars_limit_reg, FOV, NUM_BINS);
-
-
-
-	// let mut database_iterator = PyramidIterator::new(&database);
-	// let mut database_iterator = RegionalIterator::new(&database);
-	// let mut database_iterator = BoundedDeclinationIterator::new(&database, 0.7);
-	let mut database_iterator = BoundedEquatorialIterator::new(&database, 1.3);
-	// let mut database_iterator = RegionalCrunchIterator::new(&database, 1.5);
+	let gen : DatabaseGenerator = DatabaseGenerator::gen_database(&stars_limit_reg, FOV, NUM_BINS);
+	let database = gen.get_database();
+	// let mut database_iterator = ChunkIteratorNone::new(&database);
+	let mut database_iterator = ChunkIteratorEquatorial::new(&database, FOV * CHUNK_STEP, CHUNK_REACH);
 
 
 

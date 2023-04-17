@@ -6,7 +6,7 @@ use super::Constellation;
 use super::StarTriangle;
 use super::StarPyramid;
 use super::Match;
-use crate::tracking_mode::database::DatabaseIterator;
+use crate::tracking_mode::database::ChunkIterator;
 // use crate::tracking_mode::StarTriangleIterator;
 
 use crate::util::units::Equatorial;
@@ -36,15 +36,13 @@ impl Constellation
 /// If a star triangle can be formed: Match{input: Observed Stars, output: Corresponding Database}.
 pub fn find	<T: TrackingModeConsts> (
 										stars    : &dyn List<Equatorial>,
-										database : &mut dyn DatabaseIterator,
+										database : &mut dyn ChunkIterator,
 										gen_tri  : &mut dyn TriangleConstruct,
 										gen_pyr  : &mut dyn PyramidConstruct<T>,
 										gen_spec : &mut dyn SpecularityConstruct<T>
 									) -> Constellation
 		where T: 'static + TrackingModeConsts,
 {
-	let timer : std::time::Instant = std::time::Instant::now();
-	
 	database.begin();
 	let mut fallback = Constellation::None; // If a pyramid cannot be made, can a triangle be made?
 	let mut lowest_error = Decimal::MAX;
@@ -54,7 +52,6 @@ pub fn find	<T: TrackingModeConsts> (
 	// Using star_triangle_iterator to find triangle matches in the database.
 	while let Some(iter) = gen_tri.next(stars, database)
 	{
-		if 60 < timer.elapsed().as_millis() { return fallback; }
 		// input and output both make triangles of the same length.
 		let input  : Error<StarTriangle<Equatorial>> = iter.input.search_list(stars);
 		let output : Error<StarTriangle<Equatorial>> = iter.output.search_database(database.get_database());

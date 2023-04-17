@@ -44,7 +44,7 @@
 use mockall::predicate::*;
 use mockall::*;
 
-use crate::tracking_mode::database::DatabaseIterator;
+use crate::tracking_mode::database::ChunkIterator;
 use crate::tracking_mode::database::SearchResult;
 
 use crate::config::TrackingModeConsts;
@@ -255,7 +255,7 @@ pub trait PyramidConstruct <T: 'static>
 	fn find_pilot (
 				&mut self,
 				stars : &dyn List<Equatorial>,
-				database : &dyn DatabaseIterator,
+				database : &dyn ChunkIterator,
 				input : StarTriangle<usize>,
 				output : StarTriangle<usize>,
 			) -> Error<Match<usize>>;
@@ -300,7 +300,7 @@ pub trait TriangleConstruct
 	/// # Returns
 	/// * None if there is no more available star triangles with the given parameters.
 	/// * Some(Match{input: observed star triangle, output: database match}) if possible.
-	fn next ( &mut self, stars: &dyn List<Equatorial>, database: &mut dyn DatabaseIterator
+	fn next ( &mut self, stars: &dyn List<Equatorial>, database: &mut dyn ChunkIterator
 	) -> Option<IterationResult>;
 
 	/// Prepares the StarTriangleIterator for iterating.

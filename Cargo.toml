@@ -36,8 +36,8 @@ curl = "0.4.38"
 
 # Using OpenCV No Longer Needed.
 # Read .fit files for corr.fits (lens distortion)
-# fitsio = "0.19.0" 
-# fitsio-derive = "0.2.0"
+fitsio = "0.19.0" 
+fitsio-derive = "0.2.0"
 
 # For lens calibration (Not In Main Code).
 opencv = "0.63.0" # or whatever version is the latest

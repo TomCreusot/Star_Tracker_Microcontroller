@@ -6,7 +6,7 @@ use super::StarPyramid;
 use super::StarPair;
 use super::Match;
 
-use crate::tracking_mode::database::DatabaseIterator;
+use crate::tracking_mode::database::ChunkIterator;
 use crate::tracking_mode::database::SearchResult;
 
 use crate::config::TrackingModeConsts;
@@ -35,7 +35,7 @@ impl <T: 'static> PyramidConstruct <T>  for StarPyramid<usize>
 	fn find_pilot (	
 				&mut self,
 				stars    : &dyn List<Equatorial>, 
-				database : &dyn DatabaseIterator, 
+				database : &dyn ChunkIterator, 
 				input    : StarTriangle<usize>,
 				output   : StarTriangle<usize>,
 			) -> Error<Match<usize>>

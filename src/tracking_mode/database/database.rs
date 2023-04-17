@@ -55,7 +55,7 @@ pub trait Database
 			let error  = 1.0;//(if i < mid { i } else { range.end - i } - range.start) as Decimal / range.len() as Decimal;
 			if !found.is_full()
 			{
-				let result = SearchResult{result: pair, region: None, error: error };
+				let result = SearchResult{result: pair, error: error };
 				found.push_back(result).expect("database::find_close_ref: Already checked if found full?");
 			}
 		}

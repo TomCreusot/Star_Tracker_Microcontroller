@@ -7,7 +7,6 @@
 use crate::util::aliases::Decimal;
 use crate::util::units::Equatorial;
 use crate::util::units::Radians;
-use crate::util::units::BitField;
 
 use crate::tracking_mode::StarPair;
 use crate::tracking_mode::database::KVector;
@@ -60,11 +59,7 @@ pub struct DatabaseGenerator
 	// The pyramid database can only hold statics.
 	pub pairs         : Vec<StarPair<usize>>,
 	// The pyramid database can only hold statics.
-	pub pairs_region : Vec<BitField>,
-	// The pyramid database can only hold statics.
 	pub catalogue     : Vec<Equatorial>,
-
-	pub num_regions   : usize,
 
 	fov : Radians,
 	k_lookup: KVector,

@@ -82,13 +82,12 @@ use super::StarPair;
 
 use crate::util::units::Equatorial;
 use crate::util::units::Radians;
-use crate::util::units::BitField;
 use crate::util::aliases::Decimal;
 use crate::util::linear_lookup::LinearLookup;
 use crate::util::err::Error;
 
 pub use crate::tracking_mode::database::database::Database as Database;
-pub use crate::tracking_mode::database::database_iterator::DatabaseIterator as DatabaseIterator;
+pub use crate::tracking_mode::database::chunk_iterator::ChunkIterator as ChunkIterator;
 pub use crate::tracking_mode::database::database::MockDatabase as MockDatabase;
 
 mod k_vector;
@@ -96,9 +95,8 @@ mod star_database_element;
 #[cfg(not(feature = "setup"))]
 pub mod array_database;
 pub mod pyramid_database;
-pub mod regional_database;
 pub mod database;
-pub mod database_iterator;
+pub mod chunk_iterator;
 pub mod search_result;
 /// The database equation which points to the star pair database.
 ///
@@ -148,8 +146,6 @@ pub struct SearchResult
 {
 	/// The catalogue location for both stars.
 	pub result:   StarPair<usize>,
-	/// The regions the pairs occupy.
-	pub region:   Option<usize>,
 	/// How reliable the search result is.
 	/// The smaller the number the closer the result is to be true.
 	pub error:    Decimal,
@@ -178,93 +174,66 @@ pub struct PyramidDatabase <'a>
 	pub catalogue: &'a dyn LinearLookup<Equatorial>,
 }
 
-/// The size of the bitfield to be used for the regional database.
-/// Having more bits makes the triangle identification faster.
-/// Having a bit field too big will impact performance on systems of a smaller bit size.
-pub type BitFieldSize = u32;
-
-
-/// A similar database to the PyramidDatabase, however, when searching for the star pairs, they will be associated with a location.
-/// This will reduce the amount of star pairs which dont form triangles.
-/// This was found to be the most significant peformance hit in the program.
-// #[derive(Clone)]
-pub struct RegionalDatabase <'a>
+/// A chunk iterator is a way of optimising the database search process.  
+/// When searching the database for star matches, the database will return matches from around the entire celestial sphere.  
+/// To ensure that all the pairs are within the same camera frame, a chunk iterator is used to move between each chunk/region.  
+/// This ensures that only stars within the field of view will be used.  
+///  
+/// Consider that checking for triangle matches is a tripple loop O(n^3) while a chunk search is O(m).
+/// By reducing the number of incorrect matches (n) by increasing the regions (m), there is a large performance uplift.  
+/// This also creates a higher reliability where the difference in time between a match and a false positive are greater.  
+///   
+/// ChunkIteratorNone does not have a chunk and instead is just the raw database search.  
+/// This is not recomended but may be useful for testing.
+pub struct ChunkIteratorNone <'a>
 {
-	pub fov:       Radians,
-	pub k_lookup:  KVector,
-	pub k_vector:  &'a dyn LinearLookup<usize>,
-	pub pairs:     &'a dyn LinearLookup<StarPair<usize>>,
-	pub pairs_region: &'a dyn LinearLookup<BitField>,
-	pub catalogue: &'a dyn LinearLookup<Equatorial>,
-
-	pub num_regions: usize,
-}
-
-
-/// Manually calculate the angular separation during runtime.
-pub struct RegionalCrunchIterator <'a>
-{
-	latice : Vec<Equatorial>,
-	index: usize,
-	reach_multiplier: Decimal,
-	database: &'a dyn Database,
-	started: bool
-}
-
-/// Manages iterating through the pyramid database.
-#[derive(Clone, Copy)]
-pub struct PyramidIterator <'a>
-{
+	/// The database to search.
 	database: &'a dyn Database,
 }
 
-#[derive(Clone, Copy)]
-pub struct RegionalIterator <'a>
-{
-	index: usize,
-	database: &'a RegionalDatabase<'a>
-}
 
-
-pub struct BoundedDeclinationIterator <'a>
+/// A chunk iterator is a way of optimising the database search process.  
+/// When searching the database for star matches, the database will return matches from around the entire celestial sphere.  
+/// To ensure that all the pairs are within the same camera frame, a chunk iterator is used to move between each chunk/region.  
+/// This ensures that only stars within the field of view will be used.  
+///  
+/// Consider that checking for triangle matches is a tripple loop O(n^3) while a chunk search is O(m).
+/// By reducing the number of incorrect matches (n) by increasing the regions (m), there is a large performance uplift.  
+/// This also creates a higher reliability where the difference in time between a match and a false positive are greater.  
+///  
+/// For ChunkEquatorialIterator, chunks are determined by a bounded area between a min and max right ascension and declination.  
+/// The declination bounds are separated by the vertical field of view of the sensor.  
+/// The right ascension bounds are calculated by the number of photos are required to loop around the declination band closest to the equator.  
+/// The regions can be expanded with the reach variable in the constructor if the field of view is too low (too many chunks).
+pub struct ChunkIteratorEquatorial <'a>
 {
+	/// The database to search.
 	database: &'a dyn Database,
-	dec: Range<Radians>,
-	num:   usize,
-	interval: Radians,
-	index: usize,
-}
-
-// #[derive(Clone, Copy)]
-pub struct BoundedEquatorialIterator <'a>
-{
+	
+	
 	/// How many declination (vertical bands) have been covered.
 	index_dec: usize,
-	/// How many declination (vertical bands) have been covered.
+	/// How many right ascension (horizontal bands) have been covered in the current declination band.
 	index_ra: usize,
-	
-	///
-	database: &'a dyn Database,
-	
-	/// The jump for each declination region.
-	interval_dec: Radians,
-	
-	/// The jump for right ascension for each declination band. 
-	interval_ra:  Radians,
 	
 	/// The max/min range for the current declination.
 	dec:      Range<Radians>,
-	
 	/// The max/min range for the current right ascension.
 	ra:       Range<Radians>,
 	
-	///
+	/// The number of declination bands to be covered.
 	num_dec:  usize,
-	
 	/// Number of right ascension perspectives in the current declination.
 	num_ra:   usize,
 	
-	region_size: Equatorial,
+	/// The distance between declination and right ascension band centers.  
+	/// The wider this value, the less chunks there are.
+	chunk_step: Radians,
+	
+	/// Multiplied by chunk step to give the range coverage of the chunk.  
+	/// The wider this value, the more coverage but less performance.  
+	/// `chunk_size_multiplier` must be greater than 1.
+	chunk_size_multiplier: Decimal
 }
 
 
