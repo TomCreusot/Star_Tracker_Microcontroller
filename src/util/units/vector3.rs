@@ -15,7 +15,10 @@ use crate::util::units::MatPos;
 
 impl Vector3
 {
-	/// Finds the magnitude of the vector.
+//###############################################################################################//
+//									--- Operations ---
+//###############################################################################################//
+	/// Finds the magnitude (length) of the vector.  
 	/// # Example
 	/// ```
 	/// use star_tracker::util::units::Vector3;
@@ -30,8 +33,8 @@ impl Vector3
 	}
 
 
-	/// Normalizes the vector so the magnitude is 1.
-	/// Returns Errors::NaN magnitude is 0.
+	/// Normalizes the vector so the magnitude/length is 1.  
+	/// Returns Errors::NaN magnitude is 0.  
 	/// # Example
 	/// ```
 	/// use star_tracker::util::units::Vector3;
@@ -56,8 +59,8 @@ impl Vector3
 	}
 
 
-	/// Returns a new normalized vector of the current direction.
-	/// Returns Errors::NaN magnitude is 0.
+	/// Returns a new normalized vector of the current direction.  
+	/// Returns Errors::NaN magnitude is 0.  
 	/// # Example
 	/// ```
 	/// use star_tracker::util::units::Vector3;
@@ -78,7 +81,7 @@ impl Vector3
 	}
 
 
-	/// Finds the cross product between self and the input object.
+	/// Finds the cross product between self and the input object.  
 	/// # Example
 	/// ```
 	/// use star_tracker::util::units::Vector3;
@@ -108,7 +111,7 @@ impl Vector3
 	/// assert_eq!(a.dot(b), 56.0);
 	/// ```
 	pub fn dot ( &self, other: Vector3 ) -> Decimal
-	{	return self.x * other.x + self.y * other.y + self.z * other.z;			}
+	{ return self.x * other.x + self.y * other.y + self.z * other.z; }
 
 
 
@@ -141,6 +144,10 @@ impl Vector3
 		return Radians(cos.acos());
 	}
 
+
+//###############################################################################################//
+//									--- Conversion ---
+//###############################################################################################//
 
 
 	/// Converts the coordinates into a column matrix form (vertical set of rows).
@@ -260,8 +267,6 @@ impl Vector3
 			ra = -ra.abs() + M_PI * 2.0;
 		}
 		
-
-
 		let phi =(self.z / (self.x.powf(2.0) + self.y.powf(2.0) + self.z.powf(2.0)).sqrt()).acos();
 
 		let mut eq = Equatorial{ra: Radians(ra), dec: Radians(0.0)};
@@ -277,11 +282,11 @@ impl Vector3
 //							---	Debug ---
 //###############################################################################################//
 
-
 impl fmt::Display for Vector3 {
 	fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result
 	{
-		write!(f, "Vector3({:.3}, {:.3}, {:.3})", self.x, self.y, self.z)?;
+		write!(f, "Vector3({:.3}, {:.3}, {:.3})", self.x, self.y, self.z)
+			.expect("Invalid formatting");
 		return Ok(());
 	}
 }
@@ -290,10 +295,25 @@ impl fmt::Display for Vector3 {
 impl fmt::Debug for Vector3 {
 	fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result
 	{
-		write!(f, "Vector3(x: {}, y: {}, z: {})", self.x, self.y, self.z)?;
+		write!(f, "Vector3(x: {}, y: {}, z: {})", self.x, self.y, self.z)
+			.expect("Invalid formatting");
 		return Ok(());
 	}
 }
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 
 
@@ -556,6 +576,7 @@ mod test
 	}
 
 	#[test]
+	#[no_coverage]
 	fn test_to_equatorial_on_ra ( ) -> Error<()>
 	{
 		let mut c = Vector3 { x: 1.0, y: 0.0, z: 0.0 }; // x is 0
@@ -608,10 +629,11 @@ mod test
 
 
 	#[test]
+	// #[no_coverage]
 	fn test_to_equatorial_random ( )
 	{
 		let mut rng = rand::thread_rng();
-		for _i in 0..100
+		for _ in 0..100
 		{
 			let e = Equatorial{
 				ra:  Radians(rng.gen::<Decimal>() * M_PI * 2.0),
@@ -621,4 +643,33 @@ mod test
 			assert!(e.angle_distance(c.to_equatorial()) < Radians(0.00001));
 		}
 	}
+	
+	
+	
+	
+	
+//###############################################################################################//
+//
+//										Debug
+// Display: Show neat (3dp)
+// Debug: Show everything (all dp)
+// 
+//###############################################################################################//
+	//								- Display / Debug fmt -										//
+	#[test]
+	fn test_display_fmt ( )
+	{
+		let vec = Vector3 { x: 1.1234, y: 2.1234, z: 3.1234 };
+		assert_eq!(format!("{:123414}", vec), "Vector3(1.123, 2.123, 3.123)");
+	}
+	
+	
+	#[test]
+	fn test_debug_fmt ( )
+	{
+		let vec = Vector3 { x: 1.1234, y: 2.1234, z: 3.1234 };
+		assert_eq!(format!("{:?}", vec), "Vector3(x: 1.1234, y: 2.1234, z: 3.1234)");
+	}
+	
+	
 }

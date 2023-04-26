@@ -7,7 +7,8 @@ use crate::util::units::MatPos;
 
 impl CRP
 {
-	/// Creates a new CRP with a row matrix.
+	/// Creates a new CRP with a row matrix.  
+	/// Refer to the end of the [quest algorithm](crate::attitude_determination::Quest) implementation.  
 	pub fn new ( mat: &Matrix<3,1> ) -> CRP
 	{
 		return CRP{
@@ -19,7 +20,7 @@ impl CRP
 	
 	
 	/// Converts the CRP to a quaternion.  
-	/// Look at [Equation 69](https://malcolmdshuster.com/Pub_1981a_J_TRIAD-QUEST_scan.pdf#page=6).
+	/// Refer to [Equation 69](https://malcolmdshuster.com/Pub_1981a_J_TRIAD-QUEST_scan.pdf#page=6).  
 	/// `Quaternion = 1 / sqrt(gamma^2 + |X|^2) * [w: gamma, x: X.x, y: X.y, z: X.z]`.  
 	pub fn to_quaternion ( &self, gamma: Decimal ) -> Quaternion
 	{
@@ -58,7 +59,7 @@ mod test
 // pub fn to_quaternion ( &self, Decimal ) -> Quaternion
 //
 //###############################################################################################//
-	//										~ new ~												 //	
+	//										~ new ~												 //
 	#[test]
 	fn test_new ( )
 	{
@@ -72,7 +73,7 @@ mod test
 		assert_eq!(a.z, 3.0);
 	}
 	
-	//										~ to_quaternion ~									 //	
+	//										~ to_quaternion ~									 //
 	#[test]
 	// Test values generated through matlab.
 	fn test_to_quaternion ( )

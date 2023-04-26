@@ -11,7 +11,10 @@ use crate::util::err::Error;
 
 impl Vector2
 {
-	/// Finds the magnitude of the vector.
+//###############################################################################################//
+//									--- Operations ---
+//###############################################################################################//
+	/// Finds the magnitude/length of the vector.
 	/// # Example
 	/// ```
 	/// use star_tracker::util::units::Vector2;
@@ -89,6 +92,11 @@ impl Vector2
 	}
 
 
+
+//###############################################################################################//
+//									--- Conversion ---
+//###############################################################################################//
+
 	/// Converts 2D Vector to 3D Vector by setting z to 0.
 	/// # Example
 	/// ```
@@ -134,19 +142,30 @@ impl Vector2
 impl fmt::Display for Vector2 {
 	fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result
 	{
-		write!(f, "Vector2({:.3}, {:.3})", self.x, self.y)?;
+		write!(f, "Vector2({:.3}, {:.3})", self.x, self.y).expect("Invalid Formatting");
 		return Ok(());
 	}
 }
 
 
 impl fmt::Debug for Vector2 {
-    fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result
+	fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result
 	{
-		write!(f, "Vector2(x: {}, y: {})", self.x, self.y)?;
+		write!(f, "Vector2(x: {}, y: {})", self.x, self.y).expect("Invalid Formatting");
 		return Ok(());
 	}
 }
+
+
+
+
+
+
+
+
+
+
+
 
 
 //###############################################################################################//
@@ -259,4 +278,43 @@ mod test
 		vec = Vector2{x: 0.9, y: 1.9};
 		assert_eq!(vec.to_pixel(), Pixel{x: 1, y: 2});
 	}
+	
+	
+	
+	
+	
+	
+	
+	
+	
+	
+	
+	
+	
+	
+	
+//###############################################################################################//
+//
+//										Debug
+// Display: Show neat (3dp)
+//
+// Debug: Show everything (all dp)
+//
+//###############################################################################################//
+	//								- Display / Debug fmt -										//
+	#[test]
+	fn test_display_fmt ( )
+	{
+		let vec = Vector2 { x: 1.1234, y: 2.1234 };
+		assert_eq!(format!("{:123414}", vec), "Vector2(1.123, 2.123)");
+	}
+	
+	
+	#[test]
+	fn test_debug_fmt ( )
+	{
+		let vec = Vector2 { x: 1.1234, y: 2.1234 };
+		assert_eq!(format!("{:?}", vec), "Vector2(x: 1.1234, y: 2.1234)");
+	}
+	
 }

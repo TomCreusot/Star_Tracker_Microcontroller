@@ -1,18 +1,20 @@
 //! The trait Image.
+use crate::util::units::Pixel;
+use crate::util::aliases::Decimal;
 use crate::util::aliases::Byte;
 use crate::util::aliases::UInt;
-use crate::util::aliases::Decimal;
-use crate::util::units::Pixel;
 
 use crate::util::err::Errors;
 use crate::util::err::Error;
-/// If a new image struct is to be considered in the future.
+/// Image accessors, investigation and modification.  
+///
+/// Allows for external image packages to be wrapped and new image methods to be investigated.
 /// (This is ultimately just to stop requiring generic arguments as consts in generic is too new).
 pub trait Image
 {
 	/// Returns the pixel value at the current position.
 	/// # Arguments
-	/// * `px` -  The pixel to modify..
+	/// * `px` -  The pixel to modify.
 	fn get ( &self, px : Pixel ) -> Byte;
 
 	/// Sets the pixel value at the current position.
@@ -36,7 +38,11 @@ pub trait Image
 	/// (Allows you to reuse the same image).
 	/// # Example
 	/// ```
-	///	let mut img : BasicImage<3, 3> = BasicImage::new();
+	/// use star_tracker::util::units::Pixel;
+	/// use star_tracker::image_processing::BasicImage; 
+	/// use star_tracker::image_processing::Image;
+	/// 
+	/// let mut img : BasicImage<3, 3> = BasicImage::new();
 	/// img.set(Pixel{x: 0, y: 0}, 10);
 	/// img.set(Pixel{x: 2, y: 0}, 20);
 	/// img.set(Pixel{x: 0, y: 2}, 32);
@@ -44,7 +50,7 @@ pub trait Image
 	///
 	/// img.reset(); // All the pixels are now 0.
 	/// ```
-	 fn reset ( &mut self )
+	fn reset ( &mut self )
 	{
 		for xx in 0..self.width()
 		{
@@ -62,7 +68,7 @@ pub trait Image
 	/// # Returns
 	/// True if access is safe.
 	fn valid_pixel ( &self, px: Pixel ) -> bool
-	{ return px.x < self.width() && px.y < self.height()	}
+	{ return px.x < self.width() && px.y < self.height() }
 
 	/// Generates a brightness histogram of the image.
 	/// # Arguments
@@ -70,7 +76,8 @@ pub trait Image
 	///
 	/// # Example
 	/// ```
-	/// use star_tracker::image_processing::{BasicImage, Image};
+	/// use star_tracker::image_processing::BasicImage;
+	/// use star_tracker::image_processing::Image;
 	/// use star_tracker::util::aliases::UInt;
 	/// use star_tracker::util::aliases::Byte;
 	/// use star_tracker::util::units::Pixel;
@@ -88,9 +95,14 @@ pub trait Image
 	/// assert_eq!(hist[32], 1);
 	/// assert_eq!(hist[43], 1);
 	/// ```
-	fn histogram ( &self, histogram : &mut [UInt] )
+	fn histogram ( &self, histogram : &mut [UInt] ) -> Error<()>
 	{
-		assert!(histogram.len() != 0 || histogram.len() as UInt <= Byte::MAX as UInt);
+		if histogram.len() == 0 || (Byte::MAX as UInt + 1) < histogram.len() as UInt
+		{
+			return Err(Errors::InvalidSize);
+		}
+		
+		
 		let ratio : Decimal = (histogram.len() as Decimal) / (Byte::MAX as Decimal + 1.0);
 		for y in 0..self.height()
 		{
@@ -100,6 +112,8 @@ pub trait Image
 				histogram[bar] += 1;
 			}
 		}
+		
+		return Ok(());
 	}
 
 
@@ -113,10 +127,12 @@ pub trait Image
 	///
 	/// # Example
 	/// ```
-	/// use star_tracker::image_processing::{BasicImage, Image};
+	/// use star_tracker::image_processing::BasicImage;
+	/// use star_tracker::image_processing::Image;
 	/// use star_tracker::util::list::ArrayList;
 	/// use star_tracker::util::aliases::UInt;
 	/// use star_tracker::util::aliases::Byte;
+	///
 	/// let img : BasicImage<16, 16> = BasicImage::new();
 	/// let hist :  [UInt; Byte::max_value() as usize + 1] = [1; Byte::MAX as usize + 1]; // [1, 1, ...]
 	/// assert_eq!(img.percent_threshold(0.5, &hist), Byte::MAX / 2 + 1);
@@ -148,6 +164,10 @@ pub trait Image
 	///
 	/// # Example
 	/// ```
+	/// use star_tracker::util::units::Pixel;
+	/// use star_tracker::image_processing::BasicImage;
+	/// use star_tracker::image_processing::Image;
+	///
 	/// let mut from: BasicImage<2, 2> = BasicImage::new();
 	/// from.set(Pixel{x: 0, y: 0}, 1);
 	/// from.set(Pixel{x: 0, y: 1}, 2);
@@ -199,10 +219,47 @@ mod test
 	use image_processing::*;
 
 
-	//
-	// valid_pixel (x, y) -> bool
-	//
 
+//###############################################################################################//
+//
+//										Features
+//
+// NOT IMPLEMENTED pub fn get    ( &self, Pixel ) -> Byte
+// NOT IMPLEMENTED pub fn set    ( &self, Pixel, Byte )
+// NOT IMPLEMENTED pub fn width  ( &self ) -> usize
+// NOT IMPLEMENTED pub fn height ( &self ) -> usize
+// 
+// pub fn reset          ( &mut self )
+// pub fn valid_pixel    ( &self, Pixel ) -> bool
+// pub histogram         ( &self, &mut [UInt] )
+// pub percent_threshold ( &self, Decimal, &[UInt] ) -> Byte
+// pub copy_to           ( &self, &mut dyn Image) -. Error<()>
+//
+//###############################################################################################//
+//										~ reset ~												 //
+#[test]
+fn test_reset ( )
+{
+	let mut img : BasicImage<3, 3> = BasicImage::new();
+	img.set(Pixel{x: 0, y: 0}, 10);
+	img.set(Pixel{x: 2, y: 0}, 20);
+	img.set(Pixel{x: 0, y: 2}, 32);
+	img.set(Pixel{x: 0, y: 1}, 43);
+	
+	img.reset();
+	for xx in 0..img.width()
+	{
+		for yy in 0..img.height()
+		{
+			assert_eq!(img.get(Pixel{x: xx, y: yy}), 0);
+		}
+	}
+}
+
+
+
+
+//										~ valid pixel ~											 //
 	#[test]
 	fn test_valid_pixel_safe ( )
 	{
@@ -223,34 +280,9 @@ mod test
 
 
 
-	//
-	// fn reset ( &mut self )
-	//
+	
 
-	#[test]
-	fn test_reset ( )
-	{
-		let mut img : BasicImage<3, 3> = BasicImage::new();
-		img.set(Pixel{x: 0, y: 0}, 10);
-		img.set(Pixel{x: 2, y: 0}, 20);
-		img.set(Pixel{x: 0, y: 2}, 32);
-		img.set(Pixel{x: 0, y: 1}, 43);
-
-		img.reset();
-		for xx in 0..img.width()
-		{
-			for yy in 0..img.height()
-			{
-				assert_eq!(img.get(Pixel{x: xx, y: yy}), 0);
-			}
-		}
-	}
-
-
-	//
-	// histogram ( histogram : &mut [Byte] )
-	//
-
+//										~ histogram ~											 //
 	#[test]
 	fn test_histogram_256_bars ( )
 	{
@@ -261,7 +293,7 @@ mod test
 		img.set(Pixel{x: 0, y: 2}, 32);
 		img.set(Pixel{x: 0, y: 1}, 43);
 
-		img.histogram(&mut hist);
+		img.histogram(&mut hist).expect("This should be valid.");
 		assert_eq!(hist[0], 5);
 		assert_eq!(hist[10], 1);
 		assert_eq!(hist[20], 1);
@@ -275,7 +307,7 @@ mod test
 		let mut img : BasicImage<3, 3> = BasicImage::new();
 		let mut hist : [UInt; 2] = [0; 2];
 		img.set(Pixel{x: 2, y: 2}, Byte::MAX / 2 + 1);
-		img.histogram(&mut hist);
+		img.histogram(&mut hist).expect("This should be valid.");
 		assert_eq!(hist[0], 8);
 		assert_eq!(hist[1], 1);
 	}
@@ -286,16 +318,24 @@ mod test
 		let mut img : BasicImage<3, 3> = BasicImage::new();
 		let mut hist : [UInt; 1] = [0; 1];
 		img.set(Pixel{x: 2, y: 2}, Byte::MAX);
-		img.histogram(&mut hist);
+		img.histogram(&mut hist).expect("This should be valid.");
 		assert_eq!(hist[0], 9);
+	}
+
+	#[test]
+	fn test_histogram_fail ( )
+	{
+		let img        : BasicImage<3, 3> = BasicImage::new();
+		let mut hist_small : [UInt; 0] = [];
+		let mut hist_large : [UInt; Byte::MAX as usize + 2] = [0; Byte::MAX as usize + 2];
+		assert!(img.histogram(&mut hist_small).is_err());
+		assert!(img.histogram(&mut hist_large).is_err());
 	}
 
 
 
 
-	//
-	// percent_threshold ( percentage : Decimal, histogram : &[Byte] )
-	//
+//										~ percent threshold ~									 //
 	#[test]
 	fn test_percent_threshold_1_bar_0_percent ( )
 	{
@@ -339,10 +379,7 @@ mod test
 	}
 
 
-	//
-	// copy_to ( &self, &mut dyn Image )
-	//
-
+//										~ copy_to ~												 //
 	#[test]
 	fn test_copy_to ( )
 	{

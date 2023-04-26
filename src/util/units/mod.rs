@@ -1,5 +1,6 @@
-/// This is a set of units and coordinates which are used throught the project.  
-/// Try to use these as much as possible as it is more explicit and avoids silly mistakes.  
+//! This is a set of units and coordinates which are used throught the project.  
+//!
+//! Try to use these as much as possible as it is more explicit and avoids silly mistakes.  
 pub mod unit_ops;
 pub mod angles;
 pub mod vector2;
@@ -9,17 +10,17 @@ pub mod equatorial;
 pub mod crp;
 pub mod matrix;
 pub mod angle_axis;
-pub mod bit_field;
 
 use super::aliases::Decimal;
 
-use serde::Deserialize;
+// use serde::Deserialize;
 
 //###############################################################################################//
 //										---	Angles ---
 //###############################################################################################//
 
 /// An angle in radians.  
+///
 /// Radians are the default measurement of angles.  
 /// Degrees and Hours are only used as a user interface.
 /// ```
@@ -55,11 +56,12 @@ use serde::Deserialize;
 /// println!("{}", angle);                              // Prints neatly "1.23r".
 /// println!("{:?}", angle);                            // Prints in long form "1.2345".
 /// ```
-#[derive(Debug, Copy, Clone, PartialOrd)]//, PartialEq)]
-#[derive(Deserialize)]
+#[derive(Debug, Copy, Clone, PartialOrd)]
+// #[derive(Deserialize)]
 pub struct Radians ( pub Decimal );
 
 /// An angle in degrees.  
+///
 /// Use degrees for user interface.  
 /// Radians are used in the library.
 /// ```
@@ -103,6 +105,7 @@ pub struct Degrees ( pub Decimal );
 
 
 /// An angle in 24 hours.  
+///
 /// Equatorial uses this format.  
 /// This is used when reading in star locations or to output a value which can be used in another program.  
 /// The other angle formats have more control.  
@@ -140,12 +143,14 @@ pub struct Hours ( pub Decimal );
 //										---	Vector2 ---
 //###############################################################################################//
 
-/// Alias for Vector2Int.  
+/// Alias for Vector2Int (x: uusize, y: usize).  
+///
 /// Used to specify a position in an image or the size of an image.  
 pub type Pixel = Vector2Int;
 
 
 /// An integer version of Vector2.  
+///
 /// Mainly used for [Pixel](crate::util::units::Pixel).  
 #[derive(Debug, Copy, Clone, PartialEq)]
 pub struct Vector2Int
@@ -155,6 +160,7 @@ pub struct Vector2Int
 }
 
 /// 2D Cartesian Coordinates in Decimal format.  
+///
 /// Useful for specifying locations of an image which are between pixels, e.g. [Blob Centroid](crate::image_processing::Blob).  
 /// Vector2 has a variety of functions, including standard operators.  
 ///
@@ -212,7 +218,8 @@ pub struct Vector2
 //###############################################################################################//
 //										---	Vector3 ---
 //###############################################################################################//
-/// A 3d point.  
+/// A 3d cartesian vector/point.  
+///
 /// This is to represent cartesian coordinates for doing angle calculations.  
 /// Cartesian is ideal over Equatorial in most circumstances as Equatorial has limited functionality.  
 /// Equatorial coordinates must first be converted to cartesian for most calculations.  
@@ -281,12 +288,13 @@ pub struct Vector3
 //										---	Equatorial ---
 //###############################################################################################//
 /// Equatorial Coordinates are coordinates which define a point on a unit sphere.  
+///
 /// Right Ascension (ra) is defined as the angle around the equator from 0 to 2PI (Don't use 0h to 24h).  
 /// Declination (dec) is defined as the angle from -PI to PI (Don't use -90 to 90 deg).  
 /// Equatorial must be converted to cartesian [Vector3](crate::util::units::Vector3) to perform any equations.  
 /// Use Equatorial as an efficient way of storing positions as it is 2 numbers instead of 3.  
 #[derive(Copy, Clone)]
-#[derive(Deserialize)]
+// #[derive(Deserialize)]
 pub struct Equatorial
 {
 	/// Right Ascention (along the equator [0, 360)).
@@ -300,6 +308,7 @@ pub struct Equatorial
 //										--- Angle Axis ---
 //###############################################################################################//
 /// An axis describing the pivot point and an angle specifying how much to rotate around.  
+///
 /// This has a singularity at an angle of 0 and 180 degrees.  
 /// The singularity occurs as each rotation can be represented as the opposite axis with the opposite angles.  
 /// e.g.  
@@ -316,6 +325,7 @@ pub struct AngleAxis
 //										---	Quaternion ---
 //###############################################################################################//
 /// Represents a 3D rotation **without** singularity.  
+///
 /// This method uses the LEFT HAND COORDINATE SYSTEM.  
 /// This is the most ideal and confusing coordinate system.  
 #[derive(Debug, Copy, Clone)]
@@ -331,7 +341,8 @@ pub struct Quaternion
 //###############################################################################################//
 //								---	classical rodrigues parameters ---
 //###############################################################################################//
-/// A CRP is an old method of describing a rotation.  
+/// A CRP is an old method of describing a rotation (poorly).  
+///
 /// It is considered as a sphere cut in half on a plane.  
 /// The top of a hemisphere is projecting onto the plane where the point is.  
 /// There is a singularity if the point to project is at the projection point as it cannot be projected on the plane (infinity).  
@@ -358,6 +369,7 @@ pub struct CRP
 //										---	Matrix ---
 //###############################################################################################//
 /// An n x m matrix.  
+///
 /// W is the width.  
 /// H is the height.  
 #[derive(Copy, Clone)]
@@ -369,6 +381,7 @@ pub struct Matrix <const ROW: usize, const COLUMN: usize>
 
 
 /// The coordinates for the matrix.  
+///
 /// Remember rows go down (y), columns go across (x).
 #[derive(Debug, Copy, Clone, PartialEq, Eq)]
 pub struct MatPos
@@ -380,17 +393,21 @@ pub struct MatPos
 
 
 
-//###############################################################################################//
-//										---	BitField ---
-//###############################################################################################//
-/// Stores a bit field and can do bit operations easily.
-#[derive(Copy, Clone, PartialEq, Debug)]
-pub struct BitField ( pub u32 );
 
-/// Specifies how to compare bit fields.
-#[derive(Copy, Clone, PartialEq, Debug)]
-pub enum BitCompare
+
+//###############################################################################################//
+//										--- Match ---
+//###############################################################################################//
+/// A predicted input, possible match output and a weighting of uncertaincy.  
+/// This is mainly for [tracking_mode](crate::tracking_mode) and [attitude_determination](crate::attitude_determination).
+#[derive(Debug, Clone, Copy, PartialEq)]
+pub struct Match <T>
 {
-	Any(BitField),
-	All(BitField),
+	/// The values to be identified.
+	pub input: T,
+	/// The values from the database.
+	pub output: T,
+	/// The likelyhood of accuracy (futher from the center should have a lower accuracy).
+	pub weight: Decimal,
 }
+

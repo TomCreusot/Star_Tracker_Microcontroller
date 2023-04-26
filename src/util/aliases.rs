@@ -1,4 +1,5 @@
 //! This module contains any alias variables to make more sense for the project.  
+//!
 //! Change these for the circumstance of the project.  
 //! For a 8 bit microcontroller dont use anything higher than 8 bits.  
 //! For a 32 bit microcontroller dont use anything higher than 32 bits.  

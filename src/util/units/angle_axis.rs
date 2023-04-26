@@ -13,6 +13,10 @@ use super::MatPos;
 
 impl AngleAxis
 {
+//###############################################################################################//
+//									--- Conversion ---
+//###############################################################################################//
+
 	/// Constructs a quaternion from this angle axis.
 	/// # Example
 	/// ```
@@ -49,7 +53,8 @@ impl AngleAxis
 	/// This can be used in a 3x3 or a 4x4 size.
 	pub fn to_matrix ( &self ) -> Matrix<4,4>
 	{
-		// Follow this equation: [Rodregues Formula](https://mathworld.wolfram.com/RodriguesRotationFormula.html)
+		// Follow this equation:
+		// [Rodregues Formula](https://mathworld.wolfram.com/RodriguesRotationFormula.html)
 		// let mut mat : Matrix<3,3> = Matrix::new();
 		let identity : Matrix<4,4> = Matrix::identity();
 		let mut w : Matrix<4,4> = Matrix::new(); // Anti symmetric matrix.
@@ -77,12 +82,15 @@ impl AngleAxis
 	}
 }
 
-
+//###############################################################################################//
+//									--- Debug ---
+//###############################################################################################//
 
 impl fmt::Display for AngleAxis {
 	fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result
 	{
-		write!(f, "angle: {:?} degrees \t|\t axis: {:?}", self.angle.to_degrees(), self.axis)?;
+		write!(f, "AngleAxis({},\t{})", self.angle.to_degrees(), self.axis)
+			.expect("Format Error");
 		return Ok(());
 	}
 }
@@ -90,9 +98,17 @@ impl fmt::Display for AngleAxis {
 
 impl fmt::Debug for AngleAxis {
 	fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
-		return (self as &dyn fmt::Display).fmt(f);
+		write!(f, "AngleAxis({:?},\t{:?})", self.angle, self.axis)
+			.expect("Format Error");
+		return Ok(());
 	}
 }
+
+
+
+
+
+
 
 //###############################################################################################//
 //###############################################################################################//
@@ -106,14 +122,16 @@ impl fmt::Debug for AngleAxis {
 mod test
 {
 	use rand::prelude::*;
+	
 	use util::units::AngleAxis;
 	use util::units::Vector3;
 	use util::units::Radians;
+	use util::units::Degrees;
 	use util::aliases::M_PI;
 
 //###############################################################################################//
 //
-//									Constructors/Accessors
+//									Conversion
 //
 // pub fn to_quaternion ( &self ) -> Quaternion
 // pub fn to_matrix     ( &self ) -> Matrix<4,4>
@@ -157,9 +175,8 @@ mod test
 	fn test_to_matrix_3x3 ( )
 	{
 		let mut rng = rand::thread_rng();
-		for i in 0..100
+		for _ in 0..100
 		{
-			println!("{}", i);
 			let angle = Radians(rng.gen_range(-M_PI..M_PI));
 			let mut axis = Vector3 {
 				x: rng.gen_range(-1.0..1.0),
@@ -179,4 +196,42 @@ mod test
 			assert_eq!(q.rotate_point(point), (m * point.to_matrix_column_homo()).to_vector3());
 		}
 	}
+	
+	
+	
+	
+	
+	
+//###############################################################################################//
+//
+//										Debug
+// Display: Show neat (3dp)
+// Debug: Show everything (all dp)
+// 
+//###############################################################################################//
+	
+	
+	
+	
+	//								- Display / Debug fmt -										//
+	#[test]
+	fn test_display_fmt ( )
+	{
+		let angle = Degrees(0.1234).as_radians();
+		let axis  = Vector3 { x: 1.1234, y: 2.1234, z: 3.1234 };
+		let aa    = AngleAxis{angle: angle, axis: axis};
+		assert_eq!(format!("{}", aa), "AngleAxis(0.123d,\tVector3(1.123, 2.123, 3.123))");
+	}
+	
+	
+	#[test]
+	fn test_debug_fmt ( )
+	{
+		let angle = Radians(0.123);
+		let axis = Vector3 { x: 1.1234, y: 2.1234, z: 3.1234 };
+		let aa    = AngleAxis{angle: angle, axis: axis};
+		assert_eq!(format!("{:?}", aa), 
+			"AngleAxis(Radians(0.123),\tVector3(x: 1.1234, y: 2.1234, z: 3.1234))");
+	}
+	
 }

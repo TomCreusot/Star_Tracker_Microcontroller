@@ -1,16 +1,12 @@
 //! The following equations are essential to the implementation of any algorithms using Wahba's method.
+use crate::attitude_determination::Wahba;
 
-use super::Wahba;
-
-use tracking_mode::Match;
-
-use util::aliases::Decimal;
-
-use util::list::List;
-
-use util::units::Matrix;
-use util::units::MatPos;
-use util::units::Vector3;
+use crate::util::list::List;
+use crate::util::aliases::Decimal;
+use crate::util::units::Matrix;
+use crate::util::units::Match;
+use crate::util::units::MatPos;
+use crate::util::units::Vector3;
 
 
 
@@ -104,18 +100,18 @@ pub fn find_k ( z: &Matrix<3, 1>, s: &Matrix<3, 3>, sigma: Decimal ) -> Matrix<4
 mod test
 {
 	use attitude_determination::Wahba;
-	use tracking_mode::Match;
 
 	use util::aliases::Decimal;
 	use util::units::MatPos;
 	use util::units::Vector3;
 	use util::units::Matrix;
+	use util::units::Match;
 
 	use util::list::List;
 	use util::test::TestEqual;
 	use util::list::ArrayList;
 
-
+	#[no_coverage]
 	fn assert_close ( a : Decimal, b : Decimal )
 	{
 		if a.test_equal(&b)
@@ -124,8 +120,8 @@ mod test
 		}
 	}
 
-	// The following tests were performed with a set of simulated results from matlab.
 
+	#[no_coverage]
 	fn gen_b ( ) -> Matrix<3,3>
 	{
 		let mut b : Matrix<3,3> = Matrix::new();
@@ -144,10 +140,19 @@ mod test
 	}
 
 
-	//
-	// fn find_b ( &List<Match<Vector3>> ) -> Matrix<3,3>
-	//
-
+//###############################################################################################//
+//
+//										Features
+//
+// pub fn find_b     ( &dyn List<Match<Vector3>> ) -> Matrix<3,3>
+// pub fn find_z     ( &Matrix<3,3> )    -> Matrix<3,1>
+// pub fn find_s     ( &Matrix<3,3> )    -> Matrix<3,3>
+// pub fn find_sigma ( &Matrix<3,3> )    -> Decimal
+// pub fn find_k     ( &Matrix<3,1>, &Matrix<3,3>, Decimal) -> Matrix<4,4>
+//
+//###############################################################################################//
+//										~ find_b ~											 //
+// The following tests were performed with a set of simulated results from matlab.
 
 	#[test]
 	fn test_find_b ( )
@@ -179,10 +184,7 @@ mod test
 	}
 
 
-	//
-	// fn find_z ( &Matrix<3,3> ) -> Matrix<3,1>
-	//
-
+//										~ find_z ~											 //
 	#[test]
 	fn test_find_z ( )
 	{
@@ -215,10 +217,7 @@ mod test
 
 
 
-	//
-	// fn find_sigma ( &Matrix<3,3> ) -> Decimal
-	//
-
+//										~ find_sigma ~											 //
 	#[test]
 	fn test_find_sigma ( )
 	{
@@ -226,10 +225,8 @@ mod test
 	}
 
 
-	//
-	// fn find_k ( z: &Matrix<3, 1>, s: &Matrix<3, 3>, sigma: Decimal ) -> Matrix<4,4>
-	//
 
+//										~ find_k ~												 //
 	#[test]
 	fn test_find_k ( )
 	{

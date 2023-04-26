@@ -2,14 +2,17 @@
 use std::fmt;
 use std::ops::RangeInclusive;
 
-use super::Equatorial;
-use super::Vector3;
-use super::Radians;
+use crate::util::units::Equatorial;
+use crate::util::units::Vector3;
+use crate::util::units::Radians;
 use crate::util::aliases::Decimal;
 use crate::util::aliases::M_PI;
 
 impl Equatorial
 {
+//###############################################################################################//
+//								--- Constructors and Accessors ---
+//###############################################################################################//
 	/// Returns an equatorial coordinate at ra: 0, dec: 0 (on the equator at 0 hours).  
 	/// Useful for initialization or testing.  
 	/// # Example
@@ -71,6 +74,12 @@ impl Equatorial
 	}
 
 
+
+
+//###############################################################################################//
+//									--- Operations ---
+//###############################################################################################//
+
 	/// USE Vector3.angular_distance IF YOU HAVE A CARTESIAN, CONVERTING TO EQUATORIAL HAS A SINGULARITY!!!  
 	/// Finds the angle between the 2 points on a sphere.  
 	/// Just a shortcut to Vector3 equivalent.
@@ -123,7 +132,7 @@ impl Equatorial
 	/// # Example
 	/// ```
 	/// use star_tracker::util::units::Equatorial;
-	/// use star_tracker::util::units::Radians
+	/// use star_tracker::util::units::Radians;
 	/// use star_tracker::util::aliases::M_PI;
 	/// let equ = Equatorial { ra: Radians(M_PI / 4.0), dec: Radians(M_PI / 4.0) };
 	/// let cart = equ.to_vector3();
@@ -150,7 +159,8 @@ impl Equatorial
 impl fmt::Display for Equatorial {
 	fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result
 	{
-		write!(f, "Equatorial({:.2}, {:.2})d", self.ra.to_degrees().0, self.dec.to_degrees().0)?;
+		write!(f, "Equatorial(ra: {}, dec: {})", self.ra.to_degrees(), self.dec.to_degrees())
+			.expect("Format Error");
 		return Ok(());
 	}
 }
@@ -159,7 +169,7 @@ impl fmt::Display for Equatorial {
 impl fmt::Debug for Equatorial {
 	fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result
 	{
-		write!(f, "Equatorial(ra: {}, dec: {})", self.ra, self.dec)?;
+		write!(f, "Equatorial(ra: {:?}, dec: {:?})", self.ra, self.dec).expect("Format Error");
 		return Ok(());
 	}
 }
@@ -169,12 +179,14 @@ impl Equatorial
 	/// Prints in standard ra: hours, dec: degrees.
 	pub fn print_standard ( &self ) -> String
 	{
-		let ra_hours = self.ra.0 / M_PI * 12.0;
-		let ra_minutes = ra_hours.fract() * 60.0;
-		let ra_seconds = ra_minutes.fract() * 60.0;
-		let ra = format!("{:2.0}h {:2.0}m {:5.2}s", ra_hours, ra_minutes, ra_seconds);
+		let ra = self.ra.to_hours().time_format();
 
 		let dec_degrees = self.dec.to_degrees().0;
+		
+		// let mut dec_hour = self.dec.to_hours();
+		// dec_hour = Hours(dec_hour.0.fract());
+		// let dec_minutes = dec_hour.minutes();
+		// let dec_seconds = dec_hour.seconds();
 		let dec_minutes = (dec_degrees.fract() * 60.0).copysign(1.0); // arc minutes (1/60 degree).
 		let dec_seconds = (dec_minutes.fract() * 60.0).copysign(1.0); // arc minutes (1/60 degree).
 		let dec = format!("{:2.0}° {:2.0}' {:5.2}\"", dec_degrees, dec_minutes, dec_seconds);
@@ -182,6 +194,14 @@ impl Equatorial
 		return format!("J200( {} | {} )", ra, dec);
 	}
 }
+
+
+
+
+
+
+
+
 
 //###############################################################################################//
 //###############################################################################################//
@@ -199,8 +219,10 @@ mod test
 	use crate::util::aliases::Decimal;
 	use crate::util::aliases::M_PI;
 	use crate::util::units::Equatorial;
-	use crate::util::units::Radians;
 	use crate::util::units::Vector3;
+	use crate::util::units::Radians;
+	use crate::util::units::Degrees;
+	use crate::util::units::Hours;
 	use crate::util::test::TestEqual;
 
 
@@ -263,7 +285,7 @@ mod test
 
 //###############################################################################################//
 //
-//									Others
+//									Operations
 //
 // pub fn angle_distance    ( &self, Self )    -> Radians
 // pub fn planar_distance   ( &self, Self )    -> Radians
@@ -426,7 +448,7 @@ mod test
 	fn test_to_vector3_3_random ( )
 	{
 		let mut rng = rand::thread_rng();
-		for _i in 0..100
+		for _ in 0..100
 		{
 			let mut c =
 			Vector3{
@@ -440,4 +462,42 @@ mod test
 			assert!(e.test_close(&c.to_equatorial(), 0.0001));
 		}
 	}
+	
+	
+	
+	
+	
+//###############################################################################################//
+//
+//										Debug
+// Display: Show neat (3dp)
+// Debug: Show everything (all dp)
+// pub fn print_standard ( &self ) -> Self
+// 
+//###############################################################################################//
+	//								- Display / Debug fmt -										//
+	#[test]
+	fn test_display_fmt ( )
+	{
+		let eq = Equatorial{ra: Degrees(10.1234).as_radians(), dec: Degrees(20.1234).as_radians()};
+		assert_eq!(format!("{:123414}", eq), "Equatorial(ra: 10.123d, dec: 20.123d)");
+	}
+	
+	
+	#[test]
+	fn test_debug_fmt ( )
+	{
+		let eq = Equatorial{ra: Radians(10.1234), dec: Radians(20.1234)};
+		assert_eq!(format!("{:?}", eq), "Equatorial(ra: Radians(10.1234), dec: Radians(20.1234))");
+	}
+	
+	
+	#[test]
+	fn test_print_standard ( )
+	{
+		let eq = Equatorial{ra: Hours(12.43).to_radians(), dec: Degrees(20.1234).as_radians()};
+		assert_eq!(eq.print_standard(), "J200( 12h 25m 48.00s | 20°  7' 24.24\" )");
+		
+	}
+	
 }

@@ -59,3 +59,9 @@ criterion = "0.2.4"		# Measures performance of unit tests.
 nix = []
 test_integration = []
 setup = [] # tracking_mode/database will not exist until this is run.
+
+
+
+# llcov testing
+[profile.release]
+debug = true

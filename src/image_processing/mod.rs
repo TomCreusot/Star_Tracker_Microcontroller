@@ -1,3 +1,5 @@
+//! Basic image manipulation/storage and machine vision.
+//!
 //! `image_processing` involves storing an image in a reduced size and performing basic computer vision on the image.
 //! This includes a fast method of blob detection and thresholding to obtain stars.
 
@@ -66,6 +68,7 @@ pub struct BasicImage <const WIDTH : usize, const HEIGHT : usize>
 //###############################################################################################//
 
 /// A set of connected pixels in the foreground representing a star.
+///
 /// This uses the grass fire method (iteratively find new pixels and consume them).
 ///
 /// # Example

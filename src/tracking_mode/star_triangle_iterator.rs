@@ -1,7 +1,7 @@
 ///! Implementation for StarTriangleIterator
 use crate::tracking_mode::StarTriangleIterator;
 use crate::tracking_mode::TriangleConstruct;
-use crate::tracking_mode::IterationResult;
+// use crate::tracking_mode::IterationResult;
 use crate::tracking_mode::KernelIterator;
 use crate::tracking_mode::StarTriangle;
 
@@ -11,6 +11,7 @@ use crate::util::list::ArrayList;
 use crate::util::list::List;
 use crate::util::units::Equatorial;
 use crate::util::units::Radians;
+use crate::util::units::Match;
 
 
 impl <const N: usize> TriangleConstruct for StarTriangleIterator<N>
@@ -23,9 +24,9 @@ impl <const N: usize> TriangleConstruct for StarTriangleIterator<N>
 	/// * None if there is no more available star triangles with the given parameters.
 	/// * Some(Match{input: observed star triangle, output: database match}) if possible.
 	fn next ( &mut self, stars: &dyn List<Equatorial>, database: &mut dyn ChunkIterator
-																	) -> Option<IterationResult>
+															) -> Option<Match<StarTriangle<usize>>>
 	{
-		let mut tries : Option<IterationResult> = None;
+		let mut tries : Option<Match<StarTriangle<usize>>> = None;
 		'_outer: loop // This is the correct use of a do while loop.
 		{
 			// Once all possiblities for a single kernal step are exhausted.
@@ -49,7 +50,7 @@ impl <const N: usize> TriangleConstruct for StarTriangleIterator<N>
 				let input  = self.input;
 				let output = triangle.unwrap();
 				let error  = a.error + b.error + c.error;
-				tries = Some(IterationResult{input: input, output: output, error: error});
+				tries = Some(Match{input: input, output: output, weight: error});
 				break '_outer; // Rust implementation of a do while loop.
 			}
 		}
@@ -234,11 +235,12 @@ mod test
 	use crate::tracking_mode::KernelIterator;
 	use crate::tracking_mode::StarTriangle;
 	use crate::tracking_mode::StarPair;
-	use crate::tracking_mode::Match;
-	use crate::tracking_mode::database::MockDatabase;
+	use crate::tracking_mode::database::MockChunkIterator;
+	use crate::tracking_mode::database::SearchResult;
 
 	use crate::util::units::Equatorial;
 	use crate::util::units::Radians;
+	use crate::util::units::Match;
 	use crate::util::list::List;
 
 //###############################################################################################//
@@ -290,10 +292,12 @@ mod test
 		let mut iterator: StarTriangleIterator<NUM_MATCH> = StarTriangleIterator::new();
 		iterator.begin(angle, &stars);
 
-		let mut database = MockDatabase::new();
-		database.expect_find_close_ref().times(0);
-		database.expect_increment_region().times(1).returning(| | false);
-		assert_eq!(None, iterator.next(&stars, &mut database));
+		let mut chunk = MockChunkIterator::new();
+		chunk.expect_next().times(1).returning(| | false);
+		chunk.expect_begin().times(1).returning(|| return);
+		chunk.expect_find_close_ref_region().times(0);
+
+		assert_eq!(None, iterator.next(&stars, &mut chunk));
 	}
 
 
@@ -312,14 +316,15 @@ mod test
 		let mut iterator: StarTriangleIterator<NUM_MATCH> = StarTriangleIterator::new();
 		iterator.begin(angle, &stars);
 
-		let mut database = MockDatabase::new();
-		database.expect_find_close_ref().times(3 * 4).returning(|_,_,_| ());
-		let mut first = true;
-		database.expect_increment_region().times(1 + 4).returning(
-			move | | { let val = first; first = false; return val; } );
+		let mut chunk = MockChunkIterator::new();
+		let mut first = false;
+		chunk.expect_begin().times(5).returning(|| return); // 4 combinations + final check.
+		chunk.expect_next().times(9).returning(
+			move | | { let val = first; first = !first; return val; }); // 2 chunks (*2)
+		chunk.expect_find_close_ref_region().times(3 * 4 * 2).returning(|_,_,_| ());
 
 		// Should loop until finished
-		assert_eq!(None, iterator.next(&stars, &mut database));
+		assert_eq!(None, iterator.next(&stars, &mut chunk));
 	}
 
 
@@ -360,74 +365,74 @@ mod test
 			StarPair(104, 105),
 		];
 		let mut index = 0;
-		let mut database = MockDatabase::new();
-		database.expect_find_close_ref().times(3)
+		let mut chunk = MockChunkIterator::new();
+		chunk.expect_begin().returning(|| return);
+		chunk.expect_next().returning(|| return false);
+		chunk.expect_find_close_ref_region().times(3)
 			.returning(move |_, _, found|
 				{
-					found.push_back(outputs[index]);
+					found.push_back(SearchResult{result: outputs[index], error: 0.0});
 					index += 1;
-					found.push_back(outputs[index]);
+					found.push_back(SearchResult{result: outputs[index], error: 0.0});
 					index += 1;
-					found.push_back(outputs[index]);
+					found.push_back(SearchResult{result: outputs[index], error: 0.0});
 					index += 1;
-					found.push_back(outputs[index]);
+					found.push_back(SearchResult{result: outputs[index], error: 0.0});
 					index += 1;
 				}
 			);
 
-		let mut actual = iterator.next(&stars, &mut database);
-		let mut expect = Match{input:StarTriangle(0,1,2),output: StarTriangle(1,0,2), weight: 1.0};
+		let mut actual = iterator.next(&stars, &mut chunk);
+		let mut expect = Match{input:StarTriangle(0,1,2),output: StarTriangle(1,0,2), weight: 0.0};
 		assert!(iterator.indexing);
 		assert_eq!(StarTriangle(0,1,2), iterator.input);
 		assert_eq!(4, iterator.pair_a.size());
-		assert_eq!(StarPair(100, 101), iterator.pair_a.get(0));
-		assert_eq!(StarPair(0, 1), iterator.pair_a.get(1));
-		assert_eq!(StarPair(0, 2), iterator.pair_a.get(2));
-		assert_eq!(StarPair(0, 0), iterator.pair_a.get(3));
+		assert_eq!(StarPair(100, 101), iterator.pair_a.get(0).result);
+		assert_eq!(StarPair(0, 1),     iterator.pair_a.get(1).result);
+		assert_eq!(StarPair(0, 2),     iterator.pair_a.get(2).result);
+		assert_eq!(StarPair(0, 0),     iterator.pair_a.get(3).result);
 		assert_eq!(4, iterator.pair_b.size());
-		assert_eq!(StarPair(1, 2), iterator.pair_b.get(0));
-		assert_eq!(StarPair(102, 103), iterator.pair_b.get(1));
-		assert_eq!(StarPair(2, 3), iterator.pair_b.get(2));
-		assert_eq!(StarPair(2, 4), iterator.pair_b.get(3));
+		assert_eq!(StarPair(1, 2),     iterator.pair_b.get(0).result);
+		assert_eq!(StarPair(102, 103), iterator.pair_b.get(1).result);
+		assert_eq!(StarPair(2, 3),     iterator.pair_b.get(2).result);
+		assert_eq!(StarPair(2, 4),     iterator.pair_b.get(3).result);
 		assert_eq!(4, iterator.pair_c.size());
-		assert_eq!(StarPair(2, 0), iterator.pair_c.get(0));
-		assert_eq!(StarPair(3, 0), iterator.pair_c.get(1));
-		assert_eq!(StarPair(0, 4), iterator.pair_c.get(2));
-		assert_eq!(StarPair(104, 105), iterator.pair_c.get(3));
+		assert_eq!(StarPair(2, 0),     iterator.pair_c.get(0).result);
+		assert_eq!(StarPair(3, 0),     iterator.pair_c.get(1).result);
+		assert_eq!(StarPair(0, 4),     iterator.pair_c.get(2).result);
+		assert_eq!(StarPair(104, 105), iterator.pair_c.get(3).result);
 		assert_eq!((1, 0, 0), (iterator.index_a, iterator.index_b, iterator.index_c));
 		assert_eq!(Some(expect), actual);
 
-		actual = iterator.next(&stars, &mut database);
-		expect = Match{input:StarTriangle(0, 1, 2),output: StarTriangle(2, 0, 3),weight:1.0};
+		actual = iterator.next(&stars, &mut chunk);
+		expect = Match{input:StarTriangle(0, 1, 2),output: StarTriangle(2, 0, 3), weight:0.0};
 		assert_eq!(Some(expect), actual);
 
-		actual = iterator.next(&stars, &mut database);
-		expect = Match{input:StarTriangle(0, 1, 2),output: StarTriangle(2, 0, 4),weight: 1.0};
+		actual = iterator.next(&stars, &mut chunk);
+		expect = Match{input:StarTriangle(0, 1, 2),output: StarTriangle(2, 0, 4), weight: 0.0};
 		assert_eq!(Some(expect), actual);
-
 
 		iterator.kernel.size = 0;
-		actual = iterator.next(&stars, &mut database);
+		actual = iterator.next(&stars, &mut chunk);
 		assert_eq!(None, actual);
-
 
 		let outputs_2 = [StarPair(0,1), StarPair(1,2), StarPair(2,0)];
 		iterator.kernel = KernelIterator::new(outputs_2.len());
 		index = 0;
-		database = MockDatabase::new();
-		database.expect_find_close_ref().times(3)
+		chunk = MockChunkIterator::new();
+		chunk.expect_begin().returning(|| return);
+		chunk.expect_next().returning(|| return false);
+		chunk.expect_find_close_ref_region().times(3)
 			.returning(move |_, _, found|
 				{
-					found.push_back(outputs_2[index]);
+					found.push_back(SearchResult{result: outputs_2[index], error: 0.0});
 					index+=1;
 				}
 			);
 
-
-		actual = iterator.next(&stars, &mut database);
-		expect = Match{input:StarTriangle(0, 1, 2),output: StarTriangle(1, 0, 2),weight: 1.0};
+		actual = iterator.next(&stars, &mut chunk);
+		expect = Match{input:StarTriangle(0, 1, 2),output: StarTriangle(1, 0, 2),weight: 0.0};
 		assert_eq!(Some(expect), actual);
-
 	}
 
 
@@ -455,17 +460,17 @@ mod test
 		iterator.begin(angle, &stars);
 
 		check::<NUM_MATCH>(&mut iterator); 				// a: 0, b: 0, c: 0
-		iterator.pair_a.push_back(StarPair(0,0));
+		iterator.pair_a.push_back(SearchResult{result: StarPair(0,0), error: 0.0});
 		check::<NUM_MATCH>(&mut iterator);				// a: 1, b: 0, c: 0
-		iterator.pair_b.push_back(StarPair(0,0));
+		iterator.pair_b.push_back(SearchResult{result: StarPair(0,0), error: 0.0});
 		check::<NUM_MATCH>(&mut iterator); 				// a: 1, b: 1, c: 0
 		iterator.pair_a.pop_back();
 		check::<NUM_MATCH>(&mut iterator); 				// a: 0, b: 1, c: 0
-		iterator.pair_c.push_back(StarPair(0,0));
+		iterator.pair_c.push_back(SearchResult{result: StarPair(0,0), error: 0.0});
 		check::<NUM_MATCH>(&mut iterator); 				// a: 0, b: 1, c: 1
 		iterator.pair_b.pop_back();
 		check::<NUM_MATCH>(&mut iterator); 				// a: 0, b: 0, c: 1
-		iterator.pair_a.push_back(StarPair(0,0));
+		iterator.pair_a.push_back(SearchResult{result: StarPair(0,0), error: 0.0});
 		check::<NUM_MATCH>(&mut iterator); 				// a: 1, b: 0, c: 1
 
 		fn check <const N : usize> ( iter: &mut StarTriangleIterator<N> )
@@ -493,15 +498,13 @@ mod test
 		let mut iterator: StarTriangleIterator<NUM_MATCH> = StarTriangleIterator::new();
 		iterator.begin(angle, &stars);
 
-		iterator.pair_a.push_back(StarPair(0,0)).expect("");
-		iterator.pair_a.push_back(StarPair(0,1)).expect("");
-
-		iterator.pair_b.push_back(StarPair(1,0)).expect("");
-
-		iterator.pair_c.push_back(StarPair(2,0)).expect("");
-		iterator.pair_c.push_back(StarPair(2,1)).expect("");
-		iterator.pair_c.push_back(StarPair(2,2)).expect("");
-		iterator.pair_c.push_back(StarPair(2,3)).expect("");
+		let _ = iterator.pair_a.push_back(SearchResult{result: StarPair(0,0), error: 0.0});
+		let _ = iterator.pair_a.push_back(SearchResult{result: StarPair(0,1), error: 0.0});
+		let _ = iterator.pair_b.push_back(SearchResult{result: StarPair(1,0), error: 0.0});
+		let _ = iterator.pair_c.push_back(SearchResult{result: StarPair(2,0), error: 0.0});
+		let _ = iterator.pair_c.push_back(SearchResult{result: StarPair(2,1), error: 0.0});
+		let _ = iterator.pair_c.push_back(SearchResult{result: StarPair(2,2), error: 0.0});
+		let _ = iterator.pair_c.push_back(SearchResult{result: StarPair(2,3), error: 0.0});
 
 		assert!(iterator.step());
 		assert_eq!((0, 0, 0), (iterator.index_a, iterator.index_b, iterator.index_c));
@@ -540,10 +543,12 @@ mod test
 		let mut iterator: StarTriangleIterator<NUM_MATCH> = StarTriangleIterator::new();
 		iterator.begin(angle, &stars);
 
-		let mut database = MockDatabase::new();
-		database.expect_find_close_ref().times(0);
+		let mut chunk = MockChunkIterator::new();
+		chunk.expect_find_close_ref_region().times(0);
+		chunk.expect_next().times(1).returning(|| return false);
+		chunk.expect_begin().times(1).returning(|| return );
 
-		assert!(!iterator.prep_new_kernel(&stars, &mut database));
+		assert!(!iterator.prep_new_kernel(&stars, &mut chunk));
 	}
 
 
@@ -568,19 +573,30 @@ mod test
 		let mut iterator: StarTriangleIterator<NUM_MATCH> = StarTriangleIterator::new();
 		iterator.begin(angle, &stars);
 
-		let mut database = MockDatabase::new();
-		database.expect_find_close_ref().times(3)
-			.returning(|angle, _, found| found.push_back(StarPair(0, angle.0 as usize)).expect(""))
-			.withf(|_, tolerance, _| return *tolerance == Radians(0.123) );
+		// let mut database = MockDatabase::new();
+		// database.expect_find_close_ref().times(3)
+		// 	.returning(|angle, _, found| found.push_back(StarPair(0, angle.0 as usize)).expect(""))
+		// 	.withf(|_, tolerance, _| return *tolerance == Radians(0.123) );
 
-		assert!(iterator.prep_new_kernel(&stars, &mut database));
+		let mut chunk = MockChunkIterator::new();
+		chunk.expect_find_close_ref_region().times(3)
+			.returning(|angle, _, found| 
+				found.push_back(SearchResult{result: StarPair(0, angle.0 as usize), error: 0.0}).expect(""))
+			.withf(|_, tolerance, _| return *tolerance == Radians(0.123) );
+			
+		// let mut count = 0;
+		// chunk.expect_next().times(1).returning(move || {count += 1; return count < 2;});
+		chunk.expect_next().times(1).returning(|| return false);
+		chunk.expect_begin().times(1).returning(|| return);
+
+		assert!(iterator.prep_new_kernel(&stars, &mut chunk));
 		assert!(!iterator.indexing);
 		assert_eq!(iterator.kernel.i, iterator.input.0);
 		assert_eq!(iterator.kernel.j, iterator.input.1);
 		assert_eq!(iterator.kernel.k, iterator.input.2);
-		assert_eq!(StarPair(0, 0),iterator.pair_a.get(0)); // (0,0) to (0,1)
-		assert_eq!(StarPair(0, 2),iterator.pair_b.get(0)); // (0,0) to (0,2)
-		assert_eq!(StarPair(0, 1),iterator.pair_c.get(0)); // (0,1) to (0,2)
+		assert_eq!(StarPair(0, 0), iterator.pair_a.get(0).result); // (0,0) to (0,1)
+		assert_eq!(StarPair(0, 2), iterator.pair_b.get(0).result); // (0,0) to (0,2)
+		assert_eq!(StarPair(0, 1), iterator.pair_c.get(0).result); // (0,1) to (0,2)
 	}
 
 

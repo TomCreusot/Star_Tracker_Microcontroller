@@ -1,5 +1,16 @@
-//! Projection is a module which can convert between 2D camera space and 3D world space.
-//! It is also in charge of removing distortion from images/simulating it.
+//! Projection is a module which can convert between 2D camera space and 3D world space.  
+//!
+//! It is also in charge of removing distortion from images/simulating it.  
+//! 
+//! # Parameters
+//! * `Extrinsic Parameters` - Rotating and moving world space so that the point with (0, 0, +x) is in front of the camera.
+//! * `Intrinsic Parameters` - Projecting the camera space onto the image plane with scale and translation.
+//! 
+//! # Spaces
+//! * `SpaceWorld ` - The location of the objects in a 3D environment relative to [0,0,0], 0 rotation.
+//! * `SpaceCamera` - The location of the objects in a 3D environment relative to the camera (forward is +z).
+//! * `SpaceImage ` - The object projected onto a flat surface on the sensor.
+//! * `SpacePixel`  - SpaceImage rounded to the nearest pixel.
 //!
 //! A good summary of functions used can be found in this [opencv guide](https://docs.opencv.org/3.4/d9/d0c/group__calib3d.html).
 

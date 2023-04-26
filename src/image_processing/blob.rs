@@ -1,19 +1,31 @@
-//! Implementation of Blob.
-use crate::util::aliases::{Decimal, UInt, Byte};
-use crate::util::units::{Pixel, Vector2};
+//! Implementation of [Blob](crate::util::image_processing::Blob).
+use crate::util::aliases::Decimal;
+use crate::util::aliases::UInt;
+use crate::util::aliases::Byte;
+use crate::util::units::Pixel;
+use crate::util::units::Vector2;
 use crate::util::list::List;
 use crate::util::list::ListIterator;
 use crate::util::list::ArrayList;
-use super::{Image, Blob};
+
+use crate::image_processing::Image;
+use crate::image_processing::Blob;
 
 
 impl Blob
 {
-	/// Constructor
+//###############################################################################################//
+//									--- Constructor ---
+//###############################################################################################//
 	pub fn new ( ) -> Blob
 	{
 		return Blob { intensity: 0, centroid: Vector2{x: 0.0, y: 0.0} };
 	}
+	
+	
+//###############################################################################################//
+//									--- Front End ---
+//###############################################################################################//
 
 	/// Finds all blobs in an image.
 	/// # Generic Arguments
@@ -115,13 +127,7 @@ impl Blob
 	{
 		let mut blob : Blob = Blob::new();
 		let mut stack : ArrayList<Pixel, CONFIG> = ArrayList::new();
-		if CONFIG > 0
-		{
-			if stack.push_back(start).is_err()
-			{
-				println!("ERROR: Stack has 0 capacity");
-			}
-		}
+		let _ = stack.push_back(start).is_err();
 		while let Ok(cur) = stack.pop_back()
 		{
 			if img.get(cur) != 0 // If Reinserted in list.
@@ -143,6 +149,10 @@ impl Blob
 		return blob;
 	}
 
+
+//###############################################################################################//
+//									--- Back End ---
+//###############################################################################################//
 
 	/// Finds all neighbouring pixels which are valid and within the theshold.
 	/// # Generic Arguments
@@ -248,7 +258,7 @@ impl Blob
 	/// assert_eq!(Blob::find_centroid(0.0, 3, 1, 1), 0.25); // 2, 1
 	/// assert_eq!(Blob::find_centroid(0.0, 9, 2, 1), 0.2); // 9, 0, 1
 	/// ```
-	pub fn find_centroid ( 	b_pos : Decimal, b_intensity : UInt,
+	pub fn find_centroid ( b_pos : Decimal, b_intensity : UInt,
 						p_pos : UInt, p_intensity : UInt ) -> Decimal
 	{
 		return	(	(b_pos * b_intensity as Decimal) 			// Moment of current blob.
@@ -328,11 +338,18 @@ impl Blob
 #[allow(unused_must_use)]
 mod test
 {
-	use crate::image_processing::{Image, BasicImage, Blob};
-	use crate::util::list::{List, ArrayList};
-	use crate::util::{units::Vector2, units::Pixel, aliases::Decimal};
-	use util::test::DECIMAL_PRECISION_TEST;
+	use crate::image_processing::BasicImage;
+	use crate::image_processing::Image;
+	use crate::image_processing::Blob;
+	
+	use crate::util::list::ArrayList;
+	use crate::util::list::List;
+	use crate::util::test::DECIMAL_PRECISION_TEST;
+	use crate::util::units::Vector2;
+	use crate::util::units::Pixel;
+	use crate::util::aliases::Decimal;
 
+	#[no_coverage]
 	fn assert_close ( a: Decimal, b: Decimal )
 	{
 		if (a - b).abs() > DECIMAL_PRECISION_TEST
@@ -341,9 +358,17 @@ mod test
 		}
 	}
 
+
+//###############################################################################################//
 //
-// new ( ) -> Blob
+//										Front End
 //
+// pub fn new      ( ) -> Self
+// pub fn find_blobs        <const usize> ( Byte, &mut dyn Image, &mut dyn List<Blob> )
+// pub fn spread_grass_fire <const usize> ( Byte, Pixel, &mut dyn Image )
+//
+//###############################################################################################//
+//										~ new ~													 //
 
 	#[test]
 	fn test_new ( )
@@ -354,10 +379,7 @@ mod test
 		assert_eq!(blob.centroid.y, 0.0);
 	}
 
-//
-// find_blobs ( threshold : Decimal, img : &mut Image, lst : &mut ArrayList<Blob, usize> ) -> ()
-//
-
+//										~ find_blobs ~											 //
 	#[test]
 	// An error should not occure if there are no blobs.
 	fn test_find_blobs_empty ( )
@@ -454,11 +476,7 @@ mod test
 	}
 
 
-
-	//
-	// 	fn spread_grass_fire <const BLOB_SIZE : usize> ( threshold : Byte, start : Vector2<usize>, img : &mut dyn Image ) -> Blob
-	//
-
+//										~ spread_grass_fire ~									 //
 	#[test]
 	// Should safely end if too big.
 	fn test_spread_grass_fire_blob_too_big ( )
@@ -505,11 +523,15 @@ mod test
 	}
 
 
-	//
-	// fn find_neighbours ( threshold : Byte, pt : &Vector2<usize>,
-	//		img : &dyn Image, stack: &mut dyn List<Vector2<usize>> )
-	//
-
+//###############################################################################################//
+//
+//										Back End
+//
+// pub fn find_neighbours   ( Byte, &Pixel, &dyn Image, &mut dyn List<Pixel> )
+// pub fn find_centroid     ()
+//
+//###############################################################################################//
+//										~ find_neighbours ~										 //
 	#[test]
 	// The list should not panic if overfilled.
 	fn test_find_neighbours ( )
@@ -565,29 +587,33 @@ mod test
 	fn test_find_neighbours_overfill ( )
 	{
 		let threshold = 1;
-		let pt : Pixel = Pixel{ x: 0, y: 0 };
+		let pt : Pixel = Pixel{ x: 1, y: 1 };
 		let mut img : BasicImage<3, 3> = BasicImage::new();
-		let mut lst : ArrayList<Pixel, 2> = ArrayList::new();
+		let mut lst : ArrayList<Pixel, 0> = ArrayList::new();
 
-		img.set(Pixel{x: 1, y: 0}, 1); // 0, 1, 0
-		img.set(Pixel{x: 0, y: 1}, 1); // 1, 0, 1
-		img.set(Pixel{x: 0, y: 2}, 1); // 0, 1, 0
-		img.set(Pixel{x: 2, y: 0}, 1);
+		img.set(Pixel{x: 1, y: 0}, 1); // up
+		Blob::find_neighbours(threshold, &pt, &img, &mut lst);
 
+		lst.clear();
+		img.set(Pixel{x: 1, y: 0}, 0);
+		img.set(Pixel{x: 1, y: 2}, 1); // down
+		Blob::find_neighbours(threshold, &pt, &img, &mut lst);
+		
+		lst.clear();
+		img.set(Pixel{x: 1, y: 2}, 0);
+		img.set(Pixel{x: 0, y: 1}, 1); // left
+		Blob::find_neighbours(threshold, &pt, &img, &mut lst);
+
+		lst.clear();
+		img.set(Pixel{x: 0, y: 1}, 0);
+		img.set(Pixel{x: 2, y: 1}, 1); // right
 		Blob::find_neighbours(threshold, &pt, &img, &mut lst);
 	}
 
 
 
 
-
-
-
-	//
-	// find_centroid (	b_pos : Decimal, b_intensity : UInt,
-	//					p_pos : UInt, p_intensity : UInt ) -> Decimal
-	//
-
+//										~ find_centroid ~										 //
 	#[test]
 	fn test_find_centroid_single_weight ( )
 	{
@@ -603,9 +629,7 @@ mod test
 	}
 
 
-	//
-	// to_cartesian_2d ( blobs: &dyn List<Blob>, points: &mut dyn List<Vector2<Decimal>> )
-	//
+//										~ test_to_cartesian_2d ~								 //
 	#[test]
 	fn test_to_cartesian_2d ( )
 	{
@@ -621,10 +645,7 @@ mod test
 	}
 
 
-	//
-	// sort_descending_intensity ( & Blob, & Blob ) -> Decimal
-	//
-
+//										~ sort_descending_intensity ~							 //
 	#[test]
 	fn test_sort_descending_intensity ( )
 	{

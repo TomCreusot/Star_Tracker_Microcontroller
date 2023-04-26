@@ -1,4 +1,5 @@
 //! This provides specifics of errors.  
+//!
 //! Instead of using `Result<T, E>`, use `Error<T>` as a more specific error will be provided.  
 //! # Example
 //! ```
@@ -55,4 +56,86 @@ pub enum Errors
 	/// Divide by 0.  
 	/// A mathematical instance is not valid to be expressed after undergoing the edit.
 	NaN,
+}
+
+
+
+
+
+
+
+
+
+
+
+
+
+//###############################################################################################//
+//###############################################################################################//
+//
+//										Unit Tests
+//
+// This is just to pass llvm-cov.
+// Derives are not excludable.
+//
+//###############################################################################################//
+//###############################################################################################//
+
+#[cfg(test)]
+mod test
+{
+	use crate::util::err::Errors;
+	
+	#[test]
+	fn test_partial_eq ( )
+	{
+		let a = Errors::OutOfBounds;
+		let b = Errors::InvalidSize;
+		let c = Errors::InvalidValue;
+		let d = Errors::OutOfBoundsX;
+		let e = Errors::OutOfBoundsY;
+		let f = Errors::NoMatch;
+		let g = Errors::NaN;
+		
+		assert_eq!(a, a);
+		assert_eq!(b, b);
+		assert_eq!(c, c);
+		assert_eq!(d, d);
+		assert_eq!(e, e);
+		assert_eq!(f, f);
+		assert_eq!(g, g);
+		
+		assert_ne!(a, b);
+		assert_ne!(b, a);
+		assert_ne!(c, a);
+		assert_ne!(d, a);
+		assert_ne!(e, a);
+		assert_ne!(f, a);
+		assert_ne!(g, a);
+	}
+	
+	
+	#[test]
+	fn test_debug ( )
+	{
+		assert_eq!(format!("{:?}", Errors::OutOfBounds),  "OutOfBounds");
+		assert_eq!(format!("{:?}", Errors::InvalidSize),  "InvalidSize");
+		assert_eq!(format!("{:?}", Errors::InvalidValue), "InvalidValue");
+		assert_eq!(format!("{:?}", Errors::OutOfBoundsX), "OutOfBoundsX");
+		assert_eq!(format!("{:?}", Errors::OutOfBoundsY), "OutOfBoundsY");
+		assert_eq!(format!("{:?}", Errors::NoMatch),      "NoMatch");
+		assert_eq!(format!("{:?}", Errors::NaN),          "NaN");
+	}
+
+	#[test]
+	fn test_clone ( )
+	{
+		assert_eq!(Errors::OutOfBounds.clone(),  Errors::OutOfBounds);
+		assert_eq!(Errors::InvalidSize.clone(),  Errors::InvalidSize);
+		assert_eq!(Errors::InvalidValue.clone(), Errors::InvalidValue);
+		assert_eq!(Errors::OutOfBoundsX.clone(), Errors::OutOfBoundsX);
+		assert_eq!(Errors::OutOfBoundsY.clone(), Errors::OutOfBoundsY);
+		assert_eq!(Errors::NoMatch.clone(),      Errors::NoMatch);
+		assert_eq!(Errors::NaN.clone(),          Errors::NaN);
+	}
 }

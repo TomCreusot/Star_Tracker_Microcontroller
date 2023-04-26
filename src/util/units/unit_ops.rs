@@ -1,17 +1,13 @@
-/// Implementation of Mul, Add, Sub, Div and Display
+//! Implementation of Mul, Add, Sub, Div and Display
 use std::fmt;
 use std::ops::Mul;
 use std::ops::Add;
 use std::ops::Sub;
 use std::ops::Div;
 use std::ops::Neg;
-use std::ops::BitAnd;
-use std::ops::BitOr;
-use std::ops::BitAndAssign;
-use std::ops::BitOrAssign;
 use super::{
 	Degrees, Radians, Hours,
-	Quaternion, Vector3, Equatorial, AngleAxis, Pixel, Vector2, super::aliases::Decimal, BitField};
+	Quaternion, Vector3, Equatorial, AngleAxis, Pixel, Vector2, super::aliases::Decimal};
 
 use util::test::TestEqual;
 use util::aliases::DECIMAL_PRECISION;
@@ -38,7 +34,8 @@ impl Degrees
 
 
 impl fmt::Display for Degrees {
-	fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result { write!(f, "{:.2}d", self.0) } }
+	#[no_coverage]
+	fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result { write!(f, "{:.3}d", self.0) } }
 
 impl Mul<Decimal> for Degrees {
 	type Output = Self;
@@ -93,7 +90,8 @@ impl Radians
 }
 
 impl fmt::Display for Radians {
-	fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result { write!(f, "{:.2}r", self.0) } }
+	#[no_coverage]
+	fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result { write!(f, "{:.3}r", self.0) } }
 
 
 impl Mul<Decimal> for Radians {
@@ -149,7 +147,8 @@ impl Hours
 }
 
 impl fmt::Display for Hours {
-    fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result { write!(f, "{:.2}h", self.0) } }
+	#[no_coverage]
+	fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result { write!(f, "{:.3}h", self.0) } }
 
 
 impl PartialEq for Hours {
@@ -372,34 +371,6 @@ impl TestEqual for Vector3 {
 		(self.z - other.z).abs() < precision;
 	}
 }
-
-
-//###############################################################################################//
-//									--- Regions ---
-//###############################################################################################//
-
-impl BitAnd<BitField> for BitField
-{
-	type Output = Self;
-	fn bitand ( self, rhs: BitField ) -> BitField {
-		return BitField(self.0 & rhs.0); }}
-
-
-impl BitOr<BitField> for BitField
-{
-	type Output = Self;
-	fn bitor ( self, rhs: BitField ) -> BitField {
-		return BitField(self.0 | rhs.0); }}
-
-
-impl BitAndAssign<BitField> for BitField
-{
-	fn bitand_assign ( &mut self, rhs: BitField ) { *self = *self & rhs; }}
-
-
-impl BitOrAssign<BitField> for BitField
-{
-	fn bitor_assign ( &mut self, rhs: BitField ) { *self = *self | rhs; }}
 
 //###############################################################################################//
 //###############################################################################################//

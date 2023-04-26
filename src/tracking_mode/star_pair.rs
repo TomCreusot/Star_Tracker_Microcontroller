@@ -322,6 +322,30 @@ mod test
 
 
 	//
+	// fn are_same ( &self, Self ) -> bool
+	#[test]
+	fn test_are_same_equal ( )
+	{
+		let sp1 = StarPair(0, 1);
+		let sp2 = StarPair(1, 0);
+		assert!(StarPair::<usize>::are_same(&sp1, &sp1),"should be true.");
+		assert!(StarPair::<usize>::are_same(&sp1, &sp2),"should be true.");
+	}
+	#[test]
+	fn test_are_same_not_equal ( )
+	{
+		let sp1 = StarPair(0, 1);
+		let sp2 = StarPair(0, 2);
+		let sp3 = StarPair(1, 2);
+		let sp4 = StarPair(2, 1);
+		assert!(!StarPair::<usize>::are_same(&sp1, &sp2),"should not be true.");
+		assert!(!StarPair::<usize>::are_same(&sp1, &sp3),"should not be true.");
+		assert!(!StarPair::<usize>::are_same(&sp1, &sp4),"should not be true.");
+	}
+
+
+
+	//
 	// fn index_of ( Self, &dyn List<Self> ) -> Optional<usize>
 	// where T: usize
 	#[test]

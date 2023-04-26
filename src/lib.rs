@@ -86,6 +86,7 @@
 // #![feature(associated_type_defaults)]		// Allows list to implement iterator.
 
 #![feature(const_fn_floating_point_arithmetic)] // allows constant Degrees.as_radians() function.
+#![feature(no_coverage)]
 
 extern crate curl;
 extern crate csv;

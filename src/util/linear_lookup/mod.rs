@@ -1,4 +1,5 @@
 //! Designed to share similarities between Vec, ArrayList and Arrays.  
+//!
 //! This is required for the database.  
 //! When constructing the database, it is ideal to store the elements as a Vec.  
 //! When storing the database, it should be stored as an array.  
@@ -9,7 +10,7 @@
 //!
 //! struct AnnoyingToStore<'a> ( pub &'a dyn LinearLookup<u32> );
 //!
-//! let lst: ArrayList<u32, 3> = ArrayList::from_array(&[1,2,3]).expect("");
+//! let lst: ArrayList<u32, 3> = ArrayList::from_array(&[1,2,3]);
 //! let array      = AnnoyingToStore(&[1,2,3]);                    // Stored as an array.
 //! let vec        = AnnoyingToStore(&vec!(1,2,3));                // Stored as a list.
 //! let array_list = AnnoyingToStore(&lst);                        // Stored as an ArrayList.
@@ -32,7 +33,7 @@ pub trait LinearLookup <T>
 	/// Returns the size of the list (array.len(), vec.len(), array_list.size()).
 	fn size  ( &self ) -> usize;
 	
-	/// Returns the value at the index (array\[index\], vec\[index\], array_list.set(index)).
+	/// Returns the value at the index (array\[index\], vec\[index\], array_list.get(index)).
 	/// # Arguments
 	/// * `index` - The index to get the value at.
 	fn get  ( &self, index: usize ) -> T;
@@ -49,42 +50,49 @@ pub trait LinearLookup <T>
 	fn set  ( &mut self, index: usize, val: T ) -> Error<()>;
 }
 
-
+//###############################################################################################//
+//									--- ArrayList ---
+//###############################################################################################//
 impl<T, const N: usize> LinearLookup<T> for ArrayList<T, N> where T: Clone
 {
 	fn size ( &self ) -> usize
-	{	return (self as &dyn List<T>).size()			}
+	{ return (self as &dyn List<T>).size()     }
 
 	fn get ( &self, index: usize ) -> T
-	{ return (self as &dyn List<T>).get(index);		}
+	{ return (self as &dyn List<T>).get(index);  }
 
 	fn set ( &mut self, index: usize, val: T )	-> Error<()>
-	{ return (self as &mut dyn List<T>).set(index, val);	}
+	{ return (self as &mut dyn List<T>).set(index, val); }
 
 }
 
 
-
+//###############################################################################################//
+//									--- Vec ---
+//###############################################################################################//
 impl <T> LinearLookup<T> for Vec<T> where T: Clone
 {
 	fn size ( &self ) -> usize
-	{	return (self as &dyn List<T>).size()			}
+	{ return (self as &dyn List<T>).size()        }
 
 	fn get ( &self, index: usize ) -> T
-	{ return (self as &dyn List<T>).get(index);		}
+	{ return (self as &dyn List<T>).get(index);   }
 
 	fn set ( &mut self, index: usize, val: T )	-> Error<()>
-	{ return (self as &mut dyn List<T>).set(index, val);	}
+	{ return (self as &mut dyn List<T>).set(index, val); }
 }
 
 
+//###############################################################################################//
+//									--- Array ---
+//###############################################################################################//
 impl <T, const N: usize> LinearLookup<T> for [T; N] where T: Clone, T: Copy
 {
 	fn size ( &self ) -> usize
-	{	return (self as &[T;N]).len()		}
+	{ return (self as &[T;N]).len() }
 
 	fn get ( &self, index: usize ) -> T
-	{ return self[index];		}
+	{ return self[index]; }
 
 	fn set ( &mut self, index: usize, val: T )	-> Error<()>
 	{ 
@@ -121,7 +129,7 @@ mod test
 	// Im just going to test everything together.
 	pub fn test_array_list ( ) -> Error<()>
 	{
-		let mut list: ArrayList<u32, 3> = ArrayList::from_array(&[1,2,3])?;
+		let mut list: ArrayList<u32, 3> = ArrayList::from_array(&[1,2,3]);
 		assert_eq!(list.size(), 3);
 		assert_eq!(list.get(0), 1);
 		assert_eq!(list.get(1), 2);

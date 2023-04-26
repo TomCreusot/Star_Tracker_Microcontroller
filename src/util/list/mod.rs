@@ -1,9 +1,33 @@
-//! A set of instructions for a list data structure.  
+//! A universal implementation of an array list, this includes ArrayList and Vec.  
+//!
 //! Vec already is an implementation of a list, however, it is declared on the heap.  
 //! List provides a default implementation which can be used as a heap or stack object.  
 //! The main implementations are for ArrayList or Vec.  
 //! For embedded systems, it is advised to use ArrayList as it is declared on the stack.  
 //! For other systems, it is advised to use the vec implementation as it will never fill up.  
+//!
+//! # Array List Structure
+//! An array list is an oversized array with a pointer.  
+//! Like a stack, elements can be appended to the end and popped from the end quick and easily.  
+//! However, unlike a stack, an array_list is designed to access elements throughout like an array or linked list.  
+//!  Consider the following diagram.
+//! ``` text
+//! | 0 | 1 | 2 | 3 | 4 | 5 | pointer = 0
+//!   x   x   x   x   x   x
+//!
+//! Add an element (3).
+//! | 0 | 1 | 2 | 3 | 4 | 5 | pointer = 1
+//!   3   x   x   x   x   x
+
+//! Add some elements (2, 5, 4).
+//! | 0 | 1 | 2 | 3 | 4 | 5 | pointer = 4
+//!   3   2   5   4   x   x
+//!
+//! Returns 3: arraylist.get(0)
+//! Returns 2: arraylist.get(1)
+//! Returns 5: arraylist.get(2)
+//! Returns 4: arraylist.get(3)
+//! ```
 //!
 //! # Memory Allocation
 //! The heap can cause problems on microprocessesors;
@@ -40,7 +64,8 @@ use crate::util::err::Errors;
 //									---	List Trait ---
 //###############################################################################################//
 
-/// A set of instructions for a list data structure.  
+/// A set of instructions for a list/arraylist data structure.  
+///
 /// Vec already is an implementation of a list, however, it is declared on the heap.  
 /// List provides a default implementation which can be used as a heap or stack object.  
 /// The main implementations are for ArrayList or Vec.  
@@ -266,7 +291,7 @@ pub trait List<T>
 	/// list_a.remove_diff( &list_v, func );
 	/// assert_eq!(out.size(), 0);
 	/// ```
-	fn remove_diff ( &mut self, other: &dyn List<T>, compare: fn(&T, &T) -> bool)
+	fn remove_diff ( &mut self, other: &dyn List<T>, compare: fn(&T, &T) -> bool )
 	{
 		let mut ii = 0;
 		while ii < self.size()
@@ -298,6 +323,7 @@ pub trait List<T>
 //###############################################################################################//
 
 /// An implementation of an Array List with no allocations to the heap.  
+///
 /// Choose this datastructure if:
 /// * You need a **resizable**, linear datastructure of which you can access elements with an index.
 /// * You have limited memory on your device (i.e. microprocessor).
@@ -346,7 +372,7 @@ pub trait List<T>
 ///
 /// // The list can also be created from an array.
 /// // This is a useful function for test harnesses.
-/// let mut lst_2: ArrayList<u32, 5> = ArrayList::from_array(&[1, 1, 2, 3, 5]).expect("Valid bounds");
+/// let mut lst_2: ArrayList<u32, 5> = ArrayList::from_array(&[1, 1, 2, 3, 5]);
 /// 
 /// // You can remove an element at an index and shuffle everything down.
 /// // This is not recomended in a large list as shuffling everything takes time.
@@ -397,13 +423,28 @@ pub struct ArrayList <T, const N: usize>
 //									---	ListIterator ---
 //###############################################################################################//
 
-/// An iterator for a List trait.
+/// Due to limitations with lifetimes and types, the default ToIterator trait cannot be used.  
+/// Instead the iterator statically creates a new iterator from an input list.  
+/// 
+/// # Example
+/// ```
+/// use star_tracker::util::list::ListIterator;
+/// 
+/// let vec : Vec<u32> = vec![1,2,3,4];
+/// let mut iter = ListIterator::new(&vec);
+///
+/// while let Some(e) = iter.next()
+/// {
+/// 	println!("{}",e);
+/// }
+///
+/// ```
 #[derive(Copy)]
 #[derive(Clone)]
 pub struct ListIterator <'a, T>
 {
-	list		: &'a dyn List <T>,
-	index		: usize,
+	list : &'a dyn List <T>,
+	index: usize,
 }
 
 
@@ -437,9 +478,9 @@ mod test
 //
 //										Standard Implementation
 //
-// pub fn pop       ( &mut self, usize ) -> Error<T>
-// pub fn find_match ( &self, &dyn List<T>, fn(&T, &T) -> bool, &mut dyn List<T> )
-// pub fn 
+// pub fn pop         ( &mut self, usize ) -> Error<T>
+// pub fn find_match  ( &self, &dyn List<T>, fn(&T, &T) -> bool, &mut dyn List<T> )
+// pub fn remove_diff ( &mut self, other: &dyn List<T>, compare: fn(&T, &T) -> bool )
 //
 //###############################################################################################//
 //										~ pop ~													 //
@@ -487,11 +528,18 @@ mod test
 	}
 	
 	
+	
+	
+	
+	
+	
+	
+	
 	#[test]
 	// An arraylist should be able to pop an element if it is not empty.
 	fn test_pop_array_list_not_empty ( ) -> Error<()>
 	{
-		let mut list: ArrayList<usize, 4> = ArrayList::from_array(&[0, 1, 2, 3])?;
+		let mut list: ArrayList<usize, 4> = ArrayList::from_array(&[0, 1, 2, 3]);
 
 		assert_eq!(list.pop(1), Ok(1));
 		assert_eq!(list.size(), 3);
@@ -526,11 +574,28 @@ mod test
 	// If the index is out of bounds, the vector should produce an error.
 	fn test_pop_array_out_of_bounds ( )
 	{
-		let mut list: ArrayList<usize,2> = ArrayList::new();
+		let mut list: ArrayList<usize, 2> = ArrayList::new();
 		list.push_back(1);
 		assert_eq!(list.pop(2), Err(Errors::OutOfBounds));
 	}
 	
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 //										~ find_match ~											 //
 	#[test]

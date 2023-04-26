@@ -103,6 +103,7 @@ mod test
 	//
 
 	#[test]
+	#[no_coverage]
 	fn test_get_specular_valid_size ( )
 	{
 
@@ -196,7 +197,7 @@ mod test
 
 
 		assert!(SpecularityConstruct::<MockConfig>::same(&mut substitute, &st3, &st1));
-		assert!(SpecularityConstruct::<MockConfig>::same(&mut substitute, &st3, &st2));
+		assert!(SpecularityConstruct::<MockConfig>::same(&mut substitute, &st2, &st3));
 		assert!(SpecularityConstruct::<MockConfig>::same(&mut substitute, &st3, &st3));
 	}
 
@@ -226,7 +227,7 @@ mod test
 
 
 	#[test]
-	fn test_invalid ( )
+	fn test_same_invalid ( )
 	{
 		pub struct MockConfig ( );
 		impl TrackingModeConsts for MockConfig

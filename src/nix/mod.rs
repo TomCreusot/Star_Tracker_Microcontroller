@@ -19,6 +19,8 @@ pub mod nix_image;
 pub mod simulated_image;
 pub mod distribution;
 pub mod database_generator;
+pub mod k_vector;
+pub mod star_database_element;
 
 pub use self::nix_image::NixImage;
 pub use self::simulated_image::SimulatedImage;
@@ -47,6 +49,19 @@ pub struct Star
 	pub spec : String ,
 
 	pub name : String,
+}
+
+
+
+
+/// An element with all the details required to insert into the database.
+#[derive(Clone, Copy, Debug)]
+pub struct StarDatabaseElement
+{
+	/// The location of the stars (does not matter what order they are in).
+	pub pair : StarPair<usize>,
+	/// The angular separation between the stars.
+	pub dist : Radians,
 }
 
 

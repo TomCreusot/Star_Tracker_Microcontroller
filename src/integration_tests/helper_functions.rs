@@ -1,6 +1,5 @@
 use rand::prelude::*;
 
-use crate::tracking_mode::database::StarDatabaseElement;
 use crate::tracking_mode::database::PyramidDatabase;
 use crate::tracking_mode::database::SearchResult;
 use crate::tracking_mode::database::Database;
@@ -8,6 +7,7 @@ use crate::tracking_mode::database::KVector;
 
 use crate::tracking_mode::StarPair;
 
+use crate::nix::StarDatabaseElement;
 use crate::nix::Star;
 
 

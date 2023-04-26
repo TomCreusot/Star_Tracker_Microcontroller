@@ -169,29 +169,29 @@ impl Distribute
 
 
 
-
-//###############################################################################################//
-//###############################################################################################//
-//
-//										Unit Tests
-//
-//###############################################################################################//
-//###############################################################################################//
-
-#[cfg(test)]
-#[allow(unused_must_use)]
-mod test
-{
-	use crate::nix::Distribution;
-	use crate::nix::Distribute;
-	
-	// use crate::util::units::Equatorial;
-	// use crate::util::units::Radians;
-	// use crate::util::units::Degrees;
-	
-	#[test]
-	fn i_have_not_written_any_tests_for_this ( )
-	{
-		panic!("Have you tried doing your job.");
-	}
-}
+// 
+// //###############################################################################################//
+// //###############################################################################################//
+// //
+// //										Unit Tests
+// //
+// //###############################################################################################//
+// //###############################################################################################//
+// 
+// #[cfg(test)]
+// #[allow(unused_must_use)]
+// mod test
+// {
+// 	use crate::nix::Distribution;
+// 	use crate::nix::Distribute;
+// 
+// 	// use crate::util::units::Equatorial;
+// 	// use crate::util::units::Radians;
+// 	// use crate::util::units::Degrees;
+// 
+// 	#[test]
+// 	fn i_have_not_written_any_tests_for_this ( )
+// 	{
+// 		panic!("Have you tried doing your job.");
+// 	}
+// }

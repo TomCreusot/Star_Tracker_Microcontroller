@@ -30,7 +30,6 @@
 
 use crate::integration_tests::helper_functions::*;
 
-use crate::tracking_mode::database::StarDatabaseElement;
 use crate::tracking_mode::database::PyramidDatabase;
 use crate::tracking_mode::database::SearchResult;
 // use crate::tracking_mode::database::Database;
@@ -44,6 +43,7 @@ use crate::util::units::Radians;
 use crate::util::units::Degrees;
 use crate::util::list::List;
 
+use crate::nix::StarDatabaseElement;
 use crate::nix::Star;
 
 static mut K_VECTOR_BINS : Vec<usize>           = Vec::new();

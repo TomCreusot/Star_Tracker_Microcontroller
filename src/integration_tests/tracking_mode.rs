@@ -17,7 +17,7 @@ use tracking_mode::Constellation;
 use tracking_mode::StarPyramid;
 use tracking_mode::Specularity;
 use tracking_mode::StarTriangleIterator;
-use tracking_mode::database::ChunkIteratorNone;
+// use tracking_mode::database::ChunkIteratorNone;
 use tracking_mode::database::ChunkIteratorEquatorial;
 
 use nix::DatabaseGenerator;
@@ -56,9 +56,9 @@ pub fn run ( )
 
 
 	// Region Reduction
-	const REGION_SIZE  : Radians = Degrees(11.0).as_radians(); // An area smaller than FOV.
+	const REGION_SIZE  : Radians = Degrees(15.0).as_radians(); // An area smaller than FOV.
 	const REGION_NUM   : usize   = 8;   // Should not be more than 1 redundant star in a region.
-	const CHUNK_STEP   : Decimal = 2.0; // Distance * FOV between each chunk.
+	const CHUNK_STEP   : Decimal = 2.1; // Distance * FOV between each chunk.
 	const CHUNK_REACH  : Decimal = 1.1; // Overlap multiplier for each chunl.
 
 	// If stars are this close, one is excluded.
@@ -66,7 +66,7 @@ pub fn run ( )
 
 	// To create the database.
 	const NUM_BINS     : usize   = 2000; // Refer to `src/tracking_mode/database/mod.rs`.
-	const FOV          : Radians = Degrees(20.0).as_radians();
+	const FOV          : Radians = Degrees(30.0).as_radians();
 
 
 	// Disrupt input.

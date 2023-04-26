@@ -4,7 +4,6 @@ use super::PyramidConstruct;
 use super::StarTriangle;
 use super::StarPyramid;
 use super::StarPair;
-use super::Match;
 
 use crate::tracking_mode::database::ChunkIterator;
 use crate::tracking_mode::database::SearchResult;
@@ -12,6 +11,7 @@ use crate::tracking_mode::database::SearchResult;
 use crate::config::TrackingModeConsts;
 
 use crate::util::units::Equatorial;
+use crate::util::units::Match;
 use crate::util::list::ArrayList;
 use crate::util::list::List;
 use crate::util::err::Errors;
@@ -29,7 +29,6 @@ impl <T: 'static> PyramidConstruct <T>  for StarPyramid<usize>
 	/// * `database` - The database to lookup.
 	/// * `input` - The star triangle from the input (what stars are being used).
 	/// * `output` - The star triangle from the output in the same order as input.
-	/// * `regions`- Where to search.
 	/// # Returns
 	/// Ok(pilot) if valid.
 	fn find_pilot (	
@@ -53,9 +52,7 @@ impl <T: 'static> PyramidConstruct <T>  for StarPyramid<usize>
 				let mut sides_b: ArrayList<SearchResult, {T::PAIRS_MAX}> = ArrayList::new();
 				let mut sides_c: ArrayList<SearchResult, {T::PAIRS_MAX}> = ArrayList::new();
 
-				
 				// Find the side angles to the pilot, if same for each star, it is the pilot.
-				
 				database.find_close_ref_region(side_a, T::ANGLE_TOLERANCE, &mut sides_a);
 				database.find_close_ref_region(side_b, T::ANGLE_TOLERANCE, &mut sides_b);
 				database.find_close_ref_region(side_c, T::ANGLE_TOLERANCE, &mut sides_c);
@@ -69,8 +66,9 @@ impl <T: 'static> PyramidConstruct <T>  for StarPyramid<usize>
 		}
 		return Err(Errors::NoMatch);
 	}
-	
 }
+
+
 
 
 impl PyramidConstructBackEnd for StarPyramid<usize>
@@ -91,8 +89,8 @@ impl PyramidConstructBackEnd for StarPyramid<usize>
 					sides_c: &dyn List<SearchResult> ) -> Option<usize>
 	{
 		// After removing, the remaining star is the pilot and hopefuly the star 0.
-		sides_a.remove_diff(sides_b, SearchResult::has_same_pair);
-		sides_a.remove_diff(sides_c, SearchResult::has_same_pair);
+		sides_a.remove_diff(sides_b, SearchResult::has_same_star);
+		sides_a.remove_diff(sides_c, SearchResult::has_same_star);
 		
 		// Look through all the potential (a, pilot) pairs.
 		for i in 0..sides_a.size()
@@ -101,8 +99,8 @@ impl PyramidConstructBackEnd for StarPyramid<usize>
 			let a_pilot = sides_a.get(i).result;
 			let pilot_wrapped = a_pilot.find_not(output.0);
 			
-			if let Some(pilot) = pilot_wrapped {
-				
+			if let Some(pilot) = pilot_wrapped 
+			{
 				let b_pilot = StarPair(output.1, pilot);
 				let c_pilot = StarPair(output.2, pilot);
 				
@@ -112,10 +110,10 @@ impl PyramidConstructBackEnd for StarPyramid<usize>
 				let connected_c = SearchResult::index_of_pair(c_pilot, sides_c).is_some();
 				
 				if connected_a && connected_b && connected_c
-				{							
+				{
 					return Some(pilot);
-				}	
-			}	
+				}
+			}
 		}
 		return None;
 	}
@@ -147,27 +145,39 @@ mod test
 	use crate::tracking_mode::StarTriangle;
 	use crate::tracking_mode::StarPyramid;
 	use crate::tracking_mode::StarPair;
-	use crate::tracking_mode::Match;
 	
-	use crate::tracking_mode::MockPyramidConstructBackEnd;
 	use crate::tracking_mode::database::MockDatabase;
+	use crate::tracking_mode::database::ChunkIteratorNone;
+	use crate::tracking_mode::database::MockChunkIterator;
+	use crate::tracking_mode::database::SearchResult;
 	
 	use crate::util::units::Equatorial;
 	use crate::util::units::Radians;
+	use crate::util::units::Match;
 	
 	use crate::util::aliases::Decimal;
 	
 	use crate::config::TrackingModeConsts;
 
+
+	// Creates a search result with error 0.
+	// Input the star pair first and second pos.
+	#[no_coverage]
+	fn sr ( a: usize, b: usize ) -> SearchResult
+	{
+		return SearchResult{result: StarPair(a, b), error: 0.0};
+	}
+
 //###############################################################################################//
 //
 //										Confirm Pilot
 //
+// // Note, the search result error is not used in this function.
 // fn confirm_pilot ( 
 // 			&mut self, 
 //			&output, 
-//			&mut dyn List<StarPair<usize>>, 
-//			&dyn List<StarPair<usize>>, &dyn List<StarPair<usize>> ) -> Option<usize>
+//			&mut dyn List<SearchResult>, 
+//			&dyn List<SearchResult>, &dyn List<SearchResult> ) -> Option<usize>
 //
 //###############################################################################################//
 
@@ -178,9 +188,9 @@ mod test
 	{
 		let mut pyr = StarPyramid(0,0,0,0);
 		let output = StarTriangle(0, 6, 12);
-		let mut stars_a :Vec<StarPair<usize>>=vec![StarPair(0, 1), StarPair(2, 3), StarPair(4, 5)];
-		let stars_b :Vec<StarPair<usize>>=vec![StarPair(6, 7), StarPair(8, 9), StarPair(10, 11)];
-		let stars_c :Vec<StarPair<usize>>=vec![StarPair(12, 13),StarPair(14, 15),StarPair(16, 17)];
+		let mut stars_a : Vec<SearchResult> = vec![sr(0, 1),   sr(2, 3),   sr(4, 5)];
+		let stars_b     : Vec<SearchResult> = vec![sr(6, 7),   sr(8, 9),   sr(10, 11)];
+		let stars_c     : Vec<SearchResult> = vec![sr(12, 13), sr(14, 15), sr(16, 17)];
 		
 		assert_eq!(pyr.confirm_pilot(output, &mut stars_a, &stars_b, &stars_c), None);
 		assert_eq!(stars_a.size(), 0); // Should have had everything removed.
@@ -194,9 +204,9 @@ mod test
 	{
 		let mut pyr = StarPyramid(0,0,0,0);
 		let output = StarTriangle(100, 101, 102); // This is not part of any of the lists.
-		let mut stars_a : Vec<StarPair<usize>> = vec![StarPair(0, 1),   StarPair(4, 5)];
-		let stars_b     : Vec<StarPair<usize>> = vec![StarPair(6, 1),   StarPair(10, 11)];
-		let stars_c     : Vec<StarPair<usize>> = vec![StarPair(12, 13), StarPair(16, 1)];
+		let mut stars_a : Vec<SearchResult> = vec![sr(0, 1),   sr(4, 5)];
+		let stars_b     : Vec<SearchResult> = vec![sr(6, 1),   sr(10, 11)];
+		let stars_c     : Vec<SearchResult> = vec![sr(12, 13), sr(16, 1)];
 		
 		assert_eq!(pyr.confirm_pilot(output, &mut stars_a, &stars_b, &stars_c), None);
 		assert_eq!(stars_a.size(), 1); // Any without the pilot must be removed, only 1 is valid.
@@ -210,9 +220,9 @@ mod test
 	{
 		let mut pyr = StarPyramid(0,0,0,0);
 		let output = StarTriangle(100, 6, 16); // This is not part of any of the lists.
-		let mut stars_a : Vec<StarPair<usize>> = vec![StarPair(0, 1),   StarPair(4, 5)];
-		let stars_b     : Vec<StarPair<usize>> = vec![StarPair(6, 1),   StarPair(10, 11)];
-		let stars_c     : Vec<StarPair<usize>> = vec![StarPair(12, 13), StarPair(16, 1)];
+		let mut stars_a : Vec<SearchResult> = vec![sr(0, 1),   sr(4, 5)];
+		let stars_b     : Vec<SearchResult> = vec![sr(6, 1),   sr(10, 11)];
+		let stars_c     : Vec<SearchResult> = vec![sr(12, 13), sr(16, 1)];
 		
 		assert_eq!(pyr.confirm_pilot(output, &mut stars_a, &stars_b, &stars_c), None);
 		assert_eq!(stars_a.size(), 1); // Any without the pilot must be removed, only 1 is valid.
@@ -225,9 +235,9 @@ mod test
 	{
 		let mut pyr = StarPyramid(0,0,0,0);
 		let output = StarTriangle(0, 101, 16); // This is not part of any of the lists.
-		let mut stars_a : Vec<StarPair<usize>> = vec![StarPair(0, 1),   StarPair(4, 5)];
-		let stars_b     : Vec<StarPair<usize>> = vec![StarPair(6, 1),   StarPair(10, 11)];
-		let stars_c     : Vec<StarPair<usize>> = vec![StarPair(12, 13), StarPair(16, 1)];
+		let mut stars_a : Vec<SearchResult> = vec![sr(0, 1),   sr(4, 5)];
+		let stars_b     : Vec<SearchResult> = vec![sr(6, 1),   sr(10, 11)];
+		let stars_c     : Vec<SearchResult> = vec![sr(12, 13), sr(16, 1)];
 		
 		assert_eq!(pyr.confirm_pilot(output, &mut stars_a, &stars_b, &stars_c), None);
 		assert_eq!(stars_a.size(), 1); // Any without the pilot must be removed, only 1 is valid.
@@ -240,9 +250,9 @@ mod test
 	{
 		let mut pyr = StarPyramid(0,0,0,0);
 		let output = StarTriangle(0, 6, 102); // This is not part of any of the lists.
-		let mut stars_a : Vec<StarPair<usize>> = vec![StarPair(0, 1),   StarPair(4, 5)];
-		let stars_b     : Vec<StarPair<usize>> = vec![StarPair(6, 1),   StarPair(10, 11)];
-		let stars_c     : Vec<StarPair<usize>> = vec![StarPair(12, 13), StarPair(16, 1)];
+		let mut stars_a : Vec<SearchResult> = vec![sr(0, 1),   sr(4, 5)];
+		let stars_b     : Vec<SearchResult> = vec![sr(6, 1),   sr(10, 11)];
+		let stars_c     : Vec<SearchResult> = vec![sr(12, 13), sr(16, 1)];
 		
 		assert_eq!(pyr.confirm_pilot(output, &mut stars_a, &stars_b, &stars_c), None);
 		assert_eq!(stars_a.size(), 1); // Any without the pilot must be removed, only 1 is valid.
@@ -261,9 +271,9 @@ mod test
 	{
 		let mut pyr = StarPyramid(0,0,0,0);
 		let output = StarTriangle(0, 6, 16); // This is not part of any of the lists.
-		let mut stars_a : Vec<StarPair<usize>> = vec![StarPair(0, 1),   StarPair(4, 5)];
-		let stars_b     : Vec<StarPair<usize>> = vec![StarPair(6, 1),   StarPair(10, 11)];
-		let stars_c     : Vec<StarPair<usize>> = vec![StarPair(12, 13), StarPair(16, 1)];
+		let mut stars_a : Vec<SearchResult> = vec![sr(0, 1),   sr(4, 5)];
+		let stars_b     : Vec<SearchResult> = vec![sr(6, 1),   sr(10, 11)];
+		let stars_c     : Vec<SearchResult> = vec![sr(12, 13), sr(16, 1)];
 		
 		let output = pyr.confirm_pilot(output, &mut stars_a, &stars_b, &stars_c);
 		assert_eq!(output, Some(1));
@@ -278,9 +288,9 @@ mod test
 	{
 		let mut pyr = StarPyramid(0,0,0,0);
 		let output = StarTriangle(0, 6, 16); // This is not part of any of the lists.
-		let mut stars_a : Vec<StarPair<usize>> = vec![StarPair(0, 1),   StarPair(4, 2)];
-		let stars_b     : Vec<StarPair<usize>> = vec![StarPair(6, 1),   StarPair(10, 2)];
-		let stars_c     : Vec<StarPair<usize>> = vec![StarPair(12, 2), StarPair(16, 1)];
+		let mut stars_a : Vec<SearchResult> = vec![sr(0, 1),   sr(4, 2)];
+		let stars_b     : Vec<SearchResult> = vec![sr(6, 1),   sr(10, 2)];
+		let stars_c     : Vec<SearchResult> = vec![sr(12, 2), sr(16, 1)];
 		
 		// There are 2 potential pilots, the program will take the first (1).
 		let output = pyr.confirm_pilot(output, &mut stars_a, &stars_b, &stars_c);
@@ -306,7 +316,7 @@ mod test
 // fn find_pilot (	
 // 			&mut self,
 // 			stars    : &dyn List<Equatorial>, 
-// 			database : &dyn Database, 
+// 			database : &dyn ChunkIterator, 
 // 			input    : StarTriangle<usize>,
 // 			output   : StarTriangle<usize> ) -> Error<Match<usize>>
 //
@@ -334,18 +344,19 @@ mod test
 		let database = MockDatabase::new();
 		let triangle = StarTriangle(0, 1, 2);
 		
+		let chunk  = ChunkIteratorNone::new(&database);
 		
 		let mut pyr : StarPyramid<usize> = StarPyramid(0,0,0,0);
 		assert!(PyramidConstruct::<MockConfigBig>::
-			find_pilot(&mut pyr, &stars, &database, triangle, triangle).is_err());
+			find_pilot(&mut pyr, &stars, &chunk, triangle, triangle).is_err());
 		stars.push(star);
 		
 		assert!(PyramidConstruct::<MockConfigBig>::
-			find_pilot(&mut pyr, &stars, &database, triangle, triangle).is_err());
+			find_pilot(&mut pyr, &stars, &chunk, triangle, triangle).is_err());
 		stars.push(star);
 		
 		assert!(PyramidConstruct::<MockConfigBig>::
-			find_pilot(&mut pyr, &stars, &database, triangle, triangle).is_err());
+			find_pilot(&mut pyr, &stars, &chunk, triangle, triangle).is_err());
 		stars.push(star);
 	}
 
@@ -363,42 +374,43 @@ mod test
 		let mut database = MockDatabase::new();
 		let triangle = StarTriangle(0, 2, 3);
 		
+		database.expect_find_close_ref_range()
+			.times(2 * 3) 						// Called 3 times per loop
+			.returning(|_, _| return 0..0);
+		// .withf(|find, _| {find.0 < 0.0}/*0.1 < find.0*/); // star and pilot.
+		
+		let chunk  = ChunkIteratorNone::new(&database);
+		
 		let mut pyr : StarPyramid<usize> = StarPyramid(0,0,0,0);
 		// This should be called 2 * 3 times as there are 3 calls per loop and 2 valid entries.
-		database.expect_find_close_ref()
-			.times(2 * 3) 						// Called 3 times per loop
-			.returning(|_, _, _| ());
-			// .withf(|find, _| {find.0 < 0.0}/*0.1 < find.0*/); // star and pilot.
 			
 		assert! ( PyramidConstruct::<MockConfigBig>::
-			find_pilot(&mut pyr, &stars, &database, triangle, triangle).is_err() );
+			find_pilot(&mut pyr, &stars, &chunk, triangle, triangle).is_err() );
 	}
 	
 	
-	
+	#[test]
 	fn test_find_pilot_valid ( )
 	{
 		let star = Equatorial{ra: Radians(0.0), dec: Radians(0.0)};
 		let pilot = Equatorial{ra: Radians(1.0), dec: Radians(1.0)};
 		let stars : Vec<Equatorial> = vec![star, star, pilot, star];
-		let mut database = MockDatabase::new();
 		let triangle = StarTriangle(0, 1, 3);
 		
 		let mut pyr : StarPyramid<usize> = StarPyramid(0,0,0,0);
-		let mut pyr_mock = MockPyramidConstructBackEnd::new();
 			
-		static OUTPUT: [StarPair<usize>; 3] = [StarPair(0, 4), StarPair(1, 4), StarPair(2, 4)];
+		static OUTPUT: [StarPair<usize>; 3] = [StarPair(0, 4), StarPair(1, 4), StarPair(3, 4)];
 		let mut index = 0;
-		database.expect_find_close_ref()
-			.times(1 * 3)
-			.returning(move |_, _, found| {found.push_back(OUTPUT[index]); index+=1;});
 		
-		pyr_mock.expect_confirm_pilot()
-			.times(1)
-			.returning(|_, _, _, _| {return Some(4)});
-			
+		
+		let mut chunk  = MockChunkIterator::new();
+		chunk.expect_find_close_ref_region().times(1 * 3)
+			.returning(move |_,_, found|
+				{found.push_back(SearchResult{result: OUTPUT[index], error: 0.0}); index+=1;});
+		
+		
 		assert_eq! ( PyramidConstruct::<MockConfigBig>::
-			find_pilot(&mut pyr, &stars, &database, triangle, triangle).expect("Err output"), 
-			Match::<usize>{input: 1, output: 4, weight: 1.0} );
+			find_pilot(&mut pyr, &stars, &chunk, triangle, triangle).expect("Err output"), 
+			Match::<usize>{input: 2, output: 4, weight: 1.0} );
 	}
 }

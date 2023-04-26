@@ -5,11 +5,11 @@ use super::PyramidConstruct;
 use super::Constellation;
 use super::StarTriangle;
 use super::StarPyramid;
-use super::Match;
 use crate::tracking_mode::database::ChunkIterator;
 // use crate::tracking_mode::StarTriangleIterator;
 
 use crate::util::units::Equatorial;
+use crate::util::units::Match;
 use crate::util::list::List;
 use crate::util::aliases::Decimal;
 use crate::util::err::Error;
@@ -55,7 +55,7 @@ pub fn find	<T: TrackingModeConsts> (
 		// input and output both make triangles of the same length.
 		let input  : Error<StarTriangle<Equatorial>> = iter.input.search_list(stars);
 		let output : Error<StarTriangle<Equatorial>> = iter.output.search_database(database.get_database());
-		let error  : Decimal = iter.error;
+		let error  : Decimal = iter.weight;
 
 
 		// ~~~~~~~~~~~~~~~~~~~~~~~~~	 A valid match was found.		~~~~~~~~~~~~~~~~~~~~
@@ -121,8 +121,9 @@ mod test
 	use super::StarTriangle;
 	use super::StarPyramid;
 	use super::Match;
-	use crate::tracking_mode::MockSpecularityConstruct;
 	use crate::tracking_mode::database::MockDatabase;
+	use crate::tracking_mode::database::ChunkIteratorNone;
+	use crate::tracking_mode::MockSpecularityConstruct;
 	use crate::tracking_mode::MockTriangleConstruct;
 	use crate::tracking_mode::MockPyramidConstruct;
 
@@ -146,7 +147,7 @@ mod test
 	}
 
 
-
+	#[no_coverage]
 	fn compare_triangle_eq (
 		input: StarTriangle<Equatorial>,
 		output: StarTriangle<Equatorial> )
@@ -182,10 +183,11 @@ mod test
 	{
 		let a = Equatorial{ra: Radians(0.0), dec: Radians(0.0)};
 		let stars : Vec<Equatorial> = vec![a, a];
-		let mut mock_d = MockDatabase::new();
+		let mock_d = MockDatabase::new();
 		let mut mock_t = MockTriangleConstruct::new();
 		let mut mock_p = MockPyramidConstruct::new();
 		let mut mock_s = MockSpecularityConstruct::new();
+		let mut chunk  = ChunkIteratorNone::new(&mock_d);
 
 		mock_t.expect_begin()
 			.times(1)
@@ -197,7 +199,7 @@ mod test
 
 
 		let result = Constellation::find::<MockConfigBig> (
-					&stars, &mut mock_d, &mut mock_t, &mut mock_p, &mut mock_s);
+					&stars, &mut chunk, &mut mock_t, &mut mock_p, &mut mock_s);
 
 		assert_eq!(Constellation::None, result);
 
@@ -217,6 +219,10 @@ mod test
 		let mut mock_t = MockTriangleConstruct::new();
 		let mut mock_p = MockPyramidConstruct::new();
 		let mut mock_s = MockSpecularityConstruct::new();
+		
+		
+		mock_d.expect_find_star().times(3 * 3).returning(|_| Err(Errors::NoMatch));
+		let mut chunk  = ChunkIteratorNone::new(&mock_d);
 
 		mock_t.expect_begin().returning(|_, _| return);
 
@@ -235,12 +241,11 @@ mod test
 			}
 		} );
 
-		mock_d.expect_find_star().times(3 * 3).returning(|_| Err(Errors::NoMatch));
 		// 3 * 3 times as there is 3 iterations and find_star is called 3 times per loop.
 
 
 		let result = Constellation::find::<MockConfigBig> (
-			&stars, &mut mock_d, &mut mock_t, &mut mock_p, &mut mock_s);
+			&stars, &mut chunk, &mut mock_t, &mut mock_p, &mut mock_s);
 
 			assert_eq!(Constellation::None, result);
 	}
@@ -261,6 +266,9 @@ mod test
 		let mut mock_t = MockTriangleConstruct::new();
 		let mut mock_p = MockPyramidConstruct::new();
 		let mut mock_s = MockSpecularityConstruct::new();
+		
+		mock_d.expect_find_star().returning(|_| return Ok(Equatorial::zero()));
+		let mut chunk  = ChunkIteratorNone::new(&mock_d);
 
 		mock_t.expect_begin().returning(|_, _| return);
 
@@ -279,13 +287,12 @@ mod test
 			}
 		} );
 
-		mock_d.expect_find_star().returning(|_| return Ok(Equatorial::zero()));
 
 
 		mock_s.expect_same().times(3).returning(|_, _| return false);
 
 		let result = Constellation::find::<MockConfigBig> (
-			&stars, &mut mock_d, &mut mock_t, &mut mock_p, &mut mock_s);
+			&stars, &mut chunk, &mut mock_t, &mut mock_p, &mut mock_s);
 
 		assert_eq!(Constellation::None, result);
 	}
@@ -294,7 +301,7 @@ mod test
 	#[test]
 	// 4 Stars FAIL
 	// If there is triangles and the triangle is valid and the specularity is valid.
-	// If there are 4 stars, a pyramid must be found, if it cannot be found None is returned
+	// If there are 4 stars, a pyramid must be found, if it cannot be found a triangle is returned
 	fn test_find_4_stars_fail_find_pilot ( )
 	{
 		let a = Equatorial{ra: Radians(0.0), dec: Radians(0.0)};
@@ -303,6 +310,10 @@ mod test
 		let mut mock_t = MockTriangleConstruct::new();
 		let mut mock_p = MockPyramidConstruct::new();
 		let mut mock_s = MockSpecularityConstruct::new();
+		
+		mock_d.expect_find_star().returning(|_| return Ok(Equatorial::zero()));
+		let mut chunk  = ChunkIteratorNone::new(&mock_d);
+
 
 		mock_t.expect_begin().returning(|_, _| return);
 
@@ -321,7 +332,6 @@ mod test
 			}
 		} );
 
-		mock_d.expect_find_star().returning(|_| return Ok(Equatorial::zero()));
 
 
 		mock_s.expect_same().times(3).returning(|_, _| return true);
@@ -329,9 +339,10 @@ mod test
 		mock_p.expect_find_pilot().times(3).returning(|_,_,_,_| Err(Errors::NoMatch));
 
 		let result = Constellation::find::<MockConfigBig> (
-			&stars, &mut mock_d, &mut mock_t, &mut mock_p, &mut mock_s);
+			&stars, &mut chunk, &mut mock_t, &mut mock_p, &mut mock_s);
 
-		assert_eq!(Constellation::None, result);
+		let expected_fallback = Match{input: StarTriangle(a,a,a), output: StarTriangle(a,a,a), weight: 1.0};
+		assert_eq!(Constellation::Triangle(expected_fallback), result);
 	}
 
 	#[test]
@@ -348,6 +359,20 @@ mod test
 		let mut mock_p = MockPyramidConstruct::new();
 		let mut mock_s = MockSpecularityConstruct::new();
 
+		mock_d.expect_find_star()
+		.returning(|index|
+			if index == 0
+			{
+				return Ok(Equatorial::zero())
+			}
+			else
+			{
+				return Err(Errors::OutOfBounds)
+			});
+			
+		let mut chunk  = ChunkIteratorNone::new(&mock_d);
+
+
 		mock_t.expect_begin().returning(|_, _| return);
 
 		let mut i = 0;
@@ -365,17 +390,6 @@ mod test
 			}
 		} );
 
-		mock_d.expect_find_star()
-			.returning(|index|
-				if index == 0
-				{
-					return Ok(Equatorial::zero())
-				}
-				else
-				{
-					return Err(Errors::OutOfBounds)
-				});
-
 
 		mock_s.expect_same().times(3).returning(|_, _| return true);
 
@@ -383,9 +397,11 @@ mod test
 			.returning(|_,_,_,_| Ok(Match{input: 1, output: 1, weight: 0.0}));
 
 		let result = Constellation::find::<MockConfigBig> (
-			&stars, &mut mock_d, &mut mock_t, &mut mock_p, &mut mock_s);
+			&stars, &mut chunk, &mut mock_t, &mut mock_p, &mut mock_s);
 
-		assert_eq!(Constellation::None, result);
+
+		let expected_fallback = Match{input: StarTriangle(a,a,a), output: StarTriangle(a,a,a), weight: 1.0};
+		assert_eq!(Constellation::Triangle(expected_fallback), result);
 	}
 
 
@@ -406,16 +422,19 @@ mod test
 		let mut mock_p = MockPyramidConstruct::new();
 		let mut mock_s = MockSpecularityConstruct::new();
 
+		mock_d.expect_find_star()
+		.returning(|i|
+			return Ok(
+				Equatorial{ra: Radians(i as Decimal+10.0), dec: Radians(i as Decimal+10.0)}));
+		let mut chunk  = ChunkIteratorNone::new(&mock_d);
+
+
 		mock_t.expect_begin().returning(|_, _| return);
 
 		mock_t.expect_next().returning(move |_, _|
 		{		let triangle = StarTriangle(0,1,2);
 				return Some(Match{input: triangle, output: triangle, weight: 1.0});	} );
 
-		mock_d.expect_find_star()
-			.returning(|i|
-				return Ok(
-					Equatorial{ra: Radians(i as Decimal+10.0), dec: Radians(i as Decimal+10.0)}));
 
 
 		mock_s.expect_same().returning(|_, _| return true);
@@ -424,7 +443,7 @@ mod test
 			.returning(|_,_,_,_| Ok(Match{input: 3, output: 3, weight: 0.0}));
 
 		let result = Constellation::find::<MockConfigBig> (
-			&stars, &mut mock_d, &mut mock_t, &mut mock_p, &mut mock_s);
+			&stars, &mut chunk, &mut mock_t, &mut mock_p, &mut mock_s);
 
 		let expect_input = StarPyramid(stars[0], stars[1], stars[2], stars[3]);
 		let expect_output = StarPyramid(
@@ -455,17 +474,18 @@ mod test
 		let mut mock_t = MockTriangleConstruct::new();
 		let mut mock_p = MockPyramidConstruct::new();
 		let mut mock_s = MockSpecularityConstruct::new();
+		
+		mock_d.expect_find_star()
+		.returning(|i|
+			return Ok(
+				Equatorial{ra: Radians(i as Decimal+10.0), dec: Radians(i as Decimal+10.0)}));
+		let mut chunk  = ChunkIteratorNone::new(&mock_d);
 
 		mock_t.expect_begin().returning(|_, _| return);
 
 		mock_t.expect_next().returning(move |_, _|
 		{		let triangle = StarTriangle(0,1,2);
 				return Some(Match{input: triangle, output: triangle, weight: 1.0});	} );
-
-		mock_d.expect_find_star()
-			.returning(|i|
-				return Ok(
-					Equatorial{ra: Radians(i as Decimal+10.0), dec: Radians(i as Decimal+10.0)}));
 
 
 		mock_s.expect_same().returning(|_, _| return true);
@@ -479,7 +499,7 @@ mod test
 				});
 
 		let result = Constellation::find::<MockConfigBig> (
-			&stars, &mut mock_d, &mut mock_t, &mut mock_p, &mut mock_s);
+			&stars, &mut chunk, &mut mock_t, &mut mock_p, &mut mock_s);
 
 		let expect_input = StarPyramid(stars[0], stars[1], stars[2], stars[3]);
 		let expect_output = StarPyramid(

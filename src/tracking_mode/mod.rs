@@ -49,9 +49,9 @@ use crate::tracking_mode::database::SearchResult;
 
 use crate::config::TrackingModeConsts;
 
-use crate::util::aliases::Decimal;
 use crate::util::units::Vector3;
 use crate::util::units::Equatorial;
+use crate::util::units::Match;
 use crate::util::units::Radians;
 use crate::util::list::List;
 use crate::util::list::ArrayList;
@@ -73,18 +73,6 @@ pub mod database;
 //
 //###############################################################################################//
 
-/// Groups the stars to identify with their corresponding element in the database.
-#[derive(Debug, Clone, Copy, PartialEq)]
-pub struct Match <T>
-{
-	/// The values to be identified.
-	pub input: T,
-	/// The values from the database.
-	pub output: T,
-	/// The likelyhood of accuracy (futher from the center should have a lower accuracy).
-	pub weight: Decimal,
-}
-
 
 /// A set of 2 stars in equatorial space, this represents a line / angle.
 #[derive(Clone, Copy, PartialEq, Debug)]
@@ -100,16 +88,16 @@ pub struct StarTriangle<T>	( pub T, pub T, pub T );
 
 
 /// The result from the star triangle iterator.
-#[derive(Debug, Clone, Copy, PartialEq)]
-pub struct IterationResult
-{
-	/// The location of the stars in the found list.
-	pub input:  StarTriangle<usize>,
-	/// The location of the stars in the database.
-	pub output:  StarTriangle<usize>,
-	/// The lower this number, the more likely it is valid.
-	pub error:   Decimal,
-}
+// #[derive(Debug, Clone, Copy, PartialEq)]
+// pub struct IterationResult
+// {
+// 	/// The location of the stars in the found list.
+// 	pub input:  StarTriangle<usize>,
+// 	/// The location of the stars in the database.
+// 	pub output:  StarTriangle<usize>,
+// 	/// The lower this number, the more likely it is valid.
+// 	pub error:   Decimal,
+// }
 
 /// By finding every potential StarTriangle before testing their valid is bad for performance.
 /// At 3 stars, there is one triangle.
@@ -301,7 +289,7 @@ pub trait TriangleConstruct
 	/// * None if there is no more available star triangles with the given parameters.
 	/// * Some(Match{input: observed star triangle, output: database match}) if possible.
 	fn next ( &mut self, stars: &dyn List<Equatorial>, database: &mut dyn ChunkIterator
-	) -> Option<IterationResult>;
+	) -> Option<Match<StarTriangle<usize>>>;
 
 	/// Prepares the StarTriangleIterator for iterating.
 	/// # Arguments

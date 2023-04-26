@@ -1,7 +1,9 @@
-//! Implementation for BasicImage
-use crate::util::aliases::*;
+//! Implementation for [BasicImage](crate::image_processing::BasicImage).
+
+use crate::util::aliases::Byte;
 use crate::util::units::Pixel;
-use super::{BasicImage, Image};
+use crate::image_processing::BasicImage;
+use crate::image_processing::Image;
 impl <const WIDTH : usize, const HEIGHT : usize> BasicImage <WIDTH, HEIGHT>
 {
 //###############################################################################################//
@@ -86,31 +88,6 @@ impl <const WIDTH : usize, const HEIGHT : usize> Image for BasicImage <WIDTH, HE
 	/// assert_eq!(img.height(), 10);
 	/// ```
 	fn height ( &self ) -> usize	{	return HEIGHT;	}
-
-
-	/// True if the get/set will not cause a panic.
-	/// # Arguments
-	/// * `x` - The x position.
-	/// * `y` - The y position.
-	///
-	/// # Returns
-	/// True if access is safe.
-	///
-	/// # Example
-	/// ```
-	/// use star_tracker::image_processing::{BasicImage, Image};
-	/// use star_tracker::util::units::Pixel;
-	///	let img : BasicImage<10, 10> = BasicImage::new();
-	/// assert!(img.valid_pixel(Pixel{x: 0, y: 0}));
-	/// assert!(img.valid_pixel(Pixel{x: 9, y: 9}));
-	/// assert!(img.valid_pixel(Pixel{x: 0, y: 9}));
-	/// assert!(img.valid_pixel(Pixel{x: 9, y: 0}));
-	/// assert!(!img.valid_pixel(Pixel{x: 10, y: 10})); // Would panic if get or set.
-	/// ```
-	fn valid_pixel ( &self, pixel : Pixel ) -> bool 
-	{ return pixel.x < self.width() && pixel.y < self.height()	} // unsigned variables cant be -'ve.
-
-
 }
 
 
@@ -131,11 +108,22 @@ impl <const WIDTH : usize, const HEIGHT : usize> Image for BasicImage <WIDTH, HE
 #[cfg(test)]
 mod test
 {
-	use image_processing::basic_image::*;
-
+	use crate::util::units::Pixel;
+	use image_processing::BasicImage;
+	use image_processing::Image;
+	
+//###############################################################################################//
 //
-//  get ( x: usize, y: usize ) -> Byte
+//										Basic Image
 //
+// pub fn get         ( &self, x: usize, y: usize ) -> Byte 
+// pub fn set         ( &self, x: usize, y: usize, Byte ) 
+// pub fn width       ( &self ) -> usize
+// pub fn height      ( &self ) -> usize
+// pub fn valid_pixel ( &self, Pixel ) -> bool
+//
+//###############################################################################################//
+//											~ get ~												 //
 	#[test]
 	fn test_get_in_bounds ( )
 	{
@@ -155,10 +143,7 @@ mod test
 
 
 
-//
-// set ( x: usize, y: usize, value: byte )
-//
-
+//											~ set ~												 //
 	#[test]
 	fn test_set_in_bounds ( )
 	{
@@ -178,10 +163,7 @@ mod test
 	}
 
 
-	//
-	// width() -> usize
-	//
-
+//											~ width ~											 //
 	#[test]
 	fn test_width ( )
 	{
@@ -189,11 +171,7 @@ mod test
 		assert_eq!(10, img.width());
 	}
 
-
-	//
-	// height() -> usize
-	//
-
+//											~ height ~											 //
 	#[test]
 	fn test_height ( )
 	{

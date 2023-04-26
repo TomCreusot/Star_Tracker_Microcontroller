@@ -1,26 +1,26 @@
-//! The following equations are essential to the implementation of any algorithms using Whaba's method.
+//! This contains the `estimate` method, use this to obtain the attitude of the camera.
 
-use super::Quest;
-use super::Wahba;
-use super::AttitudeDetermination;
+use crate::attitude_determination::Quest;
+use crate::attitude_determination::Wahba;
+use crate::attitude_determination::AttitudeDetermination;
 
-use tracking_mode::Match;
 
-// use util::aliases::Decimal;
+use crate::util::list::List;
 
-use util::list::List;
-
-use util::units::CRP;
-use util::units::Matrix;
-// use util::units::MatPos;
-use util::units::Vector3;
-use util::units::Quaternion;
+use crate::util::units::CRP;
+use crate::util::units::Match;
+use crate::util::units::Matrix;
+use crate::util::units::Vector3;
+use crate::util::units::Quaternion;
 
 use config::AttitudeDeterminationConsts;
 
 
 impl AttitudeDetermination for Quest
 {
+	/// Call this to retrieve the attitude of the camera.  
+	/// Input a list of matches (input: image, output: actual, weight: reliability).  
+	/// Output a quaternion rotation describing the position of the camera.
 	fn estimate <T: 'static> ( positions: &dyn List<Match<Vector3>> ) -> Quaternion
 		where T: AttitudeDeterminationConsts
 	{
@@ -50,7 +50,7 @@ impl AttitudeDetermination for Quest
 		// Luckly there is a simpler solution with the polynomial.
 
 		let mut i = 0;
-		while T::LAMBDA_PRECISION <= (lambda - last_lambda).abs()
+		while T::LAMBDA_PRECISION <= (lambda - last_lambda).abs() && i < 10
 		{
 			last_lambda = lambda;
 
@@ -58,10 +58,6 @@ impl AttitudeDetermination for Quest
 			let f_prime = 4.0*lambda.powf(3.0) - 2.0 * (a + b) * lambda - c;
 			lambda = lambda - f/f_prime;
 
-			if i == 10
-			{
-				panic!("Too many loops in quest algorithm, reduce the precision of lambda.");
-			}
 			i += 1;
 		}
 

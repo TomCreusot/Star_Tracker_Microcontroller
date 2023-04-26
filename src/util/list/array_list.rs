@@ -45,49 +45,23 @@ impl <T, const N: usize> ArrayList <T, N> where T: Copy
 	/// use star_tracker::util::list::List;
 	///
 	/// let array: [u32; 5] = [2, 4, 6, 8, 10];
-	/// let list: ArrayList<u32, 5> = ArrayList::from_array(&array).expect("within range.");
+	/// let list: ArrayList<u32, 5> = ArrayList::from_array(&array);
 	/// assert_eq!(list.get(0), 2);
 	/// assert_eq!(list.get(1), 4);
 	/// assert_eq!(list.get(2), 6);
 	/// assert_eq!(list.get(3), 8);
 	/// assert_eq!(list.get(4), 10);
 	/// ```
-	pub fn from_array<const NN: usize> ( array: &[T; NN] ) -> Error<Self>
+	pub fn from_array ( array: &[T; N] ) -> Self
 	{
-		if N < NN
+		let mut list : ArrayList<T, N> = ArrayList::new();
+		for e in array
 		{
-			return Err(Errors::InvalidSize);
+			let _ = list.push_back(e.clone());
 		}
-		let mut list = ArrayList::new();
-		for i in 0..array.len()
-		{
-			let _ = list.push_back(array[i]);
-		}
-		return Ok(list);
+		return list;
 	}
 }
-
-
-
-//###############################################################################################//
-//								---	ListIterator Implementation ---
-//###############################################################################################//
-// Why did I comment this???
-// Document your code kids :P
-/*impl<'a, T, const N: usize> IntoIterator for &'a ArrayList<T, N> where T: Clone {
-	type Item = T;
-	type IntoIter = ListIterator<'a, T>;
-
-	/// Creates an iterator for arraylist.
-	fn into_iter(self) -> Self::IntoIter {
-		ListIterator {
-			list: self,
-			index: 0,
-		}
-	}
-}*/
-
-
 
 
 //###############################################################################################//
@@ -425,7 +399,7 @@ impl <T, const N: usize> Clone for ArrayList<T, N> where T:Clone
 		let mut list: Self = ArrayList::new();
 		for i in 0..self.size()
 		{
-			list.push_back(self.get(i)).expect("Array is of different size?");
+			let _ = list.push_back(self.get(i));
 		}
 		return list;
 	}
@@ -451,7 +425,6 @@ mod test
 	use crate::util::err::Errors;
 	use crate::util::err::Error;
 
-
 //###############################################################################################//
 //
 //										Constructors
@@ -475,7 +448,7 @@ mod test
 	fn test_from_array ( ) -> Error<()>
 	{
 		let array: [u32; 5] = [2, 4, 6, 8, 10];
-		let list: ArrayList<u32, 5> = ArrayList::from_array(&array)?;
+		let list: ArrayList<u32, 5> = ArrayList::from_array(&array);
 		assert_eq!(list.get(0), 2);
 		assert_eq!(list.get(1), 4);
 		assert_eq!(list.get(2), 6);
@@ -483,38 +456,8 @@ mod test
 		assert_eq!(list.get(4), 10);
 		return Ok(());
 	}
-
-	#[test]
-	// Test if the array is smaller than the array list.
-	// Only a few elements in the list should be filled.
-	fn test_from_not_enough_elements ( ) -> Error<()>
-	{
-		let array: [u32; 4] = [2, 4, 6, 8];
-		let list: ArrayList<u32, 5> = ArrayList::from_array(&array)?;
-		assert_eq!(list.size(), 4);
-		assert_eq!(list.get(0), 2);
-		assert_eq!(list.get(1), 4);
-		assert_eq!(list.get(2), 6);
-		assert_eq!(list.get(3), 8);
-		return Ok(());
-	}
-
-	#[test]
-	// SHOULD FAIL.
-	// Test if the is too big.
-	// On calling the function, InvalidSize should be called as the list cant accomidate the array.
-	fn test_from_array_too_many_elements ( )
-	{
-		let array: [u32; 5] = [2, 4, 6, 8, 10];
-		let list: Error<ArrayList<u32, 4>> = ArrayList::from_array(&array);
-		if let Err(e) = list
-		{
-			assert_eq!(e, Errors::InvalidSize);
-			return;
-		}
-		assert!(false);
-	}
-
+	
+	
 //###############################################################################################//
 //
 //										Basic Accessors
@@ -640,18 +583,9 @@ mod test
 	// Error checking would also slow the program.
 	fn test_get_not_enough_elements ( )
 	{
-		let lst: ArrayList<u32, 0> = ArrayList::new();
+		let lst: ArrayList<u32, 1> = ArrayList::from_array(&[1]);
+		lst.get(0); // to satisfy lcov
 		lst.get(1);
-	}
-	
-	#[test]
-	#[should_panic = "Out of Bounds"]
-	// get() is core to everything, it was deemed too difficult to do error checking.
-	// Error checking would also slow the program.
-	fn test_get_out_of_bounds ( )
-	{
-		let lst: ArrayList<u32, 10> = ArrayList::new();
-		lst.get(11);
 	}
 
 
@@ -833,7 +767,7 @@ mod test
 	// If the value to add is kicked, the function should return false.
 	fn test_slot_ascending_full ( )
 	{ 
-		let mut input: ArrayList<i32, 6> = ArrayList::from_array(&[0, 1, 2, 3, 4, 5]).expect("");
+		let mut input: ArrayList<i32, 6> = ArrayList::from_array(&[0, 1, 2, 3, 4, 5]);
 
 		let mut to_slot = -1;
 		assert!(input.slot(to_slot, sort_ascending));// -1  0  1  2  3  4
@@ -878,7 +812,7 @@ mod test
 	// If the value to add is kicked, the function should return false.
 	fn test_slot_descending_full ( )
 	{
-		let mut input: ArrayList<i32, 6> = ArrayList::from_array(&[100,3,2, 1, 0, -1]).expect("");
+		let mut input: ArrayList<i32, 6> = ArrayList::from_array(&[100,3,2, 1, 0, -1]);
 		
 		assert_eq!(input.size(), 6);
 		// Full, 100, 3, 2, 1, 0, -1
@@ -900,4 +834,45 @@ mod test
 		assert_eq!(input.get(4), 2);
 		assert_eq!(input.get(5), 1);
 	}
+
+//###############################################################################################//
+//
+//										Clone
+//
+/// pub fn clone ( &self ) -> Self
+//
+//###############################################################################################//
+
+	#[test]
+	fn test_clone ( )
+	{
+		let a : ArrayList<u32, 4> = ArrayList::from_array(&[10, 20, 30, 40]);
+		let b = a.clone();
+		
+		assert_eq!(a.get(0), b.get(0));
+		assert_eq!(a.get(1), b.get(1));
+		assert_eq!(a.get(2), b.get(2));
+		assert_eq!(a.get(3), b.get(3));
+	}
 }
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+

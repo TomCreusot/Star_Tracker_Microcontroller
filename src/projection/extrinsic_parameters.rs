@@ -1,4 +1,4 @@
-//! Implementation of ExtrinsicParameters
+//! Implementation of [ExtrinsicParameters](crate::projection::ExtrinsicParameters)
 use super::ExtrinsicParameters;
 use super::SpaceWorld;
 use super::SpaceCamera;
@@ -201,6 +201,7 @@ mod test
 //
 //###############################################################################################//
 
+	#[no_coverage]
 	#[test]
 	// Checks if the forward vector is always the center of the output.
 	fn test_look_at_center ( ) -> Error<()>
@@ -233,7 +234,7 @@ mod test
 		let mut rng = rand::thread_rng();
 		let range_ra  = Equatorial::range_ra();
 		let range_dec = Equatorial::range_dec();
-		for _i in 0..100
+		for _ in 0..100
 		{
 			let forward = Equatorial {
 				ra:  Radians(rng.gen_range(range_ra.start().0..range_ra.end().0)),
@@ -249,6 +250,7 @@ mod test
 	}
 
 
+	#[no_coverage]
 	#[test]
 	// Ensures the output is not flipped.
 	// * A point on the axis adjacent to forward and up must be on the correct side after the transform.
@@ -259,7 +261,7 @@ mod test
 		let range_dec = Equatorial::range_dec();
 
 		// Adjacent Axis
-		for _i in 0..100
+		for _ in 0..100
 		{
 			let forward = Equatorial {
 				ra:  Radians(rng.gen_range(range_ra.start().0..range_ra.end().0)),
@@ -269,8 +271,9 @@ mod test
 				dec: Radians(rng.gen_range(range_dec.start().0..range_dec.end().0)) };
 
 			let rotation = 
-				ExtrinsicParameters::look_at(forward, up)?.rotation;
-			let left = forward.to_vector3().cross(up.to_vector3()).normalized()?;
+				ExtrinsicParameters::look_at(forward, up).expect("look_at failed").rotation;
+			let left = forward.to_vector3().cross(up.to_vector3()).normalized()
+				.expect("cross failed");
 			// [0 0 1] x [0 1 0] = [-1 0 0]
 			assert_eq!(rotation.multiply(left), Vector3{x: -1.0, y: 0.0, z: 0.0});
 		}
@@ -278,6 +281,7 @@ mod test
 	}
 
 
+	#[no_coverage]
 	#[test]
 	// Ensures the output is not flipped.
 	// * A point on the plane of forward and up must be on the correct point after the transform.
@@ -288,7 +292,7 @@ mod test
 		let range_dec = Equatorial::range_dec();
 
 		// Same Plane
-		for _i in 0..100
+		for _ in 0..100
 		{
 			let forward = Equatorial {
 				ra:  Radians(rng.gen_range(range_ra.start().0..range_ra.end().0)),
@@ -310,6 +314,7 @@ mod test
 	}
 
 
+	#[no_coverage]
 	#[test]
 	// Errors::InvalidValue should be returned if the inputs are equal.
 	fn test_look_at_error ( )

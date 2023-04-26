@@ -821,14 +821,17 @@ impl <const ROW: usize, const COLUMN: usize> fmt::Display for Matrix<ROW, COLUMN
 			for xx in 0..self.width()
 			{
 				let val = self.get(MatPos{col: xx, row: yy});
-				write!(f, "{:.2}", val)?;
+				write!(f, "{:.3}", val)?;
 				if xx < self.width() - 1
 				{
 					write!(f, ",\t")?;
 				}
 			}
 			write!(f, "\t|")?;
-			write!(f, "\n")?;
+			if yy < self.height() - 1
+			{
+				write!(f, "\n")?;
+			}
 		}
 		return Ok(());
 	}
@@ -852,7 +855,10 @@ impl <const ROW: usize, const COLUMN: usize> fmt::Debug for Matrix<ROW, COLUMN> 
 				}
 			}
 			write!(f, "\t|")?;
-			write!(f, "\n")?;
+			if yy < self.height() - 1
+			{
+				write!(f, "\n")?;
+			}
 		}
 		return Ok(());
 	}
@@ -993,7 +999,7 @@ impl<const ROW: usize, const COLUMN: usize> PartialEq for Matrix<ROW, COLUMN> {
 #[cfg(test)]
 mod test
 {
-	use rand::prelude::*;
+	// use rand::prelude::*;
 	use util::aliases::Decimal;
 	use util::units::Vector3;
 	use util::units::Matrix;
@@ -1418,7 +1424,7 @@ mod test
 
 
 
-
+/*
 
 
 
@@ -1533,7 +1539,7 @@ mod test
 			assert_eq!(q.rotate_point(pt), rotation.multiply(pt));
 		}
 	}
-
+*/
 
 
 
@@ -1817,4 +1823,41 @@ mod test
 		mat_other.matrix[2][3] = 32.0;
 		assert!(mat3x4 == mat_other);
 	}
+	
+//###############################################################################################//
+//
+//										Debug
+// Display: Show neat (3dp)
+// Debug: Show everything (all dp)
+// 
+//###############################################################################################//
+//								- Display / Debug fmt -											 //
+	#[test]
+	fn test_display ( )
+	{
+		let mut mat   : Matrix<2,3> = Matrix::new();
+		mat.matrix[0][0] = 0.00000;
+		mat.matrix[1][0] = 1.00000;
+		mat.matrix[0][1] = 0.11111;
+		mat.matrix[1][1] = 1.11111;
+		mat.matrix[0][2] = 0.22222;
+		mat.matrix[1][2] = 1.22222;
+		assert_eq!(format!("{}", mat), 
+			"\n|\t0.000,\t0.111,\t0.222\t|\n|\t1.000,\t1.111,\t1.222\t|");
+	}
+	
+	#[test]
+	fn test_debug ( )
+	{
+		let mut mat   : Matrix<2,3> = Matrix::new();
+		mat.matrix[0][0] = 0.00000;
+		mat.matrix[1][0] = 1.00000;
+		mat.matrix[0][1] = 0.11111;
+		mat.matrix[1][1] = 1.11111;
+		mat.matrix[0][2] = 0.22222;
+		mat.matrix[1][2] = 1.22222;
+		assert_eq!(format!("{:?}", mat), 
+			"\n|\t0,\t0.11111,\t0.22222\t|\n|\t1,\t1.11111,\t1.22222\t|");
+	}
+	
 }

@@ -7,10 +7,10 @@ use crate::util::list::List;
 
 use crate::nix::Star;
 use crate::nix::Distribute;
+use crate::nix::StarDatabaseElement;
 
 use crate::tracking_mode::StarPair;
 use crate::tracking_mode::database::PyramidDatabase;
-use crate::tracking_mode::database::StarDatabaseElement;
 use crate::tracking_mode::database::KVector;
 
 
@@ -340,54 +340,54 @@ mod test
 
 	use nix::Star;
 
-	#[test]
-	// Testing the kvector involves creating a kvector and testing its accuracy.
-	fn test_gen_database ( )
-	{
-		panic!("NYI");
-
-		// let mut rng = rand::thread_rng();
-		// let mut stars : Vec<Star> = Vec::new();
-		//
-		// let fov = Degrees(30.0).to_radians();
-		// let num_bins = 100;
-		// for _i in 0..100
-		// {
-		// 	let str = "".to_string();
-		// 	let eq = Equatorial{ra: Degrees(rng.gen::<Decimal>() * 360.0).to_radians(),
-		// 		dec: Degrees(rng.gen::<Decimal>() * 180.0 - 90.0).to_radians()};
-		// 	stars.push(Star{mag: 0.0, pos: eq, spec: str.clone(), name: str.clone()});
-		// }
-		//
-		// let gen = DatabaseGenerator::gen_database(&stars, fov, num_bins);
-		// let db = gen.get_database();
-		//
-		// let mut count = 0;
-		// for ii in 0..stars.len()
-		// {
-		// 	for jj in ii+1..stars.len()
-		// 	{
-		// 		let dist = stars[ii].pos.angle_distance(stars[jj].pos);
-		// 		if dist < fov / 2.0 && ii != jj
-		// 		{
-		// 			count += 1;
-		// 			let mut found : Vec<StarPair<usize>> = Vec::new();
-		// 			db.find_close_ref(dist, Radians(0.001), &mut found);
-		//
-		// 			let mut valid = false;
-		// 			for kk in 0..found.len()
-		// 			{
-		// 				let star_1 = db.find_star(found[kk].0).expect("?");
-		// 				let star_2 = db.find_star(found[kk].1).expect("?");
-		// 				valid |= (star_1.angle_distance(star_2) - dist).abs() < 0.001;
-		// 			}
-		// 			assert!(valid)
-		// 		}
-		// 	}
-		// }
-		// assert_eq!(count, db.pairs.size());
-		// assert_eq!(stars.len(), db.catalogue.size());
-	}
+	// #[test]
+	// // Testing the kvector involves creating a kvector and testing its accuracy.
+	// fn test_gen_database ( )
+	// {
+	// 	// panic!("NYI");
+	// 
+	// 	// let mut rng = rand::thread_rng();
+	// 	// let mut stars : Vec<Star> = Vec::new();
+	// 	//
+	// 	// let fov = Degrees(30.0).to_radians();
+	// 	// let num_bins = 100;
+	// 	// for _i in 0..100
+	// 	// {
+	// 	// 	let str = "".to_string();
+	// 	// 	let eq = Equatorial{ra: Degrees(rng.gen::<Decimal>() * 360.0).to_radians(),
+	// 	// 		dec: Degrees(rng.gen::<Decimal>() * 180.0 - 90.0).to_radians()};
+	// 	// 	stars.push(Star{mag: 0.0, pos: eq, spec: str.clone(), name: str.clone()});
+	// 	// }
+	// 	//
+	// 	// let gen = DatabaseGenerator::gen_database(&stars, fov, num_bins);
+	// 	// let db = gen.get_database();
+	// 	//
+	// 	// let mut count = 0;
+	// 	// for ii in 0..stars.len()
+	// 	// {
+	// 	// 	for jj in ii+1..stars.len()
+	// 	// 	{
+	// 	// 		let dist = stars[ii].pos.angle_distance(stars[jj].pos);
+	// 	// 		if dist < fov / 2.0 && ii != jj
+	// 	// 		{
+	// 	// 			count += 1;
+	// 	// 			let mut found : Vec<StarPair<usize>> = Vec::new();
+	// 	// 			db.find_close_ref(dist, Radians(0.001), &mut found);
+	// 	//
+	// 	// 			let mut valid = false;
+	// 	// 			for kk in 0..found.len()
+	// 	// 			{
+	// 	// 				let star_1 = db.find_star(found[kk].0).expect("?");
+	// 	// 				let star_2 = db.find_star(found[kk].1).expect("?");
+	// 	// 				valid |= (star_1.angle_distance(star_2) - dist).abs() < 0.001;
+	// 	// 			}
+	// 	// 			assert!(valid)
+	// 	// 		}
+	// 	// 	}
+	// 	// }
+	// 	// assert_eq!(count, db.pairs.size());
+	// 	// assert_eq!(stars.len(), db.catalogue.size());
+	// }
 
 
 	// limit_regions ( stars, region size, # in region ) -> Vec

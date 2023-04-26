@@ -88,10 +88,10 @@ use crate::util::err::Error;
 
 pub use crate::tracking_mode::database::database::Database as Database;
 pub use crate::tracking_mode::database::chunk_iterator::ChunkIterator as ChunkIterator;
+pub use crate::tracking_mode::database::chunk_iterator::MockChunkIterator as MockChunkIterator;
 pub use crate::tracking_mode::database::database::MockDatabase as MockDatabase;
 
 mod k_vector;
-mod star_database_element;
 #[cfg(not(feature = "setup"))]
 pub mod array_database;
 pub mod pyramid_database;
@@ -152,17 +152,6 @@ pub struct SearchResult
 }
 
 
-/// An element with all the details required to insert into the database.
-#[derive(Clone, Copy, Debug)]
-pub struct StarDatabaseElement
-{
-	/// The location of the stars (does not matter what order they are in).
-	pub pair : StarPair<usize>,
-	/// The angular separation between the stars.
-	pub dist : Radians,
-}
-
-
 /// The compiled k-vector database, this will allow the construction of the database and the lookup of elements in the database.
 #[derive(Clone, Copy)]
 pub struct PyramidDatabase <'a>
@@ -187,6 +176,8 @@ pub struct PyramidDatabase <'a>
 /// This is not recomended but may be useful for testing.
 pub struct ChunkIteratorNone <'a>
 {
+	/// Next needs to be called once, if begin has been called last this is false, otherwise true.
+	started: bool,
 	/// The database to search.
 	database: &'a dyn Database,
 }

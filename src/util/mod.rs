@@ -1,10 +1,10 @@
-//! util contains any tools which may be important for general use in this project.
-//! Everything inside this module is expected to be used in multiple modules.
+//! util contains any tools which may be important for general use in this project.  
+//! Everything inside this module is expected to be used in multiple modules.  
+//! 
 //! This includes;
 //! * Types of storage lists.
 //! * Aliases of datatypes to decide precision.
 //! * Coordinate systems and units that will be used.
-//! * Ways of evenly distributing points on a sphere.
 //! * Types of errors.
 //! * Methods for testing.
 

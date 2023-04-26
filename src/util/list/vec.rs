@@ -284,14 +284,12 @@ mod test
 	{
 		let lst: Vec<u32> = Vec::new();
 		assert!(lst.is_empty());
-	}
-	
-	#[test]
-	// If the list has N capacity, it is empty when there are no elements.
-	fn test_is_empty_size_1 ( )
-	{
-		let lst: Vec<u32> = Vec::new();
+		
+		let lst: Vec<f32> = Vec::new();
 		assert!(lst.is_empty());
+		
+		let lst: Vec<i32> = Vec::new();
+		assert!(lst.is_empty());	
 	}
 	
 	#[test]

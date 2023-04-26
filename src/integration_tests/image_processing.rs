@@ -256,7 +256,7 @@ pub fn get_blobs <const HISTOGRAM_SIZE: usize, const MAX_BLOB_SIZE : usize>
 	image.copy_to(&mut img).expect("?");
 
 	let mut histogram : [u32; HISTOGRAM_SIZE] = [0; HISTOGRAM_SIZE];
-	img.histogram(&mut histogram);
+	let _ = img.histogram(&mut histogram);
 	let threshold = img.percent_threshold(thresh_percent, &histogram);
 
 

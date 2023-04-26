@@ -9,9 +9,9 @@ use star_tracker::config::TrackingModeConstructConsts;
 use star_tracker::nix::Star;
 use star_tracker::nix::Io;
 use star_tracker::nix::Template;
-use star_tracker::tracking_mode::database::StarDatabaseElement;
 use star_tracker::tracking_mode::database::KVector;
 use star_tracker::util::aliases::Decimal;
+use star_tracker::nix::StarDatabaseElement;
 
 fn main ( )
 {
