@@ -8,8 +8,11 @@
 Cargo.lock
 
 # Remove all html files in doc and coverage
-target/*
-database/*
+star_tracker_lib/target
+star_tracker_nix/target
+star_tracker_embed/target
+star_tracker_nix/results/*
+star_tracker_nix/database/*
 
 
 # Removes massive databases

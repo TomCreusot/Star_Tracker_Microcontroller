@@ -1,0 +1,64 @@
+[package]
+name = "nix"
+version = "0.1.0"
+authors = ["Tom Creusot <tom.creusot@student.curtin.edu.au>"]
+publish = false
+description = "The code for a star tracker which could be used on a microcontroller for satellites."
+repository = "https://github.com/TomCreusot/Star_Tracker_Microcontroller"
+
+#licence = "GNU General Public License v3.0"
+
+[lib]
+name = "star_tracker_nix"
+path = "lib/lib.rs"
+
+# [bin]
+# name = "database_generator"
+# path = "src/bin/database_generator.rs"
+
+# [[bin]]
+# name = "integration_tests"
+# path = "src/bin/integration_tests.rs"
+
+
+
+[dependencies.star_tracker_lib]
+path = "../star_tracker_lib"
+default_features = false
+features = ["nix", "bit_64"]
+
+
+[dependencies]
+# The package with all the star tracker stuff in.
+# star_tracker_microcontroller = {path="../lib", features=["nix", "bit_64"], default_features=false}
+
+image = "0.23.13"   # Inbuilt image reader.
+csv   = "1.1.5"     # For Reading Database
+
+
+static_assertions = "1.1.0" # Compile time asserts.
+
+
+plotters = "0.3.1"          # Observing the database and hipacaros database.
+
+curl     = "0.4.38"         # Downloading HYG database.
+
+# Read .fit files for corr.fits (lens distortion)
+fitsio        = "0.19.0" 
+fitsio-derive = "0.2.0"
+
+opencv = "0.63.0"   # For lens calibration.
+rand    = "0.8.0"   # Create random variables which can be used for testing and simulating.
+
+# Probably not relevent any more.
+serde = { version = "1.0",  features = ["derive"] }
+
+
+[features]
+setup = [] # tracking_mode/database will not exist until this is run.
+
+
+
+# llcov testing
+[profile.release]
+debug = true

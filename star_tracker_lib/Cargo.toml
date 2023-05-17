@@ -1,0 +1,42 @@
+[package]
+name = "star_tracker_lib"
+version = "0.1.0"
+authors = ["Tom Creusot <tom.creusot@student.curtin.edu.au>"]
+publish = false
+description = "The code for a star tracker which could be used on a microcontroller for satellites."
+repository = "https://github.com/TomCreusot/Star_Tracker_Microcontroller"
+
+#licence = "GNU General Public License v3.0"
+
+[lib]
+name = "star_tracker_lib"
+path = "src/lib.rs"
+required-features=[""]
+
+
+[dependencies]
+libm = "0.2.6"              # no_std maths.
+
+
+#  TESTING
+rand = {version = "0.8.0", optional = true}      # Create random variables which can be used for testing and simulating.
+mockall = {version = "0.11.4", optional = true}  # Mocks functions (Mainly used in tracking_mode).
+
+
+# Bench test.
+[dev-dependencies]
+criterion = "0.2.4"     # Measures performance of unit tests.
+rand = "0.8.0"          # Create random variables which can be used for testing and simulating.
+mockall = "0.11.4"      # Mocks functions.
+
+
+[features]
+test = ["dep:rand", "dep:mockall"]
+bit_32 = []
+bit_64 = []
+nix = ["dep:rand", "dep:mockall"]
+
+
+# llcov testing
+[profile.release]
+debug = true

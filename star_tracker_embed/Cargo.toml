@@ -1,0 +1,35 @@
+[package]
+name = "micro_rust"
+version = "0.1.0"
+# edition = "2021"
+
+
+
+# [target.thumbv7em-none-eabihf]
+# # use Tlink.c script from the cortex-m-rt crate
+# rustflags = [
+# 	"-C", "link-arg=-Tlink.x",
+# ]
+
+[dependencies.stm32h7xx-hal]
+version = "^0"
+features = ["stm32h743v", "usb_hs", "rt"]
+
+
+[dependencies]
+star_tracker_lib = {path = "../star_tracker_lib", features=["bit_32"]}
+
+cortex-m = "^0.7.7"      # Access to the generic ARM peripherals
+cortex-m-rt = "^0.7.3"  # Startup code for the ARM Core
+panic-halt = "^0.2.0"    # Panic handler
+usb-device = "0.2.9"
+usbd-serial = "0.1.1"
+# panic-semihosting = "0.6.0"
+# stm32h7xx-hal = {version = "0.13.1", features = ["stm32h743v","rt"]}
+cfg-if = "1.0.0"
+log = "0.4.17"
+# embed = "0.1.1"
+# cargo-embed = "0.16.0"
+
+
+# rustc_plugin = "0.5.35"
