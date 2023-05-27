@@ -86,6 +86,11 @@ pub struct StarPair<T>		( pub T, pub T );
 #[derive(Clone, Copy, Debug, PartialEq)]
 pub struct StarTriangle<T>	( pub T, pub T, pub T );
 
+/// A set of 4 stars in 3D space, this represents a pyramid.
+#[derive(Clone, Copy, PartialEq, Debug)]
+pub struct StarPyramid<T> ( pub T, pub T, pub T, pub T );
+
+
 
 
 
@@ -134,13 +139,6 @@ pub struct StarTriangleIterator <const N_MAX_MATCHES: usize>
 
 	angle_tolerance: Radians,
 }
-
-
-
-/// A set of 4 stars in 3D space, this represents a pyramid.
-#[derive(Clone, Copy, PartialEq, Debug)]
-pub struct StarPyramid<T> ( pub T, pub T, pub T, pub T );
-
 
 
 /// An iterator which reduces the chances of getting the same star twice.
@@ -193,7 +191,7 @@ pub struct KernelIterator
 #[derive(Debug, PartialEq, Copy, Clone)]
 pub enum Constellation
 {
-	Pyramid ( Match<StarPyramid<Equatorial>> ),
+	Pyramid  ( Match<StarPyramid<Equatorial>>  ),
 	Triangle ( Match<StarTriangle<Equatorial>> ),
 	None
 }
@@ -218,6 +216,21 @@ pub enum Specularity
 //										Traits
 //
 //###############################################################################################//
+
+
+
+
+/// Used to tell the search that it should give up.  
+/// It is recomended to abandon the search if a certain time is exceeded as the longer a search takes the less likely it is correct.  
+/// Also some searches can take far longer then others.
+#[cfg_attr(test, automock)]
+pub trait AbandonSearch
+{
+	/// Returns true if the search should be abandon.  
+	/// Returns false if the search should continue.  
+	fn should_abort ( &self ) -> bool;
+}
+
 
 #[cfg_attr(test, automock)]
 /// Use to compare regions.

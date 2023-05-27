@@ -155,7 +155,7 @@ impl NixImage for CVImage
 	/// * `px` - The pixel to get.
 	fn get ( &self, px: Pixel ) -> Color
 	{
-		let c = self.0.at_2d::<Point3>(px.x as i32, px.y as i32).expect("?");
+		let c = self.0.at_2d::<Point3>(px.y as i32, px.x as i32).expect("?");
 		return Color::Custom(c.z, c.y, c.x);
 		}
 
@@ -166,7 +166,7 @@ impl NixImage for CVImage
 	fn set ( &mut self, px: Pixel, value: Color )
 	{
 		let px_val = value.get_color();
-		let c = self.0.at_2d_mut::<Point3>(px.x as i32, px.y as i32).expect("?");
+		let c = self.0.at_2d_mut::<Point3>(px.y as i32, px.x as i32).expect("?");
 		c.x = px_val[2];
 		c.y = px_val[1];
 		c.z = px_val[0];

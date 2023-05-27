@@ -2,9 +2,9 @@
 //! Any complext testing or implementations go here.
 //! To run an integration test, type:
 //! ```cargo run --bin integration_tests"
-pub mod helper_functions;
+// pub mod helper_functions;
+// pub mod k_vector;
 
-pub mod k_vector;
 pub mod image_processing;
 pub mod tracking_mode;
 

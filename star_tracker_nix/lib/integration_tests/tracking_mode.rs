@@ -5,10 +5,12 @@
 
 use rand::prelude::*;
 
+use std::time::Duration;
 
 use star_tracker_lib::util::aliases::Decimal;
 use star_tracker_lib::util::units::Radians;
 use star_tracker_lib::util::units::Degrees;
+use star_tracker_lib::util::units::Hours;
 use star_tracker_lib::util::units::Equatorial;
 use star_tracker_lib::util::distribution::Distribute;
 
@@ -17,7 +19,11 @@ use star_tracker_lib::tracking_mode::Constellation;
 use star_tracker_lib::tracking_mode::StarPyramid;
 use star_tracker_lib::tracking_mode::Specularity;
 use star_tracker_lib::tracking_mode::StarTriangleIterator;
+use star_tracker_lib::tracking_mode::AbandonSearch;
+use star_tracker_lib::tracking_mode::database::ChunkIteratorNone;
+use star_tracker_lib::tracking_mode::database::ChunkIteratorRegional;
 use star_tracker_lib::tracking_mode::database::ChunkIteratorEquatorial;
+use star_tracker_lib::tracking_mode::database::ChunkIteratorDeclination;
 
 use star_tracker_lib::config::NixConstsStruct;
 use star_tracker_lib::config::NixConsts;
@@ -29,7 +35,7 @@ use star_tracker_lib::projection::SpaceWorld;
 use crate::io::Star;
 use crate::io::Io;
 use crate::tracking_mode::DatabaseGenerator;
-use crate::integration_tests::helper_functions::print_standard_equatorial;
+use crate::tracking_mode::SearchTimeout;
 
 
 
@@ -39,10 +45,8 @@ impl TrackingModeConsts for TrackingConstsTest
 {
 	const PAIRS_MAX       : usize = 2000;							// Irrelevant, ensure big.
 	const TRIANGLES_MAX   : usize = 2000;							// Irrelevant, ensure big.
-	// const SPECULARITY_MIN : Decimal = 300.0;						// If the triangle is flipped.
 	const SPECULARITY_MIN : Decimal = 0.0001;						// If the triangle is flipped.
-	const ANGLE_TOLERANCE : Radians = Degrees(0.1).as_radians(); 	// Maximum inaccuracy.
-	// const ANGLE_TOLERANCE : Radians = Degrees(0.1).as_radians(); // Maximum inaccuracy.
+	const ANGLE_TOLERANCE : Radians = Degrees(0.08).as_radians(); 	// Maximum inaccuracy.
 }
 
 pub fn run ( )
@@ -51,33 +55,33 @@ pub fn run ( )
 
 	// To reduce size of database.
 	const MAGNITUDE_MIN: Decimal = -20.0;
-	const MAGNITUDE_MAX: Decimal = 5.8;
+	const MAGNITUDE_MAX: Decimal = 3.88;
 
 	// The separation of the sample points, make this smaller than the FOV so you can test more edge cases.
 	const SAMPLE_FOV   : Radians = Degrees(5.0).as_radians();
 
 
 	// Region Reduction
-	const REGION_SIZE  : Radians = Degrees(15.0).as_radians(); // An area smaller than FOV.
+	const REGION_SIZE  : Radians = Degrees(22.0).as_radians(); // An area smaller than FOV.
 	const REGION_NUM   : usize   = 8;   // Should not be more than 1 redundant star in a region.
 	const CHUNK_STEP   : Decimal = 2.1; // Distance * FOV between each chunk.
 	const CHUNK_REACH  : Decimal = 1.1; // Overlap multiplier for each chunl.
 
 	// If stars are this close, one is excluded.
-	const DOUBLE_STAR_TOLERANCE : Radians = Degrees(0.2).as_radians();
+	const DOUBLE_STAR_TOLERANCE : Radians = TrackingConstsTest::ANGLE_TOLERANCE;//Degrees(0.2).as_radians();
 
 	// To create the database.
 	const NUM_BINS     : usize   = 2000; // Refer to `src/tracking_mode/database/mod.rs`.
-	const FOV          : Radians = Degrees(30.0).as_radians();
+	const FOV          : Radians = Degrees(44.0).as_radians();
 
 
 	// Disrupt input.
-	const VARIATION_MAG         : Decimal = 0.1; // The variation outside of the magnitude range.
-	const VARIATION_POSITION    : Radians = Degrees(0.06).as_radians(); // Error.
-	const FALSE_STARS 			: usize   = 4; // Maximum number of fake, random stars.
-	const HIDDEN_STARS			: usize   = 0; // Maximum number of real stars to remove.
+	const VARIATION_MAG         : Decimal = 0.0000001;//0.1; // The variation outside of the magnitude range.
+	const VARIATION_POSITION    : Radians = Radians(0.00001);//Degrees(0.06).as_radians(); // Error.
+	const FALSE_STARS           : usize   = 0;//4; // Maximum number of fake, random stars.
+	const HIDDEN_STARS          : usize   = 0; // Maximum number of real stars to remove.
 
-	const CAP_STARS             : usize   = 15; // Max stars in image.
+	const CAP_STARS             : usize   = 100; // Max stars in image.
 
 
 	// Loose conditions
@@ -120,7 +124,7 @@ pub fn run ( )
 	println!("* Double Star Reduction");
 	let stars_limit_double = DatabaseGenerator::limit_double_stars(&stars_limit_mag, DOUBLE_STAR_TOLERANCE);
 	println!("* Region Reduction");
-	let stars_limit_reg    = DatabaseGenerator::limit_regions(&stars_limit_double,REGION_SIZE, REGION_NUM);
+	let stars_limit_reg = DatabaseGenerator::limit_regions(&stars_limit_double,REGION_SIZE, REGION_NUM);
 
 
 	println!(" - {} stars total.", stars.len());
@@ -159,18 +163,27 @@ pub fn run ( )
 		println!(" - {} best coverage region reduced", coverage_best_reg);
 	}
 
+	let gen_2 : DatabaseGenerator = DatabaseGenerator::gen_database(&stars_limit_mag, FOV, TrackingConstsTest::ANGLE_TOLERANCE);
+	let database_2 = gen_2.get_database();
+	println!(" - {} angles generated (without).", database_2.pairs.size());
 
 
-	let gen : DatabaseGenerator = DatabaseGenerator::gen_database(&stars_limit_reg, FOV, NUM_BINS);
+	let gen : DatabaseGenerator = DatabaseGenerator::gen_database(&stars_limit_reg, FOV, TrackingConstsTest::ANGLE_TOLERANCE);
+	// let gen : DatabaseGenerator = DatabaseGenerator::gen_database_regional(&stars_limit_reg, FOV, TrackingConstsTest::ANGLE_TOLERANCE, Degrees(50.0).as_radians());
 	let database = gen.get_database();
-	// let mut database_iterator = ChunkIteratorNone::new(&database);
-	let mut database_iterator = ChunkIteratorEquatorial::new(&database, FOV * CHUNK_STEP, CHUNK_REACH);
+	// let database = gen.get_database_regional();
+	let mut database_iterator = ChunkIteratorNone::new(&database);
+	// let mut database_iterator = ChunkIteratorRegional::new(&database);
+	// let mut database_iterator = ChunkIteratorEquatorial::new(&database, Degrees(45.0).as_radians(), 0.2);
+	// let mut database_iterator = ChunkIteratorDeclination::new(&database, Degrees(21.0).as_radians(), 0.2, ChunkIteratorDeclination::randomise_none);
+	// let mut database_iterator = ChunkIteratorDeclination::new(&database, Degrees(50.0).as_radians(), 1.5, ChunkIteratorDeclination::randomise_parity);
 
 
 
 	println!();
 	println!("Created database");
 	println!(" - {} angles generated.", database.pairs.size());
+	println!(" - {} bins", database.k_vector.size());
 
 
 
@@ -200,6 +213,7 @@ pub fn run ( )
 	let mut avg_time_pyramid   = 0;
 	let mut avg_time_triangle  = 0;
 	let mut avg_time_error     = 0;
+	let mut avg_time_cap       = 0;
 
 	// let center = Equatorial{ra: Degrees(30.0).to_radians(), dec: Degrees(50.0).to_radians()};
 	for center in observation
@@ -256,11 +270,18 @@ pub fn run ( )
 		//
 		// Actual Algorithm
 		let timer : std::time::Instant = std::time::Instant::now();
-
+		// 
 		let constellation : Constellation = Constellation::find::<TrackingConstsTest>(
 			&observable, &mut database_iterator,
 			&mut StarTriangleIterator::<{TrackingConstsTest::PAIRS_MAX}>::new(),
-			&mut StarPyramid(0,0,0,0), &mut Specularity::Ignore);
+			&mut StarPyramid(0,0,0,0), &mut Specularity::Ignore, 
+			&SearchTimeout::start_timer(Duration::from_millis(TIME_GOOD as u64)));
+		
+		// let constellation : Constellation = Constellation::new::<TrackingConstsTest>(
+		// 	&observable, &mut database_iterator,
+		// 	&mut StarTriangleIterator::<{TrackingConstsTest::PAIRS_MAX}>::new(),
+		// 	&mut StarPyramid(0,0,0,0), &mut Specularity::Ignore,
+		// 		&SearchTimeout::start_timer(Duration::from_millis(TIME_GOOD as u64)));
 
 		let time = timer.elapsed();
 		match print_result(test_num, time, constellation, center, rotation, observable, TIME_GOOD)
@@ -270,7 +291,7 @@ pub fn run ( )
 			Result::Error        =>{num_error          +=1; avg_time_error    += time.as_millis();}
 			Result::ErrorPyramid =>{num_error_pyramid  +=1; avg_time_error    += time.as_millis();}
 			Result::ErrorTriangle=>{num_error_triangle +=1; avg_time_error    += time.as_millis();}
-			Result::ErrorTime    =>{num_error_time +=1; }
+			Result::ErrorTime    =>{num_error_time +=1; avg_time_cap += time.as_millis(); }
 		}
 		test_num+=1;
 	}
@@ -287,6 +308,7 @@ pub fn run ( )
 	println!("{:.2} ms\t avg time pyramid." ,avg_time_pyramid as Decimal /num_pyramid as Decimal);
 	println!("{:.2} ms\t avg time triangle.",avg_time_triangle as Decimal/num_triangle as Decimal);
 	println!("{:.2} ms\t avg time error.",   avg_time_error as Decimal   /(num_error + num_error_pyramid + num_error_triangle) as Decimal);
+	println!("{:.2} ms\t avg time cap.",     avg_time_cap as Decimal   /(num_error_time as Decimal));
 
 	println!("");
 	println!("");
@@ -307,6 +329,11 @@ pub fn run ( )
 
 
 
+
+pub fn run_test ( )
+{
+	
+}
 
 
 
@@ -438,4 +465,34 @@ fn print_true ( val : bool ) -> String
 	let color = if !val {"\x1B[41;1m"} else {"\x1B[0m\x1B[1;32m"};
 	let text = if val { "T" } else { "F" };
 	return format!("{}{}\x1B[0m", color, text);
+}
+
+
+
+
+
+
+
+/// Prints in standard ra: hours, dec: degrees.
+pub fn print_standard_equatorial ( to_print: Equatorial ) -> String
+{
+	let ra = hour_time_format(to_print.ra.to_hours());
+
+	let dec_degrees = to_print.dec.to_degrees().0;
+	
+	// let mut dec_hour = self.dec.to_hours();
+	// dec_hour = Hours(dec_hour.0.fract());
+	// let dec_minutes = dec_hour.minutes();
+	// let dec_seconds = dec_hour.seconds();
+	let dec_minutes = (dec_degrees.fract() * 60.0).copysign(1.0); // arc minutes (1/60 degree).
+	let dec_seconds = (dec_minutes.fract() * 60.0).copysign(1.0); // arc minutes (1/60 degree).
+	let dec = format!("{:2.0}° {:2.0}' {:5.2}\"", dec_degrees, dec_minutes, dec_seconds);
+
+	return format!("J200( {} | {} )", ra, dec);
+}
+
+// Prints hours in better format.
+pub fn hour_time_format ( hours : Hours ) -> String
+{
+	return format!("{:2.0}h {:2.0}m {:5.2}s", hours.hours(), hours.minutes(), hours.seconds());
 }

@@ -1,5 +1,5 @@
 [package]
-name = "micro_rust"
+name = "star_tracker_embed"
 version = "0.1.0"
 # edition = "2021"
 

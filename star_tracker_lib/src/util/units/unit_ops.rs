@@ -6,6 +6,10 @@ use core::ops::Add;
 use core::ops::Sub;
 use core::ops::Div;
 use core::ops::Neg;
+use core::ops::BitAnd;
+use core::ops::BitOr;
+use core::ops::BitOrAssign;
+use core::ops::BitAndAssign;
 use core::fmt;
 
 use crate::util::units::Degrees;
@@ -15,6 +19,7 @@ use crate::util::units::Hours;
 use crate::util::units::Quaternion;
 use crate::util::units::Equatorial;
 use crate::util::units::AngleAxis;
+use crate::util::units::BitField;
 use crate::util::units::Vector3;
 use crate::util::units::Vector2;
 use crate::util::units::MatPos;
@@ -590,6 +595,33 @@ impl fmt::Debug for Vector3 {
 
 
 
+//###############################################################################################//
+//									--- Regions ---
+//###############################################################################################//
+
+impl BitAnd<BitField> for BitField
+{
+	type Output = Self;
+	fn bitand ( self, rhs: BitField ) -> BitField {
+		return BitField(self.0 & rhs.0); }}
+
+
+impl BitOr<BitField> for BitField
+{
+	type Output = Self;
+	fn bitor ( self, rhs: BitField ) -> BitField {
+		return BitField(self.0 | rhs.0); }}
+
+
+impl BitAndAssign<BitField> for BitField
+{
+	fn bitand_assign ( &mut self, rhs: BitField ) { *self = *self & rhs; }}
+
+
+impl BitOrAssign<BitField> for BitField
+{
+	fn bitor_assign ( &mut self, rhs: BitField ) { *self = *self | rhs; }}
+
 
 
 
@@ -1005,5 +1037,38 @@ mod test
 		assert_eq!(vec_1, vec_2);
 		assert!( vec_1.test_close(&vec_3, 1.001));
 		assert!(!vec_1.test_close(&vec_3, 0.999));
+	}
+
+
+
+
+
+
+//###############################################################################################//
+//
+//										BitField
+//
+// Tested Together ops
+// pub fn bitand        ( self, BitField ) -> BitField
+// pub fn bitor         ( self, BitField ) -> BitField
+// pub fn bitand_assign ( &mut self, BitField )
+// pub fn bitor_assign  ( &mut self, BitField )
+//
+//###############################################################################################//
+//										~ ops ~													 //
+
+	#[test]
+	fn test_bit_field_ops ( )
+	{
+		let mut field_1 = BitField(0b1010101);
+		let     field_2 = BitField(0b0000111);
+		
+		assert_eq!(field_1 | field_2, BitField(0b1010111));
+		assert_eq!(field_1 & field_2, BitField(0b0000101));
+		
+		field_1 |= BitField(0b10);
+		assert_eq!(field_1, BitField(0b1010111));
+		field_1 &= BitField(0b11111);
+		assert_eq!(field_1, BitField(0b0010111));
 	}
 }

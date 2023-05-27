@@ -9,11 +9,13 @@ pub mod quaternion;
 pub mod equatorial;
 pub mod crp;
 pub mod matrix;
+pub mod bit_field;
 pub mod angle_axis;
 
 use crate::core_include::*;
 
 use crate::util::aliases::Decimal;
+use crate::util::aliases::UInt;
 
 // use serde::Deserialize;
 
@@ -391,6 +393,22 @@ pub struct MatPos
 }
 
 
+
+
+//###############################################################################################//
+//										---	BitField ---
+//###############################################################################################//
+/// Stores a bit field and can do bit operations easily.
+#[derive(Copy, Clone, PartialEq, Debug)]
+pub struct BitField ( pub UInt );
+
+/// Specifies how to compare bit fields.
+#[derive(Copy, Clone, PartialEq, Debug)]
+pub enum BitCompare
+{
+	Any(BitField),
+	All(BitField),
+}
 
 
 

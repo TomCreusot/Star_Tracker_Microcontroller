@@ -5,8 +5,8 @@ chip = "STM32H755ZITx"
 [with_rtt.rtt]
 enabled = true
 
-# [default.rtt]
-# enabled = true
+[default.rtt]
+enabled = true
 
 [default.reset]
 # Whether or not the target should be reset.

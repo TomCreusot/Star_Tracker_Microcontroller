@@ -28,9 +28,13 @@ impl <const N: usize> TriangleConstruct for StarTriangleIterator<N>
 	fn next ( &mut self, stars: &dyn List<Equatorial>, database: &mut dyn ChunkIterator
 															) -> Option<Match<StarTriangle<usize>>>
 	{
+		// BOTTLENECK
+		// The bottle neck is finding a set of stars which form a triangle.
+		
 		let mut tries : Option<Match<StarTriangle<usize>>> = Option::None;
 		'_outer: loop // This is the correct use of a do while loop.
 		{
+			
 			// Once all possiblities for a single kernal step are exhausted.
 			// The kernal will step, new stars will be chosen and a list of database matches are generated.
 			while !self.step()
@@ -44,6 +48,7 @@ impl <const N: usize> TriangleConstruct for StarTriangleIterator<N>
 			let a = self.pair_a.get(self.index_a);
 			let b = self.pair_b.get(self.index_b);
 			let c = self.pair_c.get(self.index_c);
+			
 			let triangle = StarTriangle::construct_triangle(a.result, b.result, c.result);
 
 			// Leaves the loop if a, b and c sides of the database are connected.

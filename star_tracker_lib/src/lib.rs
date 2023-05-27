@@ -78,8 +78,10 @@
 //! 	- Solution
 //! 		- Get someone to verify it is correct.
 //! 		- Ensure there is no singularities.
-// #![cfg_attr(    any(test, feature = "nix"),  allow(unused_imports))] // Stops maths import error.
+#![cfg_attr(any(test, feature = "nix"),  allow(unused_imports))] // Stops maths import error.
 #![feature(no_coverage)]                        // If a file should not be tested.
+#![feature(let_chains)]                         // Allows a while let loop better (constellation).
+#![feature(int_roundings)]                      // Allows div_ceil
 #![feature(generic_const_exprs)]                // Newer version of associated_type_defaults.
 #![feature(const_fn_floating_point_arithmetic)] // allows constant Degrees.as_radians() function.
 #![cfg_attr(not(any(test, feature = "nix")), no_std)]       // When not test, there must be no_std.
@@ -92,16 +94,13 @@
 
 extern crate libm;
 
-// #[cfg(not(any(test, feature = "nix")))] 
-// #[macro_use]
-// extern crate core;    // std alternative.
+#[cfg(any(test, feature = "nix"))] 
+#[macro_use]
+extern crate core;    // std alternative.
 
 
-
-// pub use crate::util::core_include::*;
-
-#[cfg(    any(test, feature = "nix"))]  extern crate mockall; // Test Mocks.
-#[cfg(    any(test, feature = "nix"))]  extern crate rand;    // Testing randomness.
+#[cfg(any(test, feature = "nix"))]  extern crate mockall; // Test Mocks.
+#[cfg(any(test, feature = "nix"))]  extern crate rand;    // Testing randomness.
 
 #[allow(dead_code)] pub mod util;
 #[allow(dead_code)] pub mod image_processing;

@@ -82,10 +82,12 @@ use crate::core_include::*;
 
 use super::StarPair;
 
-use crate::util::units::Equatorial;
-use crate::util::units::Radians;
-use crate::util::aliases::Decimal;
 use crate::util::linear_lookup::LinearLookup;
+use crate::util::aliases::Decimal;
+use crate::util::aliases::UInt;
+use crate::util::units::Equatorial;
+use crate::util::units::BitField;
+use crate::util::units::Radians;
 use crate::util::err::Error;
 
 pub use crate::tracking_mode::database::database::Database as Database;
@@ -98,6 +100,7 @@ pub use crate::tracking_mode::database::database::MockDatabase as MockDatabase;
 
 mod k_vector;
 pub mod pyramid_database;
+pub mod regional_database;
 pub mod database;
 pub mod chunk_iterator;
 pub mod search_result;
@@ -159,12 +162,65 @@ pub struct SearchResult
 #[derive(Clone, Copy)]
 pub struct PyramidDatabase <'a>
 {
+	/// The field of view used when the database was constructed.
 	pub fov:       Radians,
+	
+	/// The equation of the k_vector which points to the k_vector table `k_vector`.
 	pub k_lookup:  KVector,
+	
+	/// The k_vector table pointed to from `k_lookup`.
 	pub k_vector:  &'a dyn LinearLookup<usize>,
+	
+	/// Pairs of stars in order of separation.  
+	/// The separation is not provided, use the `k_lookup`, `k_vector` to find stars with a specific separation.  
+	/// This points to the `cataloge`, where each element in the star pair is an index of the catalogue.
 	pub pairs:     &'a dyn LinearLookup<StarPair<usize>>,
+	
+	/// The stars location in the sky.
+	/// Use the `k_lookup`, `k_vector`, `pairs` to find the pairs of stars.
 	pub catalogue: &'a dyn LinearLookup<Equatorial>,
 }
+
+
+/// This database is required for the [ChunkIteratorRegional](crate::tracking_mode::database::ChunkIteratorRegional).  
+/// A list specifying the chunk the star is located in is required as the iterator uses a bitfield.
+#[derive(Clone, Copy)]
+pub struct RegionalDatabase<'a>
+{
+	/// The field of view used when the database was constructed.
+	pub fov:       Radians,
+	
+	/// The number of bits in the `catalogue_field` bit field.
+	pub num_fields: UInt,
+	
+	
+	/// The equation of the k_vector which points to the k_vector table `k_vector`.
+	pub k_lookup:  KVector,
+
+	/// The k_vector table pointed to from `k_lookup`.
+	pub k_vector:  &'a dyn LinearLookup<usize>,
+
+	/// Pairs of stars in order of separation.  
+	/// The separation is not provided, use the `k_lookup`, `k_vector` to find stars with a specific separation.  
+	/// This points to the `cataloge`, where each element in the star pair is an index of the catalogue.
+	pub pairs:     &'a dyn LinearLookup<StarPair<usize>>,
+
+	/// The stars location in the sky.
+	/// Use the `k_lookup`, `k_vector`, `pairs` to find the pairs of stars.
+	pub catalogue: &'a dyn LinearLookup<Equatorial>,
+
+	/// Reflects the index of the `catalogue`.  
+	/// This represents what *region/chunk* of the sky the field is located in.
+	/// Use this to identify if a star is relevant.
+	pub catalogue_field: &'a dyn LinearLookup<BitField>
+}
+
+
+
+
+
+
+
 
 /// A chunk iterator is a way of optimising the database search process.  
 /// When searching the database for star matches, the database will return matches from around the entire celestial sphere.  
@@ -191,7 +247,7 @@ pub struct ChunkIteratorNone <'a>
 /// To ensure that all the pairs are within the same camera frame, a chunk iterator is used to move between each chunk/region.  
 /// This ensures that only stars within the field of view will be used.  
 ///  
-/// Consider that checking for triangle matches is a tripple loop O(n^3) while a chunk search is O(m).
+/// Consider that checking for triangle matches is a triple loop O(n^3) while a chunk search is O(m).
 /// By reducing the number of incorrect matches (n) by increasing the regions (m), there is a large performance uplift.  
 /// This also creates a higher reliability where the difference in time between a match and a false positive are greater.  
 ///  
@@ -203,7 +259,6 @@ pub struct ChunkIteratorEquatorial <'a>
 {
 	/// The database to search.
 	database: &'a dyn Database,
-	
 	
 	/// How many declination (vertical bands) have been covered.
 	index_dec: usize,
@@ -231,3 +286,115 @@ pub struct ChunkIteratorEquatorial <'a>
 }
 
 
+
+/// A chunk iterator is a way of optimising the database search process.  
+/// When searching the database for star matches, the database will return matches from around the entire celestial sphere.  
+/// To ensure that all the pairs are within the same camera frame, a chunk iterator is used to move between each chunk/region.  
+/// This ensures that only stars within the field of view will be used.  
+/// 
+/// Consider that checking for triangle matches is a triple loop O(n^3) while a chunk search is O(m).
+/// By reducing the number of incorrect matches (n) by increasing the regions (m), there is a large performance uplift.  
+/// This also creates a higher reliability where the difference in time between a match and a false positive are greater.  
+///    
+/// For ChunkIteratorEquatorial, chunks are determined by a bounded area between two declination bands.  
+/// These bands are generated by having 2 caps of 1/2 *chunk_step* at the poles and a distance of *chunk_step* approaching the equator.  
+/// There is also a *chunk_size_multiplier*, this allows the bands to overlap sligtly as a percent of the step.  
+/// `
+///               *
+///             -----          1/2 chunk_step
+///           ----------       chunk_step
+///        ---------------     chunk_step
+///        ---------------     chunk_step
+///           ----------       chunk_step
+///             -----          1/2 chunk_step
+///               *
+///
+/// `
+///
+pub struct ChunkIteratorDeclination <'a>
+{
+	/// The database to search.
+	database: &'a dyn Database,
+	
+	/// fn randomiser ( current step, number of steps ) -> index of chunk (must cover all chunks starting from 0 to n - 1).
+	/// Use `ChunkIteratorDeclination::randomise_parity`.  
+	/// This is here becasue the chunks are designed to overlap.  
+	/// Because they overlap, it is more likely that neigbouring chunks will produce the same result.  
+	/// To avoid testing the same area twice in a row, te randomiser function should input the step index and the number of steps and output the chunk to look at.  
+	/// ChunkIteratorDeclination::randomise_parity will do all the even chunks followed by the odd chunks ensuring that the order does not overlap. 
+	randomiser: fn (usize, usize) -> usize,
+	
+	/// The current step.
+	index: usize,
+	/// The number of bands in the celestial sphere.
+	num:   usize,
+	
+	/// The max/min range for the current declination.
+	dec: Range<Radians>,
+	
+	/// The distance between declination centers.  
+	/// The wider this value, the less chunks there are.
+	chunk_step: Radians,
+	/// Multiplied by chunk step to give the range coverage of the chunk.  
+	/// The wider this value, the more coverage but less performance.  
+	/// `chunk_size_multiplier` must be greater than 1.
+	chunk_size_multiplier: Decimal
+}
+
+
+
+
+/// A chunk iterator is a way of optimising the database search process.  
+/// When searching the database for star matches, the database will return matches from around the entire celestial sphere.  
+/// To ensure that all the pairs are within the same camera frame, a chunk iterator is used to move between each chunk/region.  
+/// This ensures that only stars within the field of view will be used.  
+/// 
+/// Consider that checking for triangle matches is a triple loop O(n^3) while a chunk search is O(m).
+/// By reducing the number of incorrect matches (n) by increasing the regions (m), there is a large performance uplift.  
+/// This also creates a higher reliability where the difference in time between a match and a false positive are greater.  
+///   
+/// For `ChunkIteratorRegional`, a special database (`RegionalDatabase`) must be used.  
+/// This database has a list containing a bitfield specifying a region where each star is located.  
+/// When this iterator is used, it will check if either star in the star pair are within the search region.  
+/// If the stars are outside of the region, they will be excluded.  
+///  
+/// These regions are a set of equaly spaced circles with some overlap.  
+///  
+/// Due to the aditional size of the database, it is recomended to use a different iterator if you are lacking space...
+pub struct ChunkIteratorRegional <'a>
+{
+	/// The database to search.
+	database: &'a RegionalDatabase<'a>,
+
+	/// This incriments from 0 representing what bit to investigate.
+	index: UInt,
+	
+	/// Has the iterator started iterating.  
+	/// Due to the design of the other iterators, next must be called before the iterator can begin.  
+	/// Therefore index should start from -1.  
+	/// Since the bitfield uses a uint, this variable must specify if it is the first iteration.
+	started: bool,
+	
+}
+
+
+
+
+/// Like ChunkIteratorEquatorial except it does not iterate.  
+/// This is used so that you can search a small reagion of the sky.  
+/// The usecase is if you have a general idea of the location of the attitude but not good enough.
+/// For areas that go past 360 degrees, either use a negative min bounds or a value over 360 for max.
+pub struct ChunkAreaSearch <'a>
+{
+	/// The database to search.
+	database: &'a dyn Database,
+	
+	/// The max/min range for the current declination.
+	dec: Range<Radians>,
+	
+	/// The max/min range for the current right ascension.
+	ra: Range<Radians>,
+	
+	/// Has begin been called without next?
+	started: bool,
+}

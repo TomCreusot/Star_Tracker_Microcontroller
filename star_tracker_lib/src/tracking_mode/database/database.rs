@@ -87,7 +87,7 @@ pub trait Database
 	fn get_pairs_size     ( &self ) -> usize;
 
 	/// Gets the catalogue array.
-	/// Used for any trait implementations bellow.
+	/// Used for any trait implementations below.
 	fn get_catalogue      ( &self, index: usize ) -> Equatorial;
 	/// Gets the catalogue array.
 	/// Used for any trait implementations bellow.

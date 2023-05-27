@@ -4,7 +4,7 @@ pub mod nix_image;
 pub use crate::image_processing::nix_image::NixImage as NixImage;
 
 /// Wrapper for opencv::core::Mat.
-pub struct CVImage ( opencv::core::Mat );
+pub struct CVImage ( pub opencv::core::Mat );
 
 
 

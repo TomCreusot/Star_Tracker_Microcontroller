@@ -51,7 +51,7 @@ static mut STAR_PAIRS    : Vec<StarPair<usize>> = Vec::new();
 pub fn run ( )
 {
 	let num_stars = 100;
-	let num_bins = 1000; // If the bins are too small, there is a massive performance hit.
+	let tolerance = Radians(0.01); // The tolerance determines the number of bins.
 	
 	// used in the construction of the database.
 	let gen_catalogue  : Vec<Star>                = generate_catalogue(num_stars);

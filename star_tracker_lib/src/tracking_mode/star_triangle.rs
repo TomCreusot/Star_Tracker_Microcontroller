@@ -10,6 +10,7 @@ use crate::util::units::Vector3;
 use crate::util::units::Equatorial;
 
 use crate::util::list::List;
+// use crate::util::list::ArrayList;
 
 use crate::util::err::Errors;
 use crate::util::err::Error;
@@ -33,34 +34,36 @@ impl StarTriangle<usize>
 	{
 		// (i, j) and (i, k)  (i)
 		let same_ab = StarPair::find_same(pair_a, pair_b);
-		// (i, j) and (j, k)  (j)
-		let same_ac = StarPair::find_same(pair_a, pair_c);
-		// (i, k) and (j, k)  (k)
-		let same_bc = StarPair::find_same(pair_b, pair_c);
-
-		// A triangle can be formed.
-		if same_ab.is_some() && same_ac.is_some() && same_bc.is_some()
+		
+		if let Some(ab) = same_ab
 		{
-			let ab = same_ab.unwrap();
-			let ac = same_ac.unwrap();
-			let bc = same_bc.unwrap();
-			if ab != ac && ab != bc && ac != bc
+			// (i, j) and (j, k)  (j)
+			let same_ac = StarPair::find_same(pair_a, pair_c);
+			
+			if let Some(ac) = same_ac
 			{
-				return Option::Some(
-					StarTriangle(same_ab.unwrap(), same_ac.unwrap(), same_bc.unwrap()));
+				// (i, k) and (j, k)  (k)
+				let same_bc = StarPair::find_same(pair_b, pair_c);
+
+				// A triangle can be formed.
+				if let Some(bc) = same_bc
+				{
+					if ab != ac && ab != bc && ac != bc
+					{
+						return Option::Some(StarTriangle(ab, ac, bc));
+					}
+				}
 			}
 		}
-
 		return Option::None;
 	}
 }
 
-/*
 
-impl <T: 'static> TriangleConstruct <T> for StarTriangle<usize>
-	// where T: TrackingModeConsts
-	// where T: TrackingModeConsts, [(); T::PAIRS_MAX]: Sized
-	where T: TrackingModeConsts, ArrayList<(), {T::PAIRS_MAX}> : Sized
+
+// This is the alternative to the star_triangle_iterator uncomment this and old_find in constellation to test.
+/*
+impl StarTriangle<usize>
 {
 	/// Finds every triangle from the provided stars which matches the database.
 	/// ***DOES NOT CHECK FOR SPECULARITY!!!***
@@ -68,14 +71,14 @@ impl <T: 'static> TriangleConstruct <T> for StarTriangle<usize>
 	/// * `stars` - The stars in the image.
 	/// * `database` - The database to search through.
 	/// * `triangles` -  The output.
-	fn find_match_triangle (
-								&mut self,
+	pub fn find_match_triangle <T: crate::config::TrackingModeConsts> (
 								stars: &dyn List<Equatorial>,
 								database: &dyn Database,
-								triangles: &mut dyn List<Match<StarTriangle<usize>>>
+								triangles: &mut dyn List<crate::util::units::Match<StarTriangle<usize>>>
 							)
+							where [(); T::PAIRS_MAX]:
 	{
-		let mut iter = KernelIterator::new( stars.size() );
+		let mut iter = super::KernelIterator::new( stars.size() );
 
 		while iter.step()
 		{
@@ -86,9 +89,9 @@ impl <T: 'static> TriangleConstruct <T> for StarTriangle<usize>
 
 
 			// Search the database for each side.
-			let mut matches_a : ArrayList<StarPair<usize>, {T::PAIRS_MAX}> = ArrayList::new();
-			let mut matches_b : ArrayList<StarPair<usize>, {T::PAIRS_MAX}> = ArrayList::new();
-			let mut matches_c : ArrayList<StarPair<usize>, {T::PAIRS_MAX}> = ArrayList::new();
+			let mut matches_a : ArrayList<crate::tracking_mode::database::SearchResult, {T::PAIRS_MAX}> = ArrayList::new();
+			let mut matches_b : ArrayList<crate::tracking_mode::database::SearchResult, {T::PAIRS_MAX}> = ArrayList::new();
+			let mut matches_c : ArrayList<crate::tracking_mode::database::SearchResult, {T::PAIRS_MAX}> = ArrayList::new();
 
 			database.find_close_ref(side_a, T::ANGLE_TOLERANCE, &mut matches_a);
 			database.find_close_ref(side_b, T::ANGLE_TOLERANCE, &mut matches_b);
@@ -105,11 +108,11 @@ impl <T: 'static> TriangleConstruct <T> for StarTriangle<usize>
 						{
 							// println!("{}, {}, {}", ii, jj, kk);
 							// (i, j) and (i, k)  (i)
-							let same_ab=StarPair::find_same(matches_a.get(ii),matches_b.get(jj));
+							let same_ab=StarPair::find_same(matches_a.get(ii).result,matches_b.get(jj).result);
 							// (i, j) and (j, k)  (j)
-							let same_ac=StarPair::find_same(matches_a.get(ii),matches_c.get(kk));
+							let same_ac=StarPair::find_same(matches_a.get(ii).result,matches_c.get(kk).result);
 							// (i, k) and (j, k)  (k)
-							let same_bc=StarPair::find_same(matches_b.get(jj),matches_c.get(kk));
+							let same_bc=StarPair::find_same(matches_b.get(jj).result,matches_c.get(kk).result);
 
 							// A triangle can be formed.
 							if same_ab.is_some() && same_ac.is_some() &&
@@ -120,7 +123,7 @@ impl <T: 'static> TriangleConstruct <T> for StarTriangle<usize>
 									same_ab.unwrap(),
 									same_ac.unwrap(),
 									same_bc.unwrap());
-								let found = Match{input: input, output: output, weight: 1.0};
+								let found = crate::util::units::Match{input: input, output: output, weight: 1.0};
 								triangles.push_back(found)
 									.expect("array: Triangles, was just found to not be full.");
 							}
@@ -132,8 +135,8 @@ impl <T: 'static> TriangleConstruct <T> for StarTriangle<usize>
 	}
 
 }
-
 */
+
 
 impl StarTriangle<usize>
 {

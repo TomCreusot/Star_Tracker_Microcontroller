@@ -35,11 +35,11 @@ fn main (  )
 	let mut database_stars : Vec<Star> = Vec::with_capacity(1000);
 	let mut magnitude_stars : Vec<Equatorial> = Vec::with_capacity(1000);
 
-	const MAGNITUDE_RANGE : LinearRange = LinearRange{min: -10.0, max: 7.0, num: 35};
+	const MAGNITUDE_RANGE : LinearRange = LinearRange{min: 2.0, max: 7.0, num: 16};
 	const FOV_RANGE       : LinearRange = LinearRange{
-		min: 0.0 * M_PI / 180.0, 
-		max: 50.0 * M_PI / 180.0, 
-		num: 50 };
+		min: Degrees(10.0).as_radians().0,
+		max: Degrees(90.0).as_radians().0, 
+		num: 40 };
 	
 	let mut smallest_num_stars : Vec<Vec<u32>> = vec![vec![0; MAGNITUDE_RANGE.num]; FOV_RANGE.num];
 	let mut percent_above_3 : Vec<Vec<Decimal>> = vec![vec![0.0; MAGNITUDE_RANGE.num]; FOV_RANGE.num];
@@ -201,6 +201,7 @@ impl LinearRange
 	// Returns the next value in the sequence
 	fn get ( &self, iteration: usize ) -> Decimal
 	{
-		iteration as Decimal * (self.max - self.min) / self.num as Decimal
+		return 
+		iteration as Decimal * (self.max - self.min) / self.num as Decimal + self.min as Decimal;
 	}
 }

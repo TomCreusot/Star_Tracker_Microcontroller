@@ -6,14 +6,14 @@ use crate::tracking_mode::StarPair;
 use crate::util::units::Equatorial;
 use crate::util::units::Radians;
 
-use super::PyramidDatabase;
+use super::RegionalDatabase;
 use super::Database;
 
 // The new function is located in template.txt and array_database.
 // To use new, ```use crate::tracking_mode::database::array_database;```
 // To modify, go to template.txt, modify it and run database_generator.rs.
 
-impl <'a> Database for PyramidDatabase <'a>
+impl <'a> Database for RegionalDatabase <'a>
 {
 	/// Gets the star pair at the index in the array.
 	/// Used for any trait implementations bellow.
@@ -61,14 +61,16 @@ impl <'a> Database for PyramidDatabase <'a>
 mod test
 {
 	use crate::tracking_mode::StarPair;
-	use crate::tracking_mode::database::PyramidDatabase;
+	use crate::tracking_mode::database::RegionalDatabase;
 	use crate::tracking_mode::database::Database;
 	use crate::tracking_mode::database::KVector;
 	
 	use crate::util::units::Equatorial;
 	use crate::util::units::Radians;
+	use crate::util::units::BitField;
 	
 	
+	// Tests using Regional Database
 	static DEFAULT_K_VECTOR_BIN : [usize;5]          = [0, 2, 4, 5, 9];
 	static DEFAULT_PAIRS: [StarPair<usize>; 9] = [
 		StarPair(0, 0),
@@ -94,17 +96,32 @@ mod test
 		Equatorial{ra: Radians(0.8), dec: Radians(0.0)},
 	];
 	
+	static DEFAULT_CATALOGUE_FIELD : [BitField; 9] = 
+	[
+		BitField(0b0000),
+		BitField(0b0001),
+		BitField(0b0010),
+		BitField(0b0011),
+		BitField(0b0100),
+		BitField(0b0101),
+		BitField(0b0110),
+		BitField(0b0111),
+		BitField(0b1000),
+	];
+
 	// Uses the above values to create a database.
-	fn create_database ( ) -> PyramidDatabase<'static>
+	fn create_database ( ) -> RegionalDatabase<'static>
 	{
 		let k_vector = KVector::new(DEFAULT_K_VECTOR_BIN.len(), 0.0, 0.8);
-		return PyramidDatabase
+		return RegionalDatabase
 		{
 			fov: DEFAULT_CATALOGUE[8].angle_distance(DEFAULT_CATALOGUE[0]),
+			num_fields: 4,
 			k_lookup: k_vector,
 			k_vector: &DEFAULT_K_VECTOR_BIN,
 			pairs: &DEFAULT_PAIRS,
-			catalogue: &DEFAULT_CATALOGUE
+			catalogue: &DEFAULT_CATALOGUE,
+			catalogue_field: &DEFAULT_CATALOGUE_FIELD
 		};
 	}
 

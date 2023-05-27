@@ -1,4 +1,4 @@
-//! Implementation of DatabaseIterator
+//! Implementation of ChunkIterator
 
 #[cfg(test)] use mockall::predicate::*;
 #[cfg(test)] use mockall::*;
@@ -7,14 +7,21 @@ use crate::core_include::*;
 
 use crate::tracking_mode::database::Database;
 use crate::tracking_mode::database::SearchResult;
+use crate::tracking_mode::database::ChunkAreaSearch;
+use crate::tracking_mode::database::RegionalDatabase;
 use crate::tracking_mode::database::ChunkIteratorNone;
+use crate::tracking_mode::database::ChunkIteratorRegional;
 use crate::tracking_mode::database::ChunkIteratorEquatorial;
+use crate::tracking_mode::database::ChunkIteratorDeclination;
 
-use crate::util::list::List;
 use crate::util::aliases::Decimal;
 use crate::util::aliases::M_PI;
+use crate::util::units::Equatorial;
+use crate::util::units::BitCompare;
+use crate::util::units::BitField;
 use crate::util::units::Radians;
 use crate::util::units::Degrees;
+use crate::util::list::List;
 
 use crate::util::Maths;
 
@@ -97,24 +104,262 @@ impl <'a> ChunkIterator for ChunkIteratorNone <'a>
 
 
 
-impl <'a> ChunkIteratorEquatorial <'a>
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+impl <'a> ChunkIteratorDeclination <'a>
 {
+	
+	
 	/// Creates a new iterator.  
-	/// Use `next` to start iterating.  
-	/// To ensure full coverage, make `step` smaller than `size`, the larger size is, the more overlap between chunks and the more coverage.  
-	/// If `size` is too big compared to `step`, the chunks will become too large and performance will drop.
+	/// Use `begin` to start iterating then use `next` to step.
+	/// Ensure step is smaller than the field of view to ensure full coverage.
 	/// # Arguments
 	/// * `step` -  
 	///            How far the iterator jumps between iterations, this is the separation between the centers of chunks,  
 	///            Make this proportional to the database diagonal field of view.
 	///
-	/// * `chunk_size_multiplier` - 
-	///            A number above 1, this multiplies by the step distance to be the range of each chunk.
-	///            The higher the number, the more coverage and lower performance.
+	/// * `size_multiplier` - 
+	///            The percentage of overlap between chunks, 0 means the chunks have no overlap.
+	///            For the best results, use a number greater than 0 as it will ensure that all stars are covered.
+	///
+	/// * `randomiser` -
+	///            fn randomiser ( current step, number of steps ) -> index of chunk (must cover all chunks starting from 0 to n - 1).
+	///            Use `ChunkIteratorDeclination::randomise_parity`.  
+	///            This is here becasue the chunks are designed to overlap.  
+	///            Because they overlap, it is more likely that neigbouring chunks will produce the same result.  
+	///            To avoid testing the same area twice in a row, te randomiser function should input the step index and the number of steps and output the chunk to look at.  
+	///            ChunkIteratorDeclination::randomise_parity will do all the even chunks followed by the odd chunks ensuring that the order does not overlap. 
+
+	pub fn new ( 
+		database: &'a dyn Database, 
+		step: Radians, size_addition: Decimal, 
+		randomiser: fn (usize, usize) -> usize ) -> Self
+	{
+		let true_step = Self::widen_integer_step(step);
+		let num =  (Degrees(180.0).as_radians() / true_step).0.floor() as usize + 1;
+		return Self
+		{
+			database:              database,
+			randomiser:            randomiser,
+			index:                 0,
+			num:                   num,
+			dec:                   Radians(0.0)..Radians(0.0),
+			chunk_step:            true_step,
+			chunk_size_multiplier: 1.0 + size_addition
+		}
+	}
+	
+	
+	/// Generates a randomised version of the index.  
+	/// This allows you to skip neigbouring bands so overlapping stars are ignored till the end.  
+	/// The randomisation is to use every odd band followed by every even band.
+	pub fn randomise_parity ( index: usize, num_elements: usize ) -> usize
+	{
+		if index < num_elements.div_ceil(2)
+		{
+			return index * 2;
+		}
+		
+		// Odd numbers start at ceil(num / 2)
+		return (index - num_elements.div_ceil(2)) * 2 + 1;
+	}
+	
+	
+	
+	/// Provides no randomisation, index 1 = chunk 1...
+	pub fn randomise_none ( index: usize, _num_elements: usize ) -> usize
+	{
+		return index;
+	}
+	
+	/// Widens the step size so that there is an integer number of steps of equal distance.
+	/// # Arguments
+	/// * `step` - widens the step
+	pub fn widen_integer_step ( step: Radians ) -> Radians
+	{
+		// Ensures that if 90.0001 is given, it will round to 90 instead of 180
+		let overflow = Degrees(0.2).as_radians(); 
+		
+		// NAN is created if exceeding 180.0.
+		if Degrees(180.0).as_radians() + overflow < step
+		{
+			return Degrees(360.0).to_radians();
+		}
+		
+		// Below 180 deg
+		let diviser = Degrees(180.0).as_radians() / step.0;
+		return Degrees(180.0).as_radians() / (diviser + overflow).0.floor();
+	}
+}
+
+
+impl <'a> ChunkIterator for ChunkIteratorDeclination <'a>
+{
+	
+	/// Resets this iterator.
+	/// Call this to return to the start, then call next.
+	fn begin ( &mut self )
+	{
+		self.index = 0;
+		self.dec = Radians(0.0)..Radians(0.0);
+	}
+	
+	/// Steps to the next region.
+	/// This must be called after begin.
+	/// If there is no more regions, next will return false.
+	fn next ( &mut self ) -> bool
+	{
+		if self.num <= self.index { return false; }
+		let actual_index = (self.randomiser)(self.index, self.num);
+		// let actual_index = self.index;
+		let half_step = self.chunk_step * self.chunk_size_multiplier / 2.0;
+		let dec       = Radians(actual_index as Decimal * self.chunk_step.0) - Degrees(90.0).as_radians();
+		self.dec = dec - half_step .. dec + half_step;
+		self.index += 1;
+		return true;
+	}
+	
+	fn get_database ( &self ) -> &dyn Database { return self.database; }
+	
+	
+	fn same_region ( &self, pair_index: usize ) -> bool
+	{
+		let pair = self.database.get_pairs(pair_index);
+		let p1 = self.database.find_star(pair.0);
+		let p2 = self.database.find_star(pair.1);
+		
+		if p1.is_err() || p2.is_err()
+		{
+			return false;
+		}
+		
+		let valid_dec = 
+			(self.dec.start <= p1.unwrap().dec && p1.unwrap().dec <= self.dec.end) ||
+			(self.dec.start <= p2.unwrap().dec && p2.unwrap().dec <= self.dec.end);
+
+		return valid_dec;
+	}
+	
+	
+}
+
+
+
+
+
+
+
+
+
+
+
+
+impl<'a> ChunkIteratorRegional <'a>
+{
+	/// Constructs the iterator.  
+	/// To run the iterator;  
+	/// 1. Call new and pass in the database.  
+	/// 2. Call begin.  
+	/// 3. Call next.  
+	/// 4. Use `same_region` to check the region is correct and call `next` to move to the next location.
+	pub fn new ( database: &'a RegionalDatabase ) -> Self
+	{
+		return Self { database: database, index: 0, started: false }
+	}
+}
+
+impl<'a> ChunkIterator for ChunkIteratorRegional <'a>
+{
+	/// Resets the iterator.  
+	/// Call this to return to the start, then call next.
+	fn begin ( &mut self )
+	{
+		self.index = 0;
+		self.started = false;
+	}
+
+	/// Steps to the next region.
+	/// This must be called to begin.
+	/// If there is no more regions, next will return false.
+	fn next ( &mut self ) -> bool
+	{
+		if self.started
+		{
+			self.index += 1;
+		}
+		else
+		{
+			self.started = true;
+		}
+		
+		return self.index < self.database.num_fields;
+	}
+
+	/// Returns the database this iterator holds.
+	fn get_database ( &self ) -> &dyn Database { return self.database; }
+
+	/// Returns true if the pair at the provided index fits the current region.
+	fn same_region ( &self, pair_index: usize ) -> bool
+	{
+		let pair = self.database.get_pairs(pair_index);
+		let chunk_1  = self.database.catalogue_field.get(pair.0);
+		let chunk_2  = self.database.catalogue_field.get(pair.1);
+		
+		let current_chunk = BitField(1 << self.index);
+		
+		return 
+			chunk_1.compare(BitCompare::Any(current_chunk)) ||
+			chunk_2.compare(BitCompare::Any(current_chunk));
+	}
+}
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+impl <'a> ChunkIteratorEquatorial <'a>
+{	
+	/// Creates a new iterator.  
+	/// Use `begin` to start iterating then use `next` to step.
+	/// Ensure step is smaller than the field of view to ensure full coverage.
+	/// # Arguments
+	/// * `step` -  
+	///            How far the iterator jumps between iterations, this is the separation between the centers of chunks,  
+	///            Make this proportional to the database diagonal field of view.
+	///
+	/// * `size_multiplier` - 
+	///            The percentage of overlap between chunks, 0 means the chunks have no overlap.
+	///            For the best results, use a number greater than 0 as it will ensure that all stars are covered.
 
 	pub fn new ( database: &'a dyn Database, step: Radians, chunk_size_multiplier: Decimal ) -> Self 
 	{
-		assert!(1.0 <= chunk_size_multiplier, "chunk_size_multiplier must be larger than 1.");
 		return Self
 		{
 			index_dec:             0,
@@ -125,7 +370,7 @@ impl <'a> ChunkIteratorEquatorial <'a>
 			num_dec:               (Degrees(180.0).to_radians() / step).0.ceil() as usize,
 			num_ra:                0,
 			chunk_step:            step,
-			chunk_size_multiplier: chunk_size_multiplier,
+			chunk_size_multiplier: 1.0 + chunk_size_multiplier,
 		}
 	}
 }
@@ -263,6 +508,110 @@ impl <'a> ChunkIterator for ChunkIteratorEquatorial <'a>
 
 
 
+
+
+
+impl <'a> ChunkAreaSearch <'a>
+{
+	/// Uses the given ranges as the search area.
+	pub fn from_range ( database: &'a dyn Database, 
+		bounds_ra: Range<Radians>, bounds_dec: Range<Radians> ) -> Self
+	{
+		return Self { database: database, ra: bounds_ra, dec: bounds_dec, started: false };
+	}
+	
+	/// Constructs the search area as 1/2 fov from the center point on the ra and dec axis.
+	pub fn from_point ( database: &'a dyn Database, center: Equatorial, fov: Radians ) -> Self
+	{
+		let range_ra  = center.ra  - fov / 2.0 .. center.ra  + fov / 2.0;
+		let range_dec = center.dec - fov / 2.0 .. center.dec + fov / 2.0;
+		return Self { database: database, ra: range_ra, dec: range_dec, started: false };
+	}
+}
+
+
+
+impl<'a> ChunkIterator for ChunkAreaSearch <'a>
+{
+	/// Allows you to use `next`.  
+	fn begin ( &mut self ) { self.started = false; }
+	
+	/// Returns true then always false until begin is returned again.
+	fn next ( &mut self ) -> bool 
+	{
+		let val = self.started;
+		self.started = true; 
+		return !val; 
+	}
+
+	/// Returns the database this iterator holds.
+	fn get_database ( &self ) -> &dyn Database { return self.database; }
+
+
+	/// Returns true if the pair at the provided index fits the current chunk.
+	fn same_region ( &self, pair_index: usize ) -> bool
+	{
+		let pair = self.database.get_pairs(pair_index);
+		let p1 = self.database.find_star(pair.0);
+		let p2 = self.database.find_star(pair.1);
+		
+		if p1.is_err() || p2.is_err()
+		{
+			return false;
+		}
+		let valid_dec = 
+			(self.dec.start <= p1.unwrap().dec && p1.unwrap().dec <= self.dec.end) ||
+			(self.dec.start <= p2.unwrap().dec && p2.unwrap().dec <= self.dec.end);
+
+		let mut valid_ra = 
+			(self.ra.start <= p1.unwrap().ra && p1.unwrap().ra <= self.ra.end) ||
+			(self.ra.start <= p2.unwrap().ra && p2.unwrap().ra <= self.ra.end);
+			
+		if Degrees(360.0).as_radians() < self.ra.end
+		{
+			valid_ra |= p1.unwrap().ra <= self.ra.end - Degrees(360.0).as_radians();
+			valid_ra |= p2.unwrap().ra <= self.ra.end - Degrees(360.0).as_radians();
+		}
+		else if self.ra.start < Radians(0.0)
+		{
+			valid_ra |= self.ra.start + Degrees(360.0).as_radians() <= p1.unwrap().ra;
+			valid_ra |= self.ra.start + Degrees(360.0).as_radians() <= p2.unwrap().ra;
+		}
+
+		return valid_dec && valid_ra;
+	}
+}
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 //###############################################################################################//
 //###############################################################################################//
 //
@@ -277,12 +626,18 @@ mod test
 	use crate::tracking_mode::StarPair;
 	
 	use crate::tracking_mode::database::ChunkIterator;
+	use crate::tracking_mode::database::ChunkAreaSearch;
 	use crate::tracking_mode::database::ChunkIteratorNone;
+	use crate::tracking_mode::database::ChunkIteratorRegional;
 	use crate::tracking_mode::database::ChunkIteratorEquatorial;
+	use crate::tracking_mode::database::ChunkIteratorDeclination;
 	
+	use crate::tracking_mode::database::KVector;
 	use crate::tracking_mode::database::MockDatabase;
+	use crate::tracking_mode::database::RegionalDatabase;
 
 	use crate::util::units::Equatorial;
+	use crate::util::units::BitField;
 	use crate::util::units::Radians;
 	use crate::util::units::Degrees;
 	
@@ -305,7 +660,7 @@ mod test
 //                           tolerance: Radians, found : &mut dyn List<SearchResult> )
 //
 //###############################################################################################//
-//										~ new ~											 //
+//										~ new ~													 //
 	#[test]
 	fn test_none_new ( )
 	{
@@ -315,7 +670,7 @@ mod test
 		let _ = iter.database.find_star(0);
 	}
 	
-//										~ begin ~											 //
+//										~ begin ~												 //
 	#[test]
 	// no calls to the database should occur, there is no other variables.
 	fn test_none_begin ( )
@@ -329,7 +684,7 @@ mod test
 		assert_eq!(iter.started, false);
 	}
 
-//										~ next ~											 //
+//										~ next ~												 //
 	#[test]
 	fn test_none_next ( )
 	{
@@ -409,9 +764,11 @@ mod test
 
 //###############################################################################################//
 //
-//										ChunkIteratorEquatorial
+//										ChunkIteratorDeclination
 //
-// pub fn new   ( &'a dyn Database ) -> Self;
+// pub fn new   ( &'a dyn Database, Radians, Decimal ) -> Self;
+// pub fn randomise_parity   ( index: usize, num_elements: usize ) -> usize;
+// pub fn widen_integer_step   ( Radians ) -> Radians;
 //
 // pub fn begin ( &mut self );
 // pub fn next  ( &mut self );
@@ -419,7 +776,715 @@ mod test
 // pub fn same_region  ( &self, usize );
 //
 //###############################################################################################//
-// //										~ new ~											 //
+//											~ new ~												 //
+	#[test]
+	// the step size should be rounded to 90 if it is between 60 and 90.
+	fn test_declination_new_single_band_close_ceil ( )
+	{
+		let db = MockDatabase::new();
+		let iterator = ChunkIteratorDeclination::new(&db, Degrees(88.0).as_radians(), 0.0, ChunkIteratorDeclination::randomise_parity);
+		assert_eq!(iterator.chunk_size_multiplier, 1.0); // Its a multiplier
+		assert_eq!(iterator.num, 3);
+		assert_eq!(iterator.dec.start, Radians(0.0));
+		assert_eq!(iterator.dec.end, Radians(0.0));
+		Degrees(90.0).as_radians().test_equal(&iterator.chunk_step);
+	}
+	#[test]
+	// the step size should be rounded to 60 if it is between 36 and 60.
+	fn test_declination_new_single_band_close_floor ( )
+	{
+		let db = MockDatabase::new();
+		let iterator = ChunkIteratorDeclination::new(&db, Degrees(45.1).as_radians(), 1.0, ChunkIteratorDeclination::randomise_parity);
+		assert_eq!(iterator.chunk_size_multiplier, 2.0); // Its a multiplier
+		assert_eq!(iterator.num, 4);
+		assert_eq!(iterator.dec.start, Radians(0.0));
+		assert_eq!(iterator.dec.end, Radians(0.0));
+		Degrees(60.0).as_radians().test_equal(&iterator.chunk_step);
+	}
+	
+//										~ randomise_parity ~										 //
+	#[test]
+	// Should work with an even number of elements.
+	fn test_randomise_parity_even ( )
+	{
+		assert_eq!(ChunkIteratorDeclination::randomise_parity(0, 10), 0);
+		assert_eq!(ChunkIteratorDeclination::randomise_parity(1, 10), 2);
+		assert_eq!(ChunkIteratorDeclination::randomise_parity(2, 10), 4);
+		assert_eq!(ChunkIteratorDeclination::randomise_parity(3, 10), 6);
+		assert_eq!(ChunkIteratorDeclination::randomise_parity(4, 10), 8);
+		
+		assert_eq!(ChunkIteratorDeclination::randomise_parity(5, 10), 1);
+		assert_eq!(ChunkIteratorDeclination::randomise_parity(6, 10), 3);
+		assert_eq!(ChunkIteratorDeclination::randomise_parity(7, 10), 5);
+		assert_eq!(ChunkIteratorDeclination::randomise_parity(8, 10), 7);
+		assert_eq!(ChunkIteratorDeclination::randomise_parity(9, 10), 9);
+	}
+	
+	#[test]
+	// Should work with an odd number of elements. 
+	fn test_randomise_parity_odd ( )
+	{
+		assert_eq!(ChunkIteratorDeclination::randomise_parity(0, 9), 0);
+		assert_eq!(ChunkIteratorDeclination::randomise_parity(1, 9), 2);
+		assert_eq!(ChunkIteratorDeclination::randomise_parity(2, 9), 4);
+		assert_eq!(ChunkIteratorDeclination::randomise_parity(3, 9), 6);
+		assert_eq!(ChunkIteratorDeclination::randomise_parity(4, 9), 8);
+		
+		assert_eq!(ChunkIteratorDeclination::randomise_parity(5, 9), 1);
+		assert_eq!(ChunkIteratorDeclination::randomise_parity(6, 9), 3);
+		assert_eq!(ChunkIteratorDeclination::randomise_parity(7, 9), 5);
+		assert_eq!(ChunkIteratorDeclination::randomise_parity(8, 9), 7);
+	}
+
+	#[test]
+	// Should be in order. 
+	fn test_randomise_parity_two_elements ( )
+	{
+		assert_eq!(ChunkIteratorDeclination::randomise_parity(0, 2), 0);
+		assert_eq!(ChunkIteratorDeclination::randomise_parity(1, 2), 1);
+	}
+	
+	#[test]
+	// Should be in not fail. 
+	fn test_randomise_parity_1_element ( )
+	{
+		assert_eq!(ChunkIteratorDeclination::randomise_parity(0, 1), 0);
+	}
+
+//									widen_integer_step ~										 //
+	#[test]
+	// If the size is 180, 180 should be returned.
+	fn test_widen_integer_max_size ( )
+	{
+		assert_eq!(ChunkIteratorDeclination::widen_integer_step(Degrees(180.0).as_radians()), Degrees(180.0).as_radians());
+	}
+
+	#[test]
+	// If the angle is already an integer of 180, it should not be modified.
+	fn test_widen_integer_already_integer ( )
+	{
+		assert_eq!(ChunkIteratorDeclination::widen_integer_step(Degrees(360.0).as_radians()),     Degrees(360.0).as_radians());
+		assert_eq!(ChunkIteratorDeclination::widen_integer_step(Degrees(180.0).as_radians()),     Degrees(180.0).as_radians());
+		assert_eq!(ChunkIteratorDeclination::widen_integer_step(Degrees(90.0).as_radians()),      Degrees(90.0).as_radians());
+		assert_eq!(ChunkIteratorDeclination::widen_integer_step(Degrees(60.0).as_radians()),      Degrees(60.0).as_radians());
+		assert_eq!(ChunkIteratorDeclination::widen_integer_step(Degrees(36.0).as_radians()),      Degrees(36.0).as_radians());
+		ChunkIteratorDeclination::widen_integer_step(Degrees(25.7142).as_radians()).test_equal(&Degrees(25.7142).as_radians());
+	}
+
+	#[test]
+	// Should always round up.
+	fn test_widen_integer_already_needs_to_round ( )
+	{
+		assert_eq!(ChunkIteratorDeclination::widen_integer_step(Degrees(360.1).as_radians()), Degrees(360.0).as_radians());
+		assert_eq!(ChunkIteratorDeclination::widen_integer_step(Degrees(180.3).as_radians()), Degrees(360.0).as_radians());
+		assert_eq!(ChunkIteratorDeclination::widen_integer_step(Degrees(180.1).as_radians()), Degrees(180.0).as_radians());
+		assert_eq!(ChunkIteratorDeclination::widen_integer_step(Degrees(179.0).as_radians()), Degrees(180.0).as_radians());
+		assert_eq!(ChunkIteratorDeclination::widen_integer_step(Degrees(90.3).as_radians()),  Degrees(180.0).as_radians());
+		assert_eq!(ChunkIteratorDeclination::widen_integer_step(Degrees(90.1).as_radians()),  Degrees(90.0).as_radians());
+		assert_eq!(ChunkIteratorDeclination::widen_integer_step(Degrees(56.0).as_radians()),  Degrees(60.0).as_radians());
+		assert_eq!(ChunkIteratorDeclination::widen_integer_step(Degrees(45.3).as_radians()),  Degrees(60.0).as_radians());
+		assert_eq!(ChunkIteratorDeclination::widen_integer_step(Degrees(45.0).as_radians()),  Degrees(45.0).as_radians());
+	}
+
+
+
+
+
+//										~ begin ~												 //
+	#[test]
+	fn test_declination_begin ( )
+	{
+		let db = MockDatabase::new(); 
+		let mut iterator = ChunkIteratorDeclination::new(&db, Degrees(180.0).as_radians(), 1.0, ChunkIteratorDeclination::randomise_parity);
+		assert_eq!(iterator.index, 0);
+		assert_eq!(iterator.num,   2);
+		assert_eq!(iterator.dec.start, Radians(0.0));
+		assert_eq!(iterator.dec.end, Radians(0.0));
+		assert_eq!(iterator.chunk_step, Degrees(180.0).as_radians());
+		assert_eq!(iterator.chunk_size_multiplier, 2.0);
+		iterator.next();
+		iterator.begin();
+		assert_eq!(iterator.index, 0);
+		assert_eq!(iterator.num,   2);
+		assert_eq!(iterator.dec.start, Radians(0.0));
+		assert_eq!(iterator.dec.end, Radians(0.0));
+		assert_eq!(iterator.chunk_step, Degrees(180.0).as_radians());
+		assert_eq!(iterator.chunk_size_multiplier, 2.0);
+	}
+	
+
+
+
+
+
+
+
+//										~ next ~												 //
+	#[test]
+	// each pole is 1/2 step, by having double the range, there is only one chunk
+	fn test_declination_next_single ( )
+	{
+		let db = MockDatabase::new(); 
+		let mut iterator = ChunkIteratorDeclination::new(
+			&db, Degrees(360.0).as_radians(), 0.0, ChunkIteratorDeclination::randomise_none
+		);
+		assert!(iterator.next());
+		assert_eq!(iterator.dec.start, Degrees(-270.0).as_radians());
+		assert_eq!(iterator.dec.end,   Degrees(90.00).as_radians());
+		assert!(!iterator.next());
+		
+		iterator.begin();
+		iterator.chunk_size_multiplier = 2.0;
+		assert!(iterator.next());
+		assert_eq!(iterator.dec.start, Degrees(-450.0).as_radians());
+		assert_eq!(iterator.dec.end,   Degrees( 360.0 - 90.0).as_radians());
+		assert!(!iterator.next());
+	}
+	
+	#[test]
+	// each pole is 1/2 step, by having the range, there should be two poles
+	fn test_declination_next_two ( )
+	{
+		let db = MockDatabase::new(); 
+		let mut iterator = ChunkIteratorDeclination::new(
+			&db, Degrees(180.0).as_radians(),0.0, ChunkIteratorDeclination::randomise_none
+		);
+		assert!(iterator.next());
+		assert_eq!(iterator.dec.start, Degrees(-180.0).as_radians());
+		assert_eq!(iterator.dec.end,   Degrees(00.00).as_radians());
+		assert!(iterator.next());
+		assert_eq!(iterator.dec.start, Degrees(00.0).as_radians());
+		assert_eq!(iterator.dec.end,   Degrees(180.0).as_radians());
+		assert!(!iterator.next());
+		
+		iterator.begin();
+		iterator.chunk_size_multiplier = 2.0;
+		assert!(iterator.next());
+		assert_eq!(iterator.dec.start, Degrees(-270.0).as_radians());
+		assert_eq!(iterator.dec.end,   Degrees(  90.0).as_radians());
+		assert!(iterator.next());
+		assert_eq!(iterator.dec.start, Degrees( -90.0).as_radians());
+		assert_eq!(iterator.dec.end,   Degrees( 270.0).as_radians());
+		assert!(!iterator.next());
+	}
+	
+	#[test]
+	// each pole is 1/2 step, by having half the range, there should be two poles (90 deg)
+	// and an extra band for the extra 90 degrees.
+	fn test_declination_next_three ( )
+	{
+		let db = MockDatabase::new(); 
+		let mut iterator = ChunkIteratorDeclination::new(
+			&db, Degrees(90.0).as_radians(), 0.0, ChunkIteratorDeclination::randomise_none
+		);
+		assert!(iterator.next());
+		assert_eq!(iterator.dec.start, Degrees(-135.0).as_radians());
+		assert_eq!(iterator.dec.end,   Degrees(-45.0).as_radians());
+		assert!(iterator.next());
+		assert_eq!(iterator.dec.start, Degrees(-45.0).as_radians());
+		assert_eq!(iterator.dec.end,   Degrees( 45.0).as_radians());
+		assert!(iterator.next());
+		assert_eq!(iterator.dec.start, Degrees(45.0).as_radians());
+		assert_eq!(iterator.dec.end,   Degrees(135.0).as_radians());
+		assert!(!iterator.next());
+
+		iterator.begin();
+		iterator.chunk_size_multiplier = 2.0;
+		assert!(iterator.next());
+		assert_eq!(iterator.dec.start, Degrees(-180.0).as_radians());
+		assert_eq!(iterator.dec.end,   Degrees(  -0.0).as_radians());
+		assert!(iterator.next());
+		assert_eq!(iterator.dec.start, Degrees(-90.0).as_radians());
+		assert_eq!(iterator.dec.end,   Degrees( 90.0).as_radians());
+		assert!(iterator.next());
+		assert_eq!(iterator.dec.start, Degrees(  0.0).as_radians());
+		assert_eq!(iterator.dec.end,   Degrees(180.0).as_radians());
+		assert!(!iterator.next());
+	}
+	
+	#[test]
+	// each pole is 1/2 step, by having 1/3 te range, there should be two poles (60 deg)
+	// and an extra 2 bands for the extra 2/3, 120 degrees.
+	fn test_declination_next_four ( )
+	{
+		let db = MockDatabase::new(); 
+		let mut iterator = ChunkIteratorDeclination::new(
+			&db, Degrees(60.0).as_radians(), 0.0, ChunkIteratorDeclination::randomise_none
+		);
+		assert!(iterator.next());
+		assert_eq!(iterator.dec.start, Degrees(-120.0).as_radians());
+		assert_eq!(iterator.dec.end,   Degrees(-60.0).as_radians());
+		assert!(iterator.next());
+		assert_eq!(iterator.dec.start, Degrees(-60.0).as_radians());
+		assert_eq!(iterator.dec.end,   Degrees(00.00).as_radians());
+		assert!(iterator.next());
+		assert_eq!(iterator.dec.start, Degrees(00.0).as_radians());
+		assert_eq!(iterator.dec.end,   Degrees(60.0).as_radians());
+		assert!(iterator.next());
+		assert_eq!(iterator.dec.start, Degrees(60.0).as_radians());
+		assert_eq!(iterator.dec.end,   Degrees(120.0).as_radians());
+		assert!(!iterator.next());
+		
+		iterator.begin();
+		iterator.chunk_size_multiplier = 2.0;
+		assert!(iterator.next());
+		assert_eq!(iterator.dec.start, Degrees(-150.0).as_radians());
+		assert_eq!(iterator.dec.end,   Degrees(-30.0).as_radians());
+		assert!(iterator.next());
+		assert_eq!(iterator.dec.start, Degrees(-90.0).as_radians());
+		assert_eq!(iterator.dec.end,   Degrees( 30.00).as_radians());
+		assert!(iterator.next());
+		assert_eq!(iterator.dec.start, Degrees(-30.0).as_radians());
+		assert_eq!(iterator.dec.end,   Degrees( 90.0).as_radians());
+		assert!(iterator.next());
+		assert_eq!(iterator.dec.start, Degrees( 30.0).as_radians());
+		assert_eq!(iterator.dec.end,   Degrees(150.0).as_radians());
+		assert!(!iterator.next());
+	}
+	
+	
+	
+	#[test]
+	// each pole is 1/2 step, by having 1/4 te range, there should be two poles (36 deg)
+	// and an extra 3 bands for the extra 3/4, 108 degrees.
+	fn test_declination_next_five ( )
+	{
+		let db = MockDatabase::new(); 
+		let mut iterator = ChunkIteratorDeclination::new(
+			&db, Degrees(45.0).as_radians(), 0.0, ChunkIteratorDeclination::randomise_none
+		);
+		assert!(iterator.next());
+		assert_eq!(iterator.dec.start, Degrees(-112.5).as_radians());
+		assert_eq!(iterator.dec.end,   Degrees(-67.5).as_radians());
+		assert!(iterator.next());
+		assert_eq!(iterator.dec.start, Degrees(-67.5).as_radians());
+		assert_eq!(iterator.dec.end,   Degrees(-22.5).as_radians());
+		assert!(iterator.next());
+		assert_eq!(iterator.dec.start, Degrees(-22.5).as_radians());
+		assert_eq!(iterator.dec.end,   Degrees( 22.5).as_radians());
+		assert!(iterator.next());
+		assert_eq!(iterator.dec.start, Degrees(22.5).as_radians());
+		assert_eq!(iterator.dec.end,   Degrees(67.5).as_radians());
+		assert!(iterator.next());
+		assert_eq!(iterator.dec.start, Degrees(67.5).as_radians());
+		assert_eq!(iterator.dec.end,   Degrees(112.5).as_radians());
+		assert!(!iterator.next());
+	}
+	
+	#[test]
+	// each pole is 1/2 step, by having 1/4 te range, there should be two poles (36 deg)
+	// and an extra 3 bands for the extra 3/4, 108 degrees.
+	fn test_declination_next_six ( )
+	{
+		let db = MockDatabase::new(); 
+		let mut iterator = ChunkIteratorDeclination::new(
+			&db, Degrees(36.0).as_radians(), 0.0, ChunkIteratorDeclination::randomise_none
+		);
+		assert!(iterator.next());
+		assert_eq!(iterator.dec.start, Degrees(-108.0).as_radians());
+		assert_eq!(iterator.dec.end,   Degrees(-72.00).as_radians());
+		assert!(iterator.next());
+		assert_eq!(iterator.dec.start, Degrees(-72.0).as_radians());
+		assert_eq!(iterator.dec.end,   Degrees(-36.0).as_radians());
+		assert!(iterator.next());
+		assert_eq!(iterator.dec.start, Degrees(-36.0).as_radians());
+		assert_eq!(iterator.dec.end,   Degrees(-00.0).as_radians());
+		assert!(iterator.next());
+		assert_eq!(iterator.dec.start, Degrees(00.0).as_radians());
+		assert_eq!(iterator.dec.end,   Degrees(36.0).as_radians());
+		assert!(iterator.next());
+		assert_eq!(iterator.dec.start, Degrees(36.0).as_radians());
+		assert_eq!(iterator.dec.end,   Degrees(72.0).as_radians());
+		assert!(iterator.next());
+		assert_eq!(iterator.dec.start, Degrees(72.0).as_radians());
+		assert_eq!(iterator.dec.end,   Degrees(108.0).as_radians());
+		assert!(!iterator.next());
+	}
+	
+	
+	#[test]
+	// Same as six but using the randomiser to separate the chunks.
+	// The randomiser goes through all the even chunks followed by all the odd chunks.
+	fn test_declination_next_six_randomised ( )
+	{
+		let db = MockDatabase::new(); 
+		let mut iterator = ChunkIteratorDeclination::new(
+			&db, Degrees(36.0).as_radians(), 0.0, ChunkIteratorDeclination::randomise_parity
+		);
+		assert!(iterator.next()); // 0
+		assert_eq!(iterator.dec.start, Degrees(-108.0).as_radians());
+		assert_eq!(iterator.dec.end,   Degrees(-72.00).as_radians());
+		assert!(iterator.next()); // 2
+		assert_eq!(iterator.dec.start, Degrees(-36.0).as_radians());
+		assert_eq!(iterator.dec.end,   Degrees(-00.0).as_radians());
+		assert!(iterator.next()); // 4
+		assert_eq!(iterator.dec.start, Degrees(36.0).as_radians());
+		assert_eq!(iterator.dec.end,   Degrees(72.0).as_radians());
+		assert!(iterator.next()); // 1
+		assert_eq!(iterator.dec.start, Degrees(-72.0).as_radians());
+		assert_eq!(iterator.dec.end,   Degrees(-36.0).as_radians());
+		assert!(iterator.next()); // 3
+		assert_eq!(iterator.dec.start, Degrees(00.0).as_radians());
+		assert_eq!(iterator.dec.end,   Degrees(36.0).as_radians());
+		assert!(iterator.next()); // 5
+		assert_eq!(iterator.dec.start, Degrees(72.0).as_radians());
+		assert_eq!(iterator.dec.end,   Degrees(108.0).as_radians());
+		assert!(!iterator.next());
+	}
+	
+
+
+
+
+
+//										~ get_same_region ~										 //
+	#[test]
+	fn test_declination_same_region_inside_lower_bound ( )
+	{
+		let mut db = MockDatabase::new();
+		db.expect_find_star().times(2).returning(|_| 
+			return Ok(Equatorial{ra: Radians(0.0), dec: Degrees(-10.0).as_radians()}));
+		db.expect_get_pairs().times(1).returning(|_| return StarPair(0,0));
+			
+		let mut iter = ChunkIteratorDeclination::new(&db, Radians(1.0), 1.0, ChunkIteratorDeclination::randomise_parity);
+			
+		iter.dec = Degrees(-10.0).as_radians() .. Degrees(0.0).as_radians();
+		assert!(iter.same_region(0));
+	}
+	#[test]
+	fn test_declination_same_region_inside_upper_bound ( )
+	{
+		let mut db = MockDatabase::new();
+		db.expect_find_star().times(2).returning(|_| 
+			return Ok(Equatorial{ra: Radians(0.0), dec: Degrees(20.0).as_radians()}));
+		db.expect_get_pairs().times(1).returning(|_| return StarPair(0,0));
+		let mut iter = ChunkIteratorDeclination::new(&db, Radians(1.0), 1.0, ChunkIteratorDeclination::randomise_parity);
+			
+		iter.dec = Degrees(-10.0).as_radians() .. Degrees(20.0).as_radians();
+		assert!(iter.same_region(0));
+	}
+	
+	
+	
+	#[test]
+	fn test_declination_same_region_outside_lower_bound ( )
+	{
+		let mut db = MockDatabase::new();
+		db.expect_find_star().times(2).returning(|_| 
+			return Ok(Equatorial{ra: Radians(0.0), dec: Degrees(-10.01).as_radians()}));
+		
+		db.expect_get_pairs().times(1).returning(|_| return StarPair(0, 0));
+		let mut iter = ChunkIteratorDeclination::new(&db, Radians(1.0), 1.0, ChunkIteratorDeclination::randomise_parity);
+			
+		iter.dec = Degrees(-10.0).as_radians() .. Degrees(0.0).as_radians();
+		assert!(!iter.same_region(0));
+	}
+	#[test]
+	fn test_declination_same_region_outside_upper_bound ( )
+	{
+		let mut db = MockDatabase::new();
+		db.expect_find_star().times(2).returning(|_| 
+			return Ok(Equatorial{ra: Radians(0.0), dec: Degrees(20.01).as_radians()}));
+			
+		db.expect_get_pairs().times(1).returning(|_| return StarPair(0, 0));
+		
+		let mut iter = ChunkIteratorDeclination::new(&db, Radians(1.0), 1.0, ChunkIteratorDeclination::randomise_parity);
+			
+		iter.dec = Degrees(-10.0).as_radians() .. Degrees(20.0).as_radians();
+		assert!(!iter.same_region(0));
+	}
+
+
+	#[test]
+	fn test_declination_same_region_halfin_upper_bound ( )
+	{
+		let mut db = MockDatabase::new();
+		db.expect_find_star().times(2).returning(|index| 
+			if index == 0
+			{
+				return Ok(Equatorial{ra: Radians(0.0), dec: Degrees(20.0).as_radians()});
+			}
+			else
+			{
+				return Ok(Equatorial{ra: Radians(0.0), dec: Degrees(20.01).as_radians()});
+			});
+			
+		db.expect_get_pairs().times(1).returning(|_| return StarPair(0, 1));
+		
+		let mut iter = ChunkIteratorDeclination::new(&db, Radians(1.0), 1.0, ChunkIteratorDeclination::randomise_parity);
+			
+		iter.dec = Degrees(-10.0).as_radians() .. Degrees(20.0).as_radians();
+		assert!(iter.same_region(0));
+	}
+
+
+	#[test]
+	fn test_declination_same_region_halfin_lower_bound ( )
+	{
+		let mut db = MockDatabase::new();
+		db.expect_find_star().times(2).returning(|index| 
+			if index == 0
+			{
+				return Ok(Equatorial{ra: Radians(0.0), dec: Degrees(-10.0).as_radians()});
+			}
+			else
+			{
+				return Ok(Equatorial{ra: Radians(0.0), dec: Degrees(-10.01).as_radians()});
+			});
+			
+		db.expect_get_pairs().times(1).returning(|_| return StarPair(0, 1));
+		
+		let mut iter = ChunkIteratorDeclination::new(&db, Radians(1.0), 1.0, ChunkIteratorDeclination::randomise_parity);
+			
+		iter.dec = Degrees(-10.0).as_radians() .. Degrees(20.0).as_radians();
+		assert!(iter.same_region(0));
+	}
+
+	#[test]
+	fn test_declination_same_region_invalid_first ( )
+	{
+		let mut db = MockDatabase::new();
+		db.expect_find_star().times(2).returning(|index| 
+			if index == 0
+			{
+				return Err(Errors::NoMatch);
+			}
+			else
+			{
+				return Ok(Equatorial{ra: Radians(0.0), dec: Degrees(-10.01).as_radians()});
+			});
+			
+		db.expect_get_pairs().times(1).returning(|_| return StarPair(0, 1));
+		
+		let mut iter = ChunkIteratorDeclination::new(&db, Radians(1.0), 1.0, ChunkIteratorDeclination::randomise_parity);
+			
+		iter.dec = Degrees(-10.0).as_radians() .. Degrees(20.0).as_radians();
+		assert!(!iter.same_region(0));
+	}
+	#[test]
+	fn test_declination_same_region_invalid_second ( )
+	{
+		let mut db = MockDatabase::new();
+		db.expect_find_star().times(2).returning(|index| 
+			if index == 0
+			{
+				return Ok(Equatorial{ra: Radians(0.0), dec: Degrees(-10.01).as_radians()});
+			}
+			else
+			{
+				return Err(Errors::NoMatch);
+			});
+			
+		db.expect_get_pairs().times(1).returning(|_| return StarPair(0, 1));
+		
+		let mut iter = ChunkIteratorDeclination::new(&db, Radians(1.0), 1.0, ChunkIteratorDeclination::randomise_parity);
+			
+		iter.dec = Degrees(-10.0).as_radians() .. Degrees(20.0).as_radians();
+		assert!(!iter.same_region(0));
+	}
+
+
+	
+	
+//										~ get_database ~										 //
+	#[test]
+	fn test_declination_get_database ( )
+	{
+		let mut db = MockDatabase::new();
+		db.expect_find_star().times(1).returning(|_| return Ok(Equatorial::zero()));
+		let iter = ChunkIteratorDeclination::new(&db, Radians(1.0), 1.0, ChunkIteratorDeclination::randomise_parity);
+		let _ = iter.get_database().find_star(0);
+	}
+	
+
+
+	
+
+//###############################################################################################//
+//
+//										ChunkIteratorRegional
+//
+// pub fn new   ( &'a dyn RegionalDatabase ) -> Self;
+//
+// pub fn begin ( &mut self );
+// pub fn next  ( &mut self );
+// pub fn get_database ( &self );
+// pub fn same_region  ( &self, usize );
+//
+//###############################################################################################//
+	// Tests using Regional Database
+	static DEFAULT_K_VECTOR_BIN : [usize;5]          = [0, 2, 4, 5, 9];
+	static DEFAULT_PAIRS: [StarPair<usize>; 9] = [
+		StarPair(0, 0),
+		StarPair(1, 1),
+		StarPair(2, 2),
+		StarPair(3, 3),
+		StarPair(4, 4),
+		StarPair(5, 0),
+		StarPair(6, 0),
+		StarPair(0, 7),
+		StarPair(0, 8),
+	];
+	static DEFAULT_CATALOGUE : [Equatorial;9] =
+	[
+		Equatorial{ra: Radians(0.0), dec: Radians(0.0)},
+		Equatorial{ra: Radians(0.1), dec: Radians(0.0)},
+		Equatorial{ra: Radians(0.2), dec: Radians(0.0)},
+		Equatorial{ra: Radians(0.3), dec: Radians(0.0)},
+		Equatorial{ra: Radians(0.4), dec: Radians(0.0)},
+		Equatorial{ra: Radians(0.5), dec: Radians(0.0)},
+		Equatorial{ra: Radians(0.6), dec: Radians(0.0)},
+		Equatorial{ra: Radians(0.7), dec: Radians(0.0)},
+		Equatorial{ra: Radians(0.8), dec: Radians(0.0)},
+	];
+	
+	static DEFAULT_CATALOGUE_FIELD : [BitField; 9] = 
+	[
+		BitField(0b000000001),
+		BitField(0b000000010),
+		BitField(0b000000100),
+		BitField(0b000001000),
+		BitField(0b000010000),
+		BitField(0b000100000),
+		BitField(0b001000000),
+		BitField(0b010000000),
+		BitField(0b100001000),
+	];
+
+	// Uses the above values to create a database.
+	fn create_database ( ) -> RegionalDatabase<'static>
+	{
+		let k_vector = KVector::new(DEFAULT_K_VECTOR_BIN.len(), 0.0, 0.8);
+		return RegionalDatabase
+		{
+			fov: DEFAULT_CATALOGUE[8].angle_distance(DEFAULT_CATALOGUE[0]),
+			num_fields: 9,
+			k_lookup: k_vector,
+			k_vector: &DEFAULT_K_VECTOR_BIN,
+			pairs: &DEFAULT_PAIRS,
+			catalogue: &DEFAULT_CATALOGUE,
+			catalogue_field: &DEFAULT_CATALOGUE_FIELD
+		};
+	}
+
+
+//											~ new ~												 //
+	#[test]
+	fn test_regional_new ( )
+	{ 
+		let database = create_database();
+		let iterator = ChunkIteratorRegional::new(&database);
+		assert_eq!(iterator.started, false);
+		assert_eq!(iterator.index, 0);
+		assert_eq!(iterator.database.catalogue_field.get(2).0, 4);
+	}
+
+//											~ begin ~											 //
+#[test]
+fn test_regional_begin ( )
+{
+	let database = create_database();
+	let mut iterator = ChunkIteratorRegional::new(&database);
+	assert_eq!(iterator.index,  0);
+	assert_eq!(iterator.started,false);
+	iterator.next();
+	iterator.begin();
+	assert_eq!(iterator.index,  0);
+	assert_eq!(iterator.started,false);
+}
+
+//											~ next ~											 //
+#[test]
+fn test_regional_next ( )
+{
+	let database = create_database();
+	let mut iterator = ChunkIteratorRegional::new(&database);
+	iterator.next();
+	assert_eq!(iterator.index, 0); assert!(iterator.next());
+	assert_eq!(iterator.index, 1); assert!(iterator.next());
+	assert_eq!(iterator.index, 2); assert!(iterator.next());
+	assert_eq!(iterator.index, 3); assert!(iterator.next());
+	assert_eq!(iterator.index, 4); assert!(iterator.next());
+	assert_eq!(iterator.index, 5); assert!(iterator.next());
+	assert_eq!(iterator.index, 6); assert!(iterator.next());
+	assert_eq!(iterator.index, 7); assert!(iterator.next());
+	assert_eq!(iterator.index, 8); 
+	assert!(!iterator.next());
+}
+
+//											~ get_database ~									 //
+#[test]
+fn test_regional_get_database ( )
+{
+	let database = create_database();
+	let iterator = ChunkIteratorRegional::new(&database);
+	assert_eq!(iterator.get_database().get_pairs(2).1, 2);
+}
+
+
+//											~ same_region ~										 //
+#[test]
+fn test_regional_same_region_true ( )
+{
+	let database = create_database();
+	let mut iterator = ChunkIteratorRegional::new(&database);
+	iterator.index = 0;
+	assert!(iterator.same_region(0));
+	iterator.index = 1;
+	assert!(iterator.same_region(1));
+	iterator.index = 2;
+	assert!(iterator.same_region(2));
+}
+
+#[test]
+fn test_regional_same_region_false ( )
+{
+	let database = create_database();
+	let mut iterator = ChunkIteratorRegional::new(&database);
+	iterator.index = 0;
+	assert!(!iterator.same_region(1));
+	iterator.index = 1;
+	assert!(!iterator.same_region(2));
+	iterator.index = 2;
+	assert!(!iterator.same_region(1));
+}
+
+
+#[test]
+fn test_regional_same_region_first_element ( )
+{
+	let database = create_database();
+	let mut iterator = ChunkIteratorRegional::new(&database);
+	iterator.index = 5;
+	assert!(iterator.same_region(5));
+}
+
+#[test]
+fn test_regional_same_region_last_element ( )
+{
+	let database = create_database();
+	let mut iterator = ChunkIteratorRegional::new(&database);
+	iterator.index = 8;
+	assert!(iterator.same_region(8));
+}
+
+
+
+
+
+//###############################################################################################//
+//
+//										ChunkIteratorEquatorial
+//
+// pub fn new   ( &'a dyn Database, Radians, Decimal ) -> Self;
+//
+// pub fn begin ( &mut self );
+// pub fn next  ( &mut self );
+// pub fn get_database ( &self );
+// pub fn same_region  ( &self, usize );
+//
+//###############################################################################################//
+// //										~ new ~												 //
 // 	#[test]
 // 	fn test_none_new ( )
 // 	{
@@ -448,7 +1513,7 @@ mod test
 	fn test_equatorial_next_single_band ( )
 	{
 		let step = Degrees(180.0).as_radians();
-		let chunk_size_multiplier = 1.0;
+		let chunk_size_multiplier = 0.0;
 		let db = MockDatabase::new();
 		let mut iter = ChunkIteratorEquatorial::new(&db, step, chunk_size_multiplier);
 		iter.begin();
@@ -468,7 +1533,7 @@ mod test
 	fn test_equatorial_next_two_bands ( )
 	{
 		let step = Degrees(90.0).as_radians();
-		let chunk_size_multiplier = 1.0;
+		let chunk_size_multiplier = 0.0;
 		let db = MockDatabase::new();
 		let mut iter = ChunkIteratorEquatorial::new(&db, step, chunk_size_multiplier);
 		iter.begin();
@@ -492,7 +1557,7 @@ mod test
 	fn test_equatorial_next_three_bands ( )
 	{
 		let step = Degrees(60.0).as_radians();
-		let chunk_size_multiplier = 1.0;
+		let chunk_size_multiplier = 0.0;
 		let db = MockDatabase::new();
 		let mut iter = ChunkIteratorEquatorial::new(&db, step, chunk_size_multiplier);
 		iter.begin();
@@ -581,7 +1646,7 @@ mod test
 	fn test_equatorial_next_five_bands ( )
 	{
 		let step = Degrees(20.0).as_radians();
-		let chunk_size_multiplier = 1.0;
+		let chunk_size_multiplier = 0.0;
 		let db = MockDatabase::new();
 		let mut iter = ChunkIteratorEquatorial::new(&db, step, chunk_size_multiplier);
 		iter.begin();
@@ -613,7 +1678,7 @@ mod test
 	fn test_equatorial_next_five_bands_size_multiplier ( )
 	{
 		let step = Degrees(20.0).as_radians();
-		let chunk_size_multiplier = 2.0;
+		let chunk_size_multiplier = 1.0;
 		let db = MockDatabase::new();
 		let mut iter = ChunkIteratorEquatorial::new(&db, step, chunk_size_multiplier);
 		iter.begin();
@@ -660,7 +1725,7 @@ mod test
 	fn test_equatorial_same_region_dec_invalid ( )
 	{
 		let step = Degrees(20.0).as_radians();
-		let chunk_size_multiplier = 2.0;
+		let chunk_size_multiplier = 1.0;
 		let mut db = MockDatabase::new();
 		db.expect_get_pairs().times(1).returning(|_| return StarPair(0, 1));
 		db.expect_find_star().times(2).returning(|_| 
@@ -678,7 +1743,7 @@ mod test
 	fn test_equatorial_same_region_dec_valid ( )
 	{
 		let step = Degrees(20.0).as_radians();
-		let chunk_size_multiplier = 2.0;
+		let chunk_size_multiplier = 1.0;
 		let mut db = MockDatabase::new();
 		db.expect_get_pairs().times(1).returning(|_| return StarPair(0, 1));
 		db.expect_find_star().times(2).returning(|_|
@@ -695,7 +1760,7 @@ mod test
 	fn test_equatorial_same_region_dec_valid_single ( )
 	{
 		let step = Degrees(20.0).as_radians();
-		let chunk_size_multiplier = 2.0;
+		let chunk_size_multiplier = 1.0;
 		let mut db = MockDatabase::new();
 		db.expect_get_pairs().times(1).returning(|_| return StarPair(0, 1));
 		db.expect_find_star().times(2).returning(|index|
@@ -712,7 +1777,7 @@ mod test
 	fn test_equatorial_same_region_past_360_valid ( )
 	{
 		let step = Degrees(60.0).as_radians();
-		let chunk_size_multiplier = 2.0;
+		let chunk_size_multiplier = 1.0;
 		let mut db = MockDatabase::new();
 		db.expect_get_pairs().times(1).returning(|_| return StarPair(0, 1));
 		db.expect_find_star().times(2).returning(|_|
@@ -735,7 +1800,7 @@ mod test
 	fn test_equatorial_same_region_single_ra_valid ( )
 	{
 		let step = Degrees(60.0).as_radians();
-		let chunk_size_multiplier = 2.0;
+		let chunk_size_multiplier = 1.0;
 		let mut db = MockDatabase::new();
 		db.expect_get_pairs().times(1).returning(|_| return StarPair(0, 1));
 		db.expect_find_star().times(2).returning(|index|
@@ -753,7 +1818,7 @@ mod test
 	fn test_equatorial_same_region_past_360_invalid ( )
 	{
 		let step = Degrees(60.0).as_radians();
-		let chunk_size_multiplier = 2.0;
+		let chunk_size_multiplier = 1.0;
 		let mut db = MockDatabase::new();
 		db.expect_get_pairs().times(1).returning(|_| return StarPair(0, 1));
 		db.expect_find_star().times(2).returning(|_|
@@ -777,7 +1842,7 @@ mod test
 	fn test_equatorial_same_region_under_0_invalid ( )
 	{
 		let step = Degrees(60.0).as_radians();
-		let chunk_size_multiplier = 2.0;
+		let chunk_size_multiplier = 1.0;
 		let mut db = MockDatabase::new();
 		db.expect_get_pairs().times(1).returning(|_| return StarPair(0, 1));
 		db.expect_find_star().times(2).returning(|_|
@@ -795,7 +1860,7 @@ mod test
 	fn test_equatorial_same_region_under_0_valid ( )
 	{
 		let step = Degrees(60.0).as_radians();
-		let chunk_size_multiplier = 2.0;
+		let chunk_size_multiplier = 1.0;
 		let mut db = MockDatabase::new();
 		db.expect_get_pairs().times(1).returning(|_| return StarPair(0, 1));
 		db.expect_find_star().times(2).returning(|_|
@@ -815,7 +1880,7 @@ mod test
 	fn test_equatorial_same_region_error ( )
 	{
 		let step = Degrees(60.0).as_radians();
-		let chunk_size_multiplier = 2.0;
+		let chunk_size_multiplier = 1.0;
 		let mut db = MockDatabase::new();
 		db.expect_get_pairs().times(1).returning(|_| return StarPair(0, 1));
 		db.expect_find_star().times(2).returning(|_| return Err(Errors::NoMatch));
@@ -826,5 +1891,306 @@ mod test
 		iter.next(); // dec: ~0, 6 ra bands...1
 		assert!(!iter.same_region(1), "Outside range");
 	}
+
+
+
 	
+//###############################################################################################//
+//
+//										ChunkAreaSearch
+//
+// pub fn new   ( &'a dyn RegionalDatabase ) -> Self;
+//
+// pub fn begin ( &mut self );
+// pub fn next  ( &mut self );
+// pub fn get_database ( &self );
+// pub fn same_region  ( &self, usize );
+//
+//###############################################################################################//
+//										~ new ~													 //
+	#[test]
+	fn test_area_search_from_range ( )
+	{
+		let mut db = MockDatabase::new();
+		db.expect_find_star().returning(|_| return Ok(Equatorial::zero()));
+		
+		let range_ra  = Radians(0.0) .. Radians(1.0);
+		let range_dec = Radians(1.0) .. Radians(2.0);
+		let iter = ChunkAreaSearch::from_range(&db, range_ra.clone(), range_dec.clone());
+		
+		iter.dec.start.test_close (&range_dec.start, 0.01);
+		iter.dec.end.test_close   (&range_dec.end  , 0.01);
+		iter.ra.start.test_close  (&range_ra.start , 0.01);
+		iter.ra.end.test_close    (&range_ra.end   , 0.01);
+		let _ = iter.database.find_star(0);
+		assert_eq!(iter.started, false);
+	}
+	
+	#[test]
+	fn test_area_search_from_point ( )
+	{
+		let mut db = MockDatabase::new();
+		db.expect_find_star().returning(|_| return Ok(Equatorial::zero()));
+		
+		let center = Equatorial{ra: Degrees(30.0).as_radians(), dec: Degrees(10.0).as_radians()};
+		let iter = ChunkAreaSearch::from_point(&db, center, Degrees(20.0).as_radians());
+		
+		iter.dec.start.test_close (&Degrees(-10.0).as_radians(), 0.01);
+		iter.dec.end.test_close   (&Degrees( 30.0).as_radians(), 0.01);
+		iter.ra.start.test_close  (&Degrees( 10.0).as_radians(), 0.01);
+		iter.ra.end.test_close    (&Degrees( 40.0).as_radians(), 0.01);
+		let _ = iter.database.find_star(0);
+		assert_eq!(iter.started, false);
+	}
+	
+	
+//										~ begin ~												 //
+	#[test]
+	fn test_area_search_begin ( )
+	{
+		let mut db = MockDatabase::new();
+		db.expect_find_star().returning(|_| return Ok(Equatorial::zero()));
+		
+		let range_ra  = Radians(0.0) .. Radians(1.0);
+		let range_dec = Radians(1.0) .. Radians(2.0);
+		let mut iter = ChunkAreaSearch::from_range(&db, range_ra.clone(), range_dec.clone());
+		iter.started = true; // should be false.
+		
+		iter.begin();
+		iter.dec.start.test_close (&range_dec.start, 0.01);
+		iter.dec.end.test_close   (&range_dec.end,   0.01);
+		iter.ra.start.test_close  (&range_ra.start,  0.01);
+		iter.ra.end.test_close    (&range_ra.end,    0.01);
+		let _ = iter.database.find_star(0);
+		assert_eq!(iter.started, false);
+	}
+	
+//										~ next ~												 //
+	#[test]
+	fn test_area_search_next ( )
+	{
+		let db = MockDatabase::new();
+		
+		let range_ra  = Radians(0.0) .. Radians(1.0);
+		let range_dec = Radians(1.0) .. Radians(2.0);
+		
+		let mut iter = ChunkAreaSearch::from_range(&db, range_ra.clone(), range_dec.clone());
+		iter.begin();
+		assert!(!iter.started);
+		assert!(iter.next());
+		assert!(iter.started);
+		assert!(!iter.next());
+		iter.dec.start.test_close (&range_dec.start, 0.01);
+		iter.dec.end.test_close   (&range_dec.end,   0.01);
+		iter.ra.start.test_close  (&range_ra.start,  0.01);
+		iter.ra.end.test_close    (&range_ra.end,    0.01);
+		assert_eq!(iter.started, true);
+	}
+	
+	
+//										~ get_database ~										 //
+	#[test]
+	fn test_area_search_get_database ( )
+	{
+		let mut db = MockDatabase::new();
+		db.expect_find_star().returning(|_| return Ok(Equatorial::zero()));
+		
+		let range  = Radians(0.0) .. Radians(1.0);
+		let iter = ChunkAreaSearch::from_range(&db, range.clone(), range.clone());
+		
+		let _ = iter.get_database().find_star(0);
+	}
+	
+	
+	
+//										~ same_region ~											 //
+	#[test]
+	// If the area inside the region 
+	fn test_area_search_same_region_inside_norm ( )
+	{
+		let mut db = MockDatabase::new();
+		db.expect_find_star().returning(|_| return Ok(Equatorial::zero()));
+		
+		let range_ra   = Degrees(0.0).to_radians()   .. Degrees(30.0).to_radians();
+		let range_dec  = Degrees(-15.0).to_radians() .. Degrees(15.0).to_radians();
+		
+		db.expect_get_pairs().returning(|a| return StarPair(a, a));
+		db.expect_find_star().returning(|a| 
+			{
+				match a
+				{
+					1 => { return Ok(Equatorial{
+						ra:Degrees(0.0).to_radians(), dec:Degrees(-15.0).to_radians()});}
+						
+					2 => { return Ok(Equatorial{
+						ra:Degrees(0.0).to_radians(), dec:Degrees(15.0).to_radians()});}
+						
+					3 => { return Ok(Equatorial{
+						ra:Degrees(30.0).to_radians(), dec:Degrees(-15.0).to_radians()});}
+						
+					4 => { return Ok(Equatorial{
+						ra:Degrees(30.0).to_radians(), dec:Degrees(15.0).to_radians()});}
+						
+					_ => { panic!(); }
+				}
+			});
+		
+		let iter = ChunkAreaSearch::from_range(&db, range_ra, range_dec);
+		
+		assert!(iter.same_region(0));
+		assert!(iter.same_region(1));
+		assert!(iter.same_region(2));
+		assert!(iter.same_region(3));
+	}
+	
+	
+	#[test]
+	// If the area inside the region amd the area is on the ra wrap around area. 
+	fn test_area_search_same_region_inside_wrap ( )
+	{
+		let mut db = MockDatabase::new();
+		db.expect_find_star().returning(|_| return Ok(Equatorial::zero()));
+		
+		let range_ra   = Degrees(330.0).to_radians() .. Degrees(390.0).to_radians();
+		let range_dec  = Degrees(-15.0).to_radians() .. Degrees(15.0).to_radians();
+		
+		db.expect_get_pairs().returning(|a| return StarPair(a, a));
+		db.expect_find_star().returning(|a| 
+			{
+				match a
+				{
+					1 => { return Ok(Equatorial{
+						ra:Degrees(330.0).to_radians(), dec:Degrees(0.0).to_radians()});}
+						
+					2 => { return Ok(Equatorial{
+						ra:Degrees(30.0).to_radians(), dec:Degrees(0.0).to_radians()});}
+						
+					_ => {panic!();}
+				}
+			});
+		
+		let iter = ChunkAreaSearch::from_range(&db, range_ra, range_dec);
+		
+		assert!(iter.same_region(0));
+		assert!(iter.same_region(1));
+	}
+	
+	
+	
+	#[test]
+	// If the area inside the region 
+	fn test_area_search_same_region_outside_norm ( )
+	{
+		let mut db = MockDatabase::new();
+		db.expect_find_star().returning(|_| return Ok(Equatorial::zero()));
+		
+		let range_ra   = Degrees(0.0).to_radians()   .. Degrees(30.0).to_radians();
+		let range_dec  = Degrees(-15.0).to_radians() .. Degrees(15.0).to_radians();
+		
+		db.expect_get_pairs().returning(|a| return StarPair(a, a));
+		db.expect_find_star().returning(|a| 
+			{
+				match a
+				{
+					1 => { return Ok(Equatorial{
+						ra:Degrees(0.0).to_radians(), dec:Degrees(-15.1).to_radians()});}
+						
+					2 => { return Ok(Equatorial{
+						ra:Degrees(0.0).to_radians(), dec:Degrees(15.1).to_radians()});}
+						
+					3 => { return Ok(Equatorial{
+						ra:Degrees(30.0).to_radians(), dec:Degrees(-15.1).to_radians()});}
+						
+					4 => { return Ok(Equatorial{
+						ra:Degrees(30.0).to_radians(), dec:Degrees(15.1).to_radians()});}
+						
+					5 => { return Ok(Equatorial{
+						ra:Degrees(-0.01).to_radians(), dec:Degrees(-15.0).to_radians()});}
+						
+					6 => { return Ok(Equatorial{
+						ra:Degrees(-0.01).to_radians(), dec:Degrees(15.1).to_radians()});}
+						
+					7 => { return Ok(Equatorial{
+						ra:Degrees(30.1).to_radians(), dec:Degrees(-15.1).to_radians()});}
+						
+					8 => { return Ok(Equatorial{
+						ra:Degrees(30.1).to_radians(), dec:Degrees(15.1).to_radians()});}
+						
+					_ => { panic!(); }
+				}
+			});
+		
+		let iter = ChunkAreaSearch::from_range(&db, range_ra, range_dec);
+		
+		assert!(iter.same_region(0));
+		assert!(iter.same_region(1));
+		assert!(iter.same_region(2));
+		assert!(iter.same_region(3));
+		assert!(iter.same_region(4));
+		assert!(iter.same_region(5));
+		assert!(iter.same_region(6));
+		assert!(iter.same_region(7));
+		assert!(iter.same_region(8));
+	}	
+	
+	
+	
+	
+	
+	
+	
+	
+	
+	
+	
+	#[test]
+	// If the area inside the region amd the area is on the ra wrap around area. 
+	fn test_area_search_same_region_outside_wrap ( )
+	{
+		let mut db = MockDatabase::new();
+		db.expect_find_star().returning(|_| return Ok(Equatorial::zero()));
+		
+		let range_ra   = Degrees(330.0).to_radians() .. Degrees(390.0).to_radians();
+		let range_dec  = Degrees(-15.0).to_radians() .. Degrees(15.0).to_radians();
+		
+		db.expect_get_pairs().returning(|a| return StarPair(a, a));
+		db.expect_find_star().returning(|a| 
+			{
+				match a
+				{
+					1 => { return Ok(Equatorial{
+						ra:Degrees(329.0).to_radians(), dec:Degrees(0.0).to_radians()});}
+						
+					2 => { return Ok(Equatorial{
+						ra:Degrees(31.0).to_radians(), dec:Degrees(0.0).to_radians()});}
+						
+					_ => {panic!();}
+				}
+			});
+		
+		let iter = ChunkAreaSearch::from_range(&db, range_ra, range_dec);
+		
+		assert!(iter.same_region(0));
+		assert!(iter.same_region(1));
+	}
+	
+	
+	
+	#[test]
+	// If an invalid star pair is entered (which wont happen), false will be returned.
+	// This is just to satisfy lcov
+	fn test_area_search_same_region_error ( )
+	{
+		let mut db = MockDatabase::new();
+		db.expect_get_pairs().times(1).returning(|_| return StarPair(0, 1));
+		db.expect_find_star().times(2).returning(|_| return Err(Errors::NoMatch));
+			
+		let range_ra   = Degrees(330.0).to_radians() .. Degrees(30.0).to_radians();
+		let range_dec  = Degrees(-15.0).to_radians() .. Degrees(15.0).to_radians();
+		let mut iter = ChunkAreaSearch::from_range(&db, range_ra, range_dec);
+		iter.begin();
+		iter.next(); // pole
+		iter.next(); // dec: ~0, 6 ra bands...1
+		assert!(!iter.same_region(1), "Outside range");
+	}
 }
