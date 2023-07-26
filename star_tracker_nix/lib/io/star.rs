@@ -106,22 +106,20 @@ impl<'de> Deserialize<'de> for Star
 		// #[derive(Deserialize)]
 		// #[serde(field_identifier, rename_all = "lowercase")]
 		#[derive(Debug)]
-        enum Field { Mag, Ra, Dec, Spect, Name }
+        enum Field { Mag, Ra, Dec, Spect, Name, Bf, Hip }
 
-        // This part could also be generated independently by:
-        //
-        //    #[derive(Deserialize)]
-        //    #[serde(field_identifier, rename_all = "lowercase")]
-        //    enum Field { Secs, Nanos }
-        impl<'de> Deserialize<'de> for Field 
+		// This part could also be generated independently by:
+		//
+		//    #[derive(Deserialize)]
+		//    #[serde(field_identifier, rename_all = "lowercase")]
+		//    enum Field { Secs, Nanos }
+		impl<'de> Deserialize<'de> for Field 
 		{
-            
-			fn deserialize<D>(deserializer: D) -> Result<Field, D::Error> where D: Deserializer<'de>,
-            {
-                struct FieldVisitor;
-
-                impl<'de> Visitor<'de> for FieldVisitor {
-                    type Value = Field;
+			fn deserialize<D>(deserializer: D)->Result<Field, D::Error> where D: Deserializer<'de>,
+			{
+				struct FieldVisitor;
+				impl<'de> Visitor<'de> for FieldVisitor {
+					type Value = Field;
 					
 					//
 					// QUERY
@@ -130,8 +128,9 @@ impl<'de> Deserialize<'de> for Star
                     fn expecting(&self, formatter: &mut fmt::Formatter) -> fmt::Result {
                         // formatter.write_str("`secs` or `nanos`")
 						println!("EXPECTING FIELD");
-						let s = format!("`{}` or `{}` or `{}` or `{}` or `{}`", 
-							FIELDS[0], FIELDS[1], FIELDS[2], FIELDS[3], FIELDS[4]);
+						let s = format!("`{}` or `{}` or `{}` or `{}` or `{}` or `{}` or `{}`", 
+							FIELDS[0], FIELDS[1], FIELDS[2], FIELDS[3], 
+							FIELDS[4], FIELDS[5], FIELDS[6]);
 						// let s = format!("`{}`", FIELDS[0]);
 						return formatter.write_str(&s);
                     }
@@ -149,6 +148,8 @@ impl<'de> Deserialize<'de> for Star
 						else if FIELDS[2].eq(val) { return Ok(Field::Dec); }
 						else if FIELDS[3].eq(val) { return Ok(Field::Spect); }
 						else if FIELDS[4].eq(val) { return Ok(Field::Name); }
+						else if FIELDS[5].eq(val) { return Ok(Field::Bf); }
+						else if FIELDS[6].eq(val) { return Ok(Field::Hip); }
 						else { return Err(de::Error::unknown_field(val, FIELDS)); }
                     }
                 }
@@ -187,7 +188,9 @@ impl<'de> Deserialize<'de> for Star
 				let spec = seq.next_element()?.ok_or_else(|| de::Error::invalid_length(3, &self))?;
 				let name = seq.next_element()?.ok_or_else(|| de::Error::invalid_length(4, &self))?;
 				let pos  = Equatorial{ra: Radians(ra), dec: Radians(dec)};
-				return Ok(Star{mag: mag, pos: pos, spec: spec, name: name});
+				let bf   = seq.next_element()?.ok_or_else(|| de::Error::invalid_length(5, &self))?;
+				let hip  = seq.next_element()?.ok_or_else(|| de::Error::invalid_length(6, &self))?;
+				return Ok(Star{mag: mag, pos: pos, spec: spec, name: name, bf: bf, hip: hip});
 			}
 
 			//
@@ -195,11 +198,13 @@ impl<'de> Deserialize<'de> for Star
 			fn visit_map<V>(self, mut map: V) -> Result<Star, V::Error> where V: MapAccess<'de>,
 			{				
 				// MapAccess is an iterator of keys and values.
-				let mut mag = None;
-				let mut ra = None;
-				let mut dec = None;
+				let mut mag  = None;
+				let mut ra   = None;
+				let mut dec  = None;
 				let mut spec = None;
 				let mut name = None;
+				let mut bf   = None;
+				let mut hip  = None;
 				let mut continue_loop = true;
 				// Assigns secs and nanos if there is the correct entries of that variable.
 				while continue_loop
@@ -238,6 +243,14 @@ impl<'de> Deserialize<'de> for Star
 								{
 									name = Some(next);
 								}
+								Field::Bf =>
+								{
+									bf = Some(next);
+								}
+								Field::Hip =>
+								{
+									hip = Some(next);
+								}
 							}
 						}
 						// End of List
@@ -248,11 +261,13 @@ impl<'de> Deserialize<'de> for Star
 					}
 				}
 				// If variables correct, returns object.
-				let mag  = mag.ok_or_else(|| de::Error::missing_field(FIELDS[0]))?;
-				let mut ra   = ra.ok_or_else(|| de::Error::missing_field(FIELDS[1]))?;
-				let mut dec  = dec.ok_or_else(|| de::Error::missing_field(FIELDS[2]))?;
-				let spec = spec.ok_or_else(|| de::Error::missing_field(FIELDS[3]))?;
-				let name = name.ok_or_else(|| de::Error::missing_field(FIELDS[4]))?;
+				let mag     = mag.ok_or_else( || de::Error::missing_field(FIELDS[0]))?;
+				let mut ra  = ra.ok_or_else(  || de::Error::missing_field(FIELDS[1]))?;
+				let mut dec = dec.ok_or_else( || de::Error::missing_field(FIELDS[2]))?;
+				let spec    = spec.ok_or_else(|| de::Error::missing_field(FIELDS[3]))?;
+				let name    = name.ok_or_else(|| de::Error::missing_field(FIELDS[4]))?;
+				let bf      = bf.ok_or_else(|| de::Error::missing_field(FIELDS[5]))?;
+				let hip     = hip.ok_or_else(|| de::Error::missing_field(FIELDS[6]))?;
 				
 				if NixConstsStruct::HYG_DATABASE_DEC_DEGREES
 				{
@@ -264,7 +279,15 @@ impl<'de> Deserialize<'de> for Star
 				}
 				
 				let pos  = Equatorial{ra: Radians(ra), dec: Radians(dec)};
-				return Ok(Star{mag: mag, pos: pos, spec: spec.expect(""), name: name.expect("")});
+				return Ok(
+					Star{
+						mag:  mag, 
+						pos:  pos, 
+						spec: spec.expect(""), 
+						name: name.expect(""),
+						bf:   bf.expect(""),
+						hip:  hip.expect("")
+					});
 			}
 		}
 
@@ -275,6 +298,8 @@ impl<'de> Deserialize<'de> for Star
 				NixConstsStruct::HYG_DATABASE_HEADER_DECLINATION, 
 				NixConstsStruct::HYG_DATABASE_HEADER_SPECULARITY,
 				NixConstsStruct::HYG_DATABASE_HEADER_NAME,
+				NixConstsStruct::HYG_DATABASE_HEADER_BF,
+				NixConstsStruct::HYG_DATABASE_HEADER_HIP,
 			];
 		deserializer.deserialize_struct("Star", FIELDS, DurationVisitor)
 	}

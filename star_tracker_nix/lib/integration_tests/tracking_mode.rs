@@ -1,3 +1,4 @@
+#![allow(unused_imports)]
 //! # Tracking Mode Test
 //! This is an integration test of the whole of the tracking_mode module.
 //! This includes the construction, verification and searching of the database to find specific stars.
@@ -8,6 +9,7 @@ use rand::prelude::*;
 use std::time::Duration;
 
 use star_tracker_lib::util::aliases::Decimal;
+use star_tracker_lib::util::aliases::M_PI;
 use star_tracker_lib::util::units::Radians;
 use star_tracker_lib::util::units::Degrees;
 use star_tracker_lib::util::units::Hours;
@@ -46,7 +48,7 @@ impl TrackingModeConsts for TrackingConstsTest
 	const PAIRS_MAX       : usize = 2000;							// Irrelevant, ensure big.
 	const TRIANGLES_MAX   : usize = 2000;							// Irrelevant, ensure big.
 	const SPECULARITY_MIN : Decimal = 0.0001;						// If the triangle is flipped.
-	const ANGLE_TOLERANCE : Radians = Degrees(0.08).as_radians(); 	// Maximum inaccuracy.
+	const ANGLE_TOLERANCE : Radians = Degrees(0.09).as_radians(); 	// Maximum inaccuracy.
 }
 
 pub fn run ( )
@@ -55,31 +57,29 @@ pub fn run ( )
 
 	// To reduce size of database.
 	const MAGNITUDE_MIN: Decimal = -20.0;
-	const MAGNITUDE_MAX: Decimal = 3.88;
+	const MAGNITUDE_MAX: Decimal = 4.5;
 
 	// The separation of the sample points, make this smaller than the FOV so you can test more edge cases.
 	const SAMPLE_FOV   : Radians = Degrees(5.0).as_radians();
 
 
 	// Region Reduction
-	const REGION_SIZE  : Radians = Degrees(22.0).as_radians(); // An area smaller than FOV.
+	const REGION_SIZE  : Radians = Degrees(15.0).as_radians(); // An area smaller than FOV.
 	const REGION_NUM   : usize   = 8;   // Should not be more than 1 redundant star in a region.
-	const CHUNK_STEP   : Decimal = 2.1; // Distance * FOV between each chunk.
-	const CHUNK_REACH  : Decimal = 1.1; // Overlap multiplier for each chunl.
 
 	// If stars are this close, one is excluded.
 	const DOUBLE_STAR_TOLERANCE : Radians = TrackingConstsTest::ANGLE_TOLERANCE;//Degrees(0.2).as_radians();
 
 	// To create the database.
-	const NUM_BINS     : usize   = 2000; // Refer to `src/tracking_mode/database/mod.rs`.
-	const FOV          : Radians = Degrees(44.0).as_radians();
+	const FOV          : Radians = Degrees(33.7).as_radians();
 
 
 	// Disrupt input.
-	const VARIATION_MAG         : Decimal = 0.0000001;//0.1; // The variation outside of the magnitude range.
-	const VARIATION_POSITION    : Radians = Radians(0.00001);//Degrees(0.06).as_radians(); // Error.
+	const VARIATION_MAG         : Decimal = 0.1;//0.1; // The variation outside of the magnitude range.
 	const FALSE_STARS           : usize   = 0;//4; // Maximum number of fake, random stars.
 	const HIDDEN_STARS          : usize   = 0; // Maximum number of real stars to remove.
+	const VARIATION_POSITION_STD_DEV : Radians = Degrees(0.04).as_radians(); // Standard Deviation of Error.
+	const VARIATION_POSITION_MEAN    : Radians = Degrees(0.038).as_radians(); // Mean of Error.
 
 	const CAP_STARS             : usize   = 100; // Max stars in image.
 
@@ -163,15 +163,15 @@ pub fn run ( )
 		println!(" - {} best coverage region reduced", coverage_best_reg);
 	}
 
-	let gen_2 : DatabaseGenerator = DatabaseGenerator::gen_database(&stars_limit_mag, FOV, TrackingConstsTest::ANGLE_TOLERANCE);
+	let gen_2 : DatabaseGenerator = DatabaseGenerator::gen_database(&stars_limit_mag, FOV, FOV, TrackingConstsTest::ANGLE_TOLERANCE);
 	let database_2 = gen_2.get_database();
 	println!(" - {} angles generated (without).", database_2.pairs.size());
 
 
-	let gen : DatabaseGenerator = DatabaseGenerator::gen_database(&stars_limit_reg, FOV, TrackingConstsTest::ANGLE_TOLERANCE);
-	// let gen : DatabaseGenerator = DatabaseGenerator::gen_database_regional(&stars_limit_reg, FOV, TrackingConstsTest::ANGLE_TOLERANCE, Degrees(50.0).as_radians());
-	let database = gen.get_database();
-	// let database = gen.get_database_regional();
+	// let gen : DatabaseGenerator = DatabaseGenerator::gen_database(&stars_limit_reg, FOV, FOV, TrackingConstsTest::ANGLE_TOLERANCE);
+	let gen : DatabaseGenerator = DatabaseGenerator::gen_database_regional(&stars_limit_reg, FOV, TrackingConstsTest::ANGLE_TOLERANCE, FOV/2.0);
+	// let database = gen.get_database();
+	let database = gen.get_database_regional();
 	let mut database_iterator = ChunkIteratorNone::new(&database);
 	// let mut database_iterator = ChunkIteratorRegional::new(&database);
 	// let mut database_iterator = ChunkIteratorEquatorial::new(&database, Degrees(45.0).as_radians(), 0.2);
@@ -238,9 +238,9 @@ pub fn run ( )
 			{
 				let mut position = stars[i].pos;
 				position.ra  = position.ra +
-					Radians(rng.gen_range(-VARIATION_POSITION.0..VARIATION_POSITION.0));
+					Radians(gen_random_sd(&mut rng, VARIATION_POSITION_MEAN.0, VARIATION_POSITION_STD_DEV.0));
 				position.dec = position.dec +
-					Radians(rng.gen_range(-VARIATION_POSITION.0..VARIATION_POSITION.0));
+					Radians(gen_random_sd(&mut rng, VARIATION_POSITION_MEAN.0, VARIATION_POSITION_STD_DEV.0));
 
 				let rotated = rotation.to_image(SpaceWorld(position.to_vector3())).0;
 				observable.push(rotated.to_equatorial());
@@ -265,7 +265,6 @@ pub fn run ( )
 			let eq = Equatorial{ra: ra, dec: dec};
 			observable.push(eq);
 		}
-
 
 		//
 		// Actual Algorithm
@@ -320,12 +319,63 @@ pub fn run ( )
 	println!("STARS/REGION:   {}", REGION_NUM);
 	println!("");
 	println!("VAR MAG:        {}", VARIATION_MAG);
-	println!("VAR POS:        {}", VARIATION_POSITION.to_degrees());
+	println!("VAR POS:        {}", VARIATION_POSITION_MEAN.to_degrees());
+	println!("VAR POS:        {}", VARIATION_POSITION_STD_DEV.to_degrees());
 	println!("FALSE STARS:    {}", FALSE_STARS);
 	println!("HIDDEN STARS:   {}", HIDDEN_STARS);
 	println!("");
 	println!("STARS IN IMAGE: {}", CAP_STARS);
 }
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 
 
@@ -495,4 +545,16 @@ pub fn print_standard_equatorial ( to_print: Equatorial ) -> String
 pub fn hour_time_format ( hours : Hours ) -> String
 {
 	return format!("{:2.0}h {:2.0}m {:5.2}s", hours.hours(), hours.minutes(), hours.seconds());
+}
+
+
+
+/// Uses Box Muller technique to generate a randomly generated normally distributed number.
+pub fn gen_random_sd ( rng: &mut impl Rng, mean: Decimal, std_dev: Decimal ) -> Decimal
+{
+	let u1: Decimal = rng.gen();
+	let u2: Decimal = rng.gen();
+
+	let z0 = (-2.0 * u1.ln() as Decimal).sqrt() * (2.0 * M_PI * u2).cos();
+	return mean + std_dev * z0;
 }

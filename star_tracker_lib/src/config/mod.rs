@@ -86,6 +86,10 @@ const HYG_DATABASE_HEADER_DECLINATION		: &'static str = "dec";
 const HYG_DATABASE_HEADER_SPECULARITY		: &'static str = "spect";
 /// The column name for name for the HYG Database.
 const HYG_DATABASE_HEADER_NAME				: &'static str = "proper";
+/// The column name for hip code for the HYG Database.
+const HYG_DATABASE_HEADER_HIP				: &'static str = "hip";
+/// The column for the alternate name for the HYG Database.
+const HYG_DATABASE_HEADER_BF				: &'static str = "bf";
 }
 
 //###############################################################################################//
@@ -277,6 +281,11 @@ pub trait NixConsts
 	const HYG_DATABASE_HEADER_SPECULARITY		: &'static str;
 	/// The column name for name for the HYG Database.
 	const HYG_DATABASE_HEADER_NAME				: &'static str;
+	
+	/// The column name for hip code for the HYG Database.
+	const HYG_DATABASE_HEADER_HIP				: &'static str;
+	/// The column for the alternate name for the HYG Database.
+	const HYG_DATABASE_HEADER_BF				: &'static str;
 }
 
 // /// Sample Test Code to simulate the algorithm and check its functionality.

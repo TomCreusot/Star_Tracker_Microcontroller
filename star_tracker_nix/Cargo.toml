@@ -50,6 +50,9 @@ fitsio-derive = "0.2.0"
 opencv = "0.63.0"   # For lens calibration.
 rand    = "0.8.0"   # Create random variables which can be used for testing and simulating.
 
+
+open = "5.0.0"    # Open website (Stallarium for demo).
+
 # Probably not relevent any more.
 serde = { version = "1.0",  features = ["derive"] }
 

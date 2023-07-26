@@ -10,8 +10,6 @@ use star_tracker_lib::tracking_mode::StarPair;
 use star_tracker_lib::tracking_mode::database::KVector;
 // use star_tracker_lib::tracking_mode::database::Database;
 
-use crate::io::Star;
-
 pub mod star_database_element;
 pub mod database_generator;
 pub mod k_vector;

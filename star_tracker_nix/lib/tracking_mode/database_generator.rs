@@ -52,6 +52,9 @@ impl DatabaseGenerator
 			catalogue_field: &self.catalogue_field,
 		};
 	}
+	
+
+
 
 
 	/// Creates a database on the heap.
@@ -59,12 +62,17 @@ impl DatabaseGenerator
 	/// # Arguments
 	/// * `stars`     - The stars to be inserted into the database.
 	/// * `fov`       - The field of view of the sensor, .
+	/// * `chunk_size`- The max distance between the stars until they are considered not linked.
 	/// * `tolerance` - The allowed error of a star pair until it is not considered a match.
 	/// # Returns
 	/// The database with the lifetime of all the passed in variables.
-	pub fn gen_database ( stars: &Vec<Star>, fov: Radians, tolerance: Radians ) -> Self
+	pub fn gen_database ( 
+		stars: &Vec<Star>, 
+		fov: Radians, 
+		chunk_size : Radians, 
+		tolerance: Radians ) -> Self
 	{
-		let mut pairs_unrefined = StarDatabaseElement::create_list(fov / 2.0, stars);
+		let mut pairs_unrefined = StarDatabaseElement::create_list(chunk_size, stars);
 		pairs_unrefined.sort();
 
 		let mut pairs : Vec<StarPair<usize>> = Vec::new();
@@ -95,8 +103,15 @@ impl DatabaseGenerator
 			num_fields:      0,
 		};
 	}
-
-
+	
+	
+	/// Ensures there are no angles too close to each other within the same region.
+	/// If there are, the orientation of the image may be invalid.
+	pub fn region_refine_single ( )
+	{
+		
+	}
+	
 
 
 	
@@ -121,9 +136,9 @@ impl DatabaseGenerator
 			points_num = BitField::FIELDS as usize;
 		}
 		let chunks = Distribute::fibonacci_latice(points_num);
-		let angle = Distribute::points_to_angle(points_num);
+		// let angle = Distribute::points_to_angle(points_num);
 		
-		let mut database = Self::gen_database ( stars, fov, tolerance );
+		let mut database = Self::gen_database ( stars, fov, chunk_size, tolerance );
 		let mut catalogue_field = Vec::with_capacity(database.catalogue.len()); 
 		for star in &database.catalogue
 		{
@@ -214,6 +229,9 @@ impl DatabaseGenerator
 		}
 		return stars_added;
 	}
+
+
+
 
 
 
