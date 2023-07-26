@@ -56,13 +56,10 @@ pub fn find	<T: TrackingModeConsts> (
 	let mut lowest_error = Decimal::MAX;
 	gen_tri.begin(T::ANGLE_TOLERANCE, stars);
 	
-	// println!("A {}", timer.elapsed().as_millis());
-	
 	// Loop through every possible combination of star combination using the kernel_iterator.
 	// Using star_triangle_iterator to find triangle matches in the database.
 	while !abort.should_abort() && let Some(iter) = gen_tri.next(stars, database)
 	{
-		// println!("B {} --------", timer.elapsed().as_millis());
 		// input and output both make triangles of the same length.
 		let input  : Error<StarTriangle<Equatorial>> = iter.input.search_list(stars);
 		let output : Error<StarTriangle<Equatorial>> = iter.output.search_database(database.get_database());
@@ -73,16 +70,13 @@ pub fn find	<T: TrackingModeConsts> (
 		// The code can continue.
 		if input.is_ok() && output.is_ok()
 		{
-			// println!("C {}", timer.elapsed().as_millis());
 			let input = input.unwrap();
 			let output = output.unwrap();
 
-			// println!("D {}", timer.elapsed().as_millis());
 			// ~~~~~~~~~~~~~~~~~~~~~	 The speculariy in/out match	~~~~~~~~~~~~~~~~~~~~
 			// If the triangles are not flipped, the code can continue.
 			if gen_spec.same(&input.to_vector3(), &output.to_vector3())
 			{
-				// println!("E {}", timer.elapsed().as_millis());
 				let result = gen_pyr.find_pilot(stars, database, iter.input, iter.output);
 				
 				// If a pyramid cannot be found.
@@ -97,7 +91,6 @@ pub fn find	<T: TrackingModeConsts> (
 				// A pilot was found.
 				if let Result::Ok(found) = result
 				{
-					// println!("F {}", timer.elapsed().as_millis());
 					// ~~~~~~~~~	Get the star from the database.	~~~~~~~~~~~~~~~~~~~~
 					let pil_in = stars.get(found.input);
 					let pil_out = database.get_database().find_star(found.output);
@@ -117,102 +110,61 @@ pub fn find	<T: TrackingModeConsts> (
 }
 
 
-
-
-
-
-
-
-
-// This code is a working archive to compare the performance of with and without the star_triangle_iterator.
-// Spoilers: It sucks.
-/*
-/// Creates unique sets of TrackingMode's from the location of the stars on an equatorial plane.
-/// These are then compared with the database and the accurate sets from the database will be returned.
-/// # Arguments
-/// * `stars` - The list of stars in order of magnitude (descending).
-///
-/// # Returns
-/// The triangle of the image and the triangle of the database.
-pub fn old_find <T: TrackingModeConsts> ( 
-									stars    : &dyn List<Equatorial>, 
-									database : &dyn ChunkIterator, 
-									gen_tri  : &mut dyn TriangleConstruct,
-									gen_pyr  : &mut dyn PyramidConstruct<T>,
-									gen_spec : &mut dyn SpecularityConstruct<T>,
-									abort    : &dyn AbandonSearch,
-								) -> Constellation
-	where T: 'static + TrackingModeConsts, 
-	ArrayList<(), {T::PAIRS_MAX}> : Sized, 
-	ArrayList<(), {T::TRIANGLES_MAX}> : Sized
-// where T: TrackingModeConsts, [(); T::PAIRS_MAX]: Sized
+pub fn find_all	<T: TrackingModeConsts> (
+										stars    : &dyn List<Equatorial>,
+										database : &mut dyn ChunkIterator,
+										gen_tri  : &mut dyn TriangleConstruct,
+										gen_spec : &mut dyn SpecularityConstruct<T>,
+										abort    : &dyn AbandonSearch,
+										required : usize,
+										matches  : &mut dyn List<Match<usize>>,
+									)
+		where T: 'static + TrackingModeConsts,
 {
-	// Not enough stars, instant fail.
-	if stars.size() < 3
+	database.begin();
+	gen_tri.begin(T::ANGLE_TOLERANCE, stars);
+	
+	// Loop through every possible combination of star combination using the kernel_iterator.
+	// Using star_triangle_iterator to find triangle matches in the database.
+	while !abort.should_abort() && let Some(iter) = gen_tri.next(stars, database)
 	{
-		return Constellation::None;
-	}
-	// Enough to make a triangle constellation.
-	else if stars.size() >= 3
-	{
-		// ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~	 Attempt to find stars matches.	~~~~~~~~~~~~~~~~~~~~
-		let mut triangles: 
-			ArrayList<Match<StarTriangle<usize>>,{T::TRIANGLES_MAX}> = ArrayList::new();
-		StarTriangle::<usize>::find_match_triangle::<T> ( stars, database.get_database(), &mut triangles );
+		// input and output both make triangles of the same length.
+		let input  : Error<StarTriangle<Equatorial>> = iter.input.search_list(stars);
+		let output : Error<StarTriangle<Equatorial>> = iter.output.search_database(database.get_database());
+		let error  : Decimal = iter.weight;
 
-		// ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~	 Loops through all matches.		~~~~~~~~~~~~~~~~~~~~
-		let iterator: ListIterator<Match<StarTriangle<usize>>> = ListIterator::new(&triangles);
-		for iter in iterator
+		// ~~~~~~~~~~~~~~~~~~~~~~~~~	 A valid match was found.		~~~~~~~~~~~~~~~~~~~~
+		// If the stars can be found in the database and the observed list (bug if not),
+		// The code can continue.
+		if input.is_ok() && output.is_ok()
 		{
-			// if abort.should_abort() { return Constellation::None; }
-			let input : Error<StarTriangle<Equatorial>> = iter.input.search_list(stars);
-			let output : Error<StarTriangle<Equatorial>> = iter.output.search_database(database.get_database());
-			// ~~~~~~~~~~~~~~~~~~~~~~~~~	 A valid match was found.		~~~~~~~~~~~~~~~~~~~~
-			if input.is_ok() && output.is_ok()
+			let input = input.unwrap();
+			let output = output.unwrap();
+
+			// ~~~~~~~~~~~~~~~~~~~~~	 The speculariy in/out match	~~~~~~~~~~~~~~~~~~~~
+			// If the triangles are not flipped, the code can continue.
+			if gen_spec.same(&input.to_vector3(), &output.to_vector3())
 			{
-				let input = input.unwrap();
-				let output = output.unwrap();
+				matches.clear();
+				matches.push_back(Match{input: iter.input.0, output: iter.output.0, weight: 1.0});
+				matches.push_back(Match{input: iter.input.1, output: iter.output.1, weight: 1.0});
+				matches.push_back(Match{input: iter.input.2, output: iter.output.2, weight: 1.0});
 				
-				// ~~~~~~~~~~~~~~~~~~~~~	 The speculariy in/out match	~~~~~~~~~~~~~~~~~~~~
-				if gen_spec.same(&input.to_vector3(), &output.to_vector3())
+				let mut count = 0; 
+				// ~~~~~~~~~~~~~	Searching through pilot stars.		~~~~~~~~~~~~~~~~~~~~
+				while let Some(pilot) = gen_tri.next_pilot(stars, database)
 				{
-					// ~~~~~~~~~~~~~~~~~	Only a triangle can be formed.	~~~~~~~~~~~~~~~~~~~~
-					if stars.size() == 3
-					{ 
-						return Constellation::Triangle(
-							Match{input: input, output: output, weight: 1.0});
-					}
-					
-					// ~~~~~~~~~~~~~~~~~	Pyramid can be formed.			~~~~~~~~~~~~~~~~~~~~
-					else if 3 < stars.size()
-					{ 
-						let result = gen_pyr.find_pilot(stars, database, iter.input, iter.output);
-						// ~~~~~~~~~~~~~	A match is found.				~~~~~~~~~~~~~~~~~~~~
-						if let Ok(found) = result
-						{
-							// ~~~~~~~~~	Get the star from the database.	~~~~~~~~~~~~~~~~~~~~
-							if found.input < stars.size()
-							{
-								let pil_in = stars.get(found.input);
-								let pil_out = database.get_database().find_star(found.output);
-								
-								if let Ok(out) = pil_out
-								{
-									let pyr_in  = StarPyramid(input.0, input.1, input.2, pil_in);
-									let pyr_out = StarPyramid(output.0, output.1, output.2, out);
-									return Constellation::Pyramid(
-										Match{input: pyr_in, output: pyr_out, weight: 1.0});
-								}
-							}
-						}
-					}
+					matches.push_back(Match{input: pilot.input, output: pilot.output, weight:1.0});
+					count += 1;
 				}
+				
+				if required <= count { return; }
 			}
 		}
 	}
-	return Constellation::None;
 }
-*/
+
+
 }
 
 

@@ -28,27 +28,25 @@ impl <const N: usize> TriangleConstruct for StarTriangleIterator<N>
 	fn next ( &mut self, stars: &dyn List<Equatorial>, database: &mut dyn ChunkIterator
 															) -> Option<Match<StarTriangle<usize>>>
 	{
-		// BOTTLENECK
-		// The bottle neck is finding a set of stars which form a triangle.
-		
+		self.index_p = -1;
 		let mut tries : Option<Match<StarTriangle<usize>>> = Option::None;
 		'_outer: loop // This is the correct use of a do while loop.
 		{
-			
+
 			// Once all possiblities for a single kernal step are exhausted.
 			// The kernal will step, new stars will be chosen and a list of database matches are generated.
-			while !self.step()
+			while !StarTriangleIterator::<N>::step(
+				&mut self.index_a, &mut self.index_b, &mut self.index_c,
+				self.pair_a.size(), self.pair_b.size(), self.pair_c.size())
 			{
-				if !self.prep_new_kernel(stars, database)
-				{
-					break '_outer; // Rust implementation of a do while loop.
-				}
+				 // Rust implementation of a do while loop.
+				if !self.prep_new_kernel(stars, database) { break '_outer; }
 			}
-			
-			let a = self.pair_a.get(self.index_a);
+
+			let a = self.pair_a.get(self.index_a as usize);
 			let b = self.pair_b.get(self.index_b);
 			let c = self.pair_c.get(self.index_c);
-			
+
 			let triangle = StarTriangle::construct_triangle(a.result, b.result, c.result);
 
 			// Leaves the loop if a, b and c sides of the database are connected.
@@ -61,8 +59,72 @@ impl <const N: usize> TriangleConstruct for StarTriangleIterator<N>
 				break '_outer; // Rust implementation of a do while loop.
 			}
 		}
+		self.expected_triangle = tries;
 		return tries;
 	}
+
+
+
+	/// Iterates though suitable pilot stars for the given star triangle.
+	/// Ensure the database iterator has not iterated since calling next.
+	/// # Arguments
+	/// * `stars`    - The observed stars in the image.
+	/// * `database` - The database of stars to search through (That has not been iterated since next).
+	/// # Returns
+	/// * None if there is no more available pilot stars.
+	/// * Some(Match{input: observed star triangle, output: database match}) if possible.
+	fn next_pilot ( &mut self, stars: &dyn List<Equatorial>, database: &mut dyn ChunkIterator
+																		) -> Option<Match<usize>>
+	{
+		if let Some(expected) = self.expected_triangle
+		{
+			'_outer: loop // This is the correct use of a do while loop.
+			{
+				while !( StarTriangleIterator::<N>::step(
+					&mut self.index_p_a, &mut self.index_p_b, &mut self.index_p_c,
+					self.pair_p_a.size(), self.pair_p_b.size(), self.pair_p_c.size()) )
+				{
+					if !self.prep_new_pilot(stars, database)
+					{
+						break '_outer;
+					}
+				}
+
+				// Gets the pairs between each of the star triangle stars and the pilot.
+				let a = self.pair_p_a.get(self.index_p_a as usize);
+				let b = self.pair_p_b.get(self.index_p_b);
+				let c = self.pair_p_c.get(self.index_p_c);
+
+				// Ensures the stars from the triangle are in the database result.
+				let mut valid = a.result.has(expected.output.0);
+				valid        &= b.result.has(expected.output.1);
+				valid        &= c.result.has(expected.output.2);
+
+				if valid
+				{
+					// Ensures the pilot is the same in each pair.
+					let pilot = a.result.find_not(expected.output.0);
+
+					if let Some(pilot) = pilot
+					{
+						valid &= b.result.has(pilot);
+						valid &= c.result.has(pilot);
+
+						if valid
+						{
+							let input  = self.index_p as usize;
+							let output = pilot as usize;
+							let error  = a.error + b.error + c.error;
+							return Some(Match{input: input, output: output, weight: error});
+						}
+					}
+				}
+			}
+		}
+		return Option::None;
+	}
+
+
 
 	/// Prepares the StarTriangleIterator for iterating.
 	/// # Arguments
@@ -78,7 +140,7 @@ impl <const N: usize> TriangleConstruct for StarTriangleIterator<N>
 	/// use star_tracker_lib::util::list::ArrayList;
 	///
 	/// // The stars found in the image.
-	/// let obs_stars : ArrayList<Equatorial, 2> = 
+	/// let obs_stars : ArrayList<Equatorial, 2> =
 	/// 	ArrayList::from_array(&[Equatorial::zero(),Equatorial::zero()]);
 	/// // The tolerance allowed whens searching the database.
 	/// let angle = Radians(1.0);
@@ -94,11 +156,18 @@ impl <const N: usize> TriangleConstruct for StarTriangleIterator<N>
 		self.pair_a.clear();
 		self.pair_b.clear();
 		self.pair_c.clear();
-		self.indexing = false;
-		self.index_a = 0;
+		self.pair_p_a.clear();
+		self.pair_p_b.clear();
+		self.pair_p_c.clear();
+		self.index_p = -1;
+		self.index_a = -1;
 		self.index_b = 0;
 		self.index_c = 0;
+		self.index_p_a = -1;
+		self.index_p_b = 0;
+		self.index_p_c = 0;
 		self.input = StarTriangle(0,0,0);
+		self.expected_triangle = None;
 		self.angle_tolerance = angle_tolerance;
 	}
 
@@ -120,60 +189,44 @@ impl<const N: usize> StarTriangleIterator<N>
 			pair_a: ArrayList::new(),
 			pair_b: ArrayList::new(),
 			pair_c: ArrayList::new(),
-			indexing: false,
-			index_a: 0,
+			pair_p_a: ArrayList::new(),
+			pair_p_b: ArrayList::new(),
+			pair_p_c: ArrayList::new(),
+			index_p: -1,
+			index_a: -1,
 			index_b: 0,
 			index_c: 0,
+			index_p_a: -1,
+			index_p_b: 0,
+			index_p_c: 0,
 			input: StarTriangle(0,0,0),
+			expected_triangle: Option::None,
 			angle_tolerance: Radians(0.0),
 		};
 	}
 
 
 
-	/// Steps the index of a, b and c to get a new value.
+	/// Steps a set of 3 indices where a is changing every time, b is changing every a times and c is changing a*b times.
+	/// Presequence: a: -1, b: 0, c: 0.
 	/// # Returns
 	/// False if the sequence ended.
-	fn step ( &mut self ) -> bool
+	fn step ( a: &mut isize, b: &mut usize, c: &mut usize,
+				a_max: usize, b_max: usize, c_max: usize ) -> bool
 	{
-		// println!("  STEP");
-		// If new kernal was made, the values must be reset.
-		if !self.indexing
-		{
-			self.index_a = 0;
-			self.index_b = 0;
-			self.index_c = 0;
-			self.indexing = true;
-			return 0 < self.pair_a.size() && 0 < self.pair_b.size() && 0 < self.pair_c.size();
-		}
-
-		if self.index_a < self.pair_a.size() - 1
-		{
-			self.index_a += 1;
-		}
+		if *a < a_max as isize - 1                     { *a += 1;      }
 		else
 		{
-			self.index_a = 0;
-
-			if self.index_b < self.pair_b.size() - 1
-			{
-				self.index_b += 1;
-			}
+			*a = 0;
+			if (*b as isize) < b_max as isize - 1      { *b += 1;      }
 			else
 			{
-				self.index_b = 0;
-
-				if self.index_c < self.pair_c.size() - 1
-				{
-					self.index_c += 1;
-				}
-				else
-				{
-					return false;
-				}
+				*b = 0;
+				if (*c as isize) < c_max as isize - 1  { *c += 1;      }
+				else                                   { return false; }
 			}
 		}
-		return true;
+		return *a < a_max as isize && *b < b_max && *c < c_max;
 	}
 
 
@@ -185,7 +238,7 @@ impl<const N: usize> StarTriangleIterator<N>
 	/// # Arguments
 	/// * `stars` - The stars in the image.
 	/// * `database` - The database where the stars can be searched.
-	fn prep_new_kernel ( &mut self, stars: &dyn List<Equatorial>, 
+	fn prep_new_kernel ( &mut self, stars: &dyn List<Equatorial>,
 		database: &mut dyn ChunkIterator ) -> bool
 	{
 		// Steps to the next region.
@@ -199,7 +252,6 @@ impl<const N: usize> StarTriangleIterator<N>
 				return false;
 			}
 		}
-		self.indexing = false;
 
 		// Ensures input is set.
 		self.input = StarTriangle(self.kernel.i, self.kernel.j, self.kernel.k);
@@ -217,8 +269,56 @@ impl<const N: usize> StarTriangleIterator<N>
 		database.find_close_ref_region(side_a, self.angle_tolerance, &mut self.pair_a);
 		database.find_close_ref_region(side_b, self.angle_tolerance, &mut self.pair_b);
 		database.find_close_ref_region(side_c, self.angle_tolerance, &mut self.pair_c);
-		
+
+		// With new arrays, the iterations must go back to the begining.
+		self.index_a = -1;
+		self.index_b = 0;
+		self.index_c = 0;
 		return true;
+	}
+	
+	
+
+
+	/// When all the possible pilots are exausted for a given input star, moves to a new input.
+	/// # Arguments
+	/// * `stars` - The stars in the image.
+	/// * `database` - The database where the stars can be searched.
+	fn prep_new_pilot ( &mut self, stars: &dyn List<Equatorial>,
+		database: &mut dyn ChunkIterator ) -> bool
+	{
+		if let Some(expected) = self.expected_triangle
+		{
+			// Move to next viable pilot.
+			self.index_p += 1;
+			while
+				self.index_p == expected.input.0 as isize || 
+				self.index_p == expected.input.1 as isize || 
+				self.index_p == expected.input.2 as isize
+			{
+				self.index_p += 1;
+			}
+			if stars.size() <= self.index_p as usize { return false; }
+			
+			
+			let pilot_in = stars.get(self.index_p as usize);
+			let side_a = stars.get(expected.input.0).angle_distance(pilot_in);
+			let side_b = stars.get(expected.input.1).angle_distance(pilot_in);
+			let side_c = stars.get(expected.input.2).angle_distance(pilot_in);
+			
+			self.pair_p_a.clear();
+			self.pair_p_b.clear();
+			self.pair_p_c.clear();
+			database.find_close_ref_region(side_a, self.angle_tolerance, &mut self.pair_p_a);
+			database.find_close_ref_region(side_b, self.angle_tolerance, &mut self.pair_p_b);
+			database.find_close_ref_region(side_c, self.angle_tolerance, &mut self.pair_p_c);
+
+			self.index_p_a = -1;
+			self.index_p_b = 0;
+			self.index_p_c = 0;
+			return true;
+		}
+		return false;
 	}
 
 }
@@ -255,16 +355,15 @@ mod test
 
 //###############################################################################################//
 //
-//										New
+//										Begin
 //
-// fn new <NUMBER_MATCHES> ( stars : &dyn List<Equatorial> )
+// fn new <NUMBER_MATCHES> ( &mut self, angle_tolerance: Radians, stars: &dyn List<Equatorial> )
 //
 //###############################################################################################//
 
 	#[test]
 	// The required variables to be set are:
 	// - kernel (requires the number of stars to begin).
-	// - indexing (must be false otherwise it will start the iterations 1 step early).
 	// - pair_a, pair_b, pair_c capacity must be the value of N.
 	fn test_begin ( )
 	{
@@ -273,11 +372,27 @@ mod test
 		const NUM_MATCH : usize = 4;
 		let mut iterator: StarTriangleIterator<NUM_MATCH> = StarTriangleIterator::new();
 		iterator.begin(angle, &stars);
-		assert!(!iterator.indexing);
+		
 		assert_eq!(stars.size(), iterator.kernel.size);
+		assert_eq!(3, iterator.kernel.size);
+		assert_eq!(Option::None, iterator.expected_triangle);
+		
 		assert_eq!(NUM_MATCH, iterator.pair_a.capacity());
 		assert_eq!(NUM_MATCH, iterator.pair_b.capacity());
 		assert_eq!(NUM_MATCH, iterator.pair_c.capacity());
+		
+		assert_eq!(NUM_MATCH, iterator.pair_p_a.capacity());
+		assert_eq!(NUM_MATCH, iterator.pair_p_b.capacity());
+		assert_eq!(NUM_MATCH, iterator.pair_p_c.capacity());
+		
+		assert_eq!(-1, iterator.index_p);
+		assert_eq!(-1, iterator.index_a);
+		assert_eq!(0, iterator.index_b);
+		assert_eq!(0, iterator.index_c);
+		
+		assert_eq!(-1, iterator.index_p_a);
+		assert_eq!(0, iterator.index_p_b);
+		assert_eq!(0, iterator.index_p_c);
 	}
 
 
@@ -285,7 +400,7 @@ mod test
 
 //###############################################################################################//
 //
-//										Next Match
+//										Next
 //
 // 	pub fn next ( &mut self, stars: &dyn List<Equatorial>, database: &dyn Database
 // 													) -> Option<Match<StarTriangle<usize>>>
@@ -308,6 +423,7 @@ mod test
 		chunk.expect_find_close_ref_region().times(0);
 
 		assert_eq!(None, iterator.next(&stars, &mut chunk));
+		assert_eq!(-1, iterator.index_p); // Pilot should be reset.
 	}
 
 
@@ -335,6 +451,8 @@ mod test
 
 		// Should loop until finished
 		assert_eq!(None, iterator.next(&stars, &mut chunk));
+		
+		assert_eq!(-1, iterator.index_p); // Pilot should be reset.
 	}
 
 
@@ -394,7 +512,6 @@ mod test
 
 		let mut actual = iterator.next(&stars, &mut chunk);
 		let mut expect = Match{input:StarTriangle(0,1,2),output: StarTriangle(1,0,2), weight: 0.0};
-		assert!(iterator.indexing);
 		assert_eq!(StarTriangle(0,1,2), iterator.input);
 		assert_eq!(4, iterator.pair_a.size());
 		assert_eq!(StarPair(100, 101), iterator.pair_a.get(0).result);
@@ -443,9 +560,197 @@ mod test
 		actual = iterator.next(&stars, &mut chunk);
 		expect = Match{input:StarTriangle(0, 1, 2),output: StarTriangle(1, 0, 2),weight: 0.0};
 		assert_eq!(Some(expect), actual);
+		
+		assert_eq!(-1, iterator.index_p); // Pilot should be reset.
 	}
 
 
+
+
+//###############################################################################################//
+//
+//										NextPilot
+//
+// 	pub fn next_pilot ( &mut self, stars: &dyn List<Equatorial>, database: &dyn Database
+// 													) -> Option<Match<StarTriangle<usize>>>
+//
+//###############################################################################################//
+
+	#[test]
+	// If a star triangle is not setup, the pyramid should return none.
+	fn test_next_pilot_invalid_triangle ( )
+	{
+		let mut stars : Vec<Equatorial> = Vec::new();
+		stars.push_back(Equatorial{ra: Radians(0.0), dec: Radians(0.0)});
+		stars.push_back(Equatorial{ra: Radians(1.0), dec: Radians(0.0)});
+		stars.push_back(Equatorial{ra: Radians(2.0), dec: Radians(0.0)});
+		let angle = Radians(0.123);
+		const NUM_MATCH : usize = 4;
+		let mut iterator: StarTriangleIterator<NUM_MATCH> = StarTriangleIterator::new();
+		iterator.begin(angle, &stars);
+		
+		// The iterator must not try to find a pyramid set.
+		let mut chunk = MockChunkIterator::new();
+		chunk.expect_find_close_ref_region().times(0);
+		
+		assert_eq!(Option::None, iterator.next_pilot(&stars, &mut chunk));
+		assert_eq!(-1, iterator.index_p); // If anything happened, this would not be -1.
+	}
+	
+	
+	#[test]
+	// If the triangle is setup BUT:
+	// There are only 3 stars (need 4).
+	fn test_next_pilot_ ( )
+	{
+		let mut stars : Vec<Equatorial> = Vec::new();
+		stars.push_back(Equatorial{ra: Radians(0.0), dec: Radians(0.0)});
+		stars.push_back(Equatorial{ra: Radians(1.0), dec: Radians(0.0)});
+		stars.push_back(Equatorial{ra: Radians(2.0), dec: Radians(0.0)});
+		let angle = Radians(0.123);
+		const NUM_MATCH : usize = 4;
+		let mut iterator: StarTriangleIterator<NUM_MATCH> = StarTriangleIterator::new();
+		iterator.begin(angle, &stars);
+		
+		// The iterator must not try to find a pyramid set.
+		let mut chunk = MockChunkIterator::new();
+		chunk.expect_find_close_ref_region().times(0); // Doesnt reach the search yet...
+			// .returning(move |_, _, found|
+			// 	{
+			// 
+			// 		// found.push_back(SearchResult{result: outputs[index], error: 0.0});
+			// 		// index += 1;
+			// 		// found.push_back(SearchResult{result: outputs[index], error: 0.0});
+			// 		// index += 1;
+			// 		// found.push_back(SearchResult{result: outputs[index], error: 0.0});
+			// 		// index += 1;
+			// 		// found.push_back(SearchResult{result: outputs[index], error: 0.0});
+			// 		// index += 1;
+			// 	}
+			// );
+		let triangle = StarTriangle(0, 1, 2);
+		iterator.expected_triangle = Some(Match{input: triangle, output: triangle, weight: 0.0});
+		
+		assert_eq!(Option::None, iterator.next_pilot(&stars, &mut chunk));
+		assert_eq!(3, iterator.index_p); // Exceeded the index of the array.
+	}
+
+	
+	
+	#[test]
+	// If the triangle is setup AND there are enough stars BUT:
+	// There are no matches.
+	fn test_next_pilot_no_matches ( )
+	{
+		let mut stars : Vec<Equatorial> = Vec::new();
+		stars.push_back(Equatorial{ra: Radians(0.0), dec: Radians(0.0)});
+		stars.push_back(Equatorial{ra: Radians(1.0), dec: Radians(0.0)});
+		stars.push_back(Equatorial{ra: Radians(2.0), dec: Radians(0.0)});
+		stars.push_back(Equatorial{ra: Radians(3.0), dec: Radians(0.0)});
+		let angle = Radians(0.123);
+		const NUM_MATCH : usize = 4;
+		let mut iterator: StarTriangleIterator<NUM_MATCH> = StarTriangleIterator::new();
+		iterator.begin(angle, &stars);
+		
+		let mut chunk = MockChunkIterator::new();
+		chunk.expect_find_close_ref_region().times(3) // None of the angles produces a valid result
+			.returning(move |angle, _, found|
+			{ 
+				found.push_back(SearchResult{result: 
+					StarPair(angle.0 as usize + 2, angle.0 as usize + 100), error: 0.0}); 
+			});
+		let triangle = StarTriangle(2, 0, 3);
+		iterator.expected_triangle = Some(Match{input: triangle, output: triangle, weight: 0.0});
+		
+		assert_eq!(Option::None, iterator.next_pilot(&stars, &mut chunk));
+		assert_eq!(4, iterator.index_p); // Exceeded the index of the array.
+	}
+	
+	
+	
+	#[test]
+	// If the triangle is setup AND there are enough stars AND there are matches BUT:
+	// The star triangle is not present in the pilot search.
+	fn test_next_pilot_triangle_absent ( )
+	{
+		let mut stars : Vec<Equatorial> = Vec::new();
+		stars.push_back(Equatorial{ra: Radians(0.0), dec: Radians(0.0)});
+		stars.push_back(Equatorial{ra: Radians(1.0), dec: Radians(0.0)});
+		stars.push_back(Equatorial{ra: Radians(2.0), dec: Radians(0.0)});
+		stars.push_back(Equatorial{ra: Radians(3.0), dec: Radians(0.0)});
+		stars.push_back(Equatorial{ra: Radians(4.0), dec: Radians(0.0)});
+		stars.push_back(Equatorial{ra: Radians(5.0), dec: Radians(0.0)});
+		stars.push_back(Equatorial{ra: Radians(6.0), dec: Radians(0.0)});
+		let angle = Radians(0.123);
+		const NUM_MATCH : usize = 4;
+		let mut iterator: StarTriangleIterator<NUM_MATCH> = StarTriangleIterator::new();
+		iterator.begin(angle, &stars);
+		
+		let mut chunk = MockChunkIterator::new();
+		chunk.expect_find_close_ref_region().times(3* 4)
+			.returning(move |angle, _, found|
+			{ 
+				// 0: 0 | 1 | 2
+				// 1: 0 | 0 | 1
+				// 4: 0 | 0 | 0
+				found.push_back(SearchResult{result: 
+					StarPair(angle.0 as usize + 1, (angle / 2.1).0.floor() as usize), error: 0.0}); 
+			});
+		let triangle = StarTriangle(2, 3, 5);
+		iterator.expected_triangle = Some(Match{input: triangle, output: triangle, weight: 0.0});
+		
+		let result = Option::Some(
+			Match{input: 4, output: 0, weight: 0.0}
+		);
+		assert_eq!(Option::None, iterator.next_pilot(&stars, &mut chunk));
+		assert_eq!(7, iterator.index_p);
+	}
+
+
+	
+	
+	
+	#[test]
+	// If the triangle is setup AND there are enough stars AND there are matches AND:
+	// The star triangle is present in the pilot search.
+	// It should work.
+	fn test_next_pilot ( )
+	{
+		let mut stars : Vec<Equatorial> = Vec::new();
+		stars.push_back(Equatorial{ra: Radians(0.0), dec: Radians(0.0)});
+		stars.push_back(Equatorial{ra: Radians(1.0), dec: Radians(0.0)});
+		stars.push_back(Equatorial{ra: Radians(2.0), dec: Radians(0.0)});
+		stars.push_back(Equatorial{ra: Radians(3.0), dec: Radians(0.0)});
+		stars.push_back(Equatorial{ra: Radians(4.0), dec: Radians(0.0)});
+		stars.push_back(Equatorial{ra: Radians(5.0), dec: Radians(0.0)});
+		stars.push_back(Equatorial{ra: Radians(6.0), dec: Radians(0.0)});
+		let angle = Radians(0.123);
+		const NUM_MATCH : usize = 4;
+		let mut index = 0;
+		let mut iterator: StarTriangleIterator<NUM_MATCH> = StarTriangleIterator::new();
+		iterator.begin(angle, &stars);
+		
+		let mut chunk = MockChunkIterator::new();
+		chunk.expect_find_close_ref_region().times(3* 3)
+			.returning(move |angle, _, found|
+			{ 
+				// 0: 0 | 1 | 2
+				// 1: 0 | 0 | 1
+				// 4: 0 | 0 | 0
+				let i = if index % 3 == 0 { 2 } else if index % 3 == 1 { 3 } else { 5 }; 
+				found.push_back(SearchResult{result: 
+					StarPair(i, (angle / 2.1).0.floor() as usize), error: 0.0});
+				index += 1;
+			});
+		let triangle = StarTriangle(2, 3, 5);
+		iterator.expected_triangle = Some(Match{input: triangle, output: triangle, weight: 0.0});
+		
+		let result = Option::Some(
+			Match{input: 4, output: 0, weight: 0.0}
+		);
+		assert_eq!(result, iterator.next_pilot(&stars, &mut chunk));
+		assert_eq!(4, iterator.index_p); // the correct pilot.
+	}
 
 
 //###############################################################################################//
@@ -457,82 +762,101 @@ mod test
 //###############################################################################################//
 
 	#[test]
-	// If pair a/b/c has 0 elements,
-	// - step() will return false.
-	// - Index a/b/c will be 0.
-	// - indexing will be true.
-	fn test_step_indexing_0_elements ( )
+	// When there is 0 for a max size of any input, false should be returned.
+	fn test_step_invalid ( )
 	{
-		let stars : Vec<Equatorial> = Vec::new();
-		let angle = Radians(0.0);
-		const NUM_MATCH : usize = 4;
-		let mut iterator: StarTriangleIterator<NUM_MATCH> = StarTriangleIterator::new();
-		iterator.begin(angle, &stars);
-
-		check::<NUM_MATCH>(&mut iterator); 				// a: 0, b: 0, c: 0
-		iterator.pair_a.push_back(SearchResult{result: StarPair(0,0), error: 0.0});
-		check::<NUM_MATCH>(&mut iterator);				// a: 1, b: 0, c: 0
-		iterator.pair_b.push_back(SearchResult{result: StarPair(0,0), error: 0.0});
-		check::<NUM_MATCH>(&mut iterator); 				// a: 1, b: 1, c: 0
-		iterator.pair_a.pop_back();
-		check::<NUM_MATCH>(&mut iterator); 				// a: 0, b: 1, c: 0
-		iterator.pair_c.push_back(SearchResult{result: StarPair(0,0), error: 0.0});
-		check::<NUM_MATCH>(&mut iterator); 				// a: 0, b: 1, c: 1
-		iterator.pair_b.pop_back();
-		check::<NUM_MATCH>(&mut iterator); 				// a: 0, b: 0, c: 1
-		iterator.pair_a.push_back(SearchResult{result: StarPair(0,0), error: 0.0});
-		check::<NUM_MATCH>(&mut iterator); 				// a: 1, b: 0, c: 1
-
-		fn check <const N : usize> ( iter: &mut StarTriangleIterator<N> )
-		{
-			iter.indexing = false;
-			assert!(!iter.step());
-			assert!(iter.indexing);
-			assert_eq!(0, iter.index_a);
-			assert_eq!(0, iter.index_b);
-			assert_eq!(0, iter.index_c);
-		}
+		let mut a = -1;
+		let mut b = 0;
+		let mut c = 0;
+		let size_a = 0;
+		let size_b = 10;
+		let size_c = 10;
+		assert!(!StarTriangleIterator::<0>::step(&mut a, &mut b, &mut c, size_a, size_b, size_c));
+		
+		let size_a = 10;
+		let size_b = 0;
+		let size_c = 10;
+		assert!(!StarTriangleIterator::<0>::step(&mut a, &mut b, &mut c, size_a, size_b, size_c));
+		
+		let size_a = 10;
+		let size_b = 10;
+		let size_c = 0;
+		assert!(!StarTriangleIterator::<0>::step(&mut a, &mut b, &mut c, size_a, size_b, size_c));
+		
+		let size_a = 10;
+		let size_b = 0;
+		let size_c = 0;
+		assert!(!StarTriangleIterator::<0>::step(&mut a, &mut b, &mut c, size_a, size_b, size_c));
+		
+		let size_a = 0;
+		let size_b = 0;
+		let size_c = 10;
+		assert!(!StarTriangleIterator::<0>::step(&mut a, &mut b, &mut c, size_a, size_b, size_c));
+		
+		let size_a = 0;
+		let size_b = 10;
+		let size_c = 0;
+		assert!(!StarTriangleIterator::<0>::step(&mut a, &mut b, &mut c, size_a, size_b, size_c));
+		
+		let size_a = 0;
+		let size_b = 0;
+		let size_c = 0;
+		assert!(!StarTriangleIterator::<0>::step(&mut a, &mut b, &mut c, size_a, size_b, size_c));
+		
 	}
 
-
 	#[test]
-	// step() should follow the sequence:
-	// index_a: 0..pair_a.size()
-	// index_b: 0..pair_b.size() [on completion of a].
-	// index_c: 0..pair_c.size() [on completion of b].
-	fn test_step_indexing ( )
+	fn test_step ( )
 	{
-		let stars : Vec<Equatorial> = Vec::new();
-		let angle = Radians(0.0);
-		const NUM_MATCH : usize = 4;
-		let mut iterator: StarTriangleIterator<NUM_MATCH> = StarTriangleIterator::new();
-		iterator.begin(angle, &stars);
+		let mut a = -1;
+		let mut b = 0;
+		let mut c = 0;
+		let size_a = 3;
+		let size_b = 2;
+		let size_c = 2;
 
-		let _ = iterator.pair_a.push_back(SearchResult{result: StarPair(0,0), error: 0.0});
-		let _ = iterator.pair_a.push_back(SearchResult{result: StarPair(0,1), error: 0.0});
-		let _ = iterator.pair_b.push_back(SearchResult{result: StarPair(1,0), error: 0.0});
-		let _ = iterator.pair_c.push_back(SearchResult{result: StarPair(2,0), error: 0.0});
-		let _ = iterator.pair_c.push_back(SearchResult{result: StarPair(2,1), error: 0.0});
-		let _ = iterator.pair_c.push_back(SearchResult{result: StarPair(2,2), error: 0.0});
-		let _ = iterator.pair_c.push_back(SearchResult{result: StarPair(2,3), error: 0.0});
-
-		assert!(iterator.step());
-		assert_eq!((0, 0, 0), (iterator.index_a, iterator.index_b, iterator.index_c));
-		assert!(iterator.step());
-		assert_eq!((1, 0, 0), (iterator.index_a, iterator.index_b, iterator.index_c));
-		assert!(iterator.step());
-		assert_eq!((0, 0, 1), (iterator.index_a, iterator.index_b, iterator.index_c));
-		assert!(iterator.step());
-		assert_eq!((1, 0, 1), (iterator.index_a, iterator.index_b, iterator.index_c));
-		assert!(iterator.step());
-		assert_eq!((0, 0, 2), (iterator.index_a, iterator.index_b, iterator.index_c));
-		assert!(iterator.step());
-		assert_eq!((1, 0, 2), (iterator.index_a, iterator.index_b, iterator.index_c));
-		assert!(iterator.step());
-		assert_eq!((0, 0, 3), (iterator.index_a, iterator.index_b, iterator.index_c));
-		assert!(iterator.step());
-		assert_eq!((1, 0, 3), (iterator.index_a, iterator.index_b, iterator.index_c));
-		assert!(!iterator.step());
+		assert!(StarTriangleIterator::<0>::step(&mut a, &mut b, &mut c, size_a, size_b, size_c));
+		assert_eq!((0, 0, 0), (a, b, c));
+		
+		assert!(StarTriangleIterator::<0>::step(&mut a, &mut b, &mut c, size_a, size_b, size_c));
+		assert_eq!((1, 0, 0), (a, b, c));
+		
+		assert!(StarTriangleIterator::<0>::step(&mut a, &mut b, &mut c, size_a, size_b, size_c));
+		assert_eq!((2, 0, 0), (a, b, c));
+		
+		
+		assert!(StarTriangleIterator::<0>::step(&mut a, &mut b, &mut c, size_a, size_b, size_c));
+		assert_eq!((0, 1, 0), (a, b, c));
+		
+		assert!(StarTriangleIterator::<0>::step(&mut a, &mut b, &mut c, size_a, size_b, size_c));
+		assert_eq!((1, 1, 0), (a, b, c));
+		
+		assert!(StarTriangleIterator::<0>::step(&mut a, &mut b, &mut c, size_a, size_b, size_c));
+		assert_eq!((2, 1, 0), (a, b, c));
+		
+		
+		assert!(StarTriangleIterator::<0>::step(&mut a, &mut b, &mut c, size_a, size_b, size_c));
+		assert_eq!((0, 0, 1), (a, b, c));
+		
+		assert!(StarTriangleIterator::<0>::step(&mut a, &mut b, &mut c, size_a, size_b, size_c));
+		assert_eq!((1, 0, 1), (a, b, c));
+		
+		assert!(StarTriangleIterator::<0>::step(&mut a, &mut b, &mut c, size_a, size_b, size_c));
+		assert_eq!((2, 0, 1), (a, b, c));
+		
+		
+		assert!(StarTriangleIterator::<0>::step(&mut a, &mut b, &mut c, size_a, size_b, size_c));
+		assert_eq!((0, 1, 1), (a, b, c));
+		
+		assert!(StarTriangleIterator::<0>::step(&mut a, &mut b, &mut c, size_a, size_b, size_c));
+		assert_eq!((1, 1, 1), (a, b, c));
+		
+		assert!(StarTriangleIterator::<0>::step(&mut a, &mut b, &mut c, size_a, size_b, size_c));
+		assert_eq!((2, 1, 1), (a, b, c));
+		
+		
+		
+		assert!(!StarTriangleIterator::<0>::step(&mut a, &mut b, &mut c, size_a, size_b, size_c));
 	}
 
 //###############################################################################################//
@@ -549,7 +873,7 @@ mod test
 	{
 		let stars : Vec<Equatorial> = Vec::new();
 		let angle = Radians(0.0);
-		const NUM_MATCH : usize = 0;
+		const NUM_MATCH : usize = 4;
 		let mut iterator: StarTriangleIterator<NUM_MATCH> = StarTriangleIterator::new();
 		iterator.begin(angle, &stars);
 
@@ -583,35 +907,130 @@ mod test
 		let mut iterator: StarTriangleIterator<NUM_MATCH> = StarTriangleIterator::new();
 		iterator.begin(angle, &stars);
 
-		// let mut database = MockDatabase::new();
-		// database.expect_find_close_ref().times(3)
-		// 	.returning(|angle, _, found| found.push_back(StarPair(0, angle.0 as usize)).expect(""))
-		// 	.withf(|_, tolerance, _| return *tolerance == Radians(0.123) );
-
 		let mut chunk = MockChunkIterator::new();
 		chunk.expect_find_close_ref_region().times(3)
-			.returning(|angle, _, found| 
+			.returning(|angle, _, found|
 				found.push_back(SearchResult{result: StarPair(0, angle.0.round() as usize), error: 0.0}).expect(""))
 			.withf(|_, tolerance, _| return *tolerance == Radians(0.123) );
-			
-		// let mut count = 0;
-		// chunk.expect_next().times(1).returning(move || {count += 1; return count < 2;});
+
 		chunk.expect_next().times(1).returning(|| return false);
 		chunk.expect_begin().times(1).returning(|| return);
 
 		assert!(iterator.prep_new_kernel(&stars, &mut chunk));
-		assert!(!iterator.indexing);
 		assert_eq!(iterator.kernel.i, iterator.input.0);
 		assert_eq!(iterator.kernel.j, iterator.input.1);
 		assert_eq!(iterator.kernel.k, iterator.input.2);
 		assert_eq!(StarPair(0, 1), iterator.pair_a.get(0).result); // (0,0) to (0,1)
 		assert_eq!(StarPair(0, 3), iterator.pair_b.get(0).result); // (0,0) to (0,2)
 		assert_eq!(StarPair(0, 2), iterator.pair_c.get(0).result); // (0,1) to (0,2)
+		assert_eq!(iterator.index_a, -1);
+		assert_eq!(iterator.index_b, 0);
+		assert_eq!(iterator.index_c, 0);
 	}
 
 
+	
+//###############################################################################################//
+//
+//										Prep New Pilot
+//
+// 	fn prep_new_pilot ( &mut self, stars: &dyn List<Equatorial>, database: &dyn Database )-> bool
+//
+//###############################################################################################//
 
-
+	#[test]
+	// If a star triangle could not be found, a pilot should not be found.
+	fn test_prep_new_pilot_triangle_invalid ( )
+	{
+		let mut stars : Vec<Equatorial> = Vec::new();
+		stars.push_back(Equatorial{ra: Radians(0.0), dec: Radians(0.0)});
+		stars.push_back(Equatorial{ra: Radians(1.0), dec: Radians(0.0)});
+		stars.push_back(Equatorial{ra: Radians(3.0), dec: Radians(0.0)});
+		let angle = Radians(0.123);
+		const NUM_MATCH : usize = 4;
+		let mut iterator: StarTriangleIterator<NUM_MATCH> = StarTriangleIterator::new();
+		iterator.begin(angle, &stars);
+		
+		let mut chunk = MockChunkIterator::new();
+		chunk.expect_find_close_ref_region().times(0);
+		assert!(!iterator.prep_new_pilot(&stars, &mut chunk));
+	}
+	
+	
+	
+	#[test]
+	// The index should avoid indices in the star triangle.
+	fn test_prep_new_pilot_triangle_valid ( )
+	{
+		let mut stars : Vec<Equatorial> = Vec::new();
+		stars.push_back(Equatorial{ra: Radians(0.0), dec: Radians(0.0)});
+		stars.push_back(Equatorial{ra: Radians(0.1), dec: Radians(0.0)});
+		stars.push_back(Equatorial{ra: Radians(0.2), dec: Radians(0.0)});
+		stars.push_back(Equatorial{ra: Radians(0.3), dec: Radians(0.0)});
+		stars.push_back(Equatorial{ra: Radians(0.4), dec: Radians(0.0)});
+		stars.push_back(Equatorial{ra: Radians(0.5), dec: Radians(0.0)});
+		stars.push_back(Equatorial{ra: Radians(0.6), dec: Radians(0.0)});
+		let angle = Radians(0.123);
+		const NUM_MATCH : usize = 4;
+		let mut iterator: StarTriangleIterator<NUM_MATCH> = StarTriangleIterator::new();
+		iterator.begin(angle, &stars);
+	
+		let mut chunk = MockChunkIterator::new();
+		chunk.expect_find_close_ref_region().times(3 * 4)
+			.returning(|angle, _, found|
+				{
+					let pair = StarPair(0, (angle.0 * 10.0).round() as usize);
+					let _=found.push_back(
+						SearchResult{result: pair, error: 0.0});
+				})
+			.withf(|_, tolerance, _| return *tolerance == Radians(0.123) );
+			
+		iterator.expected_triangle = Some(Match{
+			input: StarTriangle(2, 4, 5), 
+			output: StarTriangle(0, 0, 0), 
+			weight: 0.0});
+	
+		assert!(iterator.prep_new_pilot(&stars, &mut chunk));
+		assert_eq!(iterator.index_p, 0);
+		assert_eq!(iterator.index_p_a, -1);
+		assert_eq!(iterator.index_p_b,  0);
+		assert_eq!(iterator.index_p_c,  0);
+		assert_eq!(iterator.pair_p_a.get(0).result, StarPair(0, 2)); // 0 to 2
+		assert_eq!(iterator.pair_p_b.get(0).result, StarPair(0, 4)); // 0 to 4
+		assert_eq!(iterator.pair_p_c.get(0).result, StarPair(0, 5)); // 0 to 5
+		
+		assert!(iterator.prep_new_pilot(&stars, &mut chunk));
+		assert_eq!(iterator.index_p, 1);
+		assert_eq!(iterator.index_p_a, -1);
+		assert_eq!(iterator.index_p_b,  0);
+		assert_eq!(iterator.index_p_c,  0);
+		assert_eq!(iterator.pair_p_a.get(0).result, StarPair(0, 1)); // 1 to 2
+		assert_eq!(iterator.pair_p_b.get(0).result, StarPair(0, 3)); // 1 to 4
+		assert_eq!(iterator.pair_p_c.get(0).result, StarPair(0, 4)); // 1 to 5
+		
+		assert!(iterator.prep_new_pilot(&stars, &mut chunk));
+		assert_eq!(iterator.index_p, 3);
+		assert_eq!(iterator.index_p_a, -1);
+		assert_eq!(iterator.index_p_b,  0);
+		assert_eq!(iterator.index_p_c,  0);
+		assert_eq!(iterator.pair_p_a.get(0).result, StarPair(0, 1)); // 3 to 2
+		assert_eq!(iterator.pair_p_b.get(0).result, StarPair(0, 1)); // 3 to 4
+		assert_eq!(iterator.pair_p_c.get(0).result, StarPair(0, 2)); // 3 to 5
+		
+		assert!(iterator.prep_new_pilot(&stars, &mut chunk));
+		assert_eq!(iterator.index_p, 6);
+		assert_eq!(iterator.index_p_a, -1);
+		assert_eq!(iterator.index_p_b,  0);
+		assert_eq!(iterator.index_p_c,  0);
+		assert_eq!(iterator.pair_p_a.get(0).result, StarPair(0, 4)); // 6 to 2
+		assert_eq!(iterator.pair_p_b.get(0).result, StarPair(0, 2)); // 6 to 4
+		assert_eq!(iterator.pair_p_c.get(0).result, StarPair(0, 1)); // 6 to 5
+		
+		assert!(!iterator.prep_new_pilot(&stars, &mut chunk));
+	}
+	
+	
+	
 
 
 

@@ -556,78 +556,78 @@ impl Matrix <4, 1>
 //###############################################################################################//
 //							---	Convert to Quaternion Rotation ---
 //###############################################################################################//
-impl Matrix <3,3>
-{
-	/// Converts a rotation matrix to a quaternion.
-	/// Derived from [Unity](https://answers.unity.com/questions/467614/what-is-the-source-code-of-quaternionlookrotation.html).
-	/// # Example
-	/// ```
-	/// panic!("WIP");
-	/// ```
-	pub fn to_quaternion ( &self ) -> Quaternion
-	{
-		let trace: Decimal = self.trace();
-		if trace > 0.0
-		{
-			// let mut num = Decimal::sqrt(trace + 1.0);
-			let s = 2.0 * Decimal::sqrt(trace + 1.0);
-			// let w = num * 0.5;
-			let w = 0.25 * s;
-			// num = 0.5 / num;
-			// let x = (self.get(MatPos{row: 1, col: 2}) - self.get(MatPos{row: 2, col: 1})) * num;
-			// let y = (self.get(MatPos{row: 2, col: 0}) - self.get(MatPos{row: 0, col: 2})) * num;
-			// let z = (self.get(MatPos{row: 0, col: 1}) - self.get(MatPos{row: 1, col: 0})) * num;
-
-			let x = (self.get(MatPos{row: 2, col: 1}) - self.get(MatPos{row: 1, col: 2})) / s;
-			let y = (self.get(MatPos{row: 0, col: 2}) - self.get(MatPos{row: 2, col: 0})) / s;
-			let z = (self.get(MatPos{row: 1, col: 0}) - self.get(MatPos{row: 0, col: 1})) / s;
-			return Quaternion{w: w, x: x, y: y, z: z};
-		}
-		if  self.get(MatPos{row: 0, col: 0}) >= self.get(MatPos{row: 1, col: 1})
-		 && self.get(MatPos{row: 0, col: 0}) >= self.get(MatPos{row: 2, col: 2})
-		{
-			let num7 = Decimal::sqrt(1.0
-									+ self.get(MatPos{row: 0, col: 0})
-									- self.get(MatPos{row: 1, col: 1})
-									- self.get(MatPos{row: 2, col: 2}));
-			let num4 = 0.5 / num7;
-
-			let w = (self.get(MatPos{row: 1, col: 2}) - self.get(MatPos{row: 2, col: 1})) * num4;
-			let x = (self.get(MatPos{row: 0, col: 1}) - self.get(MatPos{row: 1, col: 0})) * num4;
-			let y = (self.get(MatPos{row: 0, col: 2}) - self.get(MatPos{row: 2, col: 0})) * num4;
-			let z = (self.get(MatPos{row: 1, col: 2}) - self.get(MatPos{row: 2, col: 1})) * num4;
-			return Quaternion{w: w, x: x, y: y, z: z};
-		}
-		if self.get(MatPos{row: 1, col: 1}) > self.get(MatPos{row: 2, col: 2})
-		{
-			let num6 = Decimal::sqrt(1.0
-				+ self.get(MatPos{row: 1, col: 1})
-				- self.get(MatPos{row: 0, col: 0})
-				- self.get(MatPos{row: 2, col: 2}));
-
-			let num3 = 0.5 / num6;
-
-			let x = (self.get(MatPos{row: 1, col: 0}) - self.get(MatPos{row: 0, col: 1})) * num3;
-			let y = 0.5 * num6;
-			let z = (self.get(MatPos{row: 2, col: 1}) - self.get(MatPos{row: 1, col: 2})) * num3;
-			let w = (self.get(MatPos{row: 2, col: 0}) - self.get(MatPos{row: 0, col: 2})) * num3;
-			return Quaternion{w: w, x: x, y: y, z: z};
-		}
-
-		let num5 = Decimal::sqrt(1.0
-			+ self.get(MatPos{row: 2, col: 2})
-			- self.get(MatPos{row: 0, col: 0})
-			- self.get(MatPos{row: 1, col: 1}));
-
-		let num2 = 0.5 / num5;
-
-		let x = (self.get(MatPos{row: 2, col: 0}) - self.get(MatPos{row: 0, col: 2})) * num2;
-		let y = (self.get(MatPos{row: 2, col: 1}) - self.get(MatPos{row: 1, col: 2})) * num2;
-		let z = 0.5 * num5;
-		let w = (self.get(MatPos{row: 0, col: 1}) - self.get(MatPos{row: 1, col: 0})) * num2;
-		return Quaternion{w: w, x: x, y: y, z: z};
-	}
-}
+// impl Matrix <3,3>
+// {
+// 	/// Converts a rotation matrix to a quaternion.
+// 	/// Derived from [Unity](https://answers.unity.com/questions/467614/what-is-the-source-code-of-quaternionlookrotation.html).
+// 	/// # Example
+// 	/// ```
+// 	/// panic!("WIP");
+// 	/// ```
+// 	pub fn to_quaternion ( &self ) -> Quaternion
+// 	{
+// 		let trace: Decimal = self.trace();
+// 		if trace > 0.0
+// 		{
+// 			// let mut num = Decimal::sqrt(trace + 1.0);
+// 			let s = 2.0 * Decimal::sqrt(trace + 1.0);
+// 			// let w = num * 0.5;
+// 			let w = 0.25 * s;
+// 			// num = 0.5 / num;
+// 			// let x = (self.get(MatPos{row: 1, col: 2}) - self.get(MatPos{row: 2, col: 1})) * num;
+// 			// let y = (self.get(MatPos{row: 2, col: 0}) - self.get(MatPos{row: 0, col: 2})) * num;
+// 			// let z = (self.get(MatPos{row: 0, col: 1}) - self.get(MatPos{row: 1, col: 0})) * num;
+// 
+// 			let x = (self.get(MatPos{row: 2, col: 1}) - self.get(MatPos{row: 1, col: 2})) / s;
+// 			let y = (self.get(MatPos{row: 0, col: 2}) - self.get(MatPos{row: 2, col: 0})) / s;
+// 			let z = (self.get(MatPos{row: 1, col: 0}) - self.get(MatPos{row: 0, col: 1})) / s;
+// 			return Quaternion{w: w, x: x, y: y, z: z};
+// 		}
+// 		if  self.get(MatPos{row: 0, col: 0}) >= self.get(MatPos{row: 1, col: 1})
+// 		 && self.get(MatPos{row: 0, col: 0}) >= self.get(MatPos{row: 2, col: 2})
+// 		{
+// 			let num7 = Decimal::sqrt(1.0
+// 									+ self.get(MatPos{row: 0, col: 0})
+// 									- self.get(MatPos{row: 1, col: 1})
+// 									- self.get(MatPos{row: 2, col: 2}));
+// 			let num4 = 0.5 / num7;
+// 
+// 			let w = (self.get(MatPos{row: 1, col: 2}) - self.get(MatPos{row: 2, col: 1})) * num4;
+// 			let x = (self.get(MatPos{row: 0, col: 1}) - self.get(MatPos{row: 1, col: 0})) * num4;
+// 			let y = (self.get(MatPos{row: 0, col: 2}) - self.get(MatPos{row: 2, col: 0})) * num4;
+// 			let z = (self.get(MatPos{row: 1, col: 2}) - self.get(MatPos{row: 2, col: 1})) * num4;
+// 			return Quaternion{w: w, x: x, y: y, z: z};
+// 		}
+// 		if self.get(MatPos{row: 1, col: 1}) > self.get(MatPos{row: 2, col: 2})
+// 		{
+// 			let num6 = Decimal::sqrt(1.0
+// 				+ self.get(MatPos{row: 1, col: 1})
+// 				- self.get(MatPos{row: 0, col: 0})
+// 				- self.get(MatPos{row: 2, col: 2}));
+// 
+// 			let num3 = 0.5 / num6;
+// 
+// 			let x = (self.get(MatPos{row: 1, col: 0}) - self.get(MatPos{row: 0, col: 1})) * num3;
+// 			let y = 0.5 * num6;
+// 			let z = (self.get(MatPos{row: 2, col: 1}) - self.get(MatPos{row: 1, col: 2})) * num3;
+// 			let w = (self.get(MatPos{row: 2, col: 0}) - self.get(MatPos{row: 0, col: 2})) * num3;
+// 			return Quaternion{w: w, x: x, y: y, z: z};
+// 		}
+// 
+// 		let num5 = Decimal::sqrt(1.0
+// 			+ self.get(MatPos{row: 2, col: 2})
+// 			- self.get(MatPos{row: 0, col: 0})
+// 			- self.get(MatPos{row: 1, col: 1}));
+// 
+// 		let num2 = 0.5 / num5;
+// 
+// 		let x = (self.get(MatPos{row: 2, col: 0}) - self.get(MatPos{row: 0, col: 2})) * num2;
+// 		let y = (self.get(MatPos{row: 2, col: 1}) - self.get(MatPos{row: 1, col: 2})) * num2;
+// 		let z = 0.5 * num5;
+// 		let w = (self.get(MatPos{row: 0, col: 1}) - self.get(MatPos{row: 1, col: 0})) * num2;
+// 		return Quaternion{w: w, x: x, y: y, z: z};
+// 	}
+// }
 
 // Pure rotation matrix.
 impl Matrix <3, 3>

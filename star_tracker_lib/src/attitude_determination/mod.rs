@@ -101,6 +101,7 @@ mod test
 	use attitude_determination::Quest;
 
 	use util::units::Vector3;
+	use util::units::Quaternion;
 	use util::units::AngleAxis;
 	use util::units::Radians;
 	use util::units::Degrees;
@@ -126,6 +127,13 @@ mod test
 	}
 
 
+	// Generates a set of coordinate pairs.
+	// The input coorinate is a random point on a unit sphere.
+	// The output coordinate is that point rotated using `rotation` with an error of `variation`.
+	// When run, the input to output should be close to correct but with some system noise.
+	//
+	// The weight has a random variation specified by `var_weight`, if this is set to 1, 
+	// it means one weight may be double the size, 2 is 2/3, 3 is 3/4...
 	fn random_coordinates <const N : usize> (
 			rotation : AngleAxis, variation : AngleAxis, var_weight : Decimal
 		) -> ArrayList<Match<Vector3>, N>
@@ -145,7 +153,7 @@ mod test
 			axis.z += variation.axis.z * (rng.gen::<Decimal>() - 0.5);
 			axis.normalize().expect("Error if 0,0,0");
 			let output = (AngleAxis{angle: angle, axis: axis}.to_quaternion()).rotate_point(input);
-			let weight = var_weight + rng.gen::<Decimal>();
+			let weight = 1.0 + var_weight * rng.gen::<Decimal>();
 			let element : Match<Vector3> = Match{input: input, output: output, weight: weight};
 
 			coords.push_back(element).expect("already did error check?");
@@ -154,48 +162,54 @@ mod test
 	}
 
 
-/*
+	// 
+	// #[test]
+	// // Testing the result from this algorithm and a matlab algorithm.
+	// fn test_quest_matlab ( )
+	// {
+	// 	let mut input : ArrayList<Match<Vector3>, 10> = ArrayList::new();
+	// 	let _ = input.push_back(Match{input: Vector3{x: 1.0, y: 0.0, z: 0.3},
+	// 					output: Vector3{x: 0.1, y: 1.0, z: 1.0}, weight: 1.0});
+	// 	let _ = input.push_back(Match{input: Vector3{x: 1.0, y: 0.4, z: 0.0},
+	// 					output: Vector3{x: 0.5, y: 1.0, z: 1.0}, weight: 1.0});
+	// 	let _ = input.push_back(Match{input: Vector3{x: 1.0, y: 0.3, z: 0.0},
+	// 					output: Vector3{x: 0.3, y: 1.0, z: 1.0}, weight: 1.0});
+	// 	let _ = input.push_back(Match{input: Vector3{x: 1.0, y: 0.5, z: 0.0},
+	// 					output: Vector3{x: 0.2, y: 1.0, z: 1.0}, weight: 1.0});
+	// 
+	// 	for i in 0..input.size()
+	// 	{
+	// 		let mut m = input.get(i);
+	// 		m.input.normalize();
+	// 		m.output.normalize();
+	// 		input.set(i, m).expect("HUH");
+	// 	}
+	// 
+	// 	let output_q  = Quest::estimate::<ConstQuest>(&input);
+	// 	let mut output_aa = output_q.to_angle_axis();
+	// 
+	// 	output_aa.axis.normalize();
+	// 
+	// 	let expected_q = Quaternion{
+	// 		w: 0.547549945381170,
+	// 		x: -0.461042818527695,
+	// 		y: -0.689219735118163,
+	// 		z: -0.112270804400634};
+	// 
+	// 	println!("{:?} \t\t\t {:?}", output_q, expected_q);
+	// 	println!("{:?} \n{:?}", output_aa, expected_q.to_angle_axis());
+	// 	println!("{:?}", output_aa.axis.angle_distance(expected_q.to_angle_axis().axis).to_degrees());
+	// 
+	// 	assert!(output_q.test_equal(&expected_q));
+	// }
+	// 
+
+
+
+
 	#[test]
-	fn test_quest_matlab ( )
-	{
-		let mut input : ArrayList<Match<Vector3>, 10> = ArrayList::new();
-		input.push_back(Match{input: Vector3{x: 1.0, y: 0.0, z: 0.3},
-						output: Vector3{x: 0.1, y: 1.0, z: 1.0}, weight: 1.0}).expect("HUH");
-		input.push_back(Match{input: Vector3{x: 1.0, y: 0.4, z: 0.0},
-						output: Vector3{x: 0.5, y: 1.0, z: 1.0}, weight: 1.0}).expect("HUH");
-		input.push_back(Match{input: Vector3{x: 1.0, y: 0.3, z: 0.0},
-						output: Vector3{x: 0.3, y: 1.0, z: 1.0}, weight: 1.0}).expect("HUH");
-		input.push_back(Match{input: Vector3{x: 1.0, y: 0.5, z: 0.0},
-						output: Vector3{x: 0.2, y: 1.0, z: 1.0}, weight: 1.0}).expect("HUH");
-
-		for i in 0..input.size()
-		{
-			let mut m = input.get(i);
-			m.input.normalize();
-			m.output.normalize();
-			input.set(i, m).expect("HUH");
-		}
-
-		let output_q  = Quest::estimate::<ConstQuest>(&input);
-		let mut output_aa = output_q.to_angle_axis();
-
-		output_aa.axis.normalize();
-
-		let expected_q = Quaternion{
-			w: 0.547549945381170,
-			x: -0.461042818527695,
-			y: -0.689219735118163,
-			z: -0.112270804400634};
-
-		println!("{:?} \t\t\t {:?}", output_q, expected_q);
-		println!("{:?} \n{:?}", output_aa, expected_q.to_angle_axis());
-		println!("{:?}", output_aa.axis.angle_distance(expected_q.to_angle_axis().axis).to_degrees());
-
-		assert!(output_q.test_equal(&expected_q));
-	}
-*/
-
-	#[test]
+	// If the input rotated by a constant is the output,
+	// The found quaternion should be the opposite of the initial rotation.
 	fn test_quest_perfect_values ( )
 	{
 		let angle = Degrees(90.0).to_radians();
@@ -216,28 +230,30 @@ mod test
 
 
 	#[test]
+	// This uses perfect coordinate values, however the weighting is varied.
+	// This should not create error as all the rotations are the same.
 	fn test_quest_bad_weight ( )
 	{
 		let angle = Degrees(90.0).to_radians();
 		let axis = Vector3{x: 1.0, y: 0.0, z: 0.0};
-		let angle_axis = AngleAxis{angle: angle, axis: axis};
-
+		let mut angle_axis = AngleAxis{angle: angle, axis: axis};
+		
 		let angle_var = Degrees(0.0).to_radians();
 		let axis_var = Vector3{x: 0.0, y: 0.0, z: 0.0};
 		let angle_axis_var = AngleAxis{angle: angle_var, axis: axis_var};
-
-		let input = random_coordinates::<100>(angle_axis, angle_axis_var, 1000.0);
-
-
+		
+		let input = random_coordinates::<100>(angle_axis, angle_axis_var, 10.0);
+		
+		
 		let rotation = Quest::estimate::<ConstQuest>(&input);
-		let ang_out = rotation.to_angle_axis();
-
-		println!("{:?}", ang_out);
-		assert!(rotation.dot(angle_axis.to_quaternion()).abs() < 0.01);
+		angle_axis.angle = -angle_axis.angle;
+		assert!(rotation.test_equal(&angle_axis.to_quaternion()));
 	}
 
 
 	#[test]
+	// If there is some varyation in the rotation (angle axis-axis), there may be slight error,
+	// However, it should not be substantial as the error will be averaged out.
 	fn test_quest_bad_axis ( )
 	{
 		let angle = Degrees(90.0).to_radians();
@@ -254,7 +270,6 @@ mod test
 		let rotation = Quest::estimate::<ConstQuest>(&input);
 		let ang_out = rotation.to_angle_axis();
 
-		println!("{:?}", ang_out);
 		// Rotation opposite provided angle axis.
 		println!("{}", rotation.dot(angle_axis.to_quaternion()).abs());
 		assert!(rotation.dot(angle_axis.to_quaternion()).abs() < 0.01);
@@ -263,6 +278,8 @@ mod test
 
 
 	#[test]
+	// If there is some varyation in the rotation (angle axis-angle), there may be slight error,
+	// However, it should not be substantial as the error will be averaged out.
 	fn test_quest_bad_angle ( )
 	{
 		let angle = Degrees(90.0).to_radians();
@@ -287,6 +304,7 @@ mod test
 
 
 	#[test]
+	// If everything is wrong, there it should still be accurate with such a high sample space.
 	fn test_quest_bad_angle_weight_axis ( )
 	{
 		let angle = Degrees(90.0).to_radians();
@@ -307,6 +325,40 @@ mod test
 		// Rotation opposite provided angle axis.
 		println!("{}", rotation.dot(angle_axis.to_quaternion()).abs());
 		assert!(rotation.dot(angle_axis.to_quaternion()).abs() < 0.01);
+	}
+	
+	
+	
+	
+	#[test]
+	// The previous tests test that quaternions are
+	fn test_quest_4_perfect_values ( )
+	{
+		
+	}
+	
+	#[test]
+	fn test_quaternion_reversability ( )
+	{
+		let mut rng = rand::thread_rng();
+		for i in 0..100
+		{
+			let angle = Degrees(rng.gen::<Decimal>() * 360.0 * 2.0 - 360.0).to_radians();
+			let mut axis = Vector3
+			{ x: rng.gen::<Decimal>(), y: rng.gen::<Decimal>(), z: rng.gen::<Decimal>() }
+			.normalized().expect("Error if 0,0,0");
+			let angle_axis = AngleAxis{angle: angle, axis: axis};
+
+			let rotation     = angle_axis.to_quaternion();
+			let rotation_inv = rotation.conjugate();
+
+			
+			let mut coord = Vector3
+			{ x: rng.gen::<Decimal>(), y: rng.gen::<Decimal>(), z: rng.gen::<Decimal>() }
+				.normalized().expect("Error if 0,0,0");
+			
+			assert!(coord.test_equal(&rotation_inv.rotate_point(rotation.rotate_point(coord))));
+		}
 	}
 
 

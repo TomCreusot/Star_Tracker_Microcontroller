@@ -120,6 +120,10 @@ pub struct StarTriangleIterator <const N_MAX_MATCHES: usize>
 	/// The values searched by the kernel.
 	input:  StarTriangle<usize>,
 
+	/// After calling next, this is the result.
+	/// Used for finding the pilot.
+	expected_triangle: Option<Match<StarTriangle<usize>>>,
+
 	/// All found elements from the database when searched by the star pairs constructing input.
 	pair_a: ArrayList<SearchResult, {N_MAX_MATCHES}>,
 	/// All found elements from the database when searched by the star pairs constructing input.
@@ -127,15 +131,28 @@ pub struct StarTriangleIterator <const N_MAX_MATCHES: usize>
 	/// All found elements from the database when searched by the star pairs constructing input.
 	pair_c: ArrayList<SearchResult, {N_MAX_MATCHES}>,
 
+	/// All found elements for the current pilot star and star_a.
+	pair_p_a: ArrayList<SearchResult, {N_MAX_MATCHES}>,
+	/// All found elements for the current pilot star and star_b.
+	pair_p_b: ArrayList<SearchResult, {N_MAX_MATCHES}>,
+	/// All found elements for the current pilot star and star_c.
+	pair_p_c: ArrayList<SearchResult, {N_MAX_MATCHES}>,
 
-	/// The index sequence has begun.
-	indexing: bool,
 	/// The current search index of pair_a.
-	index_a: usize,
+	index_a: isize,
 	/// The current search index of pair_b.
 	index_b: usize,
 	/// The current search index of pair_c.
 	index_c: usize,
+
+	/// The current index of the pilot star.
+	index_p: isize,
+	/// The current index of the pilot star.
+	index_p_a: isize,
+	/// The current index of the pilot star.
+	index_p_b: usize,
+	/// The current index of the pilot star.
+	index_p_c: usize,
 
 	angle_tolerance: Radians,
 }
@@ -220,14 +237,14 @@ pub enum Specularity
 
 
 
-/// Used to tell the search that it should give up.  
-/// It is recomended to abandon the search if a certain time is exceeded as the longer a search takes the less likely it is correct.  
+/// Used to tell the search that it should give up.
+/// It is recomended to abandon the search if a certain time is exceeded as the longer a search takes the less likely it is correct.
 /// Also some searches can take far longer then others.
 #[cfg_attr(test, automock)]
 pub trait AbandonSearch
 {
-	/// Returns true if the search should be abandon.  
-	/// Returns false if the search should continue.  
+	/// Returns true if the search should be abandon.
+	/// Returns false if the search should continue.
 	fn should_abort ( &self ) -> bool;
 }
 
@@ -304,7 +321,18 @@ pub trait TriangleConstruct
 	/// * None if there is no more available star triangles with the given parameters.
 	/// * Some(Match{input: observed star triangle, output: database match}) if possible.
 	fn next ( &mut self, stars: &dyn List<Equatorial>, database: &mut dyn ChunkIterator
-	) -> Option<Match<StarTriangle<usize>>>;
+		) -> Option<Match<StarTriangle<usize>>>;
+
+	/// Iterates though suitable pilot stars for the given star triangle.
+	/// Ensure the database iterator has not iterated since calling next.
+	/// # Arguments
+	/// * `stars`    - The observed stars in the image.
+	/// * `database` - The database of stars to search through (That has not been iterated since next).
+	/// # Returns
+	/// * None if there is no more available pilot stars.
+	/// * Some(Match{input: observed star triangle, output: database match}) if possible.
+	fn next_pilot ( &mut self, stars: &dyn List<Equatorial>, database: &mut dyn ChunkIterator
+	) -> Option<Match<usize>>;
 
 	/// Prepares the StarTriangleIterator for iterating.
 	/// # Arguments
