@@ -9,6 +9,16 @@ pub mod template;
 /// File management (Excluding Images).
 pub struct Io ( );
 
+/// A .png, corr.fits file and .log which all describe the image.
+pub struct Sample
+{
+	pub dir: String,
+	pub file_cor: String,
+	pub file_log: String,
+	pub file_img: String,
+}
+
+
 
 #[derive(Debug, Clone)]
 /// Use for CSV serialization
