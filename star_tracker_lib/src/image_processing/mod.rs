@@ -66,6 +66,35 @@ pub struct BasicImage <const WIDTH : usize, const HEIGHT : usize>
 
 
 //###############################################################################################//
+//										---	Threshold ---
+//###############################################################################################//
+
+pub trait Threshold
+{
+
+}
+
+pub struct ThresholdPercent
+{
+
+}
+
+
+// /// A varient of threshold which consists of a set of points which specify a local threshold.
+// /// The median/mean/percent is calculated in the local area of each node.
+// /// When the threshold of a pixel is requested, a linear function calculates the expected threshold of the pixel based on neiboring pixels.
+// ///
+// /// These points are equally spaced on the x and y axis being `NODES` wide and high.
+// ///
+// pub struct ThresholdNodal <const NODES: usize>
+// {
+// 	/// Each node is used to represent a local threshold value and position.
+// 	nodes : BasicImage<NODES, NODES>;
+// }
+
+
+
+//###############################################################################################//
 //										---	Blob ---
 //###############################################################################################//
 

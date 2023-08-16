@@ -11,7 +11,7 @@ use crate::util::err::Error;
 
 use crate::util::Maths;
 
-/// Image accessors, investigation and modification.  
+/// Image accessors, investigation and modification.
 ///
 /// Allows for external image packages to be wrapped and new image methods to be investigated.
 /// (This is ultimately just to stop requiring generic arguments as consts in generic is too new).
@@ -44,9 +44,9 @@ pub trait Image
 	/// # Example
 	/// ```
 	/// use star_tracker_lib::util::units::Pixel;
-	/// use star_tracker_lib::image_processing::BasicImage; 
+	/// use star_tracker_lib::image_processing::BasicImage;
 	/// use star_tracker_lib::image_processing::Image;
-	/// 
+	///
 	/// let mut img : BasicImage<3, 3> = BasicImage::new();
 	/// img.set(Pixel{x: 0, y: 0}, 10);
 	/// img.set(Pixel{x: 2, y: 0}, 20);
@@ -106,8 +106,8 @@ pub trait Image
 		{
 			return Result::Err(Errors::InvalidSize);
 		}
-		
-		
+
+
 		let ratio : Decimal = (histogram.len() as Decimal) / (Byte::MAX as Decimal + 1.0);
 		for y in 0..self.height()
 		{
@@ -117,7 +117,7 @@ pub trait Image
 				histogram[bar] += 1;
 			}
 		}
-		
+
 		return Result::Ok(());
 	}
 
@@ -157,6 +157,13 @@ pub trait Image
 		}
 		return ((i as Decimal * Byte::MAX as Decimal) / histogram.len() as Decimal).ceil() as Byte;
 	}
+	// 
+	//
+	// fn nodal_threshold ( &self ) ->
+	// {
+	//
+	// }
+
 
 
 	/// Copies an image over to another image.
@@ -233,7 +240,7 @@ mod test
 // NOT IMPLEMENTED pub fn set    ( &self, Pixel, Byte )
 // NOT IMPLEMENTED pub fn width  ( &self ) -> usize
 // NOT IMPLEMENTED pub fn height ( &self ) -> usize
-// 
+//
 // pub fn reset          ( &mut self )
 // pub fn valid_pixel    ( &self, Pixel ) -> bool
 // pub histogram         ( &self, &mut [UInt] )
@@ -250,7 +257,7 @@ fn test_reset ( )
 	img.set(Pixel{x: 2, y: 0}, 20);
 	img.set(Pixel{x: 0, y: 2}, 32);
 	img.set(Pixel{x: 0, y: 1}, 43);
-	
+
 	img.reset();
 	for xx in 0..img.width()
 	{
@@ -285,7 +292,7 @@ fn test_reset ( )
 
 
 
-	
+
 
 //										~ histogram ~											 //
 	#[test]

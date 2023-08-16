@@ -4,6 +4,7 @@ use core::ops::RangeInclusive;
 use crate::util::units::Equatorial;
 use crate::util::units::Vector3;
 use crate::util::units::Radians;
+use crate::util::units::Degrees;
 use crate::util::aliases::Decimal;
 use crate::util::aliases::M_PI;
 
@@ -27,10 +28,38 @@ impl Equatorial
 	{
 		return Equatorial{ra: Radians(0.0), dec: Radians(0.0)};
 	}
-
+	
+	
+	/// Returns an equatorial coordinate at ra: 0, dec: 90 (north).
+	/// Useful for initialization and testing.
+	/// ```
+	/// use star_tracker_lib::util::units::Equatorial;
+	/// use star_tracker_lib::util::units::Radians;
+	/// use star_tracker_lib::util::units::Degrees;
+	///
+	/// assert_eq!(Equatorial{ra: Radians(0.0), dec: Degrees(90.0).as_radians()}, Equatorial::north());
+	/// ```
+	pub const fn north ( ) -> Equatorial
+	{
+		return Equatorial{ra: Radians(0.0), dec: Degrees(90.0).as_radians()};
+	}
+	
+	/// Returns an equatorial coordinate at ra: 0, dec: -90 (south).
+	/// Useful for initialization and testing.
+	/// ```
+	/// use star_tracker_lib::util::units::Equatorial;
+	/// use star_tracker_lib::util::units::Radians;
+	/// use star_tracker_lib::util::units::Degrees;
+	///
+	/// assert_eq!(Equatorial{ra: Radians(0.0), dec: Degrees(-90.0).as_radians()}, Equatorial::north());
+	/// ```
+	pub const fn south ( ) -> Equatorial
+	{
+		return Equatorial{ra: Radians(0.0), dec: Degrees(-90.0).as_radians()};
+	}
 
 	/// The range for declination.  
-	/// Useful for random genration testing.  
+	/// Useful for random generation testing.  
 	pub fn range_dec ( ) -> RangeInclusive<Radians>
 	{
 		return Radians(-M_PI / 2.0) ..= Radians(M_PI / 2.0);
@@ -189,6 +218,8 @@ mod test
 //									Constructors and Accessors
 //
 // pub fn zero       ( &self ) -> Equatorial
+// pub fn north      ( &self ) -> Equatorial
+// pub fn south      ( &self ) -> Equatorial
 // pub fn range_ra   ( &self ) -> RangeInclusive<Radians>
 // pub fn range_dec  ( &self ) -> RangeInclusive<Radians>
 // pub fn get_phi    ( &self ) -> Radians
@@ -200,6 +231,23 @@ mod test
 	fn test_zero ( )
 	{
 		assert_eq!(Equatorial{ra: Radians(0.0), dec: Radians(0.0)}, Equatorial::zero());
+	}
+//										~ north ~												 //
+	#[test]
+	fn test_zero ( )
+	{
+		assert_eq!(
+			Equatorial{ra: Radians(0.0), dec: Degrees(90.0).to_radians()}, 
+			Equatorial::north());
+	}
+
+//										~ south ~												 //
+	#[test]
+	fn test_zero ( )
+	{
+		assert_eq!(
+			Equatorial{ra: Radians(0.0), dec: Degrees(-90.0).to_radians()}, 
+			Equatorial::south());
 	}
 
 //										~ range_dec / range_ra ~								 //
