@@ -1,4 +1,4 @@
-//! Implementation of [Blob](crate::util::image_processing::Blob).
+//! Implementation of [Blob](crate::image_processing::Blob).
 use core_include::*;
 
 use crate::util::aliases::Decimal;

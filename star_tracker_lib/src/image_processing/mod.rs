@@ -11,6 +11,7 @@ use crate::core_include::*;
 
 use crate::util::aliases::Byte;
 use crate::util::aliases::UInt;
+use crate::util::units::Pixel;
 use crate::util::units::Vector2;
 
 pub use crate::image_processing::image::Image;
@@ -60,7 +61,7 @@ pub use crate::image_processing::image::Image;
 /// ```
 pub struct BasicImage <const WIDTH : usize, const HEIGHT : usize>
 {
-	/// The image
+	/// The image.
 	img : [[Byte; WIDTH]; HEIGHT],
 }
 
@@ -69,28 +70,37 @@ pub struct BasicImage <const WIDTH : usize, const HEIGHT : usize>
 //										---	Threshold ---
 //###############################################################################################//
 
+/// A trait to help spcify if a pixel is the foreground (stars) or background (space) of the image.
 pub trait Threshold
 {
+	/// Generates a threshold for the given image.
+	fn new ( image: &Image ) -> Self;
 
+	/// Returns true if the pixel is in the foreground (stars).
+	fn foreground ( &self, point: Pixel, value: Byte ) -> bool;
+
+	/// Returns true if the pixel is in the background (space).
+	fn background ( &self, point: Pixel, value: Byte ) -> bool { !self.foreground(); }
 }
 
+/// A basic percent threshold.
+/// This will generate a number based on a percentage brightness of the image.
 pub struct ThresholdPercent
 {
-
+	threshold: Byte,
 }
 
 
-// /// A varient of threshold which consists of a set of points which specify a local threshold.
-// /// The median/mean/percent is calculated in the local area of each node.
-// /// When the threshold of a pixel is requested, a linear function calculates the expected threshold of the pixel based on neiboring pixels.
-// ///
-// /// These points are equally spaced on the x and y axis being `NODES` wide and high.
-// ///
-// pub struct ThresholdNodal <const NODES: usize>
-// {
-// 	/// Each node is used to represent a local threshold value and position.
-// 	nodes : BasicImage<NODES, NODES>;
-// }
+/// A varient of threshold which consists of a set of points which specify a local threshold.
+/// The median/mean/percent is calculated in the local area of each node.
+/// When the threshold of a pixel is requested, a linear function calculates the expected threshold of the pixel based on neiboring pixels.
+///
+/// These points are equally spaced on the x and y axis being `NUM_H` wide and `NUM_V` high.
+pub struct ThresholdNodal <const NUM_H: usize, const NUM_V: usize>
+{
+	/// Each node is used to represent a local threshold value and position.
+	nodes : BasicImage<{NUM_H}, {NUM_V}>,
+}
 
 
 

@@ -83,7 +83,7 @@ impl TrackingModeConsts for TrackingConstsTest
 	const PAIRS_MAX       : usize = 2000;							// Irrelevant, ensure big.
 	const TRIANGLES_MAX   : usize = 2000;							// Irrelevant, ensure big.
 	const SPECULARITY_MIN : Decimal = 0.0001;						// If the triangle is flipped.
-	const ANGLE_TOLERANCE : Radians = Degrees(0.08).as_radians(); 	// Maximum inaccuracy.
+	const ANGLE_TOLERANCE : Radians = Degrees(0.04).as_radians(); 	// Maximum inaccuracy.
 }
 
 // Defines how blob detection will work.
@@ -170,9 +170,11 @@ pub fn main ( )
 		if let Some(fov_) = fov_file { fov = fov_; }
 		else                         { continue;   }
 
-		if fov < Degrees(20.0).to_radians()  && fov < Degrees(40.0).to_radians() { continue; }
-
 		println!("{}, fov: {}", sample.dir, fov.to_degrees());
+
+
+		if sample.dir != "samples/16mm_2" {continue;}//fov < Degrees(20.0).to_radians()  && fov < Degrees(40.0).to_radians() { continue; }
+
 
 		let region_size = fov / 2.0;
 		let region_num = 8;
@@ -279,7 +281,6 @@ pub fn main ( )
 
 			imshow("w/", &img.0);
 			imshow("thresh", &img_thresh.0);
-			wait_key(0);
 
 			// Find the blobs in the image.
 			let mut blobs : Vec<Blob> = Vec::new();

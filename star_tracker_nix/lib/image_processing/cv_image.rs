@@ -67,7 +67,7 @@ impl CVImage
 		unsafe // Declaring image is unsafe
 		{
 			let gray = imread(path, 0).expect("Invalid location.");
-			let mut color: Mat = Mat::new_rows_cols(gray.size().expect("?").width, gray.size().expect("?").height, CV_8UC3).expect("?");
+			let mut color: Mat = Mat::new_rows_cols(gray.mat_size()[0], gray.mat_size()[1], CV_8UC3).expect("?");
 			cvt_color(&gray, &mut color, 8, 3).expect("Why not");
 			return Self(color);
 		}

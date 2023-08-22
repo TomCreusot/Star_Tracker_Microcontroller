@@ -150,32 +150,44 @@ fn main ( ) -> opencv::Result<()>
 					}
 				}
 				
+				
+				let mut error_old = 0.0;
+				let mut error_new = 0.0;
 				for i in 0.. cor.len()
 				{
 					let thickness = 1;
 					let pt_i = cor[i].image_px;
 					let pt_r = cor[i].real_px;
+					let pt_u = undistorted_points.get(i)?;
+					
 					let radius    = ((pt_i - pt_r).magnitude() * 3.0).round() as i32;
 
-					let color = Scalar::new(200.0, 200.0, 0.0, 0.0); // (BGR format)
+					let e_o = (pt_i - pt_r).magnitude();
+					let e_n = (Vector2{x: pt_u.x as Decimal, y: pt_u.y as Decimal} - pt_r).magnitude();
+					println!("Old Error:\t{}\nNew Error:\t{}\n", e_o, e_n);
+					error_old += e_o;
+					error_new += e_n;
+
+					let color = Scalar::new(200.0, 100.0, 100.0, 0.0); // (BGR format)
 					let pt_i = Point::new(pt_i.x.round() as i32, pt_i.y.round() as i32);
 					let _= opencv::imgproc::circle(&mut img_cor, pt_i, radius, color, thickness, 1,0);
-					// let _= opencv::imgproc::circle(&mut img_un, pt_i, radius, color, thickness, 1,0);
 
-					let color = Scalar::new(200.0, 0.0, 200.0, 0.0); // (BGR format)
+					let color = Scalar::new(100.0, 100.0, 200.0, 0.0); // (BGR format)
 					let pt_r = Point::new(pt_r.x.round() as i32, pt_r.y.round() as i32);
 					let _= opencv::imgproc::circle(&mut img_cor, pt_r, radius, color, thickness, 1,0);
-					// let _= opencv::imgproc::circle(&mut img_un, pt_r, radius, color, thickness, 1,0);
 
-					let pt_u = undistorted_points.get(i)?;
-					let color = Scalar::new(0.0, 200.0, 200.0, 0.0); // (BGR format)
+
+					let radius = (e_n - e_o) * 20.0;
+					let mut color = Scalar::new(0.0, 200.0, 200.0, 0.0);
+					if radius < 0.0 { color = Scalar::new(200.0, 200.0, 0.0, 0.0); } // (BGR format)
 					let pt_u = Point::new(pt_u.x.round() as i32, pt_u.y.round() as i32);
-					let _= opencv::imgproc::circle(&mut img_cor, pt_u, radius, color, thickness, 1,0);
-					// let _= opencv::imgproc::circle(&mut img_un, pt_u, radius, color, thickness, 1,0);
-
-					let _ = opencv::imgproc::line(&mut img_cor, pt_r, pt_u, color, thickness, 1, 0);
-					// let _ = opencv::imgproc::line(&mut img_un, pt_r, pt_u, color, thickness, 1, 0);
+					let _= opencv::imgproc::circle(&mut img_cor, pt_u, e_n.round() as i32, color, thickness + 1, 1,0);
+					
+					//let _= o
 				}
+				error_old /= cor.len() as Decimal;
+				error_new /= cor.len() as Decimal;
+				println!("Average:\nOld Error:\t{}\nNew Error:\t{}", error_old, error_new);
 
 
 				imshow("distorted", &img_org)?;
