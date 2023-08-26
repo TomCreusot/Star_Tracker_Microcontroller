@@ -10,6 +10,7 @@ use crate::util::list::List;
 use crate::util::list::ListIterator;
 use crate::util::list::ArrayList;
 
+use crate::image_processing::Threshold;
 use crate::image_processing::Image;
 use crate::image_processing::Blob;
 
@@ -21,7 +22,7 @@ impl Blob
 //###############################################################################################//
 	pub fn new ( ) -> Blob
 	{
-		return Blob { intensity: 0, centroid: Vector2{x: 0.0, y: 0.0} };
+		return Blob { size: 0, intensity: 0, centroid: Vector2{x: 0.0, y: 0.0} };
 	}
 	
 	
@@ -30,17 +31,19 @@ impl Blob
 //###############################################################################################//
 
 	/// Finds all blobs in an image.
-	/// # Generic Arguments
-	/// * `SIZE_BLOB` - The max number of pixels in a blob.
 	/// # Arguments
-	/// * `config` - The properties associated with the size requriement of the blob.
-	/// * `theshold` - The value which is the minimum intensity to satisfy being in the foreground.
-	/// * `img` - The image to read and set to black.
-	/// * `lst` - The list to append the blobs to.
+	/// * `min_size` - The least pixels to make a blob.
+	/// * `theshold` - The threshold of the image.
+	/// * `img`      - The image to read and set to black.
+	/// * `stack`    - Used to store pixels of the blob, either use a Vec if you dont care about the size of an array list if the blob cannot exceed a certain size.
+	/// * `lst`      - The list to append the blobs to.
 	///
 	/// # Example
 	/// ```
-	/// use star_tracker_lib::image_processing::{Blob, BasicImage, Image};
+	/// use star_tracker_lib::image_processing::Blob;
+	/// use star_tracker_lib::image_processing::BasicImage;
+	/// use star_tracker_lib::image_processing::Image;
+	/// use star_tracker_lib::image_processing::ThresholdPercent;			
 	/// use star_tracker_lib::util::units::Pixel;
 	/// use star_tracker_lib::util::list::{List, ArrayList};
 	/// let mut img : BasicImage<3, 3> = BasicImage::new();
@@ -49,17 +52,29 @@ impl Blob
 	/// img.set(Pixel{x: 0, y: 1}, 1); // 0 0 1
 	/// img.set(Pixel{x: 2, y: 2}, 1);
  	///
+ 	/// // lst is all the blobs in the image.
 	/// let mut lst : ArrayList<Blob, 9> = ArrayList::new();
+	///
+	/// // stack is the memory allocation allowed for when finding the blob.
+	/// // If you have limited space, use an array list with the size equal to the max number of pixels in a blob.
+	/// // If you have unlimited space or a heap, use Vec.
 	/// const MAX_BLOB_SIZE : usize = 3;
-	/// Blob::find_blobs::<MAX_BLOB_SIZE>(1, &mut img, &mut lst);
+	/// let mut stack_on_stack: ArrayList<Pixel, MAX_BLOB_SIZE> = ArrayList::new();
+	/// // let mut stack_on_heap : Vec<Pixel> = Vec::new();
+	///
+	/// // You must have a threshold for the image to know what is foreground.
+	/// let thresh = ThresholdPercent::new(&img, 0.5);
+	///
+	///
+	/// // Blobs must be equal to or above this size to added.
+	/// let min_size = 2;
+	///
+	/// Blob::find_blobs(min_size, &thresh, &mut img, &mut stack_on_stack, &mut lst);
 	/// assert_eq!(lst.get(0).intensity, 3);
 	/// assert_eq!(lst.get(0).centroid.x, 0.333333333333333333333);
 	/// assert_eq!(lst.get(0).centroid.y, 0.333333333333333333333);
 	///
-	/// assert_eq!(lst.get(1).intensity, 1);
-	/// assert_eq!(lst.get(1).centroid.x, 2.0);
-	/// assert_eq!(lst.get(1).centroid.y, 2.0);
-	/// assert_eq!(lst.size(), 2);
+	/// assert_eq!(lst.size(), 1);
 	///
 	/// // Image has been consumed.
 	/// assert_eq!(img.get(Pixel{x: 0, y: 0}), 0);
@@ -67,21 +82,24 @@ impl Blob
 	/// assert_eq!(img.get(Pixel{x: 0, y: 1}), 0);
 	/// assert_eq!(img.get(Pixel{x: 2, y: 2}), 0);
 	/// ```
-	pub fn find_blobs <const CONFIG : usize> (
-												threshold: Byte,
-												img: &mut dyn Image,
-												lst: &mut dyn List<Blob>
-											)
+	pub fn find_blobs (
+		min_size: usize,
+		threshold: &dyn Threshold, img: &mut dyn Image,
+		stack: &mut dyn List<Pixel>, lst: &mut dyn List<Blob> )
 	{
 		for y in 0..img.height ( )
 		{
 			for x in 0..img.width ( )
 			{
-				if threshold <= img.get(Pixel{x: x, y: y})
+				let pos = Pixel{x: x, y: y};
+				if threshold.foreground(pos) <= img.get(pos)
 				{
-					lst.slot(
-						Blob::spread_grass_fire::<CONFIG>(threshold, Pixel{x: x, y: y}, img),
-						Blob::sort_descending_intensity);
+					let blob = Blob::spread_grass_fire(threshold, Pixel{x: x, y: y}, img, stack);
+		
+					if min_size <= blob.size
+					{
+						lst.slot(blob, Blob::sort_descending_intensity);
+					}
 				}
 			}
 		}
@@ -89,29 +107,36 @@ impl Blob
 
 
 	/// Creates and expands the blob to fit any pixels in the foreground.
-	/// # Generic Arguments
-	/// * `BLOB_SIZE` - The number of pixels allowed in a blob (how much memory to use finding a single blob).
 	/// # Arguments
-	/// * `config` - The config for the max blob size.
 	/// * `threshold` - The value which is the minimum intensity to satisfy being in the foreground.
 	/// * `start` - The start point where the blob should begin.
-	/// * `img` - The image to read and consume (set pixels to 0).
+	/// * `img`   - The image to read and consume (set pixels to 0).
+	/// * `stack` - Used to store pixels of the blob, either use a Vec if you dont care about the size of an array list if the blob cannot exceed a certain size.
 	///
 	/// # Returns
 	/// The blob.
 	///
 	/// # Example
 	/// ```
-	/// use star_tracker_lib::image_processing::{Blob, BasicImage, Image};
+	/// use star_tracker_lib::image_processing::{Blob, BasicImage, Image, ThresholdPercent};
 	/// use star_tracker_lib::util::{list::{List, ArrayList}, units::Pixel};
 	/// let mut img : BasicImage<2, 2> = BasicImage::new();
 	/// img.set(Pixel{x: 0, y: 0}, 1); // 1 1
 	/// img.set(Pixel{x: 1, y: 0}, 1); // 1 0
 	/// img.set(Pixel{x: 0, y: 1}, 1);
 	///
+	/// // stack is the memory allocation allowed for when finding the blob.
+	/// // If you have limited space, use an array list with the size equal to the max number of pixels in a blob.
+	/// // If you have unlimited space or a heap, use Vec.
 	/// const MAX_BLOB_SIZE : usize = 3;
+	/// let mut stack_on_stack: ArrayList<Pixel, MAX_BLOB_SIZE> = ArrayList::new();
+	/// // let mut stack_on_heap : Vec<Pixel> = Vec::new();
+	///
+	/// // You must have a threshold for the image to know what is foreground.
+	/// let thresh = ThresholdPercent::new(&img, 0.5);
+	///
 	/// let start : Pixel = Pixel{x: 0, y: 0};
-	/// let blob = Blob::spread_grass_fire::<MAX_BLOB_SIZE>(1, start, &mut img);
+	/// let blob = Blob::spread_grass_fire(&thresh, start, &mut img, &mut stack_on_stack);
 	/// assert_eq!(blob.intensity, 3);
 	///
 	/// assert!((blob.centroid.x - 0.333).abs() < 0.01);
@@ -121,21 +146,18 @@ impl Blob
 	/// assert_eq!(img.get(Pixel{x: 1, y: 0}), 0);
 	/// assert_eq!(img.get(Pixel{x: 0, y: 1}), 0);
 	/// ```
-	pub fn spread_grass_fire <const CONFIG : usize> (
-														threshold : Byte,
-														start : Pixel,
-														img : &mut dyn Image
-													) -> Blob
+	pub fn spread_grass_fire  (
+			threshold: &dyn Threshold, start: Pixel, img: &mut dyn Image, stack: &mut dyn List<Pixel>
+		) -> Blob
 	{
 		let mut blob : Blob = Blob::new();
-		let mut stack : ArrayList<Pixel, CONFIG> = ArrayList::new();
 		let _ = stack.push_back(start).is_err();
 		while let Result::Ok(cur) = stack.pop_back()
 		{
 			if img.get(cur) != 0 // If Reinserted in list.
 			{
 				// Add to list
-				Blob::find_neighbours(threshold, &cur, img, &mut stack);
+				Blob::find_neighbours(threshold, &cur, img, stack);
 
 				// Recalculate Centroid and Intensity
 				blob.centroid.x = Blob::find_centroid(
@@ -143,7 +165,7 @@ impl Blob
 				blob.centroid.y = Blob::find_centroid(
 					blob.centroid.y, blob.intensity, cur.y as UInt, img.get(cur) as UInt);
 				blob.intensity += img.get(cur) as UInt;
-
+				blob.size += 1;
 				// Set the pixel to black.
 				img.set(cur, 0);
 			}
@@ -157,9 +179,6 @@ impl Blob
 //###############################################################################################//
 
 	/// Finds all neighbouring pixels which are valid and within the theshold.
-	/// # Generic Arguments
-	/// * `SIZE_BLOB` - The number of pixels allowed in a blob (how much memory to use to find a single blob).
-	///
 	/// # Arguments
 	/// * `threshold` - The value which is the minimum intensity to satisfy being in the foreground.
 	/// * `pt` - The point to look around.
@@ -168,7 +187,7 @@ impl Blob
 	///
 	/// # Example
 	/// ```
-	/// use star_tracker_lib::image_processing::{Blob, BasicImage, Image};
+	/// use star_tracker_lib::image_processing::{Blob, BasicImage, Image, ThresholdPercent};
 	/// use star_tracker_lib::util::units::Pixel;
 	/// use star_tracker_lib::util::list::{ArrayList, List};
 	/// let threshold = 1;
@@ -181,7 +200,11 @@ impl Blob
 	/// img.set(Pixel{x: 1, y: 2}, 1); // 0, 1, 0
 	/// img.set(Pixel{x: 2, y: 1}, 1);
 	///
-	/// Blob::find_neighbours(threshold, &pt, &img, &mut lst); // Right, Left, Up, Down
+	///	
+	/// // You must have a threshold for the image to know what is foreground.
+	/// let thresh = ThresholdPercent::new(&img, 0.5);
+	///
+	/// Blob::find_neighbours(&thresh, &pt, &img, &mut lst); // Right, Left, Up, Down
 	/// assert_eq!(lst.size(), 4);
 	///
 	/// assert_eq!(lst.get(0).x, 2); // Right
@@ -196,12 +219,13 @@ impl Blob
 	/// assert_eq!(lst.get(3).x, 1); // Down
 	/// assert_eq!(lst.get(3).y, 2);
 	/// ```
-	pub fn find_neighbours(threshold: Byte, pt: &Pixel, img: &dyn Image,stack:&mut dyn List<Pixel>)
+	pub fn find_neighbours(
+		threshold: &dyn Threshold, pt: &Pixel, img: &dyn Image, stack:&mut dyn List<Pixel>)
 	{
 		// 4 directional
 		// Right
 		let mut px = Pixel{x: pt.x + 1, y: pt.y};
-		if img.valid_pixel(px) && threshold <= img.get(px)
+		if img.valid_pixel(px) && threshold.foreground(px) <= img.get(px)
 		{
 			if stack.push_back(px).is_err()
 			{
@@ -212,7 +236,7 @@ impl Blob
 		if 0 < pt.x
 		{
 			px = Pixel{x: pt.x - 1, y: pt.y};
-			if img.valid_pixel(px) && threshold <= img.get(px)
+			if img.valid_pixel(px) && threshold.foreground(px) <= img.get(px)
 			{
 				if stack.push_back(px).is_err()
 				{
@@ -224,7 +248,7 @@ impl Blob
 		if 0 < pt.y
 		{
 			px = Pixel{x: pt.x, y: pt.y - 1};
-			if img.valid_pixel(px) && threshold <= img.get(px)
+			if img.valid_pixel(px) && threshold.foreground(px) <= img.get(px)
 			{
 				if stack.push_back(px).is_err()
 				{
@@ -234,7 +258,7 @@ impl Blob
 		}
 		// Down
 		px = Pixel{x: pt.x, y: pt.y + 1};
-		if img.valid_pixel(px) && threshold <= img.get(px)
+		if img.valid_pixel(px) && threshold.foreground(px) <= img.get(px)
 		{
 			if stack.push_back(px).is_err()
 			{
@@ -281,9 +305,9 @@ impl Blob
 	/// use star_tracker_lib::util::{aliases::Decimal, units::Vector2, list::{List, ArrayList}};
 	/// use star_tracker_lib::image_processing::Blob;
 	/// let mut blobs : ArrayList<Blob, 3> = ArrayList::new();
-	/// blobs.push_back(Blob{intensity: 10, centroid: Vector2{x: 10.0, y: 10.0}});
-	/// blobs.push_back(Blob{intensity: 5, centroid: Vector2{x: 5.0, y: 5.0}});
-	/// blobs.push_back(Blob{intensity: 0, centroid: Vector2{x: 0.0, y: 0.0}});
+	/// blobs.push_back(Blob{size: 0, intensity: 10, centroid: Vector2{x: 10.0, y: 10.0}});
+	/// blobs.push_back(Blob{size: 0, intensity: 5, centroid: Vector2{x: 5.0, y: 5.0}});
+	/// blobs.push_back(Blob{size: 0, intensity: 0, centroid: Vector2{x: 0.0, y: 0.0}});
 	///
 	/// let mut points : ArrayList<Vector2, 2> = ArrayList::new();
 	/// Blob::to_vector2(&blobs, &mut points);
@@ -316,8 +340,8 @@ impl Blob
 	/// ```
 	/// use star_tracker_lib::image_processing::Blob;
 	/// use star_tracker_lib::util::units::Vector2;
-	/// let brightest = Blob{intensity: 1, centroid: Vector2{x: 0.0, y: 0.0}};
-	/// let dullest = Blob{intensity: 0, centroid: Vector2{x: 0.0, y: 0.0}};
+	/// let brightest = Blob{size: 0, intensity: 1, centroid: Vector2{x: 0.0, y: 0.0}};
+	/// let dullest = Blob{size: 0, intensity: 0, centroid: Vector2{x: 0.0, y: 0.0}};
 	/// assert!(Blob::sort_descending_intensity(&brightest, &dullest));
 	/// assert!(!Blob::sort_descending_intensity(&dullest, &brightest));
 	/// ```
@@ -343,6 +367,7 @@ mod test
 	use crate::image_processing::BasicImage;
 	use crate::image_processing::Image;
 	use crate::image_processing::Blob;
+	use crate::image_processing::ThresholdPercent;
 	
 	use crate::util::list::ArrayList;
 	use crate::util::list::List;
@@ -388,9 +413,10 @@ mod test
 	{
 		let mut img : BasicImage<3, 3> = BasicImage::new();
 		let mut lst : ArrayList<Blob, 9> = ArrayList::new();
+		let thresh = ThresholdPercent{threshold: 1};
 
-		const CONFIG : usize = 0;
-		Blob::find_blobs::<CONFIG>(1, &mut img, &mut lst);
+		let mut stack : ArrayList<Pixel, 0> = ArrayList::new();
+		Blob::find_blobs(0, &thresh, &mut img, &mut stack, &mut lst);
 
 		assert_eq!(lst.size(), 0);
 	}
@@ -407,8 +433,11 @@ mod test
 		img.set(Pixel{x: 2, y: 2} , 10);
 		let mut lst : ArrayList<Blob, 2> = ArrayList::new();
 
-		const CONFIG : usize = 2;
-		Blob::find_blobs::<CONFIG>(1, &mut img, &mut lst);
+		let thresh = ThresholdPercent{threshold: 1};
+		let mut stack : ArrayList<Pixel, 2> = ArrayList::new();
+
+
+		Blob::find_blobs(0, &thresh, &mut img, &mut stack, &mut lst);
 
 		assert_eq!(lst.size(), 2);
 		assert_eq!(lst.get(0).intensity, 10);
@@ -428,8 +457,10 @@ mod test
 
 		let mut lst : ArrayList<Blob, 9> = ArrayList::new();
 
-		const CONFIG : usize = 2;
-		Blob::find_blobs::<CONFIG>(1, &mut img, &mut lst);
+		let thresh = ThresholdPercent{threshold: 1};
+		let mut stack : ArrayList<Pixel, 2> = ArrayList::new();
+
+		Blob::find_blobs(0, &thresh, &mut img, &mut stack, &mut lst);
 		assert_eq!(lst.get(0).intensity, 3);
 		assert_close(lst.get(0).centroid.x, 1.0/3.0);
 		assert_close(lst.get(0).centroid.y, 1.0/3.0);
@@ -458,9 +489,11 @@ mod test
 		img.set(Pixel{x: 2, y: 2}, 1);
 
 		let mut lst : ArrayList<Blob, 9> = ArrayList::new();
-		const CONFIG : usize = 2;
+		let thresh = ThresholdPercent{threshold: 1};
+		let mut stack : ArrayList<Pixel, 2> = ArrayList::new();
 
-		Blob::find_blobs::<CONFIG>(1, &mut img, &mut lst);
+
+		Blob::find_blobs(0, &thresh, &mut img, &mut stack, &mut lst);
 		assert_eq!(lst.get(0).intensity, 3);
 		assert_close(lst.get(0).centroid.x, 1.0/3.0);
 		assert_close(lst.get(0).centroid.y, 1.0/3.0);
@@ -476,6 +509,35 @@ mod test
 		assert_eq!(img.get(Pixel{x: 0, y: 1}), 0);
 		assert_eq!(img.get(Pixel{x: 2, y: 2}), 0);
 	}
+	
+	
+		#[test]
+	// Blobs should only be added if they are greater than a specified size.
+	fn test_find_blobs_min_size ( )
+	{
+		let mut img : BasicImage<3, 3> = BasicImage::new();
+		img.set(Pixel{x: 0, y: 0}, 1); // 1 1 0
+		img.set(Pixel{x: 1, y: 0}, 1); // 1 0 0
+		img.set(Pixel{x: 0, y: 1}, 1); // 0 0 1
+		img.set(Pixel{x: 2, y: 2}, 1);
+
+		let mut lst : ArrayList<Blob, 9> = ArrayList::new();
+		let thresh = ThresholdPercent{threshold: 1};
+		let mut stack : ArrayList<Pixel, 2> = ArrayList::new();
+
+		let min_size = 2;
+		Blob::find_blobs(min_size, &thresh, &mut img, &mut stack, &mut lst);
+		assert_eq!(lst.get(0).intensity, 3);
+		assert_close(lst.get(0).centroid.x, 1.0/3.0);
+		assert_close(lst.get(0).centroid.y, 1.0/3.0);
+
+		assert_eq!(lst.size(), 1);
+
+		assert_eq!(img.get(Pixel{x: 0, y: 0}), 0);
+		assert_eq!(img.get(Pixel{x: 1, y: 0}), 0);
+		assert_eq!(img.get(Pixel{x: 0, y: 1}), 0);
+		assert_eq!(img.get(Pixel{x: 2, y: 2}), 0);
+	}
 
 
 //										~ spread_grass_fire ~									 //
@@ -483,7 +545,6 @@ mod test
 	// Should safely end if too big.
 	fn test_spread_grass_fire_blob_too_big ( )
 	{
-		const CONFIG : usize = 3; // Will detect 4.
 		let mut img : BasicImage<3, 3> = BasicImage::new();
 		img.set(Pixel{x: 0, y: 1}, 1); // 0 1 0
 		img.set(Pixel{x: 1, y: 0}, 1); // 1 1 1
@@ -491,7 +552,11 @@ mod test
 		img.set(Pixel{x: 1, y: 2}, 1); // <(X)
 		img.set(Pixel{x: 1, y: 1}, 1); // middle
 		let start : Pixel = Pixel{x: 1, y: 1};
-		let blob = Blob::spread_grass_fire::<CONFIG>(1, start, &mut img);
+		
+		let thresh = ThresholdPercent{threshold: 1};
+		let mut stack : ArrayList<Pixel, 3> = ArrayList::new();
+
+		let blob = Blob::spread_grass_fire(&thresh, start, &mut img, &mut stack);
 		assert_eq!(blob.intensity, 4);
 		assert_eq!(blob.centroid.x, 1.0);
 		assert_eq!(blob.centroid.y, 0.75);
@@ -514,7 +579,11 @@ mod test
 		img.set(Pixel{x: 0, y: 1}, 1);
 
 		let start : Pixel = Pixel{x: 0, y: 0};
-		let blob = Blob::spread_grass_fire::<CONFIG>(1, start, &mut img);
+		
+		let thresh = ThresholdPercent{threshold: 1};
+		let mut stack : ArrayList<Pixel, 10> = ArrayList::new();
+
+		let blob = Blob::spread_grass_fire(&thresh, start, &mut img, &mut stack);
 		assert_eq!(blob.intensity, 3);
 		assert_close(blob.centroid.x, 1.0/3.0);
 		assert_close(blob.centroid.y, 1.0/3.0);
@@ -538,7 +607,7 @@ mod test
 	// The list should not panic if overfilled.
 	fn test_find_neighbours ( )
 	{
-		let threshold = 1;
+		let thresh = ThresholdPercent{threshold: 1};
 		let pt : Pixel = Pixel{ x: 1, y: 1 };
 		let mut img : BasicImage<3, 3> = BasicImage::new();
 		let mut lst : ArrayList<Pixel, 4> = ArrayList::new();
@@ -548,7 +617,7 @@ mod test
 		img.set(Pixel{x: 1, y: 2}, 1); // 0, 1, 0
 		img.set(Pixel{x: 2, y: 1}, 1);
 
-		Blob::find_neighbours(threshold, &pt, &img, &mut lst); // Right, Left, Up, Down
+		Blob::find_neighbours(&thresh, &pt, &img, &mut lst); // Right, Left, Up, Down
 		assert_eq!(lst.size(), 4);
 
 		assert_eq!(lst.get(0).x, 2); // Right
@@ -569,47 +638,47 @@ mod test
 	// find_neighbours should not panic if it is at the edge of the image.
 	fn test_find_neighbours_edge ( )
 	{
-		let threshold = 1;
+		let thresh = ThresholdPercent{threshold: 1};
 		let mut pt : Pixel = Pixel{ x: 0, y: 0 };
 		let img : BasicImage<2, 2> = BasicImage::new();
 		let mut lst : ArrayList<Pixel, 4> = ArrayList::new();
 
-		Blob::find_neighbours(threshold, &pt, &img, &mut lst);
+		Blob::find_neighbours(&thresh, &pt, &img, &mut lst);
 		pt.x = 1;
-		Blob::find_neighbours(threshold, &pt, &img, &mut lst);
+		Blob::find_neighbours(&thresh, &pt, &img, &mut lst);
 		pt.x = 0;
 		pt.y = 1;
-		Blob::find_neighbours(threshold, &pt, &img, &mut lst);
+		Blob::find_neighbours(&thresh, &pt, &img, &mut lst);
 		pt.x = 1;
-		Blob::find_neighbours(threshold, &pt, &img, &mut lst);
+		Blob::find_neighbours(&thresh, &pt, &img, &mut lst);
 	}
 
 	#[test]
 	// The list should not panic if overfilled.
 	fn test_find_neighbours_overfill ( )
 	{
-		let threshold = 1;
+		let thresh = ThresholdPercent{threshold: 1};
 		let pt : Pixel = Pixel{ x: 1, y: 1 };
 		let mut img : BasicImage<3, 3> = BasicImage::new();
 		let mut lst : ArrayList<Pixel, 0> = ArrayList::new();
 
 		img.set(Pixel{x: 1, y: 0}, 1); // up
-		Blob::find_neighbours(threshold, &pt, &img, &mut lst);
+		Blob::find_neighbours(&thresh, &pt, &img, &mut lst);
 
 		lst.clear();
 		img.set(Pixel{x: 1, y: 0}, 0);
 		img.set(Pixel{x: 1, y: 2}, 1); // down
-		Blob::find_neighbours(threshold, &pt, &img, &mut lst);
+		Blob::find_neighbours(&thresh, &pt, &img, &mut lst);
 		
 		lst.clear();
 		img.set(Pixel{x: 1, y: 2}, 0);
 		img.set(Pixel{x: 0, y: 1}, 1); // left
-		Blob::find_neighbours(threshold, &pt, &img, &mut lst);
+		Blob::find_neighbours(&thresh, &pt, &img, &mut lst);
 
 		lst.clear();
 		img.set(Pixel{x: 0, y: 1}, 0);
 		img.set(Pixel{x: 2, y: 1}, 1); // right
-		Blob::find_neighbours(threshold, &pt, &img, &mut lst);
+		Blob::find_neighbours(&thresh, &pt, &img, &mut lst);
 	}
 
 
@@ -636,9 +705,9 @@ mod test
 	fn test_to_cartesian_2d ( )
 	{
 		let mut blobs : ArrayList<Blob, 3> = ArrayList::new();
-		blobs.push_back(Blob{intensity: 10, centroid: Vector2{x: 10.0, y: 10.0}});
-		blobs.push_back(Blob{intensity: 5, centroid: Vector2{x: 5.0, y: 5.0}});
-		blobs.push_back(Blob{intensity: 0, centroid: Vector2{x: 0.0, y: 0.0}});
+		blobs.push_back(Blob{size: 0, intensity: 10, centroid: Vector2{x: 10.0, y: 10.0}});
+		blobs.push_back(Blob{size: 0, intensity: 5, centroid: Vector2{x: 5.0, y: 5.0}});
+		blobs.push_back(Blob{size: 0, intensity: 0, centroid: Vector2{x: 0.0, y: 0.0}});
 
 		let mut points : ArrayList<Vector2, 2> = ArrayList::new();
 		Blob::to_vector2(&blobs, &mut points);
@@ -651,8 +720,8 @@ mod test
 	#[test]
 	fn test_sort_descending_intensity ( )
 	{
-		let brightest = Blob{intensity: 1, centroid: Vector2{x: 0.0, y: 0.0}};
-		let dullest = Blob{intensity: 0, centroid: Vector2{x: 0.0, y: 0.0}};
+		let brightest = Blob{size: 0, intensity: 1, centroid: Vector2{x: 0.0, y: 0.0}};
+		let dullest = Blob{size: 0, intensity: 0, centroid: Vector2{x: 0.0, y: 0.0}};
 		assert!(Blob::sort_descending_intensity(&brightest, &dullest));
 		assert!(!Blob::sort_descending_intensity(&dullest, &brightest));
 	}

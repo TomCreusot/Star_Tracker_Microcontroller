@@ -268,8 +268,7 @@ mod test
 
 
 		let rotation = Quest::estimate::<ConstQuest>(&input);
-		let ang_out = rotation.to_angle_axis();
-
+		
 		// Rotation opposite provided angle axis.
 		println!("{}", rotation.dot(angle_axis.to_quaternion()).abs());
 		assert!(rotation.dot(angle_axis.to_quaternion()).abs() < 0.01);
@@ -341,10 +340,10 @@ mod test
 	fn test_quaternion_reversability ( )
 	{
 		let mut rng = rand::thread_rng();
-		for i in 0..100
+		for _i in 0..100
 		{
 			let angle = Degrees(rng.gen::<Decimal>() * 360.0 * 2.0 - 360.0).to_radians();
-			let mut axis = Vector3
+			let axis = Vector3
 			{ x: rng.gen::<Decimal>(), y: rng.gen::<Decimal>(), z: rng.gen::<Decimal>() }
 			.normalized().expect("Error if 0,0,0");
 			let angle_axis = AngleAxis{angle: angle, axis: axis};
@@ -353,7 +352,7 @@ mod test
 			let rotation_inv = rotation.conjugate();
 
 			
-			let mut coord = Vector3
+			let coord = Vector3
 			{ x: rng.gen::<Decimal>(), y: rng.gen::<Decimal>(), z: rng.gen::<Decimal>() }
 				.normalized().expect("Error if 0,0,0");
 			

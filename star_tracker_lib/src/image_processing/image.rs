@@ -122,50 +122,6 @@ pub trait Image
 	}
 
 
-	/// Finds the minimum bar of the histogram which satisfies the percentage of pixels.
-	/// # Arguments
-	/// * `percentage` - The minimum % of pixels to be foreground.
-	/// * `histogram`  - The histogram to examine.
-	///
-	/// # Returns
-	/// The minimum brightness value to be foreground.
-	///
-	/// # Example
-	/// ```
-	/// use star_tracker_lib::image_processing::BasicImage;
-	/// use star_tracker_lib::image_processing::Image;
-	/// use star_tracker_lib::util::list::ArrayList;
-	/// use star_tracker_lib::util::aliases::UInt;
-	/// use star_tracker_lib::util::aliases::Byte;
-	///
-	/// let img : BasicImage<16, 16> = BasicImage::new();
-	/// let hist :  [UInt; Byte::max_value() as usize + 1] = [1; Byte::MAX as usize + 1]; // [1, 1, ...]
-	/// assert_eq!(img.percent_threshold(0.5, &hist), Byte::MAX / 2 + 1);
-	/// assert_eq!(img.percent_threshold(0.0, &hist), 0);
-	/// assert_eq!(img.percent_threshold(1.0, &hist), Byte::MAX);
-	/// ```
-	fn percent_threshold ( &self, percentage : Decimal, histogram : &[UInt] ) -> Byte
-	{
-		let cutoff: UInt = (percentage * (self.width() * self.height()) as Decimal).ceil() as UInt;
-
-		let mut count : UInt = 0;
-		let mut i : UInt = 0;
-		while count < cutoff && i < histogram.len() as UInt
-		{
-			count += histogram[i as usize];
-			i+=1;
-		}
-		return ((i as Decimal * Byte::MAX as Decimal) / histogram.len() as Decimal).ceil() as Byte;
-	}
-	// 
-	//
-	// fn nodal_threshold ( &self ) ->
-	// {
-	//
-	// }
-
-
-
 	/// Copies an image over to another image.
 	/// The is mainly for nix.
 	/// This can be useful to duplicate an image before blob detection.
@@ -344,51 +300,6 @@ fn test_reset ( )
 		assert!(img.histogram(&mut hist_large).is_err());
 	}
 
-
-
-
-//										~ percent threshold ~									 //
-	#[test]
-	fn test_percent_threshold_1_bar_0_percent ( )
-	{
-		let img : BasicImage<3, 3> = BasicImage::new();
-		let hist : [UInt; 1] = [9];
-		assert_eq!(img.percent_threshold(0.0, &hist), 0);
-	}
-
-	#[test]
-	fn test_percent_threshold_1_bar_1_percent ( )
-	{
-		let img : BasicImage<3, 3> = BasicImage::new();
-		let hist : [UInt; 1] = [9];
-		assert_eq!(img.percent_threshold(0.01, &hist), Byte::MAX);
-	}
-
-	#[test]
-	fn test_perecent_threshold_2_bar_49_percent ( )
-	{
-		let img : BasicImage<2, 2> = BasicImage::new();
-		let hist : [UInt; 2] = [2, 2];
-		assert_eq!(img.percent_threshold(0.49, &hist), 128);
-	}
-
-	#[test]
-	fn test_percent_threshold_2_bar_50_percent ( )
-	{
-		let img : BasicImage<2, 2> = BasicImage::new();
-		let hist : [UInt; 2] = [2, 2];
-		assert_eq!(img.percent_threshold(0.6, &hist), Byte::MAX);
-	}
-
-	#[test]
-	fn test_percent_threshold_256_bar ( )
-	{
-		let img : BasicImage<16, 16> = BasicImage::new();
-		let hist :  [UInt; Byte::max_value() as usize + 1] = [1; Byte::MAX as usize + 1]; // [1, 1, ...]
-		assert_eq!(img.percent_threshold(0.5, &hist), Byte::MAX / 2 + 1);
-		assert_eq!(img.percent_threshold(0.0, &hist), 0);
-		assert_eq!(img.percent_threshold(1.0, &hist), Byte::MAX);
-	}
 
 
 //										~ copy_to ~												 //

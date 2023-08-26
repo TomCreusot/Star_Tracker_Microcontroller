@@ -37,8 +37,7 @@ use star_tracker_lib::util::units::Match;
 
 use star_tracker_lib::util::list::List;
 
-use star_tracker_lib::image_processing::Image;
-use star_tracker_lib::image_processing::Blob;
+use star_tracker_lib::image_processing::*;
 
 use star_tracker_lib::projection::IntrinsicParameters;
 use star_tracker_lib::projection::ExtrinsicParameters;
@@ -128,9 +127,6 @@ pub fn main ( )
 
 	// Loose conditions
 	const TIME_GOOD    : u128 = 100000; // ms until autofail.
-
-
-
 
 
 	println!("Performing Database Construction");
@@ -254,37 +250,39 @@ pub fn main ( )
 
 
 
-			// Threshold image with a percent threshold.
-			// let mut histogram : [UInt; 255] = [0; 255];
-			// let _ = img_consumable.histogram(&mut histogram);
-			// let thresh = img_consumable.percent_threshold(0.9999, &histogram);
-			let thresh_val = 100.0;
+			let thresh = ThresholdGrid::<100, 100>::new(&img, 50);
+//			let thresh = ThresholdPercent::new(&img, 0.99999);
 			let mut img_thresh = CVImage::duplicate(&img);
-			opencv::imgproc::adaptive_threshold(&img.0, &mut img_thresh.0, 0.0,
-				opencv::imgproc::ADAPTIVE_THRESH_GAUSSIAN_C, opencv::imgproc::THRESH_BINARY_INV, 50, thresh_val);
+			thresh.apply(&mut img_thresh);
 
+//			opencv::imgproc::adaptive_threshold(&img.0, &mut img_thresh.0, 0.0,
+//				opencv::imgproc::ADAPTIVE_THRESH_GAUSSIAN_C, opencv::imgproc::THRESH_BINARY_INV, 50, thresh_val);
+//
 			for x in 0..img_thresh.width()
 			{
 				for y in 0..img_thresh.height()
 				{
-					if img_thresh.get(Pixel{x: x, y: y}) < thresh_val as star_tracker_lib::util::aliases::Byte
+					if img_thresh.get(Pixel{x: x, y: y}) < 1 as star_tracker_lib::util::aliases::Byte
 					{
 						img.set(Pixel{x: x, y: y}, 0);
 					}
 					else
 					{
-						let val = img.get(Pixel{x: x, y: y}).saturating_mul(5);
-						img.set(Pixel{x: x, y: y}, val);
+						let val = 255;//img.get(Pixel{x: x, y: y}).saturating_mul(5);
+						img_thresh.set(Pixel{x: x, y: y}, val);
 					}
 				}
 			}
 
-			imshow("w/", &img.0);
+//			imshow("w/", &img.0);
 			imshow("thresh", &img_thresh.0);
+			wait_key(0);
 
 			// Find the blobs in the image.
+			let mut stack : Vec<Pixel> = Vec::new(); // Infinite sized blobs.
 			let mut blobs : Vec<Blob> = Vec::new();
-			Blob::find_blobs::<100>(thresh_val as star_tracker_lib::util::aliases::Byte, &mut img_consumable, &mut blobs);
+			let blob_min_size = 2;
+			Blob::find_blobs(blob_min_size, &thresh, &mut img_consumable, &mut stack, &mut blobs);
 			// Blob::find_blobs::<100>(img_thresh, &mut img_consumable, &mut blobs);
 
 			// Convert the blobs into positions.
@@ -361,7 +359,7 @@ pub fn main ( )
 			{
 				let input  = stars_3d[found_all[i].input].to_vector3();
 				let output = database_iterator.get_database().get_catalogue(found_all[i].output).to_vector3();
-				found_stars.push_back( Match{ input:  input, output: output, weight: 1.0 } );
+				let _ = found_stars.push_back( Match{ input:  input, output: output, weight: 1.0 } );
 
 				let mut name = &stars_limit_reg[found_all[i].output].name;
 				if name.len() == 0 { name = &stars_limit_reg[found_all[i].output].bf; }

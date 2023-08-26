@@ -51,7 +51,7 @@ impl Equatorial
 	/// use star_tracker_lib::util::units::Radians;
 	/// use star_tracker_lib::util::units::Degrees;
 	///
-	/// assert_eq!(Equatorial{ra: Radians(0.0), dec: Degrees(-90.0).as_radians()}, Equatorial::north());
+	/// assert_eq!(Equatorial{ra: Radians(0.0), dec: Degrees(-90.0).as_radians()}, Equatorial::south());
 	/// ```
 	pub const fn south ( ) -> Equatorial
 	{
@@ -234,7 +234,7 @@ mod test
 	}
 //										~ north ~												 //
 	#[test]
-	fn test_zero ( )
+	fn test_north ( )
 	{
 		assert_eq!(
 			Equatorial{ra: Radians(0.0), dec: Degrees(90.0).to_radians()}, 
@@ -243,7 +243,7 @@ mod test
 
 //										~ south ~												 //
 	#[test]
-	fn test_zero ( )
+	fn test_south ( )
 	{
 		assert_eq!(
 			Equatorial{ra: Radians(0.0), dec: Degrees(-90.0).to_radians()}, 

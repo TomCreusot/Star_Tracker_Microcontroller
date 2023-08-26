@@ -18,6 +18,7 @@ use rand::prelude::*;
 use star_tracker_lib::image_processing::BasicImage;
 use star_tracker_lib::image_processing::Image;
 use star_tracker_lib::image_processing::Blob;
+use star_tracker_lib::image_processing::ThresholdPercent;
 
 use star_tracker_lib::util::aliases::Byte;
 use star_tracker_lib::util::aliases::UInt;
@@ -46,7 +47,7 @@ pub fn run ( )
 	insert_lens_flare(&mut image, Pixel{x: 0, y: 0}, 150, 2000.0);
 	insert_lens_flare(&mut image, Pixel{x: 1000, y: 1000}, 200, 100.0);
 
-	let blobs = get_blobs::<255, 200>(&image, 0.9999);
+	let blobs = get_blobs::<255>(&image, 0.9999);
 	let mut num_correct = 0; // Identified star and is real.
 	let mut num_false = 0;   // Identified star which is incorrect.
 	let mut rgb = CVImage::duplicate(&image);
@@ -250,7 +251,7 @@ pub fn insert_blob ( image: &mut dyn Image,
 /// # Arguments
 /// * `image`          - The image to perform blob detection on.
 /// * `thresh_percent` - The value that pixels must be above to be a star.
-pub fn get_blobs <const HISTOGRAM_SIZE: usize, const MAX_BLOB_SIZE : usize>
+pub fn get_blobs <const HISTOGRAM_SIZE: usize>
 									( image: &dyn Image, thresh_percent: Decimal ) -> Vec<Blob>
 {
 	let mut img = CVImage::new(Pixel{x: image.width(), y: image.height()});
@@ -258,11 +259,12 @@ pub fn get_blobs <const HISTOGRAM_SIZE: usize, const MAX_BLOB_SIZE : usize>
 
 	let mut histogram : [UInt; HISTOGRAM_SIZE] = [0; HISTOGRAM_SIZE];
 	let _ = img.histogram(&mut histogram);
-	let threshold = img.percent_threshold(thresh_percent, &histogram);
+	let threshold = ThresholdPercent::new(&img, thresh_percent);
 
 
 	let mut blobs : Vec<Blob> = Vec::new();
-	Blob::find_blobs::<MAX_BLOB_SIZE>(threshold, &mut img, &mut blobs);
+	let mut stack : Vec<Pixel> = Vec::new();
+	Blob::find_blobs(0, &threshold, &mut img, &mut stack, &mut blobs);
 
 
 	return blobs;

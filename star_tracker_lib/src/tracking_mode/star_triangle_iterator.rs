@@ -699,9 +699,6 @@ mod test
 		let triangle = StarTriangle(2, 3, 5);
 		iterator.expected_triangle = Some(Match{input: triangle, output: triangle, weight: 0.0});
 		
-		let result = Option::Some(
-			Match{input: 4, output: 0, weight: 0.0}
-		);
 		assert_eq!(Option::None, iterator.next_pilot(&stars, &mut chunk));
 		assert_eq!(7, iterator.index_p);
 	}

@@ -6,6 +6,7 @@
 pub mod image;
 pub mod basic_image;
 pub mod blob;
+pub mod threshold;
 
 use crate::core_include::*;
 
@@ -53,11 +54,6 @@ pub use crate::image_processing::image::Image;
 /// assert_eq!(hist[10], 1);                             // intensity 10 has 1 pixel.
 /// assert_eq!(hist[100], 1);                            // 1 pixel is at intensity of 100.
 /// assert_eq!(hist[200], 2);                            // 2 pixels are at the intensity of 200.
-///
-/// // Thresholding
-/// assert_eq!(img.percent_threshold(0.5, &hist), 1);      // Finds what is brighter than half the pixels.
-/// assert_eq!(img.percent_threshold(0.0, &hist), 0);      // Finds what is brighter than 0 of the pixels.
-/// assert_eq!(img.percent_threshold(1.0, &hist), 201);    // Finds what is brighter than all of the pixels.
 /// ```
 pub struct BasicImage <const WIDTH : usize, const HEIGHT : usize>
 {
@@ -73,14 +69,25 @@ pub struct BasicImage <const WIDTH : usize, const HEIGHT : usize>
 /// A trait to help spcify if a pixel is the foreground (stars) or background (space) of the image.
 pub trait Threshold
 {
-	/// Generates a threshold for the given image.
-	fn new ( image: &Image ) -> Self;
-
-	/// Returns true if the pixel is in the foreground (stars).
-	fn foreground ( &self, point: Pixel, value: Byte ) -> bool;
-
-	/// Returns true if the pixel is in the background (space).
-	fn background ( &self, point: Pixel, value: Byte ) -> bool { !self.foreground(); }
+	/// Returns the threshold which is considered as the foreground (stars).
+	fn foreground ( &self, point: Pixel ) -> Byte;
+	
+	/// Applies the threshold to the image (CONSUMES).  
+	/// This is not needed for blob detection, just for viewing.
+	fn apply ( &self, img: &mut dyn Image )
+	{
+		for xx in 0..img.width()
+		{
+			for yy in 0..img.height()
+			{
+				let pos = Pixel{x: xx, y: yy};
+				if img.get(pos) < self.foreground(pos)
+				{
+					img.set(pos, 0);
+				}
+			}
+		}
+	}
 }
 
 /// A basic percent threshold.
@@ -91,15 +98,27 @@ pub struct ThresholdPercent
 }
 
 
-/// A varient of threshold which consists of a set of points which specify a local threshold.
-/// The median/mean/percent is calculated in the local area of each node.
-/// When the threshold of a pixel is requested, a linear function calculates the expected threshold of the pixel based on neiboring pixels.
-///
-/// These points are equally spaced on the x and y axis being `NUM_H` wide and `NUM_V` high.
-pub struct ThresholdNodal <const NUM_H: usize, const NUM_V: usize>
+// /// A varient of threshold which consists of a set of points which specify a local threshold.
+// /// The median/mean/percent is calculated in the local area of each node.
+// /// When the threshold of a pixel is requested, a linear function calculates the expected threshold of the pixel based on neiboring pixels.
+// ///
+// /// These points are equally spaced on the x and y axis being `NUM_H` wide and `NUM_V` high.
+// //pub struct ThresholdNodal <const NUM_H: usize, const NUM_V: usize>
+// //{
+// //	/// Each node is used to represent a local threshold value and position.
+// //	nodes : BasicImage<{NUM_H}, {NUM_V}>,
+// //}
+
+/// Nilback or Sauvola thresholding.
+/// This is the process of dividing the image into regions, each region has its own threshold.
+/// By having multiple regions, if one part of the image has disterbence, it will not effect the other.
+pub struct ThresholdGrid <const NUM_H: usize, const NUM_V: usize>
 {
-	/// Each node is used to represent a local threshold value and position.
-	nodes : BasicImage<{NUM_H}, {NUM_V}>,
+	/// The size of the image thresholded.
+	size : Pixel,
+
+	/// Each grid cell manages its own threshold.
+	cells : BasicImage<{NUM_H}, {NUM_V}>,
 }
 
 
@@ -114,27 +133,42 @@ pub struct ThresholdNodal <const NUM_H: usize, const NUM_V: usize>
 ///
 /// # Example
 /// ```
-/// use star_tracker_lib::image_processing::{Blob, Image, BasicImage};
-/// use star_tracker_lib::util::{list::ArrayList, list::List, units::Vector2};
+/// use star_tracker_lib::image_processing::Blob;
+/// use star_tracker_lib::image_processing::BasicImage;
+/// use star_tracker_lib::image_processing::Image;
+/// use star_tracker_lib::image_processing::ThresholdPercent;			
 /// use star_tracker_lib::util::units::Pixel;
-///
+/// use star_tracker_lib::util::list::{List, ArrayList};
 /// let mut img : BasicImage<3, 3> = BasicImage::new();
 /// img.set(Pixel{x: 0, y: 0}, 1); // 1 1 0
 /// img.set(Pixel{x: 1, y: 0}, 1); // 1 0 0
 /// img.set(Pixel{x: 0, y: 1}, 1); // 0 0 1
 /// img.set(Pixel{x: 2, y: 2}, 1);
 ///
+/// // lst is all the blobs in the image.
 /// let mut lst : ArrayList<Blob, 9> = ArrayList::new();
-/// const BLOB_SIZE : usize = 100; // Should be bigger than the size of a blob.
-/// Blob::find_blobs::<BLOB_SIZE>(1, &mut img, &mut lst);// Consumes pixels and finds blobs.
+///
+/// // stack is the memory allocation allowed for when finding the blob.
+/// // If you have limited space, use an array list with the size equal to the max number of pixels in a blob.
+/// // If you have unlimited space or a heap, use Vec.
+/// const MAX_BLOB_SIZE : usize = 3;
+/// let mut stack_on_stack: ArrayList<Pixel, MAX_BLOB_SIZE> = ArrayList::new();
+/// // let mut stack_on_heap : Vec<Pixel> = Vec::new();
+///
+/// // You must have a threshold for the image to know what is foreground.
+/// let thresh = ThresholdPercent::new(&img, 0.5);
+///
+/// // The smallest size a blob is allowed.
+/// let min_size = 2; 
+///
+/// Blob::find_blobs(min_size, &thresh, &mut img, &mut stack_on_stack, &mut lst);
 /// assert_eq!(lst.get(0).intensity, 3);
 /// assert_eq!(lst.get(0).centroid.x, 0.333333333333333333333);
 /// assert_eq!(lst.get(0).centroid.y, 0.333333333333333333333);
 ///
-/// assert_eq!(lst.get(1).intensity, 1);
-/// assert_eq!(lst.get(1).centroid.x, 2.0);
-/// assert_eq!(lst.get(1).centroid.y, 2.0);
+/// assert_eq!(lst.size(), 1);
 ///
+/// // Image has been consumed.
 /// assert_eq!(img.get(Pixel{x: 0, y: 0}), 0);
 /// assert_eq!(img.get(Pixel{x: 1, y: 0}), 0);
 /// assert_eq!(img.get(Pixel{x: 0, y: 1}), 0);
@@ -143,6 +177,8 @@ pub struct ThresholdNodal <const NUM_H: usize, const NUM_V: usize>
 #[derive(Clone)]
 pub struct Blob
 {
+	/// The number of pixels used.
+	pub size: usize,
 	/// The combined intensity of all the pixels.
 	pub intensity : UInt,
 	/// The center weighted point.
