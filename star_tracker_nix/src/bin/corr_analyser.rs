@@ -1,3 +1,22 @@
+//! This program is used to identify how a lens is distorted.  
+//! This will show a set of 3 images.  
+//!
+//! - Original
+//!   The original image with no modifications.
+//!
+//! - Error
+//!   Two circles will be surrounding each star, 
+//!   The green circle is where the star is observed.
+//!   The red circle is where the star should be.
+//!   The larger the circle, the more distortion.
+//!   There is also a big red circle, the `center of mass` this is where the least distortion is calculated.
+//!
+//! - Distortion
+//!   This is a colorful image showing how the lens is warped.
+//!   The `center of mass` of the lens is calculated, this is where the distortion is least.
+//!   Each pixel considers its angle from the `center of mass`, and will visually represent this.
+//!   There is a border around the image, this is the color that the pixels should ideally be at that location.
+//!
 #![allow(unused_imports)]
 extern crate fitsio;
 extern crate opencv;
@@ -52,6 +71,7 @@ pub fn main ( )
 
 		if let Some(cor) = cor
 		{
+			println!("{}", dir);
 			// Draws error onto image
 			let img_org      = imread( &img_file, ImreadModes::IMREAD_COLOR as i32 ).unwrap();
 			let mut img_err  = imread( &img_file, ImreadModes::IMREAD_COLOR as i32 ).unwrap();

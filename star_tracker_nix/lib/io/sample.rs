@@ -65,13 +65,13 @@ impl Sample
 
 				for i in 0..field_x.len()
 				{
-					let img_px   = Vector2{x: index_x[i], y: index_y[i]};
-					let real_px  = Vector2{x: field_x[i], y: field_y[i]};
+					let img_px   = Vector2{x: field_x[i], y: field_y[i]};
+					let real_px  = Vector2{x: index_x[i], y: index_y[i]};
 
-					let img_eq_ra   = Degrees(index_ra[i]  as Decimal).to_radians();
-					let img_eq_dec  = Degrees(index_dec[i] as Decimal).to_radians();
-					let real_eq_ra  = Degrees(field_ra[i]  as Decimal).to_radians();
-					let real_eq_dec = Degrees(field_dec[i] as Decimal).to_radians();
+					let img_eq_ra   = Degrees(field_ra[i]  as Decimal).to_radians();
+					let img_eq_dec  = Degrees(field_dec[i] as Decimal).to_radians();
+					let real_eq_ra  = Degrees(index_ra[i]  as Decimal).to_radians();
+					let real_eq_dec = Degrees(index_dec[i] as Decimal).to_radians();
 
 					let img_eq   = Equatorial{ra: img_eq_ra,  dec: img_eq_dec};
 					let real_eq  = Equatorial{ra: real_eq_ra, dec: real_eq_dec};

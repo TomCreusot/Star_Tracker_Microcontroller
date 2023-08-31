@@ -1,3 +1,6 @@
+//! Attempts to undistorted the image with opencv.
+//!
+//!
 #![feature(let_chains)]
 extern crate opencv;
 extern crate star_tracker_nix;
