@@ -1,3 +1,6 @@
+//! This is currently not being used.
+//! This will generate a database into a template file if required.
+//! This may be important if you want to use an embedded system where you cant use vectors and giant files.
 #![cfg(nix)]
 
 extern crate star_tracker;

@@ -1,3 +1,5 @@
+//! This runs through all the images in samples and tries to identify the stars using the star tracker code.
+//! If you want to understand how the code works, maybe start here?
 #![allow(unused_imports)]
 extern crate star_tracker_lib;
 extern crate star_tracker_nix;
@@ -82,7 +84,7 @@ impl TrackingModeConsts for TrackingConstsTest
 	const PAIRS_MAX       : usize = 2000;							// Irrelevant, ensure big.
 	const TRIANGLES_MAX   : usize = 2000;							// Irrelevant, ensure big.
 	const SPECULARITY_MIN : Decimal = 0.0001;						// If the triangle is flipped.
-	const ANGLE_TOLERANCE : Radians = Degrees(0.04).as_radians(); 	// Maximum inaccuracy.
+	const ANGLE_TOLERANCE : Radians = Degrees(0.2).as_radians(); 	// Maximum inaccuracy.
 }
 
 // Defines how blob detection will work.
@@ -116,7 +118,7 @@ pub fn main ( )
 {
 	// To reduce size of database.
 	const MAGNITUDE_MIN: Decimal = -20.0;
-	const MAGNITUDE_MAX: Decimal = 5.7;
+	const MAGNITUDE_MAX: Decimal = 5.0;
 
 
 	// Region Reduction
@@ -195,23 +197,24 @@ pub fn main ( )
 			// let gen : DatabaseGenerator = DatabaseGenerator::gen_database_regional(&stars_limit_reg, fov, TrackingConstsTest::ANGLE_TOLERANCE, fov/2.0);
 			let database = gen.get_database();
 			// let database = gen.get_database_regional();
-			let mut database_iterator = ChunkIteratorNone::new(&database);
+			// let mut database_iterator = ChunkIteratorNone::new(&database);
 			// let mut database_iterator = ChunkIteratorRegional::new(&database);
 			// let mut database_iterator = ChunkIteratorEquatorial::new(&database, Degrees(45.0).as_radians(), 0.3);
 			// let mut database_iterator = ChunkIteratorDeclination::new(&database, Degrees(21.0).as_radians(), 0.2, ChunkIteratorDeclination::randomise_none);
-			// let mut database_iterator = ChunkIteratorDeclination::new(&database, fov, 1.5, ChunkIteratorDeclination::randomise_parity);
+			let mut database_iterator = ChunkIteratorDeclination::new(&database, fov, 1.5, ChunkIteratorDeclination::randomise_parity);
 
 			// let mut database_iterator = ChunkAreaSearch::from_point(&database, center, Degrees(35.954).as_radians());
 
 
-			let mut prev = 0;
-			println!("bin tolerance {}", database_iterator.get_database().get_k_lookup().gradient);
-			for i in 0..database_iterator.get_database().get_k_vector_size()
-			{
-				let diff = database_iterator.get_database().get_k_vector(i) - database_iterator.get_database().get_k_vector(prev);
-				println!("{}\t{:.3}\t{}", i, Radians(i as Decimal * database_iterator.get_database().get_k_lookup().gradient + database_iterator.get_database().get_k_lookup().intercept).to_degrees(), diff);
-				prev = i;
-			}
+			// Identify num bins.
+			// let mut prev = 0;
+			// println!("bin tolerance {}", database_iterator.get_database().get_k_lookup().gradient);
+			// for i in 0..database_iterator.get_database().get_k_vector_size()
+			// {
+			// 	let diff = database_iterator.get_database().get_k_vector(i) - database_iterator.get_database().get_k_vector(prev);
+			// 	println!("{}\t{:.3}\t{}", i, Radians(i as Decimal * database_iterator.get_database().get_k_lookup().gradient + database_iterator.get_database().get_k_lookup().intercept).to_degrees(), diff);
+			// 	prev = i;
+			// }
 
 
 			println!("{} stars, {} pairs.", stars_limit_reg.len(), database.pairs.size());
@@ -274,14 +277,14 @@ pub fn main ( )
 				}
 			}
 
-//			imshow("w/", &img.0);
+			imshow("w/", &img.0);
 			imshow("thresh", &img_thresh.0);
 			wait_key(0);
 
 			// Find the blobs in the image.
 			let mut stack : Vec<Pixel> = Vec::new(); // Infinite sized blobs.
 			let mut blobs : Vec<Blob> = Vec::new();
-			let blob_min_size = 2;
+			let blob_min_size = 4;
 			Blob::find_blobs(blob_min_size, &thresh, &mut img_consumable, &mut stack, &mut blobs);
 			// Blob::find_blobs::<100>(img_thresh, &mut img_consumable, &mut blobs);
 
@@ -312,14 +315,14 @@ pub fn main ( )
 
 
 
-			// Not really nessisary.
+			// Not really necessary.
 			// If the camera is not on the front of the spacecraft, specify what orientation the camera is.
 			// In this case, the camera is pointing +z (relative to the spacecraft)
 			// and the top pixel is in the direction of +y (relative to the space craft).
 			let reference_forward = Vector3{x: 0.0, y: 0.0, z: 1.0}.to_equatorial();
 			let reference_up      = Vector3{x: 0.0, y: 1.0, z: 0.0}.to_equatorial();
 			let extrinsic_projection = ExtrinsicParameters::look_at(reference_forward, reference_up)
-				.expect("Ensure entrinsic projection up and forward are not the same value.");
+				.expect("Ensure extrinsic projection up and forward are not the same value.");
 
 			// Read the blob positions and convert them to 3d equatorial space.
 			let mut stars_3d : Vec<Equatorial> = Vec::new();

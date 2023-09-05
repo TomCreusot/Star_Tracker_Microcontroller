@@ -434,7 +434,19 @@ mod test
 		assert_eq!(thresh.cells.get(Pixel{x: 0, y: 1}) as usize, (50 + 50  + 100 + 150) / 4 + 1);
 		assert_eq!(thresh.cells.get(Pixel{x: 1, y: 1}) as usize, (50 + 150 + 150 + 200) / 4 + 1);
 	}
+	
+	
 		
+	#[test]
+	fn test_grid_new_excessive_overshoot ( )
+	{
+		let mut img : BasicImage<1, 1> = BasicImage::new();
+		img.set(Pixel{x:0,y:0}, 10);
+		
+		// Added 1 to all results due to truncation
+		let thresh = ThresholdGrid::<1, 1>::new(&img, 254);
+		assert_eq!(thresh.cells.get(Pixel{x: 0, y: 0}) as usize, 255);
+	}
 	
 	
 	

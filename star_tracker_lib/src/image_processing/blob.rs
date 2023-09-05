@@ -33,7 +33,7 @@ impl Blob
 	/// Finds all blobs in an image.
 	/// # Arguments
 	/// * `min_size` - The least pixels to make a blob.
-	/// * `theshold` - The threshold of the image.
+	/// * `threshold` - The threshold of the image.
 	/// * `img`      - The image to read and set to black.
 	/// * `stack`    - Used to store pixels of the blob, either use a Vec if you dont care about the size of an array list if the blob cannot exceed a certain size.
 	/// * `lst`      - The list to append the blobs to.
@@ -330,7 +330,7 @@ impl Blob
 
 	/// Sorts in order of intensity brightest first.
 	/// # Arguments
-	/// * `brighest` - The brightest value.
+	/// * `brightest` - The brightest value.
 	/// * `dullest` - The least intense blob.
 	///
 	/// # Return
@@ -345,8 +345,19 @@ impl Blob
 	/// assert!(Blob::sort_descending_intensity(&brightest, &dullest));
 	/// assert!(!Blob::sort_descending_intensity(&dullest, &brightest));
 	/// ```
-	pub fn sort_descending_intensity ( brighest : & Blob, dullest : & Blob ) -> bool
-	{return dullest.intensity < brighest.intensity;}
+	pub fn sort_descending_intensity ( brightest : & Blob, dullest : & Blob ) -> bool
+	{return dullest.intensity < brightest.intensity;}
+
+
+	/// Sorts considering the brightness and the size of the blob.
+	/// This helps nullify dead pixels or inaccurate anomalies.
+	pub fn sort_descending_size_intensity ( largest: & Blob, dullest: &Blob ) -> bool
+	{
+		return dullest.intensity as usize * dullest.size < largest.intensity as usize* largest.size;
+	}
+
+
+	// pub fn sort_descending
 }
 
 
