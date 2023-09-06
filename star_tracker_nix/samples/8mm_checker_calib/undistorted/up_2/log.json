@@ -1,0 +1,15 @@
+{
+	"fov_deg": 35.556,
+	
+	"image_size":
+	{
+		"x": 808,
+		"y": 608
+	},	
+	
+	"center":
+	{
+		"ra_degrees" : 256.634,
+		"dec_degrees": -35.705
+	}
+}

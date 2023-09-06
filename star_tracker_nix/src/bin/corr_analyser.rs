@@ -1,5 +1,6 @@
+#![allow(unused_imports)]
 //! This program is used to identify how a lens is distorted.  
-//! This will show a set of 3 images.  
+//! This will show a set of 3 images;  
 //!
 //! - Original
 //!   The original image with no modifications.
@@ -17,7 +18,7 @@
 //!   Each pixel considers its angle from the `center of mass`, and will visually represent this.
 //!   There is a border around the image, this is the color that the pixels should ideally be at that location.
 //!
-#![allow(unused_imports)]
+
 extern crate fitsio;
 extern crate opencv;
 extern crate star_tracker_nix;
@@ -60,6 +61,30 @@ use star_tracker_nix::io::StarError;
 
 pub fn main ( )
 {
+	println!(r#"===== Corr Analyser =====
+This program is used to identify how a lens is distorted.  
+This will show a set of 3 images;  
+	
+	- Original
+	  The original image with no modifications.
+	
+	- Error
+	  Two circles will be surrounding each star, 
+	  The green circle is where the star is observed.
+	  The red circle is where the star should be.
+	  The larger the circle, the more distortion.
+	   There is also a big red circle, the `center of mass` this is where the least distortion is calculated.
+	
+	- Distortion
+	  This is a colorful image showing how the lens is warped.
+	  The `center of mass` of the lens is calculated, this is where the distortion is least.
+	  Each pixel considers its angle from the `center of mass`, and will visually represent this.
+	  There is a border around the image, this is the color that the pixels should ideally be at that location.
+
+
+	  
+	"#);
+
 	let samples = Sample::load_samples();
 
 	for sample in samples
@@ -134,7 +159,6 @@ pub fn main ( )
 
 
 			// Draws distortion
-			let diagonal = Vector2{x: img_err.cols() as Decimal, y: img_err.rows() as Decimal}.magnitude();
 			for x in 0..img_dist.cols()
 			{
 				for y in 0..img_dist.rows()
@@ -142,7 +166,6 @@ pub fn main ( )
 					let pos = Vector2{x: x as Decimal, y: y as Decimal};
 					let mut total_offset = 0.0;
 					let mut sum = Vector2{x: 0.0, y: 0.0};
-					let mut scalar_error = 0.0;
 
 					for i in 0..cor.len()
 					{
@@ -150,9 +173,7 @@ pub fn main ( )
 						let err = (cor[i].image_px - cor[i].real_px) / offset.magnitude();
 						sum = sum + err;
 						total_offset += 1.0 / offset.magnitude();
-						scalar_error = err.magnitude();
 					}
-					scalar_error /= cor.len() as Decimal / total_offset;
 					sum = sum * total_offset;
 					
 			

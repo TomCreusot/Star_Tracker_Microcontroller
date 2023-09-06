@@ -1,12 +1,11 @@
 //! This binary generates a table showing for what field of view requires what magnitude for full sky coverage.
 //! Use this for deciding on your lens and database specifications.
+//!
+
 extern crate star_tracker_lib;
 extern crate star_tracker_nix;
 
 use std::fmt;
-
-use star_tracker_lib::config::NixConstsStruct;
-use star_tracker_lib::config::NixConsts;
 
 use star_tracker_lib::util::distribution::Distribute;
 use star_tracker_lib::util::aliases::Decimal;
@@ -21,44 +20,38 @@ use star_tracker_nix::io::Io;
 
 fn main (  )
 {
-	println!("===== SKY SURVEY =====\n\
-		This binary generates a table showing for what field of view requires what magnitude for full sky coverage.\n\
-		Use this for deciding on your lens and database specifications.\n\
-		On completion of running, the software will generate a csv as specified in \n\n\n
-	");
-	let mut rdr = Io::get_csv (
-		NixConstsStruct::HYG_DATABASE_PATH,
-		NixConstsStruct::HYG_DATABASE_FILE,
-		NixConstsStruct::HYG_DATABASE_URL );
-
-	let comparison_points : Vec<Equatorial> = Distribute::fibonacci_latice(1000);
-	let mut database_stars : Vec<Star> = Vec::with_capacity(1000);
-	let mut magnitude_stars : Vec<Equatorial> = Vec::with_capacity(1000);
+	println!(r#"===== Sky Survey =====
+	This binary generates a table showing for what field of view requires what magnitude for full sky coverage.\n\
+	Use this for deciding on your lens and database specifications.\n\
+	On completion of running, the software will generate a csv as specified in \n\n\n
+	
+		  
+	"#);
 
 	const MAGNITUDE_RANGE : LinearRange = LinearRange{min: 2.0, max: 7.0, num: 16};
 	const FOV_RANGE       : LinearRange = LinearRange{
 		min: Degrees(10.0).as_radians().0,
 		max: Degrees(90.0).as_radians().0, 
 		num: 40 };
-	
-	let mut smallest_num_stars : Vec<Vec<u32>> = vec![vec![0; MAGNITUDE_RANGE.num]; FOV_RANGE.num];
-	let mut percent_above_3 : Vec<Vec<Decimal>> = vec![vec![0.0; MAGNITUDE_RANGE.num]; FOV_RANGE.num];
-	let mut percent_above_4 : Vec<Vec<Decimal>> = vec![vec![0.0; MAGNITUDE_RANGE.num]; FOV_RANGE.num];
-	let mut percent_above_5 : Vec<Vec<Decimal>> = vec![vec![0.0; MAGNITUDE_RANGE.num]; FOV_RANGE.num];
-	
-	
-	let iter = rdr.deserialize();
-	for record in iter
-	{
-		let record : Star = record.expect("Could not decode.");
-		if record.mag < MAGNITUDE_RANGE.max
-		{
-			database_stars.push(record);
-		}
-	}
+
+
+	let mut database_stars : Vec<Star> = Io::get_csv_database();
+	database_stars = 
+		DatabaseGenerator::limit_magnitude(&database_stars, -20.0, MAGNITUDE_RANGE.max);
 	database_stars = 
 		DatabaseGenerator::limit_double_stars(&database_stars, Degrees(0.05).as_radians());
 	
+		
+			
+	let comparison_points : Vec<Equatorial> = Distribute::fibonacci_latice(1000);
+	let mut magnitude_stars : Vec<Equatorial> = Vec::with_capacity(1000);
+
+	let mut smallest_num_stars : Vec<Vec<u32>> = vec![vec![0; MAGNITUDE_RANGE.num]; FOV_RANGE.num];
+	let mut percent_above_3:Vec<Vec<Decimal>> = vec![vec![0.0; MAGNITUDE_RANGE.num]; FOV_RANGE.num];
+	let mut percent_above_4:Vec<Vec<Decimal>> = vec![vec![0.0; MAGNITUDE_RANGE.num]; FOV_RANGE.num];
+	let mut percent_above_5:Vec<Vec<Decimal>> = vec![vec![0.0; MAGNITUDE_RANGE.num]; FOV_RANGE.num];
+	
+
 	println!("read from database");
 	
 	// Loop through database and find every element bellow a certain magnitude, add to list.

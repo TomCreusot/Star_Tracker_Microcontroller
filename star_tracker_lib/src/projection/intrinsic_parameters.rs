@@ -48,14 +48,14 @@ impl IntrinsicParameters
 	/// * `fov` - The field of view (in any dimension).   
 	/// This must be measured in the same direction as the image size.
 	/// * `img_size` - The size of the sensor in the same direction as the fov, if simulated, use units of pixels.
-	pub fn from_fov ( fov: Radians, img_size: Decimal ) -> Self
+	/// * `principle_point - The center of the image.
+	pub fn from_fov ( fov: Radians, sensor_size: Decimal, principle_point: Vector2 ) -> Self
 	{
 		// Focal length = image size * working distance / fov (in the same units as working_dist).
 		let unit_fov     = (fov).sin();       // The width as a unit vector.
 		let working_dist = (fov / 2.0).cos(); // The distance of the distance from the plane.
-		let focal_length = img_size / unit_fov * working_dist;
+		let focal_length = sensor_size / unit_fov * working_dist;
 		let focal_lengths = Vector2{x: focal_length, y: focal_length};
-		let principle_point = Vector2{x: 0.0, y: 0.0};
 		return Self{focal_length: focal_lengths, principle_point: principle_point};
 	}
 }
@@ -82,6 +82,8 @@ mod test
 	use crate::util::units::Vector3;
 	use crate::util::units::Vector2;
 	use crate::util::units::Degrees;
+
+	use crate::util::test::TestEqual;
 
 //###############################################################################################//
 //
@@ -164,7 +166,7 @@ mod test
 		let fov  = Degrees(45.0).as_radians();
 		let size = 10.0;
 		
-		let param = IntrinsicParameters::from_fov(fov, size);
+		let param = IntrinsicParameters::from_fov(fov, size, Vector2{x: 0.0, y: 0.0});
 		
 		// If the field of view of the camera is 45 deg and 10 units wide,
 		// a point 45 deg from the center must be on the edge of the sensor.
@@ -175,5 +177,25 @@ mod test
 		println!("{}",sin_45);
 		println!("{:?}", param);
 		assert_eq!(param.to_image(initial), expected);
+	}
+
+	#[test]
+	fn test_from_fov_principle_point ( )
+	{
+		let fov  = Degrees(45.0).as_radians();
+		let size = 5.0;
+		let principle_point = Vector2{x: 4.0 / 2.0, y: 3.0 / 2.0};
+		// 3,4,5 triangle
+		let param = IntrinsicParameters::from_fov(fov, size, principle_point);
+		
+		let initial  = SpaceImage(Vector2{x: 2.0, y: 1.5});
+		let expected = SpaceCamera(Vector3{x: 0.0, y: 0.0, z: 1.0});
+		assert_eq!(param.from_image(initial), expected);
+		
+		let initial  = SpaceImage(Vector2{x: 4.0, y: 3.0});
+		param.from_image(initial).0.to_equatorial().dec.test_equal(&(fov / 2.0));
+		
+		let initial  = SpaceImage(Vector2{x: 0.0, y: 0.0});
+		param.from_image(initial).0.to_equatorial().dec.test_equal(&(fov / 2.0));
 	}
 }

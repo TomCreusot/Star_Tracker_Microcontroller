@@ -10,7 +10,6 @@ use star_tracker_lib::util::units::Equatorial;
 // use star_tracker_lib::util::units::AngleAxis;
 use star_tracker_lib::util::units::Radians;
 use star_tracker_lib::util::units::Degrees;
-use star_tracker_lib::util::units::Hours;
 use star_tracker_lib::util::units::Vector2;
 use star_tracker_lib::util::units::Pixel;
 
@@ -36,7 +35,7 @@ impl Sample
 		let mut val = Vec::new();
 
 		std::fs::create_dir_all("samples/").unwrap();
-		Sample::load_samples_rec(path, &mut val);
+		Sample::load_samples_rec(path, "".to_string(), &mut val);
 		return val;
 	}
 
@@ -134,10 +133,10 @@ impl Sample
 		let json: serde_json::Value = serde_json::from_str(&json_str).ok()?;
 
 		let center: serde_json::Value = json.get("center")?.clone();
-		let ra    = center.get("ra_hours")?.as_f64()? as Decimal;
+		let ra    = center.get("ra_degrees")?.as_f64()? as Decimal;
 		let dec   = center.get("dec_degrees")?.as_f64()? as Decimal;
 
-		return Some(Equatorial{ra: Hours(ra).to_radians(), dec: Degrees(dec).to_radians()});
+		return Some(Equatorial{ra: Degrees(ra).to_radians(), dec: Degrees(dec).to_radians()});
 	}
 
 
@@ -152,26 +151,29 @@ impl Sample
 
 
 	/// Recursively loads all the samples from the sample directory.
-	fn load_samples_rec ( path: &str, to_add: &mut Vec<Sample> )
+	fn load_samples_rec ( path: &str, dark_frame: String, to_add: &mut Vec<Sample> )
 	{
 		let mut cor_file  = "".to_string();
 		let mut log_file  = "".to_string();
-		let mut dark_file = "".to_string();
+		let mut dark_file = dark_frame;
 		let mut img_file  = Vec::new();
+
+
 		for f in std::fs::read_dir(path).unwrap()
 		{
 			let file = f.unwrap().path();
-			if file.is_dir()
-			{
-				Sample::load_samples_rec(file.to_str().unwrap(), to_add);
-			}
-			else if file.is_file()
+			if file.is_file()
 			{
 				let extension = Path::new(&file).extension().and_then(OsStr::to_str).unwrap();
 				let name = file.file_prefix().unwrap();
-				if extension == "fits" { cor_file = file.as_path().to_str().unwrap().to_string(); }
+				if extension == "fits"  { 
+					cor_file = file.as_path().to_str().unwrap().to_string(); 
+				}
 				if extension == "json"  { log_file = file.as_path().to_str().unwrap().to_string(); }
-				if name == "dark_frame"{ dark_file= file.as_path().to_str().unwrap().to_string(); }
+				if name == "dark_frame" 
+				{ 
+					dark_file = file.as_path().to_str().unwrap().to_string(); 
+				}
 				else if extension == "png" || extension == "jpg" || extension == "gif"
 					|| extension == "bmp" || extension == "jpeg"
 				{
@@ -179,13 +181,25 @@ impl Sample
 				}
 			}
 		}
+
+		// Recurse into other files.
+		// This happens second so that if there is a dark frame, that will be read first.
+		for f in std::fs::read_dir(path).unwrap()
+		{
+			let file = f.unwrap().path();
+			if file.is_dir()
+			{
+				Sample::load_samples_rec(file.to_str().unwrap(), dark_file.clone(), to_add);
+			}
+		}
+
 		if cor_file != "" || img_file.len() != 0 || log_file != ""
 		{
 			let sample = Sample{
 				dir: path.to_string(),
-				file_cor: cor_file,
-				file_img: img_file,
-				file_log: log_file,
+				file_cor:  cor_file,
+				file_img:  img_file,
+				file_log:  log_file,
 				file_dark: dark_file,
 			};
 			to_add.push(sample);

@@ -9,18 +9,13 @@ use super::Constellation;
 use super::StarTriangle;
 use super::StarPyramid;
 use crate::tracking_mode::database::ChunkIterator;
-// use crate::tracking_mode::database::Database;
-// use crate::tracking_mode::StarTriangleIterator;
 
 use crate::util::units::Equatorial;
+use crate::util::units::Radians;
 use crate::util::units::Match;
 use crate::util::list::List;
-// use crate::util::list::ArrayList;
-// use crate::util::list::ListIterator;
 use crate::util::aliases::Decimal;
 use crate::util::err::Error;
-
-use crate::config::TrackingModeConsts;
 
 impl Constellation
 {
@@ -28,12 +23,14 @@ impl Constellation
 /// Finds a StarPyramid or StarTriangle if possible.
 ///
 /// # Arguments
-/// * `stars`    - The observed (image) stars.
-/// * `database` - The database storing reference
-/// * `gen_tri`  - An object for generating a StarTrangle.
-/// * `gen_pyr`  - An object for generating a Pyramid.
-/// * `gen_spec` - An object for checking Specularity.
-/// * `abort`    - A way of abandoning a search if it takes too long.
+/// * `stars`           - The observed (image) stars.
+/// * `database`        - The database storing reference
+/// * `gen_tri`         - An object for generating a StarTriangle.
+/// * `gen_pyr`         - An object for generating a Pyramid.
+/// * `gen_spec`        - An object for checking Specularity.
+/// * `angle_tolerance` - How much error a star pair can have until it is not considered the same.
+/// 	Used for searching the database.
+/// * `abort`           - A way of abandoning a search if it takes too long.
 ///
 /// # Returns
 /// If a star pyramid can be formed: Match{input: Observed Stars, output: Corresponding Database}.
@@ -41,21 +38,21 @@ impl Constellation
 ///
 /// NOT IMPLEMENTED (in the case of a star triangle, it is not as accurate, left out)
 /// If a star triangle can be formed: Match{input: Observed Stars, output: Corresponding Database}.
-pub fn find	<T: TrackingModeConsts> (
-										stars    : &dyn List<Equatorial>,
-										database : &mut dyn ChunkIterator,
-										gen_tri  : &mut dyn TriangleConstruct,
-										gen_pyr  : &mut dyn PyramidConstruct<T>,
-										gen_spec : &mut dyn SpecularityConstruct<T>,
-										abort    : &dyn AbandonSearch,
-									) -> Constellation
-		where T: 'static + TrackingModeConsts,
+pub fn find(
+		stars          : &dyn List<Equatorial>,
+		database       : &mut dyn ChunkIterator,
+		gen_tri        : &mut dyn TriangleConstruct,
+		gen_pyr        : &mut dyn PyramidConstruct,
+		gen_spec       : &mut dyn SpecularityConstruct,
+		angle_tolerance: Radians,
+		abort          : &dyn AbandonSearch,
+	) -> Constellation
 {
 	database.begin();
 	let mut fallback = Constellation::None; // If a pyramid cannot be made, can a triangle be made?
 	let mut lowest_error = Decimal::MAX;
-	gen_tri.begin(T::ANGLE_TOLERANCE, stars);
-
+	gen_tri.begin(angle_tolerance, stars);
+	
 	// Loop through every possible combination of star combination using the kernel_iterator.
 	// Using star_triangle_iterator to find triangle matches in the database.
 	while !abort.should_abort() && let Some(iter) = gen_tri.next(stars, database)
@@ -64,7 +61,7 @@ pub fn find	<T: TrackingModeConsts> (
 		let input  : Error<StarTriangle<Equatorial>> = iter.input.search_list(stars);
 		let output : Error<StarTriangle<Equatorial>> = iter.output.search_database(database.get_database());
 		let error  : Decimal = iter.weight;
-
+		
 		// ~~~~~~~~~~~~~~~~~~~~~~~~~	 A valid match was found.		~~~~~~~~~~~~~~~~~~~~
 		// If the stars can be found in the database and the observed list (bug if not),
 		// The code can continue.
@@ -72,21 +69,22 @@ pub fn find	<T: TrackingModeConsts> (
 		{
 			let input = input.unwrap();
 			let output = output.unwrap();
-
+			
 			// ~~~~~~~~~~~~~~~~~~~~~	 The speculariy in/out match	~~~~~~~~~~~~~~~~~~~~
 			// If the triangles are not flipped, the code can continue.
 			if gen_spec.same(&input.to_vector3(), &output.to_vector3())
 			{
-				let result = gen_pyr.find_pilot(stars, database, iter.input, iter.output);
-
+				let result = 
+					gen_pyr.find_pilot(stars, database, angle_tolerance, iter.input, iter.output);
+				
 				// If a pyramid cannot be found.
 				if error < lowest_error
 				{
 					fallback =
-						Constellation::Triangle(Match{input: input, output: output, weight: 1.0});
-						lowest_error = error;
+					Constellation::Triangle(Match{input: input, output: output, weight: 1.0});
+					lowest_error = error;
 				}
-
+				
 				// ~~~~~~~~~~~~~	A match is found.				~~~~~~~~~~~~~~~~~~~~
 				// A pilot was found.
 				if let Result::Ok(found) = result
@@ -94,35 +92,55 @@ pub fn find	<T: TrackingModeConsts> (
 					// ~~~~~~~~~	Get the star from the database.	~~~~~~~~~~~~~~~~~~~~
 					let pil_in = stars.get(found.input);
 					let pil_out = database.get_database().find_star(found.output);
-
+					
 					if let Result::Ok(out) = pil_out
 					{
 						let pyr_in  = StarPyramid(input.0, input.1, input.2, pil_in);
 						let pyr_out = StarPyramid(output.0, output.1, output.2, out);
 						return Constellation::Pyramid(
 							Match{input: pyr_in, output: pyr_out, weight: 1.0});
+						}
 					}
 				}
 			}
-		}
 	}
 	return fallback;
 }
 
 
-pub fn find_all	<T: TrackingModeConsts> (
-										stars    : &dyn List<Equatorial>,
-										database : &mut dyn ChunkIterator,
-										gen_tri  : &mut dyn TriangleConstruct,
-										gen_spec : &mut dyn SpecularityConstruct<T>,
-										abort    : &dyn AbandonSearch,
-										required : usize,
-										matches  : &mut dyn List<Match<usize>>,
-									)
-		where T: 'static + TrackingModeConsts,
+/// Finds as many star matches as possible until `required` is met.
+/// Similar to `find` except it uses indices and allows you to increase the accuracy past 4 stars.
+/// If in the current iteration, more than `required` is found, all of the found stars will be used.
+///
+/// # Arguments
+/// * `stars`           - The observed (image) stars.
+/// * `database`        - The database storing reference
+/// * `gen_tri`         - An object for generating a StarTriangle.
+/// * `gen_pyr`         - An object for generating a Pyramid.
+/// * `gen_spec`        - An object for checking Specularity.
+/// * `angle_tolerance` - How much error a star pair can have until it is not considered the same.
+/// 	Used for searching the database.
+/// * `abort`           - A way of abandoning a search if it takes too long.
+///
+/// # Returns
+/// If a star pyramid can be formed: Match{input: Observed Stars, output: Corresponding Database}.
+/// None if a star pyramid and star triangle cannot be formed.
+///
+/// NOT IMPLEMENTED (in the case of a star triangle, it is not as accurate, left out)
+/// If a star triangle can be formed: Match{input: Observed Stars, output: Corresponding Database}.
+pub fn find_all	(
+	stars          : &dyn List<Equatorial>,
+	database       : &mut dyn ChunkIterator,
+	gen_tri        : &mut dyn TriangleConstruct,
+	gen_spec       : &mut dyn SpecularityConstruct,
+	abort          : &dyn AbandonSearch,
+	angle_tolerance: Radians,
+	required       : usize,
+	matches        : &mut dyn List<Match<usize>>,
+) -> bool
 {
 	database.begin();
-	gen_tri.begin(T::ANGLE_TOLERANCE, stars);
+	gen_tri.begin(angle_tolerance, stars);
 
 	// Loop through every possible combination of star combination using the kernel_iterator.
 	// Using star_triangle_iterator to find triangle matches in the database.
@@ -140,7 +158,7 @@ pub fn find_all	<T: TrackingModeConsts> (
 			let input = input.unwrap();
 			let output = output.unwrap();
 
-			// ~~~~~~~~~~~~~~~~~~~~~	 The speculariy in/out match	~~~~~~~~~~~~~~~~~~~~
+			// ~~~~~~~~~~~~~~~~~~~~~	 The specularity in/out match	~~~~~~~~~~~~~~~~~~~~
 			// If the triangles are not flipped, the code can continue.
 			if gen_spec.same(&input.to_vector3(), &output.to_vector3())
 			{
@@ -161,10 +179,11 @@ pub fn find_all	<T: TrackingModeConsts> (
 					count += 1;
 				}
 
-				if required <= count { return; }
+				if required <= count { return true; }
 			}
 		}
 	}
+	return false;
 }
 
 
@@ -200,19 +219,6 @@ mod test
 	use crate::util::aliases::Decimal;
 	use crate::util::err::Errors;
 
-	use crate::config::TrackingModeConsts;
-
-
-
-	/// A mock for the sizes for the arrays, the arrays are not expected to exceed this size.
-	pub struct MockConfigBig ( );
-	impl TrackingModeConsts for MockConfigBig
-	{
-		const PAIRS_MAX       : usize = 10;
-		const TRIANGLES_MAX   : usize = 10;
-		const SPECULARITY_MIN : Decimal = 300.0;
-		const ANGLE_TOLERANCE : Radians = Radians(0.0);
-	}
 
 
 	#[no_coverage]
@@ -257,18 +263,18 @@ mod test
 		let mut mock_s = MockSpecularityConstruct::new();
 		let mut chunk  = ChunkIteratorNone::new(&mock_d);
 		let mut abandon = MockAbandonSearch::new(); abandon.expect_should_abort().returning(||false);
+		let angle_tolerance = Radians(0.0);
 
 		mock_t.expect_begin()
 			.times(1)
-			.withf(|angle,stars| (*angle - MockConfigBig::ANGLE_TOLERANCE).abs() < 0.001
+			.withf(move |angle,stars| (*angle - angle_tolerance).abs() < 0.001
 				&& stars.size() == 2)
 			.returning(|_, _| return);
 
 		mock_t.expect_next().times(1).returning(|_, _| return None);
 
-
-		let result = Constellation::find::<MockConfigBig> (
-					&stars, &mut chunk, &mut mock_t, &mut mock_p, &mut mock_s, &abandon);
+		let result = Constellation::find (
+			&stars, &mut chunk, &mut mock_t, &mut mock_p, &mut mock_s, angle_tolerance, &abandon);
 
 		assert_eq!(Constellation::None, result);
 
@@ -279,7 +285,7 @@ mod test
 
 	#[test]
 	// If there is triangles but for some reason, the database or observed stars are invalid.
-	// It should not fail, it should continue until all triangle are exausted, then return None.
+	// It should not fail, it should continue until all triangle are exhausted, then return None.
 	fn test_find_error_match_triangles ( )
 	{
 		let a = Equatorial{ra: Radians(0.0), dec: Radians(0.0)};
@@ -289,6 +295,7 @@ mod test
 		let mut mock_p = MockPyramidConstruct::new();
 		let mut mock_s = MockSpecularityConstruct::new();
 		let mut abandon = MockAbandonSearch::new(); abandon.expect_should_abort().returning(||false);
+		let angle_tolerance = Radians(0.0);
 
 		mock_d.expect_find_star().times(3 * 3).returning(|_| Err(Errors::NoMatch));
 		let mut chunk  = ChunkIteratorNone::new(&mock_d);
@@ -313,8 +320,8 @@ mod test
 		// 3 * 3 times as there is 3 iterations and find_star is called 3 times per loop.
 
 
-		let result = Constellation::find::<MockConfigBig> (
-			&stars, &mut chunk, &mut mock_t, &mut mock_p, &mut mock_s, &abandon);
+		let result = Constellation::find (
+			&stars, &mut chunk, &mut mock_t, &mut mock_p, &mut mock_s, angle_tolerance, &abandon);
 
 			assert_eq!(Constellation::None, result);
 	}
@@ -336,6 +343,7 @@ mod test
 		let mut mock_p = MockPyramidConstruct::new();
 		let mut mock_s = MockSpecularityConstruct::new();
 		let mut abandon = MockAbandonSearch::new(); abandon.expect_should_abort().returning(||false);
+		let angle_tolerance = Radians(0.0);
 
 		mock_d.expect_find_star().returning(|_| return Ok(Equatorial::zero()));
 		let mut chunk  = ChunkIteratorNone::new(&mock_d);
@@ -361,8 +369,8 @@ mod test
 
 		mock_s.expect_same().times(3).returning(|_, _| return false);
 
-		let result = Constellation::find::<MockConfigBig> (
-			&stars, &mut chunk, &mut mock_t, &mut mock_p, &mut mock_s, &abandon);
+		let result = Constellation::find (
+			&stars, &mut chunk, &mut mock_t, &mut mock_p, &mut mock_s, angle_tolerance, &abandon);
 
 		assert_eq!(Constellation::None, result);
 	}
@@ -381,6 +389,7 @@ mod test
 		let mut mock_p = MockPyramidConstruct::new();
 		let mut mock_s = MockSpecularityConstruct::new();
 		let mut abandon = MockAbandonSearch::new(); abandon.expect_should_abort().returning(||false);
+		let angle_tolerance = Radians(0.0);
 
 		mock_d.expect_find_star().returning(|_| return Ok(Equatorial::zero()));
 		let mut chunk  = ChunkIteratorNone::new(&mock_d);
@@ -407,10 +416,14 @@ mod test
 
 		mock_s.expect_same().times(3).returning(|_, _| return true);
 
-		mock_p.expect_find_pilot().times(3).returning(|_,_,_,_| Err(Errors::NoMatch));
+		mock_p.expect_find_pilot().times(3).returning(move |_,_,a,_,_|  
+			{
+				assert_eq!(a, angle_tolerance);
+				Err(Errors::NoMatch)
+			});
 
-		let result = Constellation::find::<MockConfigBig> (
-			&stars, &mut chunk, &mut mock_t, &mut mock_p, &mut mock_s, &abandon);
+		let result = Constellation::find (
+			&stars, &mut chunk, &mut mock_t, &mut mock_p, &mut mock_s, angle_tolerance, &abandon);
 
 		let expected_fallback = Match{input: StarTriangle(a,a,a), output: StarTriangle(a,a,a), weight: 1.0};
 		assert_eq!(Constellation::Triangle(expected_fallback), result);
@@ -430,6 +443,7 @@ mod test
 		let mut mock_p = MockPyramidConstruct::new();
 		let mut mock_s = MockSpecularityConstruct::new();
 		let mut abandon = MockAbandonSearch::new(); abandon.expect_should_abort().returning(||false);
+		let angle_tolerance = Radians(0.0);
 
 		mock_d.expect_find_star()
 		.returning(|index|
@@ -466,10 +480,10 @@ mod test
 		mock_s.expect_same().times(3).returning(|_, _| return true);
 
 		mock_p.expect_find_pilot().times(3)
-			.returning(|_,_,_,_| Ok(Match{input: 1, output: 1, weight: 0.0}));
+			.returning(|_,_,_,_,_| Ok(Match{input: 1, output: 1, weight: 0.0}));
 
-		let result = Constellation::find::<MockConfigBig> (
-			&stars, &mut chunk, &mut mock_t, &mut mock_p, &mut mock_s, &abandon);
+		let result = Constellation::find (
+			&stars, &mut chunk, &mut mock_t, &mut mock_p, &mut mock_s, angle_tolerance, &abandon);
 
 
 		let expected_fallback = Match{input: StarTriangle(a,a,a), output: StarTriangle(a,a,a), weight: 1.0};
@@ -494,6 +508,7 @@ mod test
 		let mut mock_p = MockPyramidConstruct::new();
 		let mut mock_s = MockSpecularityConstruct::new();
 		let mut abandon = MockAbandonSearch::new(); abandon.expect_should_abort().returning(||false);
+		let angle_tolerance = Radians(0.0);
 
 		mock_d.expect_find_star()
 		.returning(|i|
@@ -513,10 +528,10 @@ mod test
 		mock_s.expect_same().returning(|_, _| return true);
 
 		mock_p.expect_find_pilot().times(1)
-			.returning(|_,_,_,_| Ok(Match{input: 3, output: 3, weight: 0.0}));
+			.returning(|_,_,_,_,_| Ok(Match{input: 3, output: 3, weight: 0.0}));
 
-		let result = Constellation::find::<MockConfigBig> (
-			&stars, &mut chunk, &mut mock_t, &mut mock_p, &mut mock_s, &abandon);
+		let result = Constellation::find (
+			&stars, &mut chunk, &mut mock_t, &mut mock_p, &mut mock_s, angle_tolerance, &abandon);
 
 		let expect_input = StarPyramid(stars[0], stars[1], stars[2], stars[3]);
 		let expect_output = StarPyramid(
@@ -548,6 +563,7 @@ mod test
 		let mut mock_p = MockPyramidConstruct::new();
 		let mut mock_s = MockSpecularityConstruct::new();
 		let mut abandon = MockAbandonSearch::new(); abandon.expect_should_abort().returning(||false);
+		let angle_tolerance = Radians(0.0);
 
 		mock_d.expect_find_star()
 		.returning(|i|
@@ -566,14 +582,14 @@ mod test
 
 		let mut already_called = false;
 		mock_p.expect_find_pilot().times(2)
-			.returning(move |_,_,_,_|
+			.returning(move |_,_,_,_,_|
 				{
 					if already_called { return Ok(Match{input: 3, output: 3, weight: 0.0}) }
 					else { already_called = true; return Err(Errors::NoMatch); }
 				});
 
-		let result = Constellation::find::<MockConfigBig> (
-			&stars, &mut chunk, &mut mock_t, &mut mock_p, &mut mock_s, &abandon);
+		let result = Constellation::find (
+			&stars, &mut chunk, &mut mock_t, &mut mock_p, &mut mock_s, angle_tolerance, &abandon);
 
 		let expect_input = StarPyramid(stars[0], stars[1], stars[2], stars[3]);
 		let expect_output = StarPyramid(
@@ -602,6 +618,7 @@ mod test
 		let mut mock_s = MockSpecularityConstruct::new();
 		let mut abandon = MockAbandonSearch::new();
 		abandon.expect_should_abort().returning(|| true);
+		let angle_tolerance = Radians(0.0);
 
 		mock_d.expect_find_star()
 		.returning(|_| return Ok(Equatorial::zero()));
@@ -613,8 +630,8 @@ mod test
 
 		mock_t.expect_next().returning(|_, _| return None );
 
-		let result = Constellation::find::<MockConfigBig> (
-			&stars, &mut chunk, &mut mock_t, &mut mock_p, &mut mock_s, &abandon);
+		let result = Constellation::find (
+			&stars, &mut chunk, &mut mock_t, &mut mock_p, &mut mock_s, angle_tolerance, &abandon);
 
 		assert_eq!(Constellation::None, result);
 	}

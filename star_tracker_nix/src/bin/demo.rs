@@ -1,6 +1,8 @@
+#![allow(unused_imports)]
 //! This runs through all the images in samples and tries to identify the stars using the star tracker code.
 //! If you want to understand how the code works, maybe start here?
-#![allow(unused_imports)]
+//!
+
 extern crate star_tracker_lib;
 extern crate star_tracker_nix;
 extern crate opencv;
@@ -63,138 +65,125 @@ use star_tracker_lib::tracking_mode::database::ChunkIteratorDeclination;
 use star_tracker_lib::attitude_determination::AttitudeDetermination;
 use star_tracker_lib::attitude_determination::Quest;
 
-use star_tracker_lib::config::NixConstsStruct;
-use star_tracker_lib::config::NixConsts;
-use star_tracker_lib::config::TrackingModeConsts;
-use star_tracker_lib::config::ImageProcessingConsts;
-use star_tracker_lib::config::AttitudeDeterminationConsts;
-
 use star_tracker_nix::io::Star;
 use star_tracker_nix::io::Io;
 use star_tracker_nix::tracking_mode::DatabaseGenerator;
 use star_tracker_nix::tracking_mode::SearchTimeout;
 use star_tracker_nix::image_processing::CVImage;
 
-
-
-// Defines how the tracking algorithm should perform.
-pub struct TrackingConstsTest ( );
-impl TrackingModeConsts for TrackingConstsTest
-{
-	const PAIRS_MAX       : usize = 2000;							// Irrelevant, ensure big.
-	const TRIANGLES_MAX   : usize = 2000;							// Irrelevant, ensure big.
-	const SPECULARITY_MIN : Decimal = 0.0001;						// If the triangle is flipped.
-	const ANGLE_TOLERANCE : Radians = Degrees(0.2).as_radians(); 	// Maximum inaccuracy.
-}
-
-// Defines how blob detection will work.
-pub struct ImageProcessingConstsTest ( );
-impl ImageProcessingConsts for ImageProcessingConstsTest
-{
-	/// Size of the image, not needed for this as we are using opencv image.
-	const IMAGE_SIZE_MAX : Pixel = Pixel{ x: 0, y: 0 };
-
-	/// The MAXIMUM number of pixels in a star.
-	/// If this is too low, it will consider a star as multiple stars.
-	const BLOB_SIZE_MAX  : usize = 50;
-}
-
-
-
-pub struct AttitudeDeterminationConstsTest ( );
-impl AttitudeDeterminationConsts for AttitudeDeterminationConstsTest
-{
-/// For quest algorithm, to find the correct attitude, the neuton raphson method is used.
-/// This method will loop and slowly decrease the gap between the current and previous prediction.
-/// Achieving perfect precision comparing the 2 values will take up computation power.
-/// By specifying a precision, the computational requirements are lowered.
-const LAMBDA_PRECISION		:	Decimal		= 0.1;//DECIMAL_PRECISION * 10000000.0;//100000.0;
-
-}
-
-
-
 pub fn main ( )
 {
-	// To reduce size of database.
-	const MAGNITUDE_MIN: Decimal = -20.0;
-	const MAGNITUDE_MAX: Decimal = 5.0;
+	println!(r#"===== Demo =====
+This runs through all the images in samples and tries to identify the stars using the star tracker code.
+If you want to understand how the code works, maybe start here?
 
 
-	// Region Reduction
+	  
+	"#);
 
-	// If stars are this close, one is excluded.
-	const DOUBLE_STAR_TOLERANCE : Radians = TrackingConstsTest::ANGLE_TOLERANCE;
+	let angle_tolerance = Degrees(0.05).as_radians();
+	let magnitude_min = -20.0;
+	let magnitude_max =  6.69;
+	let double_star_tolerance = angle_tolerance;
 
 
 	// Loose conditions
-	const TIME_GOOD    : u128 = 100000; // ms until autofail.
+	let time_good: u128 = 100000; // ms until auto fail.
 
 
 	println!("Performing Database Construction");
 	println!("\tReading database.");
 	print!("\t");
-	let mut stars : Vec<Star> = Vec::new();
-	let mut rdr = Io::get_csv (
-		NixConstsStruct::HYG_DATABASE_PATH,
-		NixConstsStruct::HYG_DATABASE_FILE,
-		NixConstsStruct::HYG_DATABASE_URL );
+	let mut stars : Vec<Star> = Io::get_csv_database();
 
-	let iter = rdr.deserialize();
-	for record in iter
-	{
-		let star : Star = record.expect("Could not decode.");
-		stars.push(star);
-	}
+	let magnitude_reduction = 
+	[
+		6.69, // 10
+		6.38, // 12
+		5.75, // 14
+		5.75, // 16
+		5.44, // 18
+		5.44, // 20
+		5.12, // 22
+		5.12, // 24
+		5.12, // 26
+		5.12, // 28
+		4.81, // 30
+		4.81, // 32
+		4.50, // 34
+		4.50, // 36
+		4.19, // 38
+		4.19, // 40
+		4.19, // 42
+		4.19, // 44
+		4.19, // 46
+		4.19, // 48
+		3.56, // 50
+		3.56, // 52
+		3.56, // 54
+		3.56, // 56
+		3.56, // 58
+		3.25, // 60
+		3.25, // 62
+		3.25, // 64
+		3.25, // 66
+		3.25, // 68
+		3.25, // 70
+		3.25, // 72
+		3.25, // 74
+		3.25, // 76
+		2.94, // 78
+		2.94, // 80
+		2.94, // 82
+		2.62, // 84
+		2.62, // 86
+		2.62, // 88
+	];
+
 	println!("\t Found: {} stars", stars.len());
 
 	stars.sort(); // The magnitude must be sorted to get best results for `limit_regions`
 	println!("\tLimiting Magnitude.");
-	let stars_limit_mag    = DatabaseGenerator::limit_magnitude (&stars, MAGNITUDE_MIN, MAGNITUDE_MAX);
+	let stars_limit_mag    = DatabaseGenerator::limit_magnitude (&stars, magnitude_min, magnitude_max);
 	println!("\tLimiting Double Stars.");
-	let stars_limit_double = DatabaseGenerator::limit_double_stars(&stars_limit_mag, DOUBLE_STAR_TOLERANCE);
+	let stars_limit_double = DatabaseGenerator::limit_double_stars(&stars_limit_mag, double_star_tolerance);
 	println!("\tLimiting Similar.");
 	// let stars_limit_sim    = DatabaseGenerator::limit_similar(&stars_limit_double, Degrees(0.0001).to_radians());
-
+	
 	println!("\tCreating Database.");
-
+	
 	let samples = star_tracker_nix::io::Sample::load_samples();
-
+	
 	for sample in samples
 	{
-		// The Diagonal field of view.
-		let fov_file = sample.get_fov();
-		let fov : Radians;
-		if let Some(fov_) = fov_file { fov = fov_; }
-		else                         { continue;   }
-
-		println!("{}, fov: {}", sample.dir, fov.to_degrees());
-
-
-		if sample.dir != "samples/16mm_2" {continue;}//fov < Degrees(20.0).to_radians()  && fov < Degrees(40.0).to_radians() { continue; }
-
-
-		let region_size = fov / 2.0;
-		let region_num = 8;
-
-		for img in sample.file_img
+		for img in &sample.file_img
 		{
 			println!("\t{}", img);
-
-			// let mut img = CVImage(imread(&img, opencv::core::CV_8UC3 as i32 )
-				// .expect("Could not find img.png in root."));
+			
+			// The Diagonal field of view.
+			let fov_file = sample.get_fov();
+			let fov : Radians;
+			if let Some(fov_) = fov_file { fov = fov_; }
+			else                         { continue;   }
+			println!("\n\n\n\n{}, fov: {}", sample.dir, fov.to_degrees());
+			
+			let region_size = fov / 2.0;
+			let region_num = 8;
+			
 			let mut img = CVImage::read(&img);
-			let dark_frame = CVImage::read(&sample.file_dark);//(imread(&sample.file_dark, opencv::core::CV_8UC3 as i32).expect(""));
-
-
-
+			let dark_frame = CVImage::read(&sample.file_dark);
+			
+			let magnitude = magnitude_reduction[((fov.to_degrees().0 - 10.0) / 2.0).round() as usize];
+			
+			println!("\tLimiting Magnitude.");
+			let stars_limit_mag_2    = DatabaseGenerator::limit_magnitude (&stars_limit_double, magnitude_min, magnitude);
 			println!("\tLimiting Regions.");
-			let stars_limit_reg    = DatabaseGenerator::limit_regions(&stars_limit_double,region_size, region_num);
+			let stars_limit_reg    = DatabaseGenerator::limit_regions(&stars_limit_mag_2, region_size, region_num);
 
 
 			println!("NUM: {} {} {} {}", stars.len(), stars_limit_mag.len(), stars_limit_double.len(), stars_limit_reg.len());
-			let gen : DatabaseGenerator = DatabaseGenerator::gen_database(&stars_limit_reg, fov, fov, TrackingConstsTest::ANGLE_TOLERANCE);
-			// let gen : DatabaseGenerator = DatabaseGenerator::gen_database_regional(&stars_limit_reg, fov, TrackingConstsTest::ANGLE_TOLERANCE, fov/2.0);
+			let gen : DatabaseGenerator = DatabaseGenerator::gen_database(&stars_limit_reg, fov, fov / 1.5, angle_tolerance);
+			// let gen : DatabaseGenerator = DatabaseGenerator::gen_database_regional(&stars_limit_reg, fov, fov, TrackingConstsTest::ANGLE_TOLERANCE);
 			let database = gen.get_database();
 			// let database = gen.get_database_regional();
 			// let mut database_iterator = ChunkIteratorNone::new(&database);
@@ -204,19 +193,6 @@ pub fn main ( )
 			let mut database_iterator = ChunkIteratorDeclination::new(&database, fov, 1.5, ChunkIteratorDeclination::randomise_parity);
 
 			// let mut database_iterator = ChunkAreaSearch::from_point(&database, center, Degrees(35.954).as_radians());
-
-
-			// Identify num bins.
-			// let mut prev = 0;
-			// println!("bin tolerance {}", database_iterator.get_database().get_k_lookup().gradient);
-			// for i in 0..database_iterator.get_database().get_k_vector_size()
-			// {
-			// 	let diff = database_iterator.get_database().get_k_vector(i) - database_iterator.get_database().get_k_vector(prev);
-			// 	println!("{}\t{:.3}\t{}", i, Radians(i as Decimal * database_iterator.get_database().get_k_lookup().gradient + database_iterator.get_database().get_k_lookup().intercept).to_degrees(), diff);
-			// 	prev = i;
-			// }
-
-
 			println!("{} stars, {} pairs.", stars_limit_reg.len(), database.pairs.size());
 
 
@@ -232,8 +208,7 @@ pub fn main ( )
 
 			println!("Performing Image Processing and Blob Detection");
 
-
-
+			// Removing Dark Frame from Image.
 			for x in 0..img.width()
 			{
 				for y in 0..img.height()
@@ -246,21 +221,29 @@ pub fn main ( )
 				}
 			}
 
+			// The image to be examined will be consumed.
+			// To have a visualization, you will need a copy.
 			let mut img_consumable = CVImage::new(Pixel{x: img.width(), y: img.height()});
-
-			// Copy the image
 			img.copy_to(&mut img_consumable).unwrap();
 
 
-
+			// Create a threshold using a semi adaptive threshold.
 			let thresh = ThresholdGrid::<100, 100>::new(&img, 50);
-//			let thresh = ThresholdPercent::new(&img, 0.99999);
 			let mut img_thresh = CVImage::duplicate(&img);
 			thresh.apply(&mut img_thresh);
 
-//			opencv::imgproc::adaptive_threshold(&img.0, &mut img_thresh.0, 0.0,
-//				opencv::imgproc::ADAPTIVE_THRESH_GAUSSIAN_C, opencv::imgproc::THRESH_BINARY_INV, 50, thresh_val);
-//
+			// Find the blobs in the image.
+			let mut stack : Vec<Pixel> = Vec::new(); // Infinite sized blobs.
+			let mut blobs : Vec<Blob> = Vec::new();
+			let blob_min_size = 1;
+			Blob::find_blobs(blob_min_size, &thresh, &mut img_consumable, &mut stack, &mut blobs);
+
+			// Convert the blobs into positions.
+			let mut stars_2d : Vec<Vector2> = Vec::new();
+			blobs.sort_order(Blob::sort_descending_intensity);
+			Blob::to_vector2(&blobs, &mut stars_2d);
+			
+			// Visualizes the stars.
 			for x in 0..img_thresh.width()
 			{
 				for y in 0..img_thresh.height()
@@ -271,34 +254,20 @@ pub fn main ( )
 					}
 					else
 					{
-						let val = 255;//img.get(Pixel{x: x, y: y}).saturating_mul(5);
+						let val = 255;
 						img_thresh.set(Pixel{x: x, y: y}, val);
 					}
 				}
 			}
-
-			imshow("w/", &img.0);
-			imshow("thresh", &img_thresh.0);
-			wait_key(0);
-
-			// Find the blobs in the image.
-			let mut stack : Vec<Pixel> = Vec::new(); // Infinite sized blobs.
-			let mut blobs : Vec<Blob> = Vec::new();
-			let blob_min_size = 4;
-			Blob::find_blobs(blob_min_size, &thresh, &mut img_consumable, &mut stack, &mut blobs);
-			// Blob::find_blobs::<100>(img_thresh, &mut img_consumable, &mut blobs);
-
-			// Convert the blobs into positions.
-			let mut stars_2d : Vec<Vector2> = Vec::new();
-			blobs.sort_order(Blob::sort_descending_intensity);
-			Blob::to_vector2(&blobs, &mut stars_2d);
-
-			for i in 0..stars_2d.len()
+			for i in 0..stars_2d.size()
 			{
-				println!(". {:.3}\t{:.3}", stars_2d[i].x + 1.0, stars_2d[i].y + 1.0);
+				let color = Scalar::new(0.0, 100.0, 255.0, 100.0); // Red color (BGR format)
+				let thickness = 1;
+				let radius    = 10;
+				let px_pt = Point::new(stars_2d.get(i).x as i32, stars_2d.get(i).y as i32);
+				circle(&mut img_thresh.0, px_pt, radius, color, thickness, 1, 0).unwrap();
 			}
-
-
+			let _ = imshow("Thresholded", &img_thresh.0);
 
 			println!("\tFound: {} stars", stars_2d.len());
 
@@ -309,8 +278,9 @@ pub fn main ( )
 
 			println!("Performing Projection");
 			// Construct the parameters for an inverse intrinsic projection.
-			let img_horizontal = ((img.width() as Decimal).powf(2.0) + (img.height() as Decimal).powf(2.0)).sqrt();
-			let intrinsic_projection = IntrinsicParameters::from_fov(fov, img_horizontal);
+			let sensor_horizontal = ((img.width() as Decimal).powf(2.0) + (img.height() as Decimal).powf(2.0)).sqrt();
+			let img_center = Vector2{x: img.width() as Decimal / 2.0, y: img.height() as Decimal / 2.0};
+			let intrinsic_projection = IntrinsicParameters::from_fov(fov, sensor_horizontal, img_center);
 
 
 
@@ -335,6 +305,7 @@ pub fn main ( )
 				stars_3d.push(world_space.0.to_equatorial());
 			}
 
+
 		//##############################################################################################//
 		//							--- Tracking Mode ---
 		//##############################################################################################//
@@ -345,17 +316,19 @@ pub fn main ( )
 			// Finds a `constellation` which is 4 stars forming a pyramid shape.
 			// Refer to star_tracker_lib::tracking_mode::{mod, Constellation::find}
 			let mut found_all : Vec<Match<usize>> = Vec::new();
-			Constellation::find_all::<TrackingConstsTest>(
+			let success = Constellation::find_all (
 				&stars_3d, &mut database_iterator,
-				&mut StarTriangleIterator::<{TrackingConstsTest::PAIRS_MAX}>::new(),
-				&mut Specularity::Ignore,
-				&SearchTimeout::start_timer(Duration::from_millis(TIME_GOOD as u64)),
-				2,
+				&mut StarTriangleIterator::<10000>::new(),
+				&mut Specularity::default(),
+				&SearchTimeout::start_timer(Duration::from_millis(time_good as u64)),
+				angle_tolerance,
+				3,
 				&mut found_all
 			);
 
 			let mut found_stars : Vec<Match<Vector3>> = Vec::new();
 
+			if !success { println!("Could not find enough stars, heres the best match") };
 			println!("\tTime taken: {}ms", timer.elapsed().as_millis());
 
 			for i in 0..found_all.size()
@@ -386,64 +359,19 @@ pub fn main ( )
 			}
 
 
-			let rotate_to_cam  : Quaternion = Quest::estimate::<AttitudeDeterminationConstsTest> ( &found_stars );
+			let rotate_to_cam  : Quaternion = Quest::estimate(&found_stars, None);
 			let rotate_to_world: Quaternion = rotate_to_cam.conjugate();
 			let world_center = rotate_to_world.rotate_point(reference_forward.to_vector3());
 			println!("Found Center: {}", print_standard_equatorial(world_center.to_equatorial()));
 
 
-
-			println!("{:?}", rotate_to_cam.to_angle_axis());
-			println!("{:?}", rotate_to_world.to_angle_axis());
-
-
-			// for i in 0..stars_limit_reg.len()
-			// {
-			// 	let star = rotate_to_cam.rotate_point(stars_limit_reg[i].pos.to_vector3());
-			//
-			// 	// if star.angle_distance(reference_forward.to_vector3()) < fov/ 2.0
-			// 	{
-			// 		let center = Point::new(img.width() as i32 / 2, img.height() as i32 / 2);
-			// 		let mut star_world_space = SpaceWorld(star);
-			// 		let mut star_camera_space = extrinsic_projection.to_image(star_world_space);
-			// 		let mut star_pixel_space  = intrinsic_projection.to_image(star_camera_space);
-			// 		let mut star_point_space  = Point::new(star_pixel_space.0.x as i32, star_pixel_space.0.y as i32);// + center;
-			//
-			// 		let circle_thickness = 1;
-			// 		let circle_radius    = (MAGNITUDE_MAX - stars_limit_reg[i].mag) as i32;
-			//
-			// 		let mut circle_color = Scalar::new(0.0, 100.0, 0.0, 0.0); // Red color (BGR format)
-			// 		circle(&mut img.0,star_point_space,circle_radius,circle_color,circle_thickness,1,0,
-			// 		).unwrap();
-			//
-			// 		if ( stars_limit_reg[i].name.eq("Hadar") )
-			// 		{
-			// 			circle_color.0[0] = 255.0;
-			// 			circle_color.0[1] = 255.0;
-			//
-			//
-			// 			let _ =line(&mut img.0, center, star_point_space, circle_color, circle_thickness, 1, 0);
-			// 		}
-			// 		let mut circle_color = Scalar::new(0.0, 100.0, 0.0, 0.0); // Red color (BGR format)
-			// 		if ( stars_limit_reg[i].name.eq("Rigil Kentaurus") )
-			// 		{
-			// 			circle_color.0[0] = 255.0;
-			// 			circle_color.0[1] = 0.0;
-			// 			circle_color.0[2] = 255.0;
-			//
-			// 			let _ = line(&mut img.0,center,star_point_space,circle_color,circle_thickness,1,0);
-			// 		}
-			//
-			// 		if ( stars_limit_reg[i].name.eq("Gacrux") || stars_limit_reg[i].name.eq("Acrux") || stars_limit_reg[i].name.eq("Mimosa") || stars_limit_reg[i].name.eq("Imai"))
-			// 		{
-			// 			circle_color.0[0] = 255.0;
-			// 			circle_color.0[1] = 255.0;
-			// 			circle_color.0[2] = 255.0;
-			// 			circle(&mut img.0,star_point_space,circle_radius,circle_color,circle_thickness,1,0,
-			// 			).unwrap();
-			// 		}
-			// 	}
-			// }
+			if sample.file_log != "" && sample.file_img.size() == 1
+			{
+				if let Some(center) = sample.get_center()
+				{
+					println!("True Center: {}", print_standard_equatorial(center));
+				} 
+			}
 
 			let _ = imshow("Image", &img.0);
 			let _ = wait_key(0).unwrap();

@@ -61,83 +61,6 @@ impl StarTriangle<usize>
 
 
 
-// This is the alternative to the star_triangle_iterator uncomment this and old_find in constellation to test.
-/*
-impl StarTriangle<usize>
-{
-	/// Finds every triangle from the provided stars which matches the database.
-	/// ***DOES NOT CHECK FOR SPECULARITY!!!***
-	/// # Arguments
-	/// * `stars` - The stars in the image.
-	/// * `database` - The database to search through.
-	/// * `triangles` -  The output.
-	pub fn find_match_triangle <T: crate::config::TrackingModeConsts> (
-								stars: &dyn List<Equatorial>,
-								database: &dyn Database,
-								triangles: &mut dyn List<crate::util::units::Match<StarTriangle<usize>>>
-							)
-							where [(); T::PAIRS_MAX]:
-	{
-		let mut iter = super::KernelIterator::new( stars.size() );
-
-		while iter.step()
-		{
-			// Find the sides of the triangle.
-			let side_a = stars.get(iter.i).angle_distance(stars.get(iter.j)); // i, j
-			let side_b = stars.get(iter.i).angle_distance(stars.get(iter.k)); // i, k
-			let side_c = stars.get(iter.j).angle_distance(stars.get(iter.k)); // j, k
-
-
-			// Search the database for each side.
-			let mut matches_a : ArrayList<crate::tracking_mode::database::SearchResult, {T::PAIRS_MAX}> = ArrayList::new();
-			let mut matches_b : ArrayList<crate::tracking_mode::database::SearchResult, {T::PAIRS_MAX}> = ArrayList::new();
-			let mut matches_c : ArrayList<crate::tracking_mode::database::SearchResult, {T::PAIRS_MAX}> = ArrayList::new();
-
-			database.find_close_ref(side_a, T::ANGLE_TOLERANCE, &mut matches_a);
-			database.find_close_ref(side_b, T::ANGLE_TOLERANCE, &mut matches_b);
-			database.find_close_ref(side_c, T::ANGLE_TOLERANCE, &mut matches_c);
-
-			// If each side has found a match, search every possibility
-			if matches_a.size() > 0 && matches_b.size() > 0 && matches_c.size() > 0
-			{
-				for ii in 0..matches_a.size()
-				{
-					for jj in 0..matches_b.size()
-					{
-						for kk in 0..matches_c.size()
-						{
-							// println!("{}, {}, {}", ii, jj, kk);
-							// (i, j) and (i, k)  (i)
-							let same_ab=StarPair::find_same(matches_a.get(ii).result,matches_b.get(jj).result);
-							// (i, j) and (j, k)  (j)
-							let same_ac=StarPair::find_same(matches_a.get(ii).result,matches_c.get(kk).result);
-							// (i, k) and (j, k)  (k)
-							let same_bc=StarPair::find_same(matches_b.get(jj).result,matches_c.get(kk).result);
-
-							// A triangle can be formed.
-							if same_ab.is_some() && same_ac.is_some() &&
-								same_bc.is_some( ) && !triangles.is_full()
-							{
-								let input  = StarTriangle(iter.i, iter.j, iter.k);
-								let output = StarTriangle(
-									same_ab.unwrap(),
-									same_ac.unwrap(),
-									same_bc.unwrap());
-								let found = crate::util::units::Match{input: input, output: output, weight: 1.0};
-								triangles.push_back(found)
-									.expect("array: Triangles, was just found to not be full.");
-							}
-						}
-					}
-				}
-			}
-		}
-	}
-
-}
-*/
-
-
 impl StarTriangle<usize>
 {
 	/// Tries to convert self into an equatorial StarTriangle by finding the stars in the database.
@@ -245,19 +168,6 @@ mod test
 	use crate::util::units::Radians;
 	use crate::util::aliases::Decimal;
 	use crate::util::err::Errors;
-
-
-	/// A mock for the sizes for the arrays, the arrays are not expected to exceed this size.
-	// pub struct MockConfigBig ( );
-	// impl TrackingModeConsts for MockConfigBig
-	// {
-	// 	const PAIRS_MAX       : usize = 10;
-	// 	const TRIANGLES_MAX   : usize = 10;
-	// 	const SPECULARITY_MIN : Decimal = 300.0;
-	// }
-
-
-
 
 
 //###############################################################################################//

@@ -7,6 +7,8 @@ use std::io::BufReader;
 use std::path::Path;
 
 use super::Io;
+use super::Star;
+use super::HipparcosAccessorStruct;
 
 
 impl Io
@@ -46,6 +48,27 @@ impl Io
 		}
 	}
 
+
+
+
+	/// Reads the hipparcos star database.
+	/// If the database is not downloaded, it will automatically download.
+	pub fn get_csv_database ( ) ->  Vec<Star>
+	{
+		let mut stars : Vec<Star> = Vec::with_capacity(10000);
+		let mut rdr = Io::get_csv (
+			HipparcosAccessorStruct::HYG_DATABASE_PATH,
+			HipparcosAccessorStruct::HYG_DATABASE_FILE,
+			HipparcosAccessorStruct::HYG_DATABASE_URL );
+	
+		let iter = rdr.deserialize();
+		for record in iter
+		{
+			let star : Star = record.expect("Could not decode.");
+			stars.push(star);
+		}
+		return stars;
+	}
 
 
 

@@ -44,18 +44,11 @@ sudo apt-get install libclang-dev -y
 
 printf ${HEADER}"\n \n \n \n ---------- UPGRADING RUST TO RECOMMENDED VERSION ---------\n\n"${BODY}
 # new resources required
+source ~/.bashrc
 rustup default nightly
 
 
 
-printf ${HEADER}"\n \n \n \n ---------- CONSTRUCTING DATABASE ---------\n\n"${BODY}
-# Creates database
-cargo run --bin database_generator --features "setup"
-
-
-
-
-
-
-
-
+printf ${HEADER}"\n \n \n \n ---------- INSTALLING EMBEDDED PROBE ---------\n\n"${BODY}
+cargo install cargo-embed
+rustup target add thumbv7em-none-eabihf

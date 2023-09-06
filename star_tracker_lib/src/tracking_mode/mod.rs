@@ -7,21 +7,21 @@
 //! ## Summary
 //! The algorithm creates a kernal (a set of 3 stars) with a method to reduce the number of times a false positive star is used.
 //! It then will compare the constellation with a k-vector table database.
-//! If it succeeds, it will then find another star and varify it is also consistant.
+//! If it succeeds, it will then find another star and verify it is also consistent.
 //!
-//! ### Creating the kernal
-//! To select the stars, a looping algerithm must be chosen the proposed method is implemented in this algorithm.
+//! ### Creating the kernel
+//! To select the stars, a looping algorithm must be chosen the proposed method is implemented in this algorithm.
 //! This will access the index of 0-1-2, 2-3-4, 3-4-5, 1-2-4, 2-3-5, 1-2-5, 1-3-4, 2-4-5, 1-3-5, 1-4-5.
 //! This method is done to reduce the times a specific star is used as it may be a false star.
 //!
-//! ### Using the kernal
+//! ### Using the kernel
 //! By working with the database, a set of star 'pairs' are found.
 //! These each pair contains the id/location of each star.
 //! By finding the common star from 2 pairs, the star can be identified in the database and the sample.
 //! The matched triangle will then have its specularity checked (check if it is flipped).
 //!
 //! ### Pyramid
-//! If a correct kernal is found, an extra test is performed where another star is picked, finding the distance from this star to the other stars, this is then compared with the database.
+//! If a correct kernel is found, an extra test is performed where another star is picked, finding the distance from this star to the other stars, this is then compared with the database.
 //!
 //! ### Database
 //! Refer to [this file](database/mod).
@@ -33,13 +33,13 @@
 //! - Contains a method to reduce the repetition of using a false star.
 //! - Fast as uses K-Table.
 //! - Checks if the triangle is flipped (false positive).
-//! - Adds an extra star to varify correct identification opposing other triangle constilation based methods.
+//! - Adds an extra star to verify correct identification opposing other triangle constellation based methods.
 //!
 //!
 //! ## Useful links:
 //! - [Original Paper](https://www.researchgate.net/publication/254199748_Lost-in-Space_Pyramid_Algorithm_for_Robust_Star_Pattern_Recognition)
-//! - [Pseudo Interpritation](https://arxiv.org/pdf/1808.08686.pdf#page=7)
-//! - [Good Explination](http://mtc-m21b.sid.inpe.br/col/sid.inpe.br/mtc-m21b/2017/08.10.22.44/doc/publicacao.pdf#page=105)
+//! - [Pseudo Interpretation](https://arxiv.org/pdf/1808.08686.pdf#page=7)
+//! - [Good Explanation](http://mtc-m21b.sid.inpe.br/col/sid.inpe.br/mtc-m21b/2017/08.10.22.44/doc/publicacao.pdf#page=105)
 
 #[cfg(test)] use mockall::predicate::*;
 #[cfg(test)] use mockall::*;
@@ -49,8 +49,6 @@ use crate::core_include::*;
 use crate::tracking_mode::database::ChunkIterator;
 use crate::tracking_mode::database::SearchResult;
 
-use crate::config::TrackingModeConsts;
-
 use crate::util::units::Vector3;
 use crate::util::units::Equatorial;
 use crate::util::units::Match;
@@ -58,10 +56,11 @@ use crate::util::units::Radians;
 use crate::util::list::List;
 use crate::util::list::ArrayList;
 use crate::util::err::Error;
+use crate::util::aliases::Decimal;
 
 pub mod kernel_iterator;
 pub mod constellation;
-pub mod star_pyramid;
+pub mod pilot_finder;
 pub mod star_pair;
 pub mod star_triangle;
 pub mod star_triangle_iterator;
@@ -91,7 +90,32 @@ pub struct StarTriangle<T>	( pub T, pub T, pub T );
 pub struct StarPyramid<T> ( pub T, pub T, pub T, pub T );
 
 
-
+/// Use to search for a pilot star to match a star triangle.
+/// This is needed to generate a constellation.
+/// # To Use:
+/// ```
+/// #![macro_use]
+/// use star_tracker_lib::pilot_finder_array;
+/// use star_tracker_lib::pilot_finder_vec; // Only compiles with nix flag.
+/// use star_tracker_lib::tracking_mode::PilotFinder;
+/// use star_tracker_lib::tracking_mode::database::SearchResult;
+/// use star_tracker_lib::util::list::ArrayList;
+///
+/// /// For Computer
+/// let finder = pilot_finder_vec!(); // Only compiles with nix flag...
+/// /// For Embed
+/// const ARRAY_SIZE: usize = 100; // The number of database matches that can be stored.
+/// let finder = pilot_finder_array!(ARRAY_SIZE);
+/// ```
+pub struct PilotFinder<'a>
+{
+	/// This variable should be private but rust has weird rules making it impossible with macros...
+	pub sides_a: &'a mut dyn List<SearchResult>,
+	/// This variable should be private but rust has weird rules making it impossible with macros...
+	pub sides_b: &'a mut dyn List<SearchResult>,
+	/// This variable should be private but rust has weird rules making it impossible with macros...
+	pub sides_c: &'a mut dyn List<SearchResult>
+}
 
 
 /// The result from the star triangle iterator.
@@ -214,12 +238,22 @@ pub enum Constellation
 }
 
 
+/// When comparing constellation, triangles are used.
+/// Specularity is the test to see if the triangle is flipped.
+/// If the triangle is flipped, it is invalid.
+pub struct Specularity
+{
+	/// If a triangles area is too small (i.e. a strait line or small), any inaccuracy could cause it to be considered flipped.
+	/// Use this to define the minimum specularity until the specularity is unimportant.
+	specularity_min: Decimal,
+}
+
 /// A specularity test.
 /// Ignore means the area was too small.
 /// Valid means that the sign is a valid way of checking specularity in the current triangle.
 #[derive(Debug)]
 #[derive(PartialEq)]
-pub enum Specularity
+pub enum SpecularityResult
 {
 	Ignore,
 	Valid(bool)
@@ -261,52 +295,27 @@ pub trait RegionCompare
 
 
 #[cfg_attr(test, automock)]
-pub trait PyramidConstruct <T: 'static>
-	// where T: TrackingModeConsts, [(); T::PAIRS_MAX]: Sized
-	where T: TrackingModeConsts//, ArrayList<(), {T::PAIRS_MAX}> : Sized
+pub trait PyramidConstruct
 {
-	/// Finds the pilot
+	/// Finds the pilot 
 	/// # Arguments
-	/// * `stars` - The stars from the image.
+	/// * `stars` - The stars from the image. 
 	/// * `database` - The database to lookup.
-	/// * `input` - The star triangle from the input.
+	/// * `angle_tolerance` - How much error a star pair can have until it is not considered the same.
+	/// 	Used for searching the database.
+	/// * `input` - The star triangle from the input (what stars are being used).
+	/// * `output` - The star triangle from the output in the same order as input.
 	/// # Returns
 	/// Ok(pilot) if valid.
 	fn find_pilot (
 				&mut self,
 				stars : &dyn List<Equatorial>,
 				database : &dyn ChunkIterator,
+				angle_tolerance: Radians,
 				input : StarTriangle<usize>,
 				output : StarTriangle<usize>,
 			) -> Error<Match<usize>>;
-
-
-
 }
-
-
-#[cfg_attr(test, automock)]
-/// This is backend code for StarPyramid to help with mocking.
-/// Dont use.
-pub trait PyramidConstructBackEnd
-{
-	/// INTERNAL FUNCTION!!! (This is just here so it can be used as a mock in tests)
-	/// Finds the index of the pilot and confirms it as valid.
-	/// # Arguments
-	/// * `output` - The confirmed triangle of the database.
-	/// * `pair_a` - The found stars matching the distance from output.0 to pilot.
-	/// * `pair_b` - The found stars matching the distance from output.1 to pilot.
-	/// * `pair_c` - The found stars matching the distance from output.2 to pilot.
-	/// # Returns
-	/// The database catalogue index to the pilot or none if pilot could not be confirmed.
-	fn confirm_pilot (
-		&mut self,
-		output: StarTriangle<usize>,
-		pair_a: &mut dyn List<SearchResult>,
-		pair_b: &dyn List<SearchResult>,
-		pair_c: &dyn List<SearchResult> ) -> Option<usize>;
-}
-
 
 
 
@@ -343,7 +352,7 @@ pub trait TriangleConstruct
 
 
 #[cfg_attr(test, automock)]
-pub trait SpecularityConstruct <T: 'static> where T: TrackingModeConsts
+pub trait SpecularityConstruct
 {
 	/// Returns true if the triangle is the same orientation OR a triangle is IGNORE.
 	fn same ( &mut self, a: &StarTriangle<Vector3>, b: &StarTriangle<Vector3> ) -> bool;

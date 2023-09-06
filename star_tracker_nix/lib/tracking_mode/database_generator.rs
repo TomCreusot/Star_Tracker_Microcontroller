@@ -105,14 +105,6 @@ impl DatabaseGenerator
 	}
 	
 	
-	/// Ensures there are no angles too close to each other within the same region.
-	/// If there are, the orientation of the image may be invalid.
-	pub fn region_refine_single ( )
-	{
-		
-	}
-	
-
 
 	
 	/// Creates a database on the heap.
@@ -127,7 +119,7 @@ impl DatabaseGenerator
 	/// # Returns
 	/// The database with the lifetime of all the passed in variables.
 	pub fn gen_database_regional ( 
-		stars: &Vec<Star>, fov: Radians, tolerance: Radians, chunk_size: Radians ) -> Self
+		stars: &Vec<Star>, fov: Radians, chunk_size: Radians, tolerance: Radians ) -> Self
 	{
 		let mut points_num = Distribute::angle_to_points(fov);
 

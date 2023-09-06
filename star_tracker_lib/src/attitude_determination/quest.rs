@@ -12,8 +12,9 @@ use crate::util::units::Match;
 use crate::util::units::Matrix;
 use crate::util::units::Vector3;
 use crate::util::units::Quaternion;
+use crate::util::aliases::Decimal;
 
-use config::AttitudeDeterminationConsts;
+use crate::attitude_determination::LAMBDA_PRECISION;
 
 use crate::util::Maths;
 
@@ -21,10 +22,21 @@ use crate::util::Maths;
 impl AttitudeDetermination for Quest
 {
 	/// Call this to retrieve the attitude of the camera.  
-	/// Input a list of matches (input: image, output: actual, weight: reliability).  
-	/// Output a quaternion rotation describing the position of the camera.
-	fn estimate <T: 'static> ( positions: &dyn List<Match<Vector3>> ) -> Quaternion
-		where T: AttitudeDeterminationConsts
+	/// Finds the most likely pointing direction from the given (observed, reference) positions.
+	/// # Arguments
+	/// * `positions` - The (input: observed, output: reference, weighting: __).
+	/// 	The weighting is just a ratio, it does not matter the size, just how it relates to other weightings.
+	/// * `lambda_precision` - 
+	/// 	For quest algorithm, to find the correct attitude, the neuton raphson method is used.
+	/// 	This method will loop and slowly decrease the gap between the current and previous prediction.
+	/// 	Achieving perfect precision comparing the 2 values will take up computation power.
+	/// 	By specifying a precision, the computational requirements are lowered.
+	/// 	To use a default estimate value, you can provide None and it will use LAMBDA_PRECISION.
+	/// # Returns
+	/// A quaternion which rotates output to input.
+	/// Use Quaternion.conjugate() to get a rotation from input to output.
+	fn estimate ( positions: &dyn List<Match<Vector3>>, mut lambda_precision: Option<Decimal> ) 
+																					-> Quaternion
 	{
 		// Create K matrix (Davenport).
 		let b = Wahba::find_b(positions).transposed();
@@ -46,13 +58,10 @@ impl AttitudeDetermination for Quest
 		let c = s.determinate() + (z.transposed() * s * z).to_decimal();
 		let d = (z.transposed() * s * s * z).to_decimal();
 
-		// Use the neuton raphson method to solve for lambda.
-		// This would be:
-		// ``` lambda_n = det[lambda_n-1 * I_4x4 - K] / d/dx(det[lambda_n-1 * I_4x4 - K]) ```
-		// Luckly there is a simpler solution with the polynomial.
+		let lambda_precision = *lambda_precision.get_or_insert(LAMBDA_PRECISION); 
 
-		let mut i = 0;
-		while T::LAMBDA_PRECISION <= (lambda - last_lambda).abs() && i < 10
+		let mut i = 0; // An iteration count stops an infinite loop.
+		while lambda_precision <= (lambda - last_lambda).abs() && i < 10
 		{
 			last_lambda = lambda;
 

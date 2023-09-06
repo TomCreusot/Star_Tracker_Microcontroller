@@ -5,11 +5,11 @@ version = "0.1.0"
 
 
 
-# [target.thumbv7em-none-eabihf]
-# # use Tlink.c script from the cortex-m-rt crate
-# rustflags = [
-# 	"-C", "link-arg=-Tlink.x",
-# ]
+[target.thumbv7em-none-eabihf]
+# use Tlink.c script from the cortex-m-rt crate
+rustflags = [
+	"-C", "link-arg=-Tlink.x",
+]
 
 [dependencies.stm32h7xx-hal]
 version = "^0"

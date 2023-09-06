@@ -55,8 +55,8 @@
 use crate::util::units::Match;
 use crate::util::units::Vector3;
 use crate::util::units::Quaternion;
+use crate::util::aliases::Decimal;
 use crate::util::list::List;
-use config::AttitudeDeterminationConsts;
 
 pub mod wahba;
 pub mod quest;
@@ -66,9 +66,17 @@ pub trait AttitudeDetermination
 	/// Finds the most likely pointing direction from the given (observed, reference) positions.
 	/// # Arguments
 	/// * `positions` - The (input: observed, output: reference, weighting: __).
-	/// The weighting is just a ratio, it does not matter the size, just how it relates to other weightings.
-	fn estimate <T: 'static> ( positions: &dyn List<Match<Vector3>> ) -> Quaternion
-		where T: AttitudeDeterminationConsts;
+	/// 	The weighting is just a ratio, it does not matter the size, just how it relates to other weightings.
+	/// * `lambda` - 
+	/// 	For quest algorithm, to find the correct attitude, the neuton raphson method is used.
+	/// 	This method will loop and slowly decrease the gap between the current and previous prediction.
+	/// 	Achieving perfect precision comparing the 2 values will take up computation power.
+	/// 	By specifying a precision, the computational requirements are lowered.
+	/// 	To use a default estimate value, you can provide None and it will use LAMBDA_PRECISION.
+	/// # Returns
+	/// A quaternion which rotates output to input.
+	/// Use Quaternion.conjugate() to get a rotation from input to output. 
+	fn estimate ( positions: &dyn List<Match<Vector3>>, lambda: Option<Decimal> ) -> Quaternion;
 }
 
 /// Formula required for any Wahba based methods.
@@ -80,7 +88,11 @@ pub struct Wahba ( );
 /// Use `estimate` to estimate the attitude of the camera.
 pub struct Quest( );
 
-
+/// For quest algorithm, to find the correct attitude, the neuton raphson method is used.
+/// This method will loop and slowly decrease the gap between the current and previous prediction.
+/// Achieving perfect precision comparing the 2 values will take up computation power.
+/// By specifying a precision, the computational requirements are lowered.
+const LAMBDA_PRECISION: Decimal = 0.1;
 
 
 
@@ -96,9 +108,8 @@ pub struct Quest( );
 #[cfg(test)]
 mod test
 {
-	use config::AttitudeDeterminationConsts;
-	use attitude_determination::AttitudeDetermination;
 	use attitude_determination::Quest;
+	use attitude_determination::AttitudeDetermination;
 
 	use util::units::Vector3;
 	use util::units::Quaternion;
@@ -113,18 +124,8 @@ mod test
 	use util::list::ArrayList;
 	use util::list::List;
 
-
 	use rand::prelude::*;
 
-
-
-
-
-	pub struct ConstQuest ( );
-	impl AttitudeDeterminationConsts for ConstQuest
-	{
-		const LAMBDA_PRECISION : Decimal = DECIMAL_PRECISION * 100000.0;
-	}
 
 
 	// Generates a set of coordinate pairs.
@@ -223,7 +224,7 @@ mod test
 		let input = random_coordinates::<100>(angle_axis, angle_axis_var, 0.0);
 
 
-		let rotation = Quest::estimate::<ConstQuest>(&input);
+		let rotation = Quest::estimate(&input, None);
 		angle_axis.angle = -angle_axis.angle;
 		assert!(rotation.test_equal(&angle_axis.to_quaternion()));
 	}
@@ -245,7 +246,7 @@ mod test
 		let input = random_coordinates::<100>(angle_axis, angle_axis_var, 10.0);
 		
 		
-		let rotation = Quest::estimate::<ConstQuest>(&input);
+		let rotation = Quest::estimate(&input, None);
 		angle_axis.angle = -angle_axis.angle;
 		assert!(rotation.test_equal(&angle_axis.to_quaternion()));
 	}
@@ -267,7 +268,7 @@ mod test
 		let input = random_coordinates::<100>(angle_axis, angle_axis_var, 0.0);
 
 
-		let rotation = Quest::estimate::<ConstQuest>(&input);
+		let rotation = Quest::estimate(&input, None);
 		
 		// Rotation opposite provided angle axis.
 		println!("{}", rotation.dot(angle_axis.to_quaternion()).abs());
@@ -292,7 +293,7 @@ mod test
 		let input = random_coordinates::<100>(angle_axis, angle_axis_var, 0.0);
 
 
-		let rotation = Quest::estimate::<ConstQuest>(&input);
+		let rotation = Quest::estimate(&input, None);
 		let ang_out = rotation.to_angle_axis();
 
 		println!("{:?}", ang_out);
@@ -317,7 +318,7 @@ mod test
 		let input = random_coordinates::<100>(angle_axis, angle_axis_var, 1000.0);
 
 
-		let rotation = Quest::estimate::<ConstQuest>(&input);
+		let rotation = Quest::estimate(&input, None);
 		let ang_out = rotation.to_angle_axis();
 
 		println!("{:?}", ang_out);
@@ -337,7 +338,7 @@ mod test
 	}
 	
 	#[test]
-	fn test_quaternion_reversability ( )
+	fn test_quaternion_reversibility ( )
 	{
 		let mut rng = rand::thread_rng();
 		for _i in 0..100
@@ -351,7 +352,6 @@ mod test
 			let rotation     = angle_axis.to_quaternion();
 			let rotation_inv = rotation.conjugate();
 
-			
 			let coord = Vector3
 			{ x: rng.gen::<Decimal>(), y: rng.gen::<Decimal>(), z: rng.gen::<Decimal>() }
 				.normalized().expect("Error if 0,0,0");

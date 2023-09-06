@@ -2,28 +2,49 @@
 use super::SpecularityConstruct;
 use super::StarTriangle;
 use super::Specularity;
+use super::SpecularityResult;
 
 use crate::util::units::Vector3;
+use crate::util::aliases::Decimal;
 
-use crate::config::TrackingModeConsts;
 
 use crate::util::Maths;
 
 
 
-impl <T: 'static> SpecularityConstruct<T> for Specularity where T: TrackingModeConsts
+impl SpecularityConstruct for Specularity
 {
 	/// Returns true if the triangle is the same orientation OR a triangle is IGNORE.
 	fn same ( &mut self, a: &StarTriangle<Vector3>, b: &StarTriangle<Vector3> ) -> bool
 	{
-		let aa = Specularity::new::<T>(a);
-		let bb = Specularity::new::<T>(b);
-		return aa == bb || aa == Specularity::Ignore || bb == Specularity::Ignore;
+		let aa = self.test(a);
+		let bb = self.test(b);
+		return aa == bb || aa == SpecularityResult::Ignore || bb == SpecularityResult::Ignore;
 	}
 }
 
 impl Specularity
 {
+	/// Sets up the specularity test with an ideal value.  
+	/// The value will ensure all triangles which are not close to a strait line are valid.  
+	/// The ideal value used is 0.001.  
+	pub fn default ( ) -> Self
+	{
+		return Self{specularity_min: 0.001};
+	}
+	
+	/// You should use Specularity::default() if you don't know what your doing.  
+	/// Specularity Min is the value until specularity should be ignored as the star triangle is a straight line.  
+	/// The default value is 0.001 which has been hand picked.  
+	/// Specularity ranges from ~0.0001 to ~0.01, if you use 1.0, the specularity step will be ignored.
+	pub fn new ( specularity_min: Decimal ) -> Self
+	{
+		return Self{specularity_min: specularity_min};
+	}
+
+
+
+
 	/// Finds the specularity of the triangle.
 	/// # Arguments
 	/// * `triangle` - The triangle.
@@ -43,13 +64,8 @@ impl Specularity
 	/// use star_tracker_lib::tracking_mode::Specularity;
 	/// use star_tracker_lib::util::units::Vector3;
 	/// use star_tracker_lib::util::aliases::Decimal;
-	/// use star_tracker_lib::config::TrackingModeConsts;
 	///
-	///	pub struct MockConfig ( );
-	///	impl TrackingModeConsts for MockConfig
-	///	{	const PAIRS_MAX : usize = 0; const TRIANGLES_MAX   : usize = 0;
-	///		const SPECULARITY_MIN : Decimal = 239.0;
-	///	}
+	/// let spec = Specularity::new(239.0);
 	///
 	/// let pt1 = Vector3 { x: -1.0, y: 2.0, z: 3.0 };
 	/// let pt2 = Vector3 { x: 4.0, y: 5.0, z: 6.0 };
@@ -62,20 +78,18 @@ impl Specularity
 	/// // pt1 x pt3 = (-42, 12, -22) . pt2 = -240 = false
 	/// let st3 : StarTriangle<Vector3> = StarTriangle(pt2.clone(), pt1.clone(), pt3.clone() );
 	///
-	/// // SPECULARITY::new::<MockConfig>::(st1); // Specularity::Valid(true);
-	/// // SPECULARITY::new::<MockConfig>::(st2); // Specularity::Valid(false);
-	/// // SPECULARITY::new::<MockConfig>::(st3); // Specularity::Valid(false);
-	/// // SPECULARITY::new::<MockConfig>::(st4); // Specularity::Ignore;
+	/// spec.test(&st1); // SpecularityResult::Valid(true);
+	/// spec.test(&st2); // SpecularityResult::Valid(false);
+	/// spec.test(&st3); // SpecularityResult::Valid(false);
 	/// ```
-	pub fn new <T> ( triangle: &StarTriangle<Vector3> ) -> Specularity
-		where T: TrackingModeConsts
+	pub fn test ( &self, triangle: &StarTriangle<Vector3> ) -> SpecularityResult
 	{
 		let cross = triangle.1.cross(triangle.2).dot(triangle.0);
-		if cross.abs() < T::SPECULARITY_MIN
+		if cross.abs() < self.specularity_min
 		{
-			return Specularity::Ignore;
+			return SpecularityResult::Ignore;
 		}
-		return Specularity::Valid(cross > 0.0);
+		return SpecularityResult::Valid(cross > 0.0);
 	}
 }
 
@@ -94,12 +108,10 @@ mod test
 	use crate::tracking_mode::StarTriangle;
 	use crate::tracking_mode::Specularity;
 	use crate::tracking_mode::SpecularityConstruct;
+	use crate::tracking_mode::SpecularityResult;
 
 	use crate::util::units::Vector3;
 	use crate::util::aliases::Decimal;
-
-	use crate::config::TrackingModeConsts;
-
 
 	//
 	// fn get_specular ( &self ) -> Specularity
@@ -109,12 +121,7 @@ mod test
 	#[no_coverage]
 	fn test_get_specular_valid_size ( )
 	{
-
-		pub struct MockConfig ( );
-		impl TrackingModeConsts for MockConfig
-		{	const PAIRS_MAX : usize = 0; const TRIANGLES_MAX   : usize = 0;
-			const SPECULARITY_MIN : Decimal = 239.0;
-		}
+		let spec = Specularity::new(239.0);
 
 		let pt1 = Vector3 { x: -1.0, y: 2.0, z: 3.0 };
 		let pt2 = Vector3 { x: 4.0, y: 5.0, z: 6.0 };
@@ -127,15 +134,15 @@ mod test
 		// pt1 x pt3 = (-42, 12, -22) . pt2 = -240 = false
 		let st3 : StarTriangle<Vector3> = StarTriangle(pt2.clone(), pt1.clone(), pt3.clone() );
 
-		if let Specularity::Valid(spec1) = Specularity::new::<MockConfig>(&st1)
+		if let SpecularityResult::Valid(spec1) = spec.test(&st1)
 		{	assert!(spec1);					}
 		else
 		{	panic!("Spec1 was Invalid?");	}
-		if let Specularity::Valid(spec2) = Specularity::new::<MockConfig>(&st2)
+		if let SpecularityResult::Valid(spec2) = spec.test(&st2)
 		{	assert!(!spec2);				}
 		else
 		{	panic!("Spec2 was invalid?");	}
-		if let Specularity::Valid(spec3) = Specularity::new::<MockConfig>(&st3)
+		if let SpecularityResult::Valid(spec3) = spec.test(&st3)
 		{	assert!(!spec3);				}
 		else
 		{	panic!("Spec3 was invalid?");	}
@@ -147,11 +154,7 @@ mod test
 	#[test]
 	fn test_get_specular_ignore ( )
 	{
-		pub struct MockConfig ( );
-		impl TrackingModeConsts for MockConfig
-		{	const PAIRS_MAX : usize = 0; const TRIANGLES_MAX : usize = 0;
-			const SPECULARITY_MIN : Decimal = 250.0;
-		}
+		let spec = Specularity::new(250.0);
 
 		let pt1 = Vector3 { x: -1.0, y: 2.0, z: 3.0 };
 		let pt2 = Vector3 { x: 4.0, y: 5.0, z: 6.0 };
@@ -164,9 +167,9 @@ mod test
 		// pt1 x pt3 = (-42, 12, -22) . pt2 = -240 = false
 		let st3 : StarTriangle<Vector3> = StarTriangle(pt2.clone(), pt1.clone(), pt3.clone() );
 
-		assert_eq!(Specularity::new::<MockConfig>(&st1), Specularity::Ignore);
-		assert_eq!(Specularity::new::<MockConfig>(&st2), Specularity::Ignore);
-		assert_eq!(Specularity::new::<MockConfig>(&st3), Specularity::Ignore);
+		assert_eq!(spec.test(&st1), SpecularityResult::Ignore);
+		assert_eq!(spec.test(&st2), SpecularityResult::Ignore);
+		assert_eq!(spec.test(&st3), SpecularityResult::Ignore);
 	}
 
 
@@ -180,75 +183,59 @@ mod test
 	#[test]
 	fn test_same_ignore ( )
 	{
-		pub struct MockConfig ( );
-		impl TrackingModeConsts for MockConfig
-		{	const PAIRS_MAX : usize = 0; const TRIANGLES_MAX : usize = 0;
-			const SPECULARITY_MIN : Decimal = 239.0;
-		}
-
-		let pt1 = Vector3 { x: -1.0, y: 2.0, z: 3.0 };
-		let pt2 = Vector3 { x: 4.0, y: 5.0, z: 6.0 };
-		let pt3 = Vector3 { x: 7.0, y: 8.0, z: -9.0 };
-		let mut substitute = Specularity::Ignore;
-
+		let mut spec = Specularity::new(239.0);
+		
+		let pt1 = Vector3 { x: -1.0, y: 2.0, z:  3.0 };
+		let pt2 = Vector3 { x: 4.0,  y: 5.0, z:  6.0 };
+		let pt3 = Vector3 { x: 7.0,  y: 8.0, z: -9.0 };
+		
 		// pt2 x pt3 = (-93, 78, -3) . pt1 = 240 = true
 		let st1 : StarTriangle<Vector3> = StarTriangle(pt1.clone(), pt2.clone(), pt3.clone() );
 		// pt2 x pt3 = (93, -78, 3) . pt1 = -240 = false
 		let st2 : StarTriangle<Vector3> = StarTriangle(pt1.clone(), pt3.clone(), pt2.clone() );
 		// Ignore
 		let st3 : StarTriangle<Vector3> = StarTriangle(pt1.clone(), pt1.clone(), pt1.clone() );
-
-
-		assert!(SpecularityConstruct::<MockConfig>::same(&mut substitute, &st3, &st1));
-		assert!(SpecularityConstruct::<MockConfig>::same(&mut substitute, &st2, &st3));
-		assert!(SpecularityConstruct::<MockConfig>::same(&mut substitute, &st3, &st3));
+		
+		assert!(spec.same(&st3, &st1));
+		assert!(spec.same(&st2, &st3));
+		assert!(spec.same(&st3, &st3));
 	}
-
-
+	
+	
 	#[test]
 	fn test_same_valid ( )
 	{
-		pub struct MockConfig ( );
-		impl TrackingModeConsts for MockConfig
-		{	const PAIRS_MAX : usize = 0; const TRIANGLES_MAX : usize = 0;
-			const SPECULARITY_MIN : Decimal = 239.0;
-		}
-
+		let mut spec = Specularity::new(239.0);
+		
 		let pt1 = Vector3 { x: -1.0, y: 2.0, z: 3.0 };
 		let pt2 = Vector3 { x: 4.0, y: 5.0, z: 6.0 };
 		let pt3 = Vector3 { x: 7.0, y: 8.0, z: -9.0 };
-		let mut substitute = Specularity::Ignore;
-
+		
 		// pt2 x pt3 = (-93, 78, -3) . pt1 = 240 = true
 		let st1 : StarTriangle<Vector3> = StarTriangle(pt1.clone(), pt2.clone(), pt3.clone() );
 		// pt2 x pt3 = (93, -78, 3) . pt1 = -240 = false
 		let st2 : StarTriangle<Vector3> = StarTriangle(pt1.clone(), pt3.clone(), pt2.clone() );
-
-		assert!(SpecularityConstruct::<MockConfig>::same(&mut substitute, &st1, &st1));
-		assert!(SpecularityConstruct::<MockConfig>::same(&mut substitute, &st2, &st2));
+		
+		assert!(spec.same(&st1, &st1));
+		assert!(spec.same(&st2, &st2));
 	}
-
-
+	
+	
 	#[test]
 	fn test_same_invalid ( )
 	{
-		pub struct MockConfig ( );
-		impl TrackingModeConsts for MockConfig
-		{	const PAIRS_MAX : usize = 0; const TRIANGLES_MAX : usize = 0;
-			const SPECULARITY_MIN : Decimal = 250.0;
-		}
+		let mut spec = Specularity::new(250.0);
 
 		let pt1 = Vector3 { x: -1.0, y: 2.0, z: 3.0 };
 		let pt2 = Vector3 { x: 4.0, y: 5.0, z: 6.0 };
 		let pt3 = Vector3 { x: 7.0, y: 8.0, z: -9.0 };
-		let mut substitute = Specularity::Ignore;
 
 		// pt2 x pt3 = (-93, 78, -3) . pt1 = 240 = true
 		let st1 : StarTriangle<Vector3> = StarTriangle(pt1.clone(), pt2.clone(), pt3.clone() );
 		// pt2 x pt3 = (93, -78, 3) . pt1 = -240 = false
 		let st2 : StarTriangle<Vector3> = StarTriangle(pt1.clone(), pt3.clone(), pt2.clone() );
 
-		assert!(SpecularityConstruct::<MockConfig>::same(&mut substitute, &st1, &st2));
-		assert!(SpecularityConstruct::<MockConfig>::same(&mut substitute, &st2, &st1));
+		assert!(spec.same(&st1, &st2));
+		assert!(spec.same(&st2, &st1));
 	}
 }

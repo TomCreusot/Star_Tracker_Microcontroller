@@ -3,9 +3,6 @@ use std::cmp::Ordering;
 use serde::de::{self, SeqAccess, MapAccess, Visitor, Deserializer};
 use serde::Deserialize;
 
-use star_tracker_lib::config::NixConstsStruct;
-use star_tracker_lib::config::NixConsts;
-
 use star_tracker_lib::util::test::TestEqual;
 use star_tracker_lib::util::aliases::Decimal;
 use star_tracker_lib::util::units::Equatorial;
@@ -17,6 +14,7 @@ use star_tracker_lib::util::list::List;
 
 
 use crate::io::Star;
+use crate::io::HipparcosAccessorStruct;
 
 impl Star
 {
@@ -269,11 +267,11 @@ impl<'de> Deserialize<'de> for Star
 				let bf      = bf.ok_or_else(|| de::Error::missing_field(FIELDS[5]))?;
 				let hip     = hip.ok_or_else(|| de::Error::missing_field(FIELDS[6]))?;
 				
-				if NixConstsStruct::HYG_DATABASE_DEC_DEGREES
+				if HipparcosAccessorStruct::HYG_DATABASE_DEC_DEGREES
 				{
 					dec = Degrees(dec).to_radians().0;
 				} 
-				if NixConstsStruct::HYG_DATABASE_RA_HOURS
+				if HipparcosAccessorStruct::HYG_DATABASE_RA_HOURS
 				{
 					ra = Hours(ra).to_radians().0;
 				}
@@ -293,13 +291,13 @@ impl<'de> Deserialize<'de> for Star
 
 		const FIELDS: &'static [&'static str] = 
 			&[
-				NixConstsStruct::HYG_DATABASE_HEADER_MAGNITUDE, 
-				NixConstsStruct::HYG_DATABASE_HEADER_RIGHT_ASCENTION, 
-				NixConstsStruct::HYG_DATABASE_HEADER_DECLINATION, 
-				NixConstsStruct::HYG_DATABASE_HEADER_SPECULARITY,
-				NixConstsStruct::HYG_DATABASE_HEADER_NAME,
-				NixConstsStruct::HYG_DATABASE_HEADER_BF,
-				NixConstsStruct::HYG_DATABASE_HEADER_HIP,
+				HipparcosAccessorStruct::HYG_DATABASE_HEADER_MAGNITUDE, 
+				HipparcosAccessorStruct::HYG_DATABASE_HEADER_RIGHT_ASCENSION, 
+				HipparcosAccessorStruct::HYG_DATABASE_HEADER_DECLINATION, 
+				HipparcosAccessorStruct::HYG_DATABASE_HEADER_SPECULARITY,
+				HipparcosAccessorStruct::HYG_DATABASE_HEADER_NAME,
+				HipparcosAccessorStruct::HYG_DATABASE_HEADER_BF,
+				HipparcosAccessorStruct::HYG_DATABASE_HEADER_HIP,
 			];
 		deserializer.deserialize_struct("Star", FIELDS, DurationVisitor)
 	}

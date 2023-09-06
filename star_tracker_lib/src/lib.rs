@@ -106,10 +106,7 @@ extern crate core;    // std alternative.
 #[allow(dead_code)] pub mod image_processing;
 #[allow(dead_code)] pub mod attitude_determination;
 #[allow(dead_code)] pub mod tracking_mode;
-#[allow(dead_code)] pub mod config;
 #[allow(dead_code)] pub mod projection;
-
-// pub mod core_include;
 
 pub mod core_include
 {
