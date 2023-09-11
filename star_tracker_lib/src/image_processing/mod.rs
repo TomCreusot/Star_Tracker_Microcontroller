@@ -66,7 +66,7 @@ pub struct BasicImage <const WIDTH : usize, const HEIGHT : usize>
 //										---	Threshold ---
 //###############################################################################################//
 
-/// A trait to help spcify if a pixel is the foreground (stars) or background (space) of the image.
+/// A trait to help specify if a pixel is the foreground (stars) or background (space) of the image.
 pub trait Threshold
 {
 	/// Returns the threshold which is considered as the foreground (stars).

@@ -1,0 +1,20 @@
+{
+	"fov_deg": 17.906,
+	
+	"image_size":
+	{
+		"x": 808,
+		"y": 608
+	},	
+	
+	"center":
+	{
+		"ra_degrees" : 286.410,
+		"dec_degrees": -21.694
+	},
+	"timestamp":
+	{
+		"date": "7/09/2023", 
+		"time": "9:26 PM"
+	}
+}

@@ -71,24 +71,30 @@ use star_tracker_nix::tracking_mode::DatabaseGenerator;
 use star_tracker_nix::tracking_mode::SearchTimeout;
 use star_tracker_nix::image_processing::CVImage;
 
+use std::env;
+
 pub fn main ( )
 {
 	println!(r#"===== Demo =====
 This runs through all the images in samples and tries to identify the stars using the star tracker code.
 If you want to understand how the code works, maybe start here?
 
+This accepts command line arguments for exclusive selection of images:
+reset; cargo run --bin demo 16mm_checker_calib_2
 
 	  
 	"#);
+	let exclusive_folders: Vec<String> = env::args().collect();
 
-	let angle_tolerance = Degrees(0.05).as_radians();
-	let magnitude_min = -20.0;
-	let magnitude_max =  6.69;
+
+	let angle_tolerance = Degrees(0.09).as_radians();
+	let magnitude_min = -20.00;
+	let magnitude_max =   6.69;
 	let double_star_tolerance = angle_tolerance;
 
 
 	// Loose conditions
-	let time_good: u128 = 100000; // ms until auto fail.
+	let time_good: u128 = 10000; // ms until auto fail.
 
 
 	println!("Performing Database Construction");
@@ -158,6 +164,17 @@ If you want to understand how the code works, maybe start here?
 	{
 		for img in &sample.file_img
 		{
+
+
+			// Allows you to choose the folder images.
+			let mut is_exclusive = false;
+			for i in 1..exclusive_folders.len()
+			{
+				is_exclusive |= sample.file_img[0].contains(&exclusive_folders[i]);
+			}
+			if !is_exclusive { continue; }
+
+
 			println!("\t{}", img);
 			
 			// The Diagonal field of view.
@@ -181,7 +198,6 @@ If you want to understand how the code works, maybe start here?
 			let stars_limit_reg    = DatabaseGenerator::limit_regions(&stars_limit_mag_2, region_size, region_num);
 
 
-			println!("NUM: {} {} {} {}", stars.len(), stars_limit_mag.len(), stars_limit_double.len(), stars_limit_reg.len());
 			let gen : DatabaseGenerator = DatabaseGenerator::gen_database(&stars_limit_reg, fov, fov / 1.5, angle_tolerance);
 			// let gen : DatabaseGenerator = DatabaseGenerator::gen_database_regional(&stars_limit_reg, fov, fov, TrackingConstsTest::ANGLE_TOLERANCE);
 			let database = gen.get_database();
@@ -190,7 +206,7 @@ If you want to understand how the code works, maybe start here?
 			// let mut database_iterator = ChunkIteratorRegional::new(&database);
 			// let mut database_iterator = ChunkIteratorEquatorial::new(&database, Degrees(45.0).as_radians(), 0.3);
 			// let mut database_iterator = ChunkIteratorDeclination::new(&database, Degrees(21.0).as_radians(), 0.2, ChunkIteratorDeclination::randomise_none);
-			let mut database_iterator = ChunkIteratorDeclination::new(&database, fov, 1.5, ChunkIteratorDeclination::randomise_parity);
+			let mut database_iterator = ChunkIteratorDeclination::new(&database, fov, 1.25, ChunkIteratorDeclination::randomise_parity);
 
 			// let mut database_iterator = ChunkAreaSearch::from_point(&database, center, Degrees(35.954).as_radians());
 			println!("{} stars, {} pairs.", stars_limit_reg.len(), database.pairs.size());
