@@ -111,10 +111,33 @@ impl Threshold for ThresholdPercent
 
 impl <const NUM_H: usize, const NUM_V: usize> ThresholdGrid <NUM_H, NUM_V>
 {
-	pub fn new ( img: &dyn Image, overshoot: Byte ) -> Self
+	/// Generates a threshold for the given image.
+	/// # Arguments
+	/// * `img`      - The image
+	/// * `overshoot`- From the average of the cell, should the threshold be higher or lower by how much.
+	/// * `skip`     - Sample every *skip* pixel to speed up the algorithm.
+	///
+	/// # Returns
+	/// Returns a threshold of every cell..
+	///
+	/// # Example
+	/// ```
+	/// use star_tracker_lib::image_processing::ThresholdGrid;
+	/// use star_tracker_lib::image_processing::Threshold;
+	/// use star_tracker_lib::image_processing::BasicImage;
+	/// use star_tracker_lib::image_processing::Image;
+	/// use star_tracker_lib::util::units::Pixel;
+	/// let img : BasicImage<99, 99> = BasicImage::new();
+	///
+	/// // Threshold will generate 9 cells which have a threshold value of the average pixel + 10.
+	/// // Every second pixel will be skipped to make the algorithm run 4 times faster (2^2).
+	/// let thresh = ThresholdGrid::<3,3>::new(&img, 10, 1);
+	/// assert_eq!(thresh.foreground(Pixel{x: 0, y: 0}), 10); // 0 + 10
+	/// 
+	/// ```
+	pub fn new ( img: &dyn Image, overshoot: Byte, skip: usize ) -> Self
 	{
 		let mut cells : BasicImage<NUM_H, NUM_V> = BasicImage::new();
-		
 		for col in 0..NUM_H
 		{
 			for row in 0..NUM_V
@@ -129,9 +152,9 @@ impl <const NUM_H: usize, const NUM_V: usize> ThresholdGrid <NUM_H, NUM_V>
 				let end_x   = (((col + 1) * img.width())  as Decimal / NUM_H as Decimal).round() as usize;
 				let end_y   = (((row + 1) * img.height()) as Decimal / NUM_V as Decimal).round() as usize;
 				
-				for xx in start_x .. end_x
+				for xx in ( start_x .. end_x ).step_by(skip + 1)
 				{				
-					for yy in start_y .. end_y
+					for yy in ( start_y .. end_y ).step_by(skip + 1)
 					{
 						count += 1.0;
 						cell_val += img.get(Pixel{x: xx, y: yy}) as Decimal;
@@ -168,73 +191,6 @@ impl <const NUM_H: usize, const NUM_V: usize> Threshold for ThresholdGrid<NUM_H,
 
 
 
-
-
-
-//###############################################################################################//
-//										--- Nodal ---
-//###############################################################################################//
-//
-//impl ThresholdNodal<const NUM_H: usize, const NUM_V: usize>
-//{
-//	/// Generates a threshold for the given image.
-//	/// Returns the threshold.
-//	fn new ( img: &Image ) -> Self
-//	{
-//		let nodes = BasicImage::new();
-//	
-//		let node_reach = Pixel {
-//			x: img.width()  / (NODES.x - 1),
-//			y: img.height() / (NODES.y - 1),
-//		};
-//
-//		// |1      |...|2     2|...|3  3  3|...|4 4 4 4|
-//		let node_spacing = Pixel {
-//			x: img.width()  / (NODES.x - 1),
-//			y: img.height() / (NODES.y - 1),
-//		};
-//
-//		for n_x in 0..NODES.x
-//		{
-//			for n_y in 0..NODES.y
-//			{
-//				let node = Pixel{x: n_x, y: n_y};
-//				let min = Pixel{
-//					x: node.x.saturating_sub(node_reach.x), 
-//					y: node.y.saturating_sub(node_reach.y)};
-//					
-//				let max = Pixel{
-//					x: std::cmp::min(node.x + node_reach.x, img.width()), 
-//					y: std::cmp::min(node.y + node_reach.y, img.height())};
-//				
-//				let mut avg = 0.0;
-//				for p_x in min.x .. max.x
-//				{
-//					for p_y in min.y .. max.y
-//					{
-//						let node = Pixel{x: p_x, y: p_y};			
-//						avg += img.get(pos) as Decimal;
-//					}
-//				}
-//				avg /= node_reach.x * node_reach.y;
-//				nodes.get(node) = avg as Byte;
-//			}
-//		}
-//		
-//		return Ok(Self{nodes: nodes});
-//	}
-//}
-//
-//
-//
-//pub impl <const NUM_H: usize, const NUM_V: usize> Threshold for ThresholdNodal<NUM_H, NUM_V>
-//{
-//	/// Returns true if the pixel is in the foreground (stars).
-//	fn foreground ( &self, point: Pixel, value: Byte ) -> bool
-//	{
-//		
-//	}
-//}
 
 
 
@@ -378,7 +334,7 @@ mod test
 //
 //										Threshold Grid
 //
-// pub new        ( &dyn Image,   Byte )  -> ThresholdGrid
+// pub new        ( &dyn Image,   Byte, usize )  -> ThresholdGrid
 // pub foreground ( &self, Pixel, Byte  ) -> bool
 //
 //###############################################################################################//
@@ -397,9 +353,9 @@ mod test
 			}
 		}
 
-		let thresh = ThresholdGrid::<1, 1>::new(&img, 0);
+		let thresh = ThresholdGrid::<1, 1>::new(&img, 0, 0);
 		assert_eq!(thresh.cells.get(Pixel{x: 0, y: 0}), 5);
-		let thresh = ThresholdGrid::<1, 1>::new(&img, 3);
+		let thresh = ThresholdGrid::<1, 1>::new(&img, 3, 0);
 		assert_eq!(thresh.cells.get(Pixel{x: 0, y: 0}), 3+5);
 	}
 	
@@ -412,7 +368,7 @@ mod test
 		img.set(Pixel{x: 0, y: 3}, 20);
 		img.set(Pixel{x: 3, y: 3}, 24);
 		
-		let thresh = ThresholdGrid::<2, 2>::new(&img, 0);
+		let thresh = ThresholdGrid::<2, 2>::new(&img, 0, 0);
 		assert_eq!(thresh.cells.get(Pixel{x: 0, y: 0}), 12 / 4);
 		assert_eq!(thresh.cells.get(Pixel{x: 1, y: 0}), 16 / 4);
 		assert_eq!(thresh.cells.get(Pixel{x: 0, y: 1}), 20 / 4);
@@ -428,7 +384,7 @@ mod test
 		img.set(Pixel{x:0,y:2}, 100); img.set(Pixel{x:1,y:2}, 150); img.set(Pixel{x:2,y:2}, 200);
 		
 		// Added 1 to all results due to truncation
-		let thresh = ThresholdGrid::<2, 2>::new(&img, 0);
+		let thresh = ThresholdGrid::<2, 2>::new(&img, 0, 0);
 		assert_eq!(thresh.cells.get(Pixel{x: 0, y: 0}) as usize, (0  + 50  + 50  + 50 ) / 4 + 1);
 		assert_eq!(thresh.cells.get(Pixel{x: 1, y: 0}) as usize, (50 + 50  + 100 + 150) / 4 + 1);
 		assert_eq!(thresh.cells.get(Pixel{x: 0, y: 1}) as usize, (50 + 50  + 100 + 150) / 4 + 1);
@@ -436,7 +392,6 @@ mod test
 	}
 	
 	
-		
 	#[test]
 	fn test_grid_new_excessive_overshoot ( )
 	{
@@ -444,10 +399,66 @@ mod test
 		img.set(Pixel{x:0,y:0}, 10);
 		
 		// Added 1 to all results due to truncation
-		let thresh = ThresholdGrid::<1, 1>::new(&img, 254);
+		let thresh = ThresholdGrid::<1, 1>::new(&img, 254, 0);
 		assert_eq!(thresh.cells.get(Pixel{x: 0, y: 0}) as usize, 255);
 	}
 	
+
+	#[test]
+	// Does the skip produce the same results?
+	fn test_grid_new_skip_reproducable ( )
+	{
+		const GRID_SIZE : usize = 10;
+		let mut img : BasicImage<{3 * GRID_SIZE}, {3 * GRID_SIZE}> = BasicImage::new();
+		for x in 0..img.width() {
+			for y in 0..img.height() {
+				img.set(Pixel{x: x, y: y}, ((x / GRID_SIZE) + (y / GRID_SIZE * 5)) as Byte);
+		} }
+		
+		// Added 1 to all results due to truncation
+		let thresh = ThresholdGrid::<3, 3>::new(&img, 0, 1);
+		assert_eq!(thresh.cells.get(Pixel{x: 0, y: 0}) as usize, 0);
+		assert_eq!(thresh.cells.get(Pixel{x: 1, y: 0}) as usize, 1);
+		assert_eq!(thresh.cells.get(Pixel{x: 2, y: 0}) as usize, 2);
+
+		assert_eq!(thresh.cells.get(Pixel{x: 0, y: 1}) as usize, 5);
+		assert_eq!(thresh.cells.get(Pixel{x: 1, y: 1}) as usize, 6);	
+		assert_eq!(thresh.cells.get(Pixel{x: 2, y: 1}) as usize, 7);	
+
+		assert_eq!(thresh.cells.get(Pixel{x: 0, y: 2}) as usize, 10);
+		assert_eq!(thresh.cells.get(Pixel{x: 1, y: 2}) as usize, 11);	
+		assert_eq!(thresh.cells.get(Pixel{x: 2, y: 2}) as usize, 12);	
+	}
+	
+
+	#[test]
+	// every second pixel is skipped when skip is set to 2.
+	// If every second pixel is off, the threshold should still be the same as if they all were the same.
+	fn test_grid_new_skip_every_other ( )
+	{
+		const GRID_SIZE : usize = 10;
+		let mut img : BasicImage<{3 * GRID_SIZE}, {3 * GRID_SIZE}> = BasicImage::new();
+		for x in 0..img.width() {
+			for y in 0..img.height() {
+				if x % 2 == 0 && y % 2 == 0 {
+					img.set(Pixel{x: x, y: y}, ((x / GRID_SIZE) + (y / GRID_SIZE * 5)) as Byte);
+		} } }
+
+		// Added 1 to all results due to truncation
+		let thresh = ThresholdGrid::<3, 3>::new(&img, 0, 1);
+		assert_eq!(thresh.cells.get(Pixel{x: 0, y: 0}) as usize, 0);
+		assert_eq!(thresh.cells.get(Pixel{x: 1, y: 0}) as usize, 1);
+		assert_eq!(thresh.cells.get(Pixel{x: 2, y: 0}) as usize, 2);
+
+		assert_eq!(thresh.cells.get(Pixel{x: 0, y: 1}) as usize, 5);
+		assert_eq!(thresh.cells.get(Pixel{x: 1, y: 1}) as usize, 6);	
+		assert_eq!(thresh.cells.get(Pixel{x: 2, y: 1}) as usize, 7);	
+
+		assert_eq!(thresh.cells.get(Pixel{x: 0, y: 2}) as usize, 10);
+		assert_eq!(thresh.cells.get(Pixel{x: 1, y: 2}) as usize, 11);	
+		assert_eq!(thresh.cells.get(Pixel{x: 2, y: 2}) as usize, 12);	
+	}
+
 	
 	
 //										~ Foreground ~											 //

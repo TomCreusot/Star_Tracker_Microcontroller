@@ -10,4 +10,5 @@ extern crate rand;
 
 pub mod image_processing;
 pub mod tracking_mode;
+pub mod util;
 pub mod io;

@@ -60,6 +60,7 @@ impl Sample
 				let field_dec : Vec<f64> = hdu.read_col(&mut fits, "field_dec").expect("Invalid fits.");
 				let index_ra  : Vec<f64> = hdu.read_col(&mut fits, "index_ra") .expect("Invalid fits.");
 				let index_dec : Vec<f64> = hdu.read_col(&mut fits, "index_dec").expect("Invalid fits.");
+				let flux      : Vec<f64> = hdu.read_col(&mut fits, "FLUX")     .expect("Invalid fits.");
 
 
 				for i in 0..field_x.len()
@@ -82,6 +83,7 @@ impl Sample
 					{
 						image_px: img_px, real_px: real_px, error_px: error_px,
 						image_eq: img_eq, real_eq: real_eq, error_eq: error_eq,
+						flux: flux[i]
 					};
 					output.push(star);
 				}

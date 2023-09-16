@@ -16,7 +16,10 @@ use star_tracker_nix::tracking_mode::DatabaseGenerator;
 
 pub fn main ( )
 {
-	println!(r#"===== Magnitude =====
+	println!(r#"
+	
+	
+				===== Magnitude =====
 This is used to calculate the minimum observable magnitude of each image in the samples folder.
 It will use the corr.fits file to figure out the magnitudes.
 
@@ -53,19 +56,19 @@ It will use the corr.fits file to figure out the magnitudes.
 				let mut set = false;
 				let mut dullest = 0;
 				let mut dullest_second = 0;
-				for i in 0..cor_values.len()
+				for i_c in 0..cor_values.len()
 				{
-					let point = cor_values[i].real_eq;
+					let point = cor_values[i_c].real_eq;
 					
-					for i in 0..stars_limit_double.len()
+					for i_d in 0..stars_limit_double.len()
 					{
-						if point.angle_distance(stars_limit_double[i].pos) < DOUBLE_STAR_TOLERANCE
+						if point.angle_distance(stars_limit_double[i_d].pos) < DOUBLE_STAR_TOLERANCE
 						{
-							if !set || stars_limit_double[dullest].mag < stars_limit_double[i].mag
+							if !set || stars_limit_double[dullest].mag < stars_limit_double[i_d].mag
 							{
 								set = true;
 								dullest_second = dullest;
-								dullest = i;
+								dullest = i_d;
 							}
 						}
 					}

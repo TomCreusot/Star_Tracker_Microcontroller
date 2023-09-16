@@ -61,7 +61,10 @@ use star_tracker_nix::io::StarError;
 
 pub fn main ( )
 {
-	println!(r#"===== Corr Analyser =====
+	println!(r#"
+	
+	
+				===== Corr Analyser =====
 This program is used to identify how a lens is distorted.  
 This will show a set of 3 images;  
 	

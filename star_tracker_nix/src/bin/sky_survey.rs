@@ -20,7 +20,10 @@ use star_tracker_nix::io::Io;
 
 fn main (  )
 {
-	println!(r#"===== Sky Survey =====
+	println!(r#"
+	
+	
+				===== Sky Survey =====
 	This binary generates a table showing for what field of view requires what magnitude for full sky coverage.\n\
 	Use this for deciding on your lens and database specifications.\n\
 	On completion of running, the software will generate a csv as specified in \n\n\n

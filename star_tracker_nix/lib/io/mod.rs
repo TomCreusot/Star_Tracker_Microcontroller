@@ -42,7 +42,10 @@ pub struct StarError
 	/// The great angle distance between image_eq and real_eq.
 	pub error_eq:  Radians,
 	/// The distance between image_px and real px.
-	pub error_px:  Decimal
+	pub error_px:  Decimal,
+
+
+	pub flux: Decimal,
 }
 
 

@@ -87,9 +87,18 @@ impl Blob
 		threshold: &dyn Threshold, img: &mut dyn Image,
 		stack: &mut dyn List<Pixel>, lst: &mut dyn List<Blob> )
 	{
-		for y in 0..img.height ( )
+		for y in 0..img.height()
 		{
-			for x in 0..img.width ( )
+			let step_size = if min_size < 1 { 1 } else { min_size };
+
+			// □: Not Observed.
+			// ■: Observed.
+			// □■□■□■□■□■□■
+			// ■□■□■□■□■□■□
+			// □■□■□■□■□■□■
+			// ■□■□■□■□■□■□
+			// □■□■□■□■□■□■
+			for x in (((y % 2) * min_size / 2)..img.width()).step_by(step_size)
 			{
 				let pos = Pixel{x: x, y: y};
 				if threshold.foreground(pos) <= img.get(pos)
@@ -147,7 +156,7 @@ impl Blob
 	/// assert_eq!(img.get(Pixel{x: 0, y: 1}), 0);
 	/// ```
 	pub fn spread_grass_fire  (
-			threshold: &dyn Threshold, start: Pixel, img: &mut dyn Image, stack: &mut dyn List<Pixel>
+		threshold: &dyn Threshold, start: Pixel, img: &mut dyn Image, stack: &mut dyn List<Pixel>
 		) -> Blob
 	{
 		let mut blob : Blob = Blob::new();
@@ -166,6 +175,7 @@ impl Blob
 					blob.centroid.y, blob.intensity, cur.y as UInt, img.get(cur) as UInt);
 				blob.intensity += img.get(cur) as UInt;
 				blob.size += 1;
+
 				// Set the pixel to black.
 				img.set(cur, 0);
 			}
@@ -355,9 +365,6 @@ impl Blob
 	{
 		return dullest.intensity as usize * dullest.size < largest.intensity as usize* largest.size;
 	}
-
-
-	// pub fn sort_descending
 }
 
 
@@ -418,6 +425,7 @@ mod test
 	}
 
 //										~ find_blobs ~											 //
+
 	#[test]
 	// An error should not occure if there are no blobs.
 	fn test_find_blobs_empty ( )
@@ -522,7 +530,7 @@ mod test
 	}
 	
 	
-		#[test]
+	#[test]
 	// Blobs should only be added if they are greater than a specified size.
 	fn test_find_blobs_min_size ( )
 	{
@@ -549,6 +557,135 @@ mod test
 		assert_eq!(img.get(Pixel{x: 0, y: 1}), 0);
 		assert_eq!(img.get(Pixel{x: 2, y: 2}), 0);
 	}
+
+
+
+	#[test]
+	// If the min size is set to less than 1, it should not crash. 
+	fn test_find_blobs_safe ( )
+	{
+		let mut img : BasicImage<4, 4> = BasicImage::new();
+		
+		let mut lst : ArrayList<Blob, 0> = ArrayList::new();
+		let thresh = ThresholdPercent{threshold: 1};
+		let mut stack : ArrayList<Pixel, 2> = ArrayList::new();
+		
+		let min_size = 0;
+		Blob::find_blobs(min_size, &thresh, &mut img, &mut stack, &mut lst);
+	}
+
+
+	#[test]
+	// If the blob size is 2, then every second pixel will be ignored. 
+	fn test_find_blobs_step_2_not_consumed ( )
+	{
+		let mut img : BasicImage<4, 4> = BasicImage::new();
+		img.set(Pixel{x: 1, y: 0}, 1);
+		img.set(Pixel{x: 3, y: 0}, 1);
+		img.set(Pixel{x: 0, y: 1}, 1);
+		img.set(Pixel{x: 2, y: 1}, 1);
+		img.set(Pixel{x: 1, y: 2}, 1);
+		img.set(Pixel{x: 3, y: 2}, 1);
+		
+		let mut lst : ArrayList<Blob, 9> = ArrayList::new();
+		let thresh = ThresholdPercent{threshold: 1};
+		let mut stack : ArrayList<Pixel, 2> = ArrayList::new();
+		
+		let min_size = 2;
+		Blob::find_blobs(min_size, &thresh, &mut img, &mut stack, &mut lst);
+		assert_eq!(img.get(Pixel{x: 1, y: 0}), 1); // The pixels are not consumed
+		assert_eq!(img.get(Pixel{x: 3, y: 0}), 1);
+		
+		assert_eq!(img.get(Pixel{x: 0, y: 1}), 1);
+		assert_eq!(img.get(Pixel{x: 2, y: 1}), 1);
+		
+		assert_eq!(img.get(Pixel{x: 1, y: 2}), 1);
+		assert_eq!(img.get(Pixel{x: 3, y: 2}), 1);
+	}
+	
+	#[test]
+	// If the blob size is 2, then every other second pixel will be consumed. 
+	fn test_find_blobs_step_2_consumed ( )
+	{
+		let mut img : BasicImage<4, 4> = BasicImage::new();
+		img.set(Pixel{x: 0, y: 0}, 1);
+		img.set(Pixel{x: 2, y: 0}, 1);
+		img.set(Pixel{x: 1, y: 1}, 1);
+		img.set(Pixel{x: 3, y: 1}, 1);
+		img.set(Pixel{x: 0, y: 2}, 1);
+		img.set(Pixel{x: 2, y: 2}, 1);
+
+		let mut lst : ArrayList<Blob, 9> = ArrayList::new();
+		let thresh = ThresholdPercent{threshold: 1};
+		let mut stack : ArrayList<Pixel, 2> = ArrayList::new();
+
+		let min_size = 2;
+		Blob::find_blobs(min_size, &thresh, &mut img, &mut stack, &mut lst);
+		assert_eq!(img.get(Pixel{x: 1, y: 0}), 0); // The pixels are not consumed
+		assert_eq!(img.get(Pixel{x: 3, y: 0}), 0);
+
+		assert_eq!(img.get(Pixel{x: 0, y: 1}), 0);
+		assert_eq!(img.get(Pixel{x: 2, y: 1}), 0);
+
+		assert_eq!(img.get(Pixel{x: 1, y: 2}), 0);
+		assert_eq!(img.get(Pixel{x: 3, y: 2}), 0);
+	}
+
+
+	#[test]
+	// If the blob size is 4, then every fourth pixel will be consumed. 
+	fn test_find_blobs_step_4_consumed ( )
+	{
+		let mut img : BasicImage<5, 5> = BasicImage::new();
+		img.set(Pixel{x: 0, y: 0}, 1);
+		img.set(Pixel{x: 4, y: 0}, 1);
+		img.set(Pixel{x: 2, y: 1}, 1);
+		img.set(Pixel{x: 0, y: 2}, 1);
+		img.set(Pixel{x: 4, y: 2}, 1);
+
+		let mut lst : ArrayList<Blob, 9> = ArrayList::new();
+		let thresh = ThresholdPercent{threshold: 1};
+		let mut stack : ArrayList<Pixel, 2> = ArrayList::new();
+
+		let min_size = 4;
+		Blob::find_blobs(min_size, &thresh, &mut img, &mut stack, &mut lst);
+		assert_eq!(img.get(Pixel{x: 0, y: 0}), 0); // The pixels are not consumed
+		assert_eq!(img.get(Pixel{x: 4, y: 0}), 0);
+
+		assert_eq!(img.get(Pixel{x: 2, y: 1}), 0);
+
+		assert_eq!(img.get(Pixel{x: 0, y: 2}), 0);
+		assert_eq!(img.get(Pixel{x: 4, y: 2}), 0);
+	}
+
+	#[test]
+	// If the blob size is 4, then every other fourth pixel will be not consumed. 
+	fn test_find_blobs_step_4_not_consumed ( )
+	{
+		let mut img : BasicImage<5, 5> = BasicImage::new();
+		img.set(Pixel{x: 2, y: 0}, 1);
+		img.set(Pixel{x: 0, y: 1}, 1);
+		img.set(Pixel{x: 4, y: 1}, 1);
+		img.set(Pixel{x: 2, y: 2}, 1);
+
+		let mut lst : ArrayList<Blob, 9> = ArrayList::new();
+		let thresh = ThresholdPercent{threshold: 1};
+		let mut stack : ArrayList<Pixel, 2> = ArrayList::new();
+
+		let min_size = 4;
+		Blob::find_blobs(min_size, &thresh, &mut img, &mut stack, &mut lst);
+		assert_eq!(img.get(Pixel{x: 2, y: 0}), 1); // The pixels are not consumed
+
+		assert_eq!(img.get(Pixel{x: 0, y: 1}), 1);
+		assert_eq!(img.get(Pixel{x: 4, y: 1}), 1);
+
+		assert_eq!(img.get(Pixel{x: 2, y: 0}), 1);
+	}
+
+
+
+
+
 
 
 //										~ spread_grass_fire ~									 //
@@ -729,12 +866,24 @@ mod test
 
 //										~ sort_descending_intensity ~							 //
 	#[test]
+	#[cfg_attr(coverage, no_coverage)]
 	fn test_sort_descending_intensity ( )
 	{
 		let brightest = Blob{size: 0, intensity: 1, centroid: Vector2{x: 0.0, y: 0.0}};
 		let dullest = Blob{size: 0, intensity: 0, centroid: Vector2{x: 0.0, y: 0.0}};
 		assert!(Blob::sort_descending_intensity(&brightest, &dullest));
 		assert!(!Blob::sort_descending_intensity(&dullest, &brightest));
+	}
+
+//										~ sort_descending_size_intensity ~						 //
+	#[test]
+	#[cfg_attr(coverage, no_coverage)]
+	fn test_sort_descending_size_intensity ( )
+	{
+		let brightest = Blob{size: 10, intensity: 1, centroid: Vector2{x: 0.0, y: 0.0}};
+		let dullest = Blob{size: 0, intensity: 0, centroid: Vector2{x: 0.0, y: 0.0}};
+		assert!(Blob::sort_descending_size_intensity(&brightest, &dullest));
+		assert!(!Blob::sort_descending_size_intensity(&dullest, &brightest));
 	}
 
 

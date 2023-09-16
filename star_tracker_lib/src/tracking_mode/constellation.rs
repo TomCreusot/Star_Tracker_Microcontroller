@@ -120,11 +120,18 @@ pub fn find(
 /// * `gen_spec`        - An object for checking Specularity.
 /// * `angle_tolerance` - How much error a star pair can have until it is not considered the same.
 /// 	Used for searching the database.
+/// * `num_stars`       - The how many stars are required.  
+///                       If min is reached, the current constellation will be returned.  
+///                       If between min and max stars, more stars will be searched for, on max, the constellation is immediatly returned and the search ends.  
+///                       If min is reached, true is returned, otherwise it will continue searching.  
+///                       It is recomended to use `4..=4` for 4 stars to be found.
+///   
 /// * `abort`           - A way of abandoning a search if it takes too long.
 ///
 /// # Returns
-/// If a star pyramid can be formed: Match{input: Observed Stars, output: Corresponding Database}.
-/// None if a star pyramid and star triangle cannot be formed.
+/// True if the minimum number of stars could be found.
+/// False if it failed to find the minimum stars.
+/// matches will have a value if 3 stars are found, even if min stars were not found.
 ///
 /// NOT IMPLEMENTED (in the case of a star triangle, it is not as accurate, left out)
 /// If a star triangle can be formed: Match{input: Observed Stars, output: Corresponding Database}.
@@ -135,7 +142,7 @@ pub fn find_all	(
 	gen_spec       : &mut dyn SpecularityConstruct,
 	abort          : &dyn AbandonSearch,
 	angle_tolerance: Radians,
-	required       : usize,
+	num_stars      : std::ops::RangeInclusive<usize>,
 	matches        : &mut dyn List<Match<usize>>,
 ) -> bool
 {
@@ -170,16 +177,15 @@ pub fn find_all	(
 				let _=
 				matches.push_back(Match{input: iter.input.2, output: iter.output.2, weight: 1.0});
 
-				let mut count = 0;
 				// ~~~~~~~~~~~~~	Searching through pilot stars.		~~~~~~~~~~~~~~~~~~~~
-				while let Some(pilot) = gen_tri.next_pilot(stars, database)
+				while let Some(pilot) = gen_tri.next_pilot(stars, database) 
+					&& matches.size() < *num_stars.end()
 				{
 					let _=
 					matches.push_back(Match{input: pilot.input, output: pilot.output, weight:1.0});
-					count += 1;
 				}
 
-				if required <= count { return true; }
+				if *num_stars.start() <= matches.size() { return true; }
 			}
 		}
 	}

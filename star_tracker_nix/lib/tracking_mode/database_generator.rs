@@ -21,6 +21,62 @@ use crate::tracking_mode::KVectorGenerator;
 
 impl DatabaseGenerator
 {
+	/// The required magnitude to ensure there are 4 stars in the image in any orientation with the specified field of view.
+	pub fn recomended_magnitude ( fov: Radians ) -> Decimal
+	{
+		let magnitude_reduction = [
+			6.69, // 10
+			6.38, // 12
+			5.75, // 14
+			5.75, // 16
+			5.44, // 18
+			5.44, // 20
+			5.12, // 22
+			5.12, // 24
+			5.12, // 26
+			5.12, // 28
+			4.81, // 30
+			4.81, // 32
+			4.50, // 34
+			4.50, // 36
+			4.19, // 38
+			4.19, // 40
+			4.19, // 42
+			4.19, // 44
+			4.19, // 46
+			4.19, // 48
+			3.56, // 50
+			3.56, // 52
+			3.56, // 54
+			3.56, // 56
+			3.56, // 58
+			3.25, // 60
+			3.25, // 62
+			3.25, // 64
+			3.25, // 66
+			3.25, // 68
+			3.25, // 70
+			3.25, // 72
+			3.25, // 74
+			3.25, // 76
+			2.94, // 78
+			2.94, // 80
+			2.94, // 82
+			2.62, // 84
+			2.62, // 86
+			2.62, // 88
+		];
+		return magnitude_reduction[((fov.to_degrees().0 - 10.0) / 2.0).round() as usize];
+	}
+
+
+
+
+
+
+
+
+
 	/// Returns the default PyramidDatabase.  
 	/// Call gen_database before this.
 	pub fn get_database ( &self ) -> PyramidDatabase

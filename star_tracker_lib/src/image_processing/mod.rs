@@ -88,6 +88,28 @@ pub trait Threshold
 			}
 		}
 	}
+	
+	/// Applies the threshold to the image (CONSUMES).  
+	/// This is not needed for blob detection, just for viewing.
+	/// Sets background to 0, foreground to 255.
+	fn apply_bin ( &self, img: &mut dyn Image )
+	{
+		for xx in 0..img.width()
+		{
+			for yy in 0..img.height()
+			{
+				let pos = Pixel{x: xx, y: yy};
+				if img.get(pos) < self.foreground(pos)
+				{
+					img.set(pos, 0);
+				}
+				else
+				{
+					img.set(pos, 255);
+				}
+			}
+		}
+	}
 }
 
 /// A basic percent threshold.
@@ -183,4 +205,92 @@ pub struct Blob
 	pub intensity : UInt,
 	/// The center weighted point.
 	pub centroid : Vector2,
+}
+
+
+
+//###############################################################################################//
+//###############################################################################################//
+//
+//										Unit Tests
+//
+//###############################################################################################//
+//###############################################################################################//
+
+#[cfg(test)]
+#[allow(unused_must_use)]
+mod test
+{
+	use crate::image_processing::BasicImage;
+	use crate::image_processing::Image;
+	use crate::image_processing::ThresholdPercent;
+	use crate::image_processing::Threshold;
+	
+	use crate::util::units::Pixel;
+
+	#[test]
+	fn test_threshold_apply (  )
+	{
+		let thresh = ThresholdPercent{threshold: 10};
+
+		let mut img : BasicImage<3, 3> = BasicImage::new();
+		img.set(Pixel{x: 0, y: 0}, 9);  // 9,  10, 9
+		img.set(Pixel{x: 1, y: 0}, 10); // 10, 9,  10
+		img.set(Pixel{x: 2, y: 0}, 9);  // 9,  10, 9
+
+		img.set(Pixel{x: 0, y: 1}, 10);
+		img.set(Pixel{x: 1, y: 1}, 9);
+		img.set(Pixel{x: 2, y: 1}, 10);
+		
+		img.set(Pixel{x: 0, y: 2} , 9);
+		img.set(Pixel{x: 1, y: 2} , 10);
+		img.set(Pixel{x: 2, y: 2} , 9);
+
+		thresh.apply(&mut img);
+
+		assert_eq!(img.get(Pixel{x: 0, y: 0}), 0);
+		assert_eq!(img.get(Pixel{x: 1, y: 0}), 10);
+		assert_eq!(img.get(Pixel{x: 2, y: 0}), 0);
+
+		assert_eq!(img.get(Pixel{x: 0, y: 1}), 10);
+		assert_eq!(img.get(Pixel{x: 1, y: 1}), 0);
+		assert_eq!(img.get(Pixel{x: 2, y: 1}), 10);
+
+		assert_eq!(img.get(Pixel{x: 0, y: 2}), 0);
+		assert_eq!(img.get(Pixel{x: 1, y: 2}), 10);
+		assert_eq!(img.get(Pixel{x: 2, y: 2}), 0);
+	}
+
+	#[test]
+	fn test_threshold_apply_bin (  )
+	{
+		let thresh = ThresholdPercent{threshold: 10};
+
+		let mut img : BasicImage<3, 3> = BasicImage::new();
+		img.set(Pixel{x: 0, y: 0}, 9);  // 9,  10, 9
+		img.set(Pixel{x: 1, y: 0}, 10); // 10, 9,  10
+		img.set(Pixel{x: 2, y: 0}, 9);  // 9,  10, 9
+
+		img.set(Pixel{x: 0, y: 1}, 10);
+		img.set(Pixel{x: 1, y: 1}, 9);
+		img.set(Pixel{x: 2, y: 1}, 10);
+		
+		img.set(Pixel{x: 0, y: 2} , 9);
+		img.set(Pixel{x: 1, y: 2} , 10);
+		img.set(Pixel{x: 2, y: 2} , 9);
+
+		thresh.apply_bin(&mut img);
+
+		assert_eq!(img.get(Pixel{x: 0, y: 0}), 0);
+		assert_eq!(img.get(Pixel{x: 1, y: 0}), 255);
+		assert_eq!(img.get(Pixel{x: 2, y: 0}), 0);
+
+		assert_eq!(img.get(Pixel{x: 0, y: 1}), 255);
+		assert_eq!(img.get(Pixel{x: 1, y: 1}), 0);
+		assert_eq!(img.get(Pixel{x: 2, y: 1}), 255);
+
+		assert_eq!(img.get(Pixel{x: 0, y: 2}), 0);
+		assert_eq!(img.get(Pixel{x: 1, y: 2}), 255);
+		assert_eq!(img.get(Pixel{x: 2, y: 2}), 0);
+	}
 }

@@ -237,7 +237,9 @@ fn test_reset ( )
 		assert!(img.valid_pixel(Pixel{x: 0, y: 9}));
 		assert!(img.valid_pixel(Pixel{x: 9, y: 0}));
 	}
+
 	#[test]
+	#[cfg_attr(coverage, no_coverage)]
 	fn test_valid_pixel_unsafe ( )
 	{
 		let img : BasicImage<10, 10> = BasicImage::new();

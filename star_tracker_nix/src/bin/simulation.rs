@@ -47,7 +47,10 @@ use star_tracker_nix::tracking_mode::SearchTimeout;
 
 pub fn main ( )
 {
-	println!(r#"===== Simulation =====
+	println!(r#"
+	
+	
+				===== Simulation =====
 This is an integration test of the whole of the tracking_mode module.
 This includes the construction, verification and searching of the database to find specific stars.
 This also provides a step by step guide to use the tracking mode algorithm.
