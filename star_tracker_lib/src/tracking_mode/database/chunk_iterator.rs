@@ -444,7 +444,7 @@ impl <'a> ChunkIterator for ChunkIteratorEquatorial <'a>
 			if eq_dec_band.0 < 0.0 { eq_dec_band.0 = 0.0; }
 			
 			// Find the field of view of the declination band (angle to revolve around it from [0,0,0]).
-			// This is coinsidently cos(declination) * 360 degrees.
+			// This is coincidently cos(declination) * 360 degrees.
 			let angle =  Radians(eq_dec_band.cos() * 2.0 * M_PI);
 			
 			// Number of photos = field of view of declination band / field of view of the sensor
@@ -574,6 +574,7 @@ impl<'a> ChunkIterator for ChunkAreaSearch <'a>
 		}
 		else if self.ra.start < Radians(0.0)
 		{
+			println!("{} {} {}", self.ra.start.to_degrees(), (self.ra.start + Degrees(360.0).as_radians()).to_degrees(), p1.unwrap().ra.to_degrees());
 			valid_ra |= self.ra.start + Degrees(360.0).as_radians() <= p1.unwrap().ra;
 			valid_ra |= self.ra.start + Degrees(360.0).as_radians() <= p2.unwrap().ra;
 		}
@@ -2005,176 +2006,206 @@ fn test_regional_same_region_last_element ( )
 	
 //										~ same_region ~											 //
 	#[test]
-	// If the area inside the region 
-	fn test_area_search_same_region_inside_norm ( )
+	// If both stars are inside the region.
+	fn test_area_search_same_region_both_inside ( )
 	{
 		let mut db = MockDatabase::new();
-		db.expect_find_star().returning(|_| return Ok(Equatorial::zero()));
+		db.expect_find_star().returning(|a| 
+		{
+			match a // Every 2 is the same.
+			{
+				0 => return Ok(Equatorial{ra: Degrees(15.0).to_radians(), dec: Degrees(0.0).to_radians()}), // Center
+				1 => return Ok(Equatorial{ra: Degrees(0.0).to_radians(),  dec: Degrees(15.0).to_radians()}), // Top Left
+				2 => return Ok(Equatorial{ra: Degrees(30.0).to_radians(), dec: Degrees(15.0).to_radians()}), // Top Right
+				3 => return Ok(Equatorial{ra: Degrees(0.0).to_radians(),  dec: Degrees(-15.0).to_radians()}), // Bottom Left
+				_ => return Ok(Equatorial{ra: Degrees(30.0).to_radians(), dec: Degrees(-15.0).to_radians()}), // Bottom Right
+			}
+		});
 		
 		let range_ra   = Degrees(0.0).to_radians()   .. Degrees(30.0).to_radians();
 		let range_dec  = Degrees(-15.0).to_radians() .. Degrees(15.0).to_radians();
 		
 		db.expect_get_pairs().returning(|a| return StarPair(a, a));
-		db.expect_find_star().returning(|a| 
-			{
-				match a
-				{
-					1 => { return Ok(Equatorial{
-						ra:Degrees(0.0).to_radians(), dec:Degrees(-15.0).to_radians()});}
-						
-					2 => { return Ok(Equatorial{
-						ra:Degrees(0.0).to_radians(), dec:Degrees(15.0).to_radians()});}
-						
-					3 => { return Ok(Equatorial{
-						ra:Degrees(30.0).to_radians(), dec:Degrees(-15.0).to_radians()});}
-						
-					4 => { return Ok(Equatorial{
-						ra:Degrees(30.0).to_radians(), dec:Degrees(15.0).to_radians()});}
-						
-					_ => { panic!(); }
-				}
-			});
-		
+
 		let iter = ChunkAreaSearch::from_range(&db, range_ra, range_dec);
-		
-		assert!(iter.same_region(0));
-		assert!(iter.same_region(1));
-		assert!(iter.same_region(2));
-		assert!(iter.same_region(3));
-	}
-	
-	
-	#[test]
-	// If the area inside the region amd the area is on the ra wrap around area. 
-	fn test_area_search_same_region_inside_wrap ( )
-	{
-		let mut db = MockDatabase::new();
-		db.expect_find_star().returning(|_| return Ok(Equatorial::zero()));
-		
-		let range_ra   = Degrees(330.0).to_radians() .. Degrees(390.0).to_radians();
-		let range_dec  = Degrees(-15.0).to_radians() .. Degrees(15.0).to_radians();
-		
-		db.expect_get_pairs().returning(|a| return StarPair(a, a));
-		db.expect_find_star().returning(|a| 
-			{
-				match a
-				{
-					1 => { return Ok(Equatorial{
-						ra:Degrees(330.0).to_radians(), dec:Degrees(0.0).to_radians()});}
-						
-					2 => { return Ok(Equatorial{
-						ra:Degrees(30.0).to_radians(), dec:Degrees(0.0).to_radians()});}
-						
-					_ => {panic!();}
-				}
-			});
-		
-		let iter = ChunkAreaSearch::from_range(&db, range_ra, range_dec);
-		
-		assert!(iter.same_region(0));
-		assert!(iter.same_region(1));
-	}
-	
-	
-	
-	#[test]
-	// If the area inside the region 
-	fn test_area_search_same_region_outside_norm ( )
-	{
-		let mut db = MockDatabase::new();
-		db.expect_find_star().returning(|_| return Ok(Equatorial::zero()));
-		
-		let range_ra   = Degrees(0.0).to_radians()   .. Degrees(30.0).to_radians();
-		let range_dec  = Degrees(-15.0).to_radians() .. Degrees(15.0).to_radians();
-		
-		db.expect_get_pairs().returning(|a| return StarPair(a, a));
-		db.expect_find_star().returning(|a| 
-			{
-				match a
-				{
-					1 => { return Ok(Equatorial{
-						ra:Degrees(0.0).to_radians(), dec:Degrees(-15.1).to_radians()});}
-						
-					2 => { return Ok(Equatorial{
-						ra:Degrees(0.0).to_radians(), dec:Degrees(15.1).to_radians()});}
-						
-					3 => { return Ok(Equatorial{
-						ra:Degrees(30.0).to_radians(), dec:Degrees(-15.1).to_radians()});}
-						
-					4 => { return Ok(Equatorial{
-						ra:Degrees(30.0).to_radians(), dec:Degrees(15.1).to_radians()});}
-						
-					5 => { return Ok(Equatorial{
-						ra:Degrees(-0.01).to_radians(), dec:Degrees(-15.0).to_radians()});}
-						
-					6 => { return Ok(Equatorial{
-						ra:Degrees(-0.01).to_radians(), dec:Degrees(15.1).to_radians()});}
-						
-					7 => { return Ok(Equatorial{
-						ra:Degrees(30.1).to_radians(), dec:Degrees(-15.1).to_radians()});}
-						
-					8 => { return Ok(Equatorial{
-						ra:Degrees(30.1).to_radians(), dec:Degrees(15.1).to_radians()});}
-						
-					_ => { panic!(); }
-				}
-			});
-		
-		let iter = ChunkAreaSearch::from_range(&db, range_ra, range_dec);
-		
 		assert!(iter.same_region(0));
 		assert!(iter.same_region(1));
 		assert!(iter.same_region(2));
 		assert!(iter.same_region(3));
 		assert!(iter.same_region(4));
-		assert!(iter.same_region(5));
-		assert!(iter.same_region(6));
-		assert!(iter.same_region(7));
-		assert!(iter.same_region(8));
-	}	
+	}
 	
-	
-	
-	
-	
-	
-	
-	
-	
-	
-	
+
+
+
+
 	#[test]
-	// If the area inside the region amd the area is on the ra wrap around area. 
-	fn test_area_search_same_region_outside_wrap ( )
+	// If one star is within the region, it should return true.
+	fn test_area_search_same_region_one_inside ( )
 	{
 		let mut db = MockDatabase::new();
-		db.expect_find_star().returning(|_| return Ok(Equatorial::zero()));
+		let mut i = 0;
+		db.expect_find_star().returning(move |_| 
+		{
+			i+=1;
+			match i
+			{
+				1 => return Ok(Equatorial{ra: Degrees(0.0).to_radians(),   dec: Degrees(16.0).to_radians()}), // Dec Above
+				2 => return Ok(Equatorial{ra: Degrees(15.0).to_radians(),  dec: Degrees(0.0).to_radians()}),
+
+				3 => return Ok(Equatorial{ra: Degrees(0.0).to_radians(),   dec: Degrees(-16.0).to_radians()}), // Dec Below
+				4 => return Ok(Equatorial{ra: Degrees(15.0).to_radians(),  dec: Degrees(0.0).to_radians()}),
+				
+				5 => return Ok(Equatorial{ra: Degrees(359.0).to_radians(), dec: Degrees(0.0).to_radians()}), // Ra Left
+				6 => return Ok(Equatorial{ra: Degrees(15.0).to_radians(),  dec: Degrees(0.0).to_radians()}),
+				
+				7 => return Ok(Equatorial{ra: Degrees(31.0).to_radians(),  dec: Degrees(0.0).to_radians()}), // Ra Right
+				_ => return Ok(Equatorial{ra: Degrees(15.0).to_radians(),  dec: Degrees(0.0).to_radians()}),
+			}
+		});
 		
-		let range_ra   = Degrees(330.0).to_radians() .. Degrees(390.0).to_radians();
+		let range_ra   = Degrees(0.0).to_radians()   .. Degrees(30.0).to_radians();
 		let range_dec  = Degrees(-15.0).to_radians() .. Degrees(15.0).to_radians();
 		
 		db.expect_get_pairs().returning(|a| return StarPair(a, a));
+
+		let iter = ChunkAreaSearch::from_range(&db, range_ra, range_dec);
+		assert!(iter.same_region(0));
+		assert!(iter.same_region(1));
+		assert!(iter.same_region(2));
+		assert!(iter.same_region(3));
+	}
+	
+
+
+
+
+
+	#[test]
+	// If both stars are outside of the region, false will be returned.
+	fn test_area_search_same_region_both_outside ( )
+	{
+		let mut db = MockDatabase::new();
+		db.expect_find_star().returning(|a| 
+			{
+				match a // Every 2 is the same.
+				{
+					0 => return Ok(Equatorial{ra: Degrees(0.0).to_radians(),   dec: Degrees(16.0).to_radians()}),  // Top
+					1 => return Ok(Equatorial{ra: Degrees(359.0).to_radians(), dec: Degrees(16.0).to_radians()}), // Top Left
+					2 => return Ok(Equatorial{ra: Degrees(31.0).to_radians(),  dec: Degrees(16.0).to_radians()}), // Top Right
+
+					3 => return Ok(Equatorial{ra: Degrees(359.0).to_radians(), dec: Degrees(0.0).to_radians()}),  // Left
+					4 => return Ok(Equatorial{ra: Degrees(31.0).to_radians(),  dec: Degrees(0.0).to_radians()}),  // Right
+
+					5 => return Ok(Equatorial{ra: Degrees(0.0).to_radians(),   dec: Degrees(-16.0).to_radians()}),  // Bottom
+					6 => return Ok(Equatorial{ra: Degrees(359.0).to_radians(), dec: Degrees(-16.0).to_radians()}), // Bottom Left
+					_ => return Ok(Equatorial{ra: Degrees(31.0).to_radians(),  dec: Degrees(-16.0).to_radians()}), // Bottom Right
+				}
+			});
+		
+		let range_ra   = Degrees(0.0).to_radians()   .. Degrees(30.0).to_radians();
+		let range_dec  = Degrees(-15.0).to_radians() .. Degrees(15.0).to_radians();
+		
+		db.expect_get_pairs().returning(|a| return StarPair(a, a));
+
+		let iter = ChunkAreaSearch::from_range(&db, range_ra, range_dec);
+		assert_eq!(iter.same_region(0), false);
+		assert_eq!(iter.same_region(1), false);
+		assert_eq!(iter.same_region(2), false);
+		assert_eq!(iter.same_region(3), false);
+		assert_eq!(iter.same_region(4), false);
+		assert_eq!(iter.same_region(5), false);
+		assert_eq!(iter.same_region(6), false);
+		assert_eq!(iter.same_region(7), false);
+	}
+	
+	
+
+
+
+	#[test]	
+	#[cfg_attr(coverage, no_coverage)]
+	// If the region wraps around, the stars on the inner side will be inside.
+	fn test_area_search_same_region_inside_wrap ( )
+	{
+		let mut db = MockDatabase::new();
 		db.expect_find_star().returning(|a| 
 			{
 				match a
 				{
-					1 => { return Ok(Equatorial{
-						ra:Degrees(329.0).to_radians(), dec:Degrees(0.0).to_radians()});}
-						
-					2 => { return Ok(Equatorial{
-						ra:Degrees(31.0).to_radians(), dec:Degrees(0.0).to_radians()});}
-						
-					_ => {panic!();}
+					// negative wrap
+					0 => return Ok(Equatorial{ra: Degrees(-30.0).to_radians(), dec: Degrees(15.0).to_radians()}),  // Top Left
+					1 => return Ok(Equatorial{ra: Degrees(-30.0).to_radians(), dec: Degrees(0.0).to_radians()}),   // Left
+					2 => return Ok(Equatorial{ra: Degrees(-30.0).to_radians(), dec: Degrees(-15.0).to_radians()}), // Bottom Left
+					
+					// over wrap
+					3 => return Ok(Equatorial{ra: Degrees(370.0).to_radians(), dec: Degrees(15.0).to_radians()}),  // Top Right
+					4 => return Ok(Equatorial{ra: Degrees(370.0).to_radians(), dec: Degrees(0.0).to_radians()}),   // Right
+					_ => return Ok(Equatorial{ra: Degrees(370.0).to_radians(), dec: Degrees(-15.0).to_radians()}), // Bottom Right
 				}
-			});
+			});	
+			
+		db.expect_get_pairs().returning(|a| return StarPair(a, a));
 		
+		let range_ra   = Degrees(-30.0).to_radians() .. Degrees(30.0).to_radians();
+		let range_dec  = Degrees(-15.0).to_radians() .. Degrees(15.0).to_radians();
 		let iter = ChunkAreaSearch::from_range(&db, range_ra, range_dec);
-		
 		assert!(iter.same_region(0));
 		assert!(iter.same_region(1));
+		assert!(iter.same_region(2));
+		
+		let range_ra   = Degrees(350.0).to_radians() .. Degrees(370.0).to_radians();
+		let range_dec  = Degrees(-15.0).to_radians() .. Degrees(15.0).to_radians();
+		let iter = ChunkAreaSearch::from_range(&db, range_ra, range_dec);
+		assert!(iter.same_region(3));
+		assert!(iter.same_region(4));
+		assert!(iter.same_region(5));
+	}
+
+
+
+	#[test]
+	// If the region wraps around, the stars on the outside side will be outside.
+	fn test_area_search_same_region_outside_wrap ( )
+	{
+		let mut db = MockDatabase::new();
+		db.expect_find_star().returning(|a| 
+			{
+				match a
+				{
+					// negative wrap
+					0 => return Ok(Equatorial{ra: Degrees(-31.0).to_radians(), dec: Degrees(15.0).to_radians()}),  // Top Left
+					1 => return Ok(Equatorial{ra: Degrees(-31.0).to_radians(), dec: Degrees(0.0).to_radians()}),   // Left
+					2 => return Ok(Equatorial{ra: Degrees(-31.0).to_radians(), dec: Degrees(-15.0).to_radians()}), // Bottom Left
+					
+					// over wrap
+					3 => return Ok(Equatorial{ra: Degrees(371.0).to_radians(), dec: Degrees(15.0).to_radians()}),  // Top Right
+					4 => return Ok(Equatorial{ra: Degrees(371.0).to_radians(), dec: Degrees(0.0).to_radians()}),   // Right
+					_ => return Ok(Equatorial{ra: Degrees(371.0).to_radians(), dec: Degrees(-15.0).to_radians()}), // Bottom Right
+				}
+			});	
+			
+		db.expect_get_pairs().returning(|a| return StarPair(a, a));
+		
+		let range_ra   = Degrees(-30.0).to_radians() .. Degrees(30.0).to_radians();
+		let range_dec  = Degrees(-15.0).to_radians() .. Degrees(15.0).to_radians();
+		let iter = ChunkAreaSearch::from_range(&db, range_ra, range_dec);
+		assert_eq!(iter.same_region(0), false);
+		assert_eq!(iter.same_region(1), false);
+		assert_eq!(iter.same_region(2), false);
+		
+		let range_ra   = Degrees(350.0).to_radians() .. Degrees(370.0).to_radians();
+		let range_dec  = Degrees(-15.0).to_radians() .. Degrees(15.0).to_radians();
+		let iter = ChunkAreaSearch::from_range(&db, range_ra, range_dec);
+		assert_eq!(iter.same_region(3), false);
+		assert_eq!(iter.same_region(4), false);
+		assert_eq!(iter.same_region(5), false);
 	}
 	
 	
+
+
+
 	
 	#[test]
 	// If an invalid star pair is entered (which wont happen), false will be returned.
@@ -2182,15 +2213,25 @@ fn test_regional_same_region_last_element ( )
 	fn test_area_search_same_region_error ( )
 	{
 		let mut db = MockDatabase::new();
-		db.expect_get_pairs().times(1).returning(|_| return StarPair(0, 1));
-		db.expect_find_star().times(2).returning(|_| return Err(Errors::NoMatch));
-			
+		let mut i = 0;
+		db.expect_get_pairs().times(2).returning(|_| return StarPair(0, 1));
+		db.expect_find_star().returning(move |_| 
+		{
+			i += 1;
+			match i // Every 2 is the same.
+			{
+				1 => return Ok(Equatorial::north()),
+				2 => return Err(crate::util::err::Errors::NoMatch),
+				3 => return Err(crate::util::err::Errors::NoMatch),
+				_ => return Ok(Equatorial::north()),
+			}
+		});
+		
 		let range_ra   = Degrees(330.0).to_radians() .. Degrees(30.0).to_radians();
 		let range_dec  = Degrees(-15.0).to_radians() .. Degrees(15.0).to_radians();
-		let mut iter = ChunkAreaSearch::from_range(&db, range_ra, range_dec);
-		iter.begin();
-		iter.next(); // pole
-		iter.next(); // dec: ~0, 6 ra bands...1
+		let iter = ChunkAreaSearch::from_range(&db, range_ra, range_dec);
+
+		assert!(!iter.same_region(0), "Outside range");
 		assert!(!iter.same_region(1), "Outside range");
 	}
 }

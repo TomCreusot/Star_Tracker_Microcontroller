@@ -118,7 +118,6 @@ fn confirm_pilot ( &mut self, output: StarTriangle<usize> ) -> Option<usize>
 		// The pilot is the opposite to a.
 		let a_pilot = self.sides_a.get(i).result;
 		let pilot_wrapped = a_pilot.find_not(output.0);
-		
 		if let Some(pilot) = pilot_wrapped 
 		{
 			let b_pilot = StarPair(output.1, pilot);
@@ -213,8 +212,8 @@ mod test
 	{
 		let output = StarTriangle(0, 6, 12);
 		let mut stars_a : Vec<SearchResult> = vec![sr(0, 1),   sr(2, 3),   sr(4, 5)];
-		let mut stars_b     : Vec<SearchResult> = vec![sr(6, 7),   sr(8, 9),   sr(10, 11)];
-		let mut stars_c     : Vec<SearchResult> = vec![sr(12, 13), sr(14, 15), sr(16, 17)];
+		let mut stars_b : Vec<SearchResult> = vec![sr(6, 7),   sr(8, 9),   sr(10, 11)];
+		let mut stars_c : Vec<SearchResult> = vec![sr(12, 13), sr(14, 15), sr(16, 17)];
 		let mut finder = pilot_finder_vec_test!(stars_a, stars_b, stars_c);
 		
 		assert_eq!(finder.confirm_pilot(output), None);
@@ -229,8 +228,8 @@ mod test
 	{
 		let output = StarTriangle(100, 101, 102); // This is not part of any of the lists.
 		let mut stars_a : Vec<SearchResult> = vec![sr(0, 1),   sr(4, 5)];
-		let mut stars_b     : Vec<SearchResult> = vec![sr(6, 1),   sr(10, 11)];
-		let mut stars_c     : Vec<SearchResult> = vec![sr(12, 13), sr(16, 1)];
+		let mut stars_b : Vec<SearchResult> = vec![sr(6, 1),   sr(10, 11)];
+		let mut stars_c : Vec<SearchResult> = vec![sr(12, 13), sr(16, 1)];
 		let mut finder = pilot_finder_vec_test!(stars_a, stars_b, stars_c);
 		
 		assert_eq!(finder.confirm_pilot(output), None);
@@ -245,8 +244,8 @@ mod test
 	{
 		let output = StarTriangle(100, 6, 16); // This is not part of any of the lists.
 		let mut stars_a : Vec<SearchResult> = vec![sr(0, 1),   sr(4, 5)];
-		let mut stars_b     : Vec<SearchResult> = vec![sr(6, 1),   sr(10, 11)];
-		let mut stars_c     : Vec<SearchResult> = vec![sr(12, 13), sr(16, 1)];
+		let mut stars_b : Vec<SearchResult> = vec![sr(6, 1),   sr(10, 11)];
+		let mut stars_c  : Vec<SearchResult> = vec![sr(12, 13), sr(16, 1)];
 		let mut finder = pilot_finder_vec_test!(stars_a, stars_b, stars_c);
 		
 		assert_eq!(finder.confirm_pilot(output), None);
@@ -260,8 +259,8 @@ mod test
 	{
 		let output = StarTriangle(0, 101, 16); // This is not part of any of the lists.
 		let mut stars_a : Vec<SearchResult> = vec![sr(0, 1),   sr(4, 5)];
-		let mut stars_b     : Vec<SearchResult> = vec![sr(6, 1),   sr(10, 11)];
-		let mut stars_c     : Vec<SearchResult> = vec![sr(12, 13), sr(16, 1)];
+		let mut stars_b : Vec<SearchResult> = vec![sr(6, 1),   sr(10, 11)];
+		let mut stars_c : Vec<SearchResult> = vec![sr(12, 13), sr(16, 1)];
 		let mut finder = pilot_finder_vec_test!(stars_a, stars_b, stars_c);
 		
 		assert_eq!(finder.confirm_pilot(output), None);
@@ -275,14 +274,30 @@ mod test
 	{
 		let output = StarTriangle(0, 6, 102); // This is not part of any of the lists.
 		let mut stars_a : Vec<SearchResult> = vec![sr(0, 1),   sr(4, 5)];
-		let mut stars_b     : Vec<SearchResult> = vec![sr(6, 1),   sr(10, 11)];
-		let mut stars_c     : Vec<SearchResult> = vec![sr(12, 13), sr(16, 1)];
+		let mut stars_b : Vec<SearchResult> = vec![sr(6, 1),   sr(10, 11)];
+		let mut stars_c : Vec<SearchResult> = vec![sr(12, 13), sr(16, 1)];
 		let mut finder = pilot_finder_vec_test!(stars_a, stars_b, stars_c);
 		
 		assert_eq!(finder.confirm_pilot(output), None);
 		assert_eq!(stars_a.size(), 1); // Any without the pilot must be removed, only 1 is valid.
 	}
 	
+	#[test]
+	// On line 122: `if let Some(pilot) = pilot_wrapped`, llcov thinks this can fail.
+	// This satisfies the test and makes the function impossibly safely fail.
+	fn test_confirm_pilot_llcov_edge_case ( )
+	{
+		// For None to be returned, both stars_a need to be equal to output.0
+		let output = StarTriangle(0, 6, 102);
+		let mut stars_a : Vec<SearchResult> = vec![sr(0, 0)];
+		let mut stars_b : Vec<SearchResult> = vec![sr(6, 0)];
+		let mut stars_c : Vec<SearchResult> = vec![sr(16, 0)];
+		let mut finder = pilot_finder_vec_test!(stars_a, stars_b, stars_c);
+		
+		assert_eq!(finder.confirm_pilot(output), None);
+		assert_eq!(stars_a.size(), 1); // Any without the pilot must be removed, only 1 is valid.
+	}
+
 	//																							//
 	// ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ Valid ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ //
 	//																							//

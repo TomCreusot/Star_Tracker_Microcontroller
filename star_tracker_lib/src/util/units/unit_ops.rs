@@ -169,7 +169,7 @@ impl fmt::Display for Hours {
 
 
 //###############################################################################################//
-//									--- Equatiorial ---
+//									--- Equatorial ---
 //###############################################################################################//
 
 impl PartialEq for Equatorial {
@@ -689,6 +689,8 @@ mod test
 // pub fn eq  ( &self, &Self ) -> bool
 // pub fn test_close ( &self, &Self, Decimal ) -> bool
 //
+// pub fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result
+//
 //###############################################################################################//
 //										~ abs ~													 //
 	#[test]
@@ -727,7 +729,16 @@ mod test
 		let angle = Radians(1.2345);
 		assert_eq!(angle, Radians(1.2345 + DECIMAL_PRECISION / 2.0));
 	}
-	
+
+
+
+//										~ fmt ~													 //
+	#[test]
+	fn test_radians_fmt ( )
+	{
+		let angle = Radians(1.2345678);
+		assert_eq!(angle.to_string(), "1.235r");
+	}
 	
 	
 	
@@ -740,7 +751,7 @@ mod test
 // Tested Together ops
 // pub fn mul ( self, Decimal ) -> Self
 // pub fn mul ( self, Degrees ) -> Self
-// pub fn add ( self, Degres ) -> Self
+// pub fn add ( self, Degrees ) -> Self
 // pub fn sub ( self, Degrees ) -> Self
 // pub fn div ( self, Decimal ) -> Self
 // pub fn div ( self, Degrees ) -> Self
@@ -749,6 +760,8 @@ mod test
 // Tested Together eq
 // pub fn eq  ( &self, &Self ) -> bool
 // pub fn test_close ( &self, &Self, Decimal ) -> bool
+//
+// pub fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result
 //
 //###############################################################################################//
 //										~ abs ~													 //
@@ -791,6 +804,13 @@ mod test
 		assert!(angle.test_close(&Degrees(2.2344), 1.0));
 	}
 	
+//										~ fmt ~													 //
+	#[test]
+	fn test_degrees_fmt ( )
+	{
+		let angle = Degrees(1.2345678);
+		assert_eq!(angle.to_string(), "1.235d");
+	}
 	
 	
 	
@@ -833,6 +853,15 @@ mod test
 		assert!(angle.test_close(&Hours(2.2344), 1.0));
 	}
 
+
+//										~ fmt ~													 //
+	#[test]
+	fn test_hours_fmt ( )
+	{
+		let angle = Hours(1.2345678);
+		assert_eq!(angle.to_string(), "1.235h");
+	}
+	
 	
 	
 //###############################################################################################//

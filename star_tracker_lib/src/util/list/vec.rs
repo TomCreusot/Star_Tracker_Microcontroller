@@ -64,12 +64,8 @@ impl <T> List <T> for Vec <T> where T: Clone
 	/// Equivalent to [vec.push(value)](https://doc.rust-lang.org/std/vec/struct.Vec.html#method.push).
 	fn push_back ( &mut self, value: T ) -> Error<()>
 	{
-		if self.size() < (self as &dyn List<T>).capacity()
-		{
-			self.push(value);
-			return Ok(());
-		}
-		return Err(Errors::InvalidSize);
+		self.push(value);
+		return Ok(());
 	}
 
 
@@ -285,13 +281,13 @@ mod test
 	fn test_is_empty_size_0 ( )
 	{
 		let lst: Vec<u32> = Vec::new();
-		assert!(lst.is_empty());
+		assert!(List::is_empty(&lst));
 		
 		let lst: Vec<f32> = Vec::new();
-		assert!(lst.is_empty());
+		assert!(List::is_empty(&lst));
 		
 		let lst: Vec<i32> = Vec::new();
-		assert!(lst.is_empty());	
+		assert!(List::is_empty(&lst));
 	}
 	
 	#[test]
@@ -300,7 +296,7 @@ mod test
 	{
 		let mut lst: Vec<u32> = Vec::new();
 		lst.push_back(1);
-		assert!(!lst.is_empty());
+		assert!(!List::is_empty(&lst));
 	}
 
 
@@ -355,7 +351,7 @@ mod test
 //										~ set ~													 //
 	#[test]
 	// Should correctly set elements in the list.
-	// Elements should be persistant.
+	// Elements should be persistent.
 	fn test_set_valid ( )
 	{
 		let mut lst: Vec<u32> = Vec::new();

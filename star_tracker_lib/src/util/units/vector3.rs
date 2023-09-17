@@ -552,40 +552,39 @@ mod test
 	}
 
 	#[test]
-	fn test_to_equatorial_on_ra ( ) -> Error<()>
+	fn test_to_equatorial_on_ra ( )
 	{
 		let mut c = Vector3 { x: 1.0, y: 0.0, z: 0.0 }; // x is 0
 		let mut e = c.to_equatorial();
 		assert_eq!(e.ra,  Degrees(0.0).to_radians());
 		
-		c = Vector3{ x: 1.0, y: 1.0, z: 0.0 }.normalized()?;
+		c = Vector3{ x: 1.0, y: 1.0, z: 0.0 }.normalized().expect("");
 		e = c.to_equatorial();
 		e.ra.test_close(&Degrees(45.0).to_radians(), 0.001);
 		
-		c = Vector3{ x: 0.0, y: 1.0, z: 0.0 }.normalized()?;
+		c = Vector3{ x: 0.0, y: 1.0, z: 0.0 }.normalized().expect("");
 		e = c.to_equatorial();
 		e.ra.test_close(&Degrees(90.0).to_radians(), 0.001);
 		
-		c = Vector3{ x: -1.0, y: 1.0, z: 0.0 }.normalized()?;
+		c = Vector3{ x: -1.0, y: 1.0, z: 0.0 }.normalized().expect("");
 		e = c.to_equatorial();
 		e.ra.test_close(&Degrees(135.0).to_radians(), 0.001);
 		
-		c = Vector3{ x: -1.0, y: 0.0, z: 0.0 }.normalized()?;
+		c = Vector3{ x: -1.0, y: 0.0, z: 0.0 }.normalized().expect("");
 		e = c.to_equatorial();
 		e.ra.test_close(&Degrees(180.0).to_radians(), 0.001);
 		
-		c = Vector3{ x: -1.0, y: -1.0, z: 0.0 }.normalized()?;
+		c = Vector3{ x: -1.0, y: -1.0, z: 0.0 }.normalized().expect("");
 		e = c.to_equatorial();
 		e.ra.test_close(&Degrees(225.0).to_radians(), 0.001);
 		
-		c = Vector3{ x: 0.0, y: -1.0, z: 0.0 }.normalized()?;
+		c = Vector3{ x: 0.0, y: -1.0, z: 0.0 }.normalized().expect("");
 		e = c.to_equatorial();
 		e.ra.test_close(&Degrees(270.0).to_radians(), 0.001);
 		
-		c = Vector3{ x: 1.0, y: -1.0, z: 0.0 }.normalized()?;
+		c = Vector3{ x: 1.0, y: -1.0, z: 0.0 }.normalized().expect("");
 		e = c.to_equatorial();
 		e.ra.test_close(&Degrees(315.0).to_radians(), 0.001);
-		return Ok(());
 	}
 
 

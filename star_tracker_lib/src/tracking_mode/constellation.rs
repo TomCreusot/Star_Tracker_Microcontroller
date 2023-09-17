@@ -122,9 +122,9 @@ pub fn find(
 /// 	Used for searching the database.
 /// * `num_stars`       - The how many stars are required.  
 ///                       If min is reached, the current constellation will be returned.  
-///                       If between min and max stars, more stars will be searched for, on max, the constellation is immediatly returned and the search ends.  
+///                       If between min and max stars, more stars will be searched for, on max, the constellation is immediately returned and the search ends.  
 ///                       If min is reached, true is returned, otherwise it will continue searching.  
-///                       It is recomended to use `4..=4` for 4 stars to be found.
+///                       It is recommended to use `4..=4` for 4 stars to be found.
 ///   
 /// * `abort`           - A way of abandoning a search if it takes too long.
 ///
@@ -132,9 +132,6 @@ pub fn find(
 /// True if the minimum number of stars could be found.
 /// False if it failed to find the minimum stars.
 /// matches will have a value if 3 stars are found, even if min stars were not found.
-///
-/// NOT IMPLEMENTED (in the case of a star triangle, it is not as accurate, left out)
-/// If a star triangle can be formed: Match{input: Observed Stars, output: Corresponding Database}.
 pub fn find_all	(
 	stars          : &dyn List<Equatorial>,
 	database       : &mut dyn ChunkIterator,
@@ -178,13 +175,13 @@ pub fn find_all	(
 				matches.push_back(Match{input: iter.input.2, output: iter.output.2, weight: 1.0});
 
 				// ~~~~~~~~~~~~~	Searching through pilot stars.		~~~~~~~~~~~~~~~~~~~~
-				while let Some(pilot) = gen_tri.next_pilot(stars, database) 
-					&& matches.size() < *num_stars.end()
+				while matches.size() < *num_stars.end() && 
+					let Some(pilot) = gen_tri.next_pilot(stars, database) 
 				{
 					let _=
 					matches.push_back(Match{input: pilot.input, output: pilot.output, weight:1.0});
 				}
-
+				
 				if *num_stars.start() <= matches.size() { return true; }
 			}
 		}
@@ -209,12 +206,16 @@ pub fn find_all	(
 #[allow(unused_must_use)]
 mod test
 {
+	use std::ops::RangeInclusive;
+
 	use super::Constellation;
 	use super::StarTriangle;
 	use super::StarPyramid;
 	use super::Match;
 	use crate::tracking_mode::database::MockDatabase;
+	use crate::tracking_mode::database::MockChunkIterator;
 	use crate::tracking_mode::database::ChunkIteratorNone;
+	use crate::tracking_mode::database::ChunkIterator;
 	use crate::tracking_mode::MockSpecularityConstruct;
 	use crate::tracking_mode::MockTriangleConstruct;
 	use crate::tracking_mode::MockPyramidConstruct;
@@ -224,6 +225,7 @@ mod test
 	use crate::util::units::Radians;
 	use crate::util::aliases::Decimal;
 	use crate::util::err::Errors;
+	use crate::util::list::List;
 
 
 
@@ -240,12 +242,459 @@ mod test
 		assert!((output.2.dec - input.2.dec).0.abs() < 0.01);
 	}
 
+	// Returns an AbandonSearch which is mocked and will return false every time it is called.
+	fn abandon_never ( ) -> MockAbandonSearch
+	{
+		let mut abandon = MockAbandonSearch::new(); 
+		abandon.expect_should_abort().returning(||false);
+		return abandon;
+	}
+
+
 
 //###############################################################################################//
 //
-//										find
+//										find_all
 //
-// pub fn find	<T: TrackingModeConsts> (
+// pub fn find_all	(
+// 	stars          : &dyn List<Equatorial>,
+// 	database       : &mut dyn ChunkIterator,
+// 	gen_tri        : &mut dyn TriangleConstruct,
+// 	gen_spec       : &mut dyn SpecularityConstruct,
+// 	abort          : &dyn AbandonSearch,
+// 	angle_tolerance: Radians,
+// 	num_stars      : std::ops::RangeInclusive<usize>,
+// 	matches        : &mut dyn List<Match<usize>>,
+// ) -> bool
+//
+//###############################################################################################//
+
+
+
+	#[test]
+	// Checks the database is reset before anything happens.
+	// Without a reset database, some regions of the sky will be missed.
+	// This could result in unreliable inconsistent results. 
+	fn test_find_all_database_reset ( )
+	{
+		let stars : Vec<Equatorial> = vec![];
+
+		let mut mock_t = MockTriangleConstruct::new();
+		let mut mock_s = MockSpecularityConstruct::new();
+		let mut mock_c = MockChunkIterator::new();
+		let abandon = abandon_never();
+		let angle_tolerance = Radians(0.0);
+		let mut matches = Vec::<Match<usize>>::new();
+
+		mock_c.expect_begin().times(1).returning(|| return);
+		mock_t.expect_begin().times(1).returning(|_, _| return);
+		mock_t.expect_next().times(1).returning(|_, _| return None);
+	
+		let passed = Constellation::find_all (&stars, &mut mock_c, &mut mock_t, &mut mock_s, &abandon, angle_tolerance, 0..=0, &mut matches);
+		assert_eq!(passed, false);
+		assert_eq!(matches.len(), 0);
+	}
+	
+	#[test]
+	// If there is only 0, 1 or 2 stars, there is not enough to find a match.
+	// False should be returned with no stars added to the output list.
+	fn test_find_all_insufficient_input_stars ( )
+	{
+		let a = Equatorial::north();
+		let stars_0 : Vec<Equatorial> = vec![];
+		let stars_1 : Vec<Equatorial> = vec![a];
+		let stars_2 : Vec<Equatorial> = vec![a, a];
+		
+		let mock_d     = MockDatabase::new();
+		let mut mock_t = MockTriangleConstruct::new();
+		let mut mock_s = MockSpecularityConstruct::new();
+		let mut chunk  = ChunkIteratorNone::new(&mock_d);
+		let abandon = abandon_never();
+		let angle_tolerance = Radians(0.0);
+		let mut matches = Vec::<Match<usize>>::new();
+		
+		mock_t.expect_begin().times(1 * 3).returning(|_, _| return);
+		mock_t.expect_next().times(1 * 3).returning(|_, _| return None);
+		
+		let passed = Constellation::find_all (&stars_0, &mut chunk, &mut mock_t, &mut mock_s, &abandon, angle_tolerance, 0..=0, &mut matches);
+		assert_eq!(passed, false);
+		assert_eq!(matches.len(), 0);
+		
+		let passed = Constellation::find_all (&stars_1, &mut chunk, &mut mock_t, &mut mock_s, &abandon, angle_tolerance, 0..=0, &mut matches);
+		assert_eq!(passed, false);
+		assert_eq!(matches.len(), 0);
+		
+		let passed = Constellation::find_all (&stars_2, &mut chunk, &mut mock_t, &mut mock_s, &abandon, angle_tolerance, 0..=0, &mut matches);
+		assert_eq!(passed, false);
+		assert_eq!(matches.len(), 0);
+	}
+	
+	#[test]
+	// If there is 3 or more stars but none form a triangle.
+	// False should be returned with no stars added to the output list.
+	fn test_find_all_no_triangle_match ( )
+	{
+		let a = Equatorial::north();
+		let stars_3 : Vec<Equatorial> = vec![a, a, a];
+		let stars_4 : Vec<Equatorial> = vec![a, a, a, a];
+
+		let mut mock_t = MockTriangleConstruct::new();
+		let mut mock_s = MockSpecularityConstruct::new();
+		let mut mock_c = MockChunkIterator::new();
+		let abandon = abandon_never();
+		let angle_tolerance = Radians(0.0);
+		let mut matches = Vec::<Match<usize>>::new();
+
+		mock_c.expect_begin()       .times(1 * 2).returning(|| return);
+		mock_t.expect_begin()       .times(1 * 2).returning(|_, _| return);
+		mock_t.expect_next()        .times(1 * 2).returning(|_, _| return None);
+	
+		let passed = Constellation::find_all (&stars_3, &mut mock_c, &mut mock_t, &mut mock_s, &abandon, angle_tolerance, 0..=0, &mut matches);
+		assert_eq!(passed, false);
+		assert_eq!(matches.len(), 0);
+		let passed = Constellation::find_all (&stars_4, &mut mock_c, &mut mock_t, &mut mock_s, &abandon, angle_tolerance, 0..=0, &mut matches);
+		assert_eq!(passed, false);
+		assert_eq!(matches.len(), 0);
+	}
+
+
+	#[test]
+	// If the input or output stars were to somehow changed.
+	// This should never happen...
+	// It is just to satisfy llcov.
+	fn test_find_all_edge_case ( )
+	{
+		let a = Equatorial::north();
+		let stars : Vec<Equatorial> = vec![a, a, a];
+
+		let mut mock_d = MockDatabase::new();
+		let mut mock_t = MockTriangleConstruct::new();
+		let mut mock_s = MockSpecularityConstruct::new();
+		let abandon = abandon_never();
+		let angle_tolerance = Radians(0.0);
+		let mut matches = Vec::<Match<usize>>::new();
+		
+		let mut i = 0;
+		mock_t.expect_begin()       .times(1).returning(|_, _| return);
+		mock_d.expect_find_star()   .returning(|a| 
+			if a == 0 { Ok(Equatorial::north()) } else { Err(Errors::NoMatch) });
+		mock_t.expect_next().returning(move |_, _| 
+		{
+			if i == 0
+			{
+				i += 1;
+				return Some(Match{
+					input: StarTriangle(10, 10, 10), 
+					output: StarTriangle(0, 0, 0), weight: 0.0});
+			}
+			else if i == 1
+			{
+				i += 1;
+				return Some(Match{
+					input: StarTriangle(0, 0, 0), 
+					output: StarTriangle(1, 1, 1), weight: 0.0});
+					
+			}
+			return None;	
+		});
+		let mut mock_c = ChunkIteratorNone::new(&mock_d);
+		
+		let passed = Constellation::find_all (&stars, &mut mock_c, &mut mock_t, &mut mock_s, &abandon, angle_tolerance, 0..=0, &mut matches);
+		assert_eq!(passed, false);
+		assert_eq!(matches.len(), 0);
+	}
+
+
+
+
+	
+	#[test]
+	// If there is only 3 stars that can be found and the min stars is 4.
+	// The output list should have the stars in it and false should be returned.
+	fn test_find_all_triangle_invalid_specularity ( )
+	{
+		let stars = vec![Equatorial::north(), Equatorial::south(), Equatorial::zero()];
+
+		let mut mock_d = MockDatabase::new();
+		let mut mock_t = MockTriangleConstruct::new();
+		let mut mock_s = MockSpecularityConstruct::new();
+		let abandon = abandon_never();
+		let angle_tolerance = Radians(0.0);
+		let mut matches = Vec::<Match<usize>>::new();
+		
+		let mut i = 0;  // 1 every iteration.
+		let mut ii = 0; // 3 every iteration.
+		mock_t.expect_begin().times(1).returning(|_, _| return);
+		mock_d.expect_find_star().times(stars.len() * 3).returning(move |a| {
+				assert_eq!(a, i);
+				ii += 1;
+				if 2 < ii
+				{
+					ii = 0;
+					i+=1;
+				}
+				return Ok(Equatorial::north())});
+
+		mock_s.expect_same().times(stars.len()).returning(move |a, b| {
+			let cloned = vec![Equatorial::north(), Equatorial::south(),	Equatorial::zero()];
+			let s = cloned[i].to_vector3();
+			let north = Equatorial::north().to_vector3();
+			assert_eq!(*a, StarTriangle(s, s, s));
+			assert_eq!(*b, StarTriangle(north, north, north));
+			i+=1;
+			return false; });
+
+		mock_t.expect_next().times(stars.len() + 1).returning(move |_, _| {
+			if i < 3
+			{
+				let val = Some(Match{
+					input: StarTriangle(i, i, i), 
+					output: StarTriangle(i, i, i), weight: 0.0});
+				i += 1;
+				return val;
+			} else { return None; }});
+
+		let mut mock_c = ChunkIteratorNone::new(&mock_d);
+				
+		let passed = Constellation::find_all (&stars, &mut mock_c, &mut mock_t, &mut mock_s, &abandon, angle_tolerance, 0..=0, &mut matches);
+		assert_eq!(passed, false);
+		assert_eq!(matches.len(), 0);
+	}
+	
+	
+
+
+	#[test]
+	// If there is only 3 stars that can be found and the min stars is 4.
+	// The output list should have the stars in it and false should be returned.
+	fn test_find_all_triangle_no_pyramids ( )
+	{
+		let stars = vec![Equatorial::north(), Equatorial::south(), Equatorial::zero()];
+		let stars_count = stars.len();
+
+		let mut mock_d = MockDatabase::new();
+		let mut mock_t = MockTriangleConstruct::new();
+		let mut mock_s = MockSpecularityConstruct::new();
+		let abandon = abandon_never();
+		let angle_tolerance = Radians(0.0);
+		let mut matches = Vec::<Match<usize>>::new();
+		
+		let mut i = 0;  // 1 every iteration.
+		mock_t.expect_begin()     .times(1).returning(|_, _| return);
+		mock_t.expect_next()      .times(stars.len() + 1).returning(move |_, _| {
+			if i < stars_count
+			{
+				let val = Some(Match{
+					input: StarTriangle(i, i, i), output: StarTriangle(i, i, i), weight: 0.0});
+				i += 1;
+				return val;
+			} else { return None; }});
+
+
+		mock_d.expect_find_star() .times(stars.len() * 3).returning(|_| return Ok(Equatorial::north()));
+		mock_s.expect_same()      .times(stars.len()).returning(|_, _| true);
+		mock_t.expect_next_pilot().times(stars.len()).returning(|_, _| None);
+
+
+		let mut mock_c = ChunkIteratorNone::new(&mock_d);
+				
+		let passed = Constellation::find_all (&stars, &mut mock_c, &mut mock_t, &mut mock_s, &abandon, angle_tolerance, 4..=4, &mut matches);
+		assert_eq!(passed, false);
+		assert_eq!(matches.len(), 3); // The last closest match
+		assert_eq!(matches[0].input, 2);
+		assert_eq!(matches[1].input, 2);
+		assert_eq!(matches[2].input, 2);
+		assert_eq!(matches[0].output, 2);
+		assert_eq!(matches[1].output, 2);
+		assert_eq!(matches[2].output, 2);
+	}
+
+
+
+
+
+	#[test]
+	// If there is enough stars and a triangle is found but no pyramid match can be found.
+	// The triangle should be put in the output list and false should be returned.
+	fn test_find_all_triangle_not_enough_pyramids ( )
+	{
+		let stars = vec![Equatorial::north(), Equatorial::south(), Equatorial::zero()];
+		let stars_count = stars.len();
+
+		let mut mock_d = MockDatabase::new();
+		let mut mock_t = MockTriangleConstruct::new();
+		let mut mock_s = MockSpecularityConstruct::new();
+		let abandon = abandon_never();
+		let angle_tolerance = Radians(0.0);
+		let mut matches = Vec::<Match<usize>>::new();
+		
+		let mut i = 0;  // 1 every iteration.
+		let mut needs_2_pilots = false;
+		mock_t.expect_begin()     .times(1).returning(|_, _| return);
+		mock_t.expect_next()      .times(stars.len() + 1).returning(move |_, _| {
+			if i < stars_count
+			{
+				let val = Some(Match{
+					input: StarTriangle(i, i, i), output: StarTriangle(i, i, i), weight: 0.0});
+				i += 1;
+				return val;
+			} else { return None; }});
+
+		mock_d.expect_find_star() .times(stars.len() * 3).returning(|_| return Ok(Equatorial::north()));
+		mock_s.expect_same()      .times(stars.len()).returning(|_, _| true);
+		mock_t.expect_next_pilot().times(stars.len() * 2).returning(move |_, _| 
+		{
+			needs_2_pilots = !needs_2_pilots;
+			i+=1;
+			if needs_2_pilots { return Some(Match{input: i*100, output: (i + 1)*100, weight: 0.0}); }
+			return None;
+		});
+
+
+		let mut mock_c = ChunkIteratorNone::new(&mock_d);
+				
+		let passed = Constellation::find_all (&stars, &mut mock_c, &mut mock_t, &mut mock_s, &abandon, angle_tolerance, 5..=5, &mut matches);
+		assert_eq!(passed, false);
+		assert_eq!(matches.len(), 4);
+		assert_eq!(matches[0].input, 2);
+		assert_eq!(matches[1].input, 2);
+		assert_eq!(matches[2].input, 2);
+		assert_eq!(matches[3].input, 100 * 5);
+		assert_eq!(matches[0].output, 2);
+		assert_eq!(matches[1].output, 2);
+		assert_eq!(matches[2].output, 2);
+		assert_eq!(matches[3].output, 100 * 6);
+	}
+
+	
+	#[test]
+	// If there is enough stars and a pyramid can be formed and only 4 stars are required.
+	fn test_find_all_valid_4_stars ( )
+	{
+		let stars = vec![Equatorial::north()];
+
+		let mut mock_d = MockDatabase::new();
+		let mut mock_t = MockTriangleConstruct::new();
+		let mut mock_s = MockSpecularityConstruct::new();
+		let abandon = abandon_never();
+		let angle_tolerance = Radians(0.0);
+		let mut matches = Vec::<Match<usize>>::new();
+		
+		mock_t.expect_begin()     .times(1).returning(|_, _| return);
+		mock_t.expect_next()      .times(1).returning(|_, _| 
+			Some(Match{input: StarTriangle(0, 0, 0), output: StarTriangle(1, 2, 3), weight: 0.0}));
+
+		mock_d.expect_find_star() .times(3).returning(|_| return Ok(Equatorial::north()));
+		mock_s.expect_same()      .times(1).returning(|_, _| true);
+		mock_t.expect_next_pilot().times(1).returning(|_, _| 
+			return Some(Match{input: 200, output: 100, weight: 0.0}));
+
+
+		let mut mock_c = ChunkIteratorNone::new(&mock_d);
+				
+		let passed = Constellation::find_all (&stars, &mut mock_c, &mut mock_t, &mut mock_s, &abandon, angle_tolerance, 4..=4, &mut matches);
+		assert_eq!(passed, true);
+		assert_eq!(matches.len(), 4);
+		assert_eq!(matches[0].input, 0);
+		assert_eq!(matches[1].input, 0);
+		assert_eq!(matches[2].input, 0);
+		assert_eq!(matches[3].input, 200);
+		assert_eq!(matches[0].output, 1);
+		assert_eq!(matches[1].output, 2);
+		assert_eq!(matches[2].output, 3);
+		assert_eq!(matches[3].output, 100);
+	}
+	
+	
+	#[test]
+	// If the number of valid pyramid stars exceed the required number of stars, no more should be added.
+	// The function will abort true with a list of valid stars.
+	fn test_find_all_valid_too_many_pyramids ( )
+	{
+		let stars = vec![Equatorial::north()];
+
+		let mut mock_d = MockDatabase::new();
+		let mut mock_t = MockTriangleConstruct::new();
+		let mut mock_s = MockSpecularityConstruct::new();
+		let abandon = abandon_never();
+		let angle_tolerance = Radians(0.0);
+		let mut matches = Vec::<Match<usize>>::new();
+		
+		mock_t.expect_begin()     .times(1).returning(|_, _| return);
+		mock_t.expect_next()      .times(1).returning( |_, _| 
+			Some(Match{input: StarTriangle(0, 0, 0), output: StarTriangle(1, 2, 3), weight: 0.0}));
+
+		mock_d.expect_find_star() .times(3).returning(|_| return Ok(Equatorial::north()));
+		mock_s.expect_same()      .times(1).returning(|_, _| true);
+
+		let mut i = 0;
+		mock_t.expect_next_pilot().times(2).returning(move |_, _| 
+			{
+				i += 1;
+				return Some(Match{input: i * 200, output: i * 100, weight: 0.0});
+			});
+
+
+		let mut mock_c = ChunkIteratorNone::new(&mock_d);
+				
+		let passed = Constellation::find_all (&stars, &mut mock_c, &mut mock_t, &mut mock_s, &abandon, angle_tolerance, 5..=5, &mut matches);
+		assert_eq!(passed, true);
+		assert_eq!(matches.len(), 5);
+		assert_eq!(matches[0].input, 0);
+		assert_eq!(matches[1].input, 0);
+		assert_eq!(matches[2].input, 0);
+		assert_eq!(matches[3].input, 200);
+		assert_eq!(matches[4].input, 400);
+		assert_eq!(matches[0].output, 1);
+		assert_eq!(matches[1].output, 2);
+		assert_eq!(matches[2].output, 3);
+		assert_eq!(matches[3].output, 100);
+		assert_eq!(matches[4].output, 200);
+	}
+
+
+
+	
+	#[test]
+	fn test_find_all_abort ( )
+	{
+		let stars = vec![Equatorial::north()];
+
+		let mut mock_d = MockDatabase::new();
+		let mut mock_t = MockTriangleConstruct::new();
+		let mut mock_s = MockSpecularityConstruct::new();
+		let mut abandon = MockAbandonSearch::new();
+		let angle_tolerance = Radians(0.0);
+		let mut matches = Vec::<Match<usize>>::new();
+		
+		mock_t.expect_begin()     .times(1).returning(|_, _| return);
+		mock_t.expect_next()      .times(2).returning( |_, _| 
+			Some(Match{input: StarTriangle(0, 0, 0), output: StarTriangle(1, 2, 3), weight: 0.0}));
+
+		mock_d.expect_find_star() .times(3*2).returning(|_| return Ok(Equatorial::north()));
+		mock_s.expect_same()      .times(2).returning(|_, _| true);
+		mock_t.expect_next_pilot().times(2).returning(|_, _| None);
+
+		let mut i = 0;
+		abandon.expect_should_abort().times(2 + 1).returning(move || 
+		{
+			i += 1;
+			return !(i < 3);
+		});
+
+		let mut mock_c = ChunkIteratorNone::new(&mock_d);
+				
+		let passed = Constellation::find_all (&stars, &mut mock_c, &mut mock_t, &mut mock_s, &abandon, angle_tolerance, 5..=5, &mut matches);
+		assert_eq!(passed, false);
+		assert_eq!(matches.len(), 3);
+	}
+	
+	
+	//###############################################################################################//
+	//
+	//										find
+	//
+	// pub fn find	<T: TrackingModeConsts> (
 // 										stars    : &dyn List<Equatorial>,
 // 										database : &dyn Database,
 // 										gen_tri  : &mut dyn TriangleConstruct,
@@ -282,9 +731,7 @@ mod test
 		let result = Constellation::find (
 			&stars, &mut chunk, &mut mock_t, &mut mock_p, &mut mock_s, angle_tolerance, &abandon);
 
-		assert_eq!(Constellation::None, result);
-
-	}
+		assert_eq!(Constellation::None, result);	}
 
 
 
@@ -618,7 +1065,7 @@ mod test
 	{
 		let a = Equatorial{ra: Radians(0.0), dec: Radians(0.0)};
 		let stars : Vec<Equatorial> = vec![a, a, a, a];
-		let mut mock_d = MockDatabase::new();
+		let mock_d = MockDatabase::new();
 		let mut mock_t = MockTriangleConstruct::new();
 		let mut mock_p = MockPyramidConstruct::new();
 		let mut mock_s = MockSpecularityConstruct::new();
@@ -626,15 +1073,11 @@ mod test
 		abandon.expect_should_abort().returning(|| true);
 		let angle_tolerance = Radians(0.0);
 
-		mock_d.expect_find_star()
-		.returning(|_| return Ok(Equatorial::zero()));
-
 		let mut chunk  = ChunkIteratorNone::new(&mock_d);
 
 
 		mock_t.expect_begin().returning(|_, _| return);
 
-		mock_t.expect_next().returning(|_, _| return None );
 
 		let result = Constellation::find (
 			&stars, &mut chunk, &mut mock_t, &mut mock_p, &mut mock_s, angle_tolerance, &abandon);

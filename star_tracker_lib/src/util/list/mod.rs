@@ -32,7 +32,7 @@
 //! ```
 //!
 //! # Memory Allocation
-//! The heap can cause problems on microprocessesors;
+//! The heap can cause problems on microprocessors;
 //! - It takes time to allocate memory to the heap as oppose to the stack which is instant.
 //! - The size of the program is variable and it is hard to predict if the system will run out of memory.
 //! - Memory will be fragmented and scattered.  
@@ -77,7 +77,7 @@ use crate::util::err::Errors;
 /// For other systems, it is advised to use the vec implementation as it will never fill up.  
 ///
 /// # Memory Allocation
-/// The heap can cause problems on microprocessesors;
+/// The heap can cause problems on microprocessors;
 /// - It takes time to allocate memory to the heap as oppose to the stack which is instant.
 /// - The size of the program is variable and it is hard to predict if the system will run out of memory.
 /// - Memory will be fragmented and scattered.  
@@ -146,7 +146,7 @@ pub trait List<T>
 	/// The value removed.
 	fn pop_back ( &mut self ) -> Error<T>;
 
-	/// Sets the counter to 0 so all elements will be override and the list is essentialy cleared.
+	/// Sets the counter to 0 so all elements will be override and the list is essentially cleared.
 	fn clear ( &mut self );
 
 	/// Sorts the list
@@ -208,6 +208,7 @@ pub trait List<T>
 		{
 			return Result::Err(Errors::InvalidSize);
 		}
+		
 		if index < self.size()
 		{
 			let value = self.get(index);
@@ -218,10 +219,6 @@ pub trait List<T>
 				ii += 1;
 			}
 			let popped = self.pop_back();
-			if popped.is_err()
-			{
-				return popped;
-			}
 			return Result::Ok(value);
 		}
 		return Result::Err(Errors::OutOfBounds);
@@ -231,8 +228,8 @@ pub trait List<T>
 	/// Finds any associated items and appends self to out.
 	/// # Arguments
 	/// * `list_b` - A list to compare with list_a.
-	/// * `compare` - A function to compare the two (usualy a == b).
-	/// * `out` - The output array which holds the simularities.
+	/// * `compare` - A function to compare the two (usually a == b).
+	/// * `out` - The output array which holds the similarities.
 	/// # Returns
 	/// Errors::InvalidSize if the list is full and more elements should be added.
 	/// Ok(()) otherwise.
@@ -323,15 +320,15 @@ pub trait List<T>
 
 /// An implementation of an Array List with no allocations to the heap.  
 ///
-/// Choose this datastructure if:
-/// * You need a **resizable**, linear datastructure of which you can access elements with an index.
+/// Choose this data structure if:
+/// * You need a **resizable**, linear data structure of which you can access elements with an index.
 /// * You have limited memory on your device (i.e. microprocessor).
 /// * You need a reliable system which has a known memory usage.
 /// * You have a slow processor which will make heap allocations slow.  
-/// Refere to [**List**](crate::util::list::List) for more details about which type of list to use.
+/// Refer to [**List**](crate::util::list::List) for more details about which type of list to use.
 ///
 /// # Example
-/// The following example will show the versitility of an array_list.
+/// The following example will show the versatility of an array_list.
 /// ```
 /// use star_tracker_lib::util::list::ArrayList;
 /// use star_tracker_lib::util::list::List;
@@ -350,14 +347,14 @@ pub trait List<T>
 /// assert!(lst.is_full());
 /// assert_eq!(lst.size(), 3);
 ///
-/// // Assignes the value at the provided index.
+/// // Assigns the value at the provided index.
 /// lst.set(0, 3);    // 321
 ///
 /// // Sorts the list with a custom sorting function.
 /// fn sort_ascending ( left: & u32, right: & u32 ) -> bool	{  return left < right;  }
 /// lst.sort_order(sort_ascending); // 1, 2, 3
 ///
-/// // Varifies the list is in sorted order and removes each element.
+/// // Verifies the list is in sorted order and removes each element.
 /// assert_eq!(lst.pop_back(), Ok(3));  // 1, 2 | 3
 /// assert_eq!(lst.pop_back(), Ok(2));  // 1    | 2
 /// assert_eq!(lst.pop_back(), Ok(1));  //      | 1
@@ -374,7 +371,7 @@ pub trait List<T>
 /// let mut lst_2: ArrayList<u32, 5> = ArrayList::from_array(&[1, 1, 2, 3, 5]);
 /// 
 /// // You can remove an element at an index and shuffle everything down.
-/// // This is not recomended in a large list as shuffling everything takes time.
+/// // This is not recommended in a large list as shuffling everything takes time.
 /// assert_eq!(lst.pop(0), Ok(1)); // 1, 2, 3, 5, _
 /// 
 /// // You can find elements which match between two lists of any type.
@@ -550,7 +547,7 @@ mod test
 //										~ find_match ~											 //
 	#[test]
 	// Function should work on vectors and array lists.
-	// Since the parameters are interchangable, they are tested in the same test.
+	// Since the parameters are interchangeable, they are tested in the same test.
 	fn test_find_match ( )
 	{
 		let mut list_a: ArrayList<usize, 10> = ArrayList::new();

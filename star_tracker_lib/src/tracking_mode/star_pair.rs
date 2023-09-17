@@ -54,7 +54,7 @@ impl <T> StarPair <T> where T : PartialEq + Copy + core::fmt::Debug
 	/// * `pair_a` - The first angle.
 	/// * `pair_b` - The second angle.
 	/// # Returns
-	/// The simmilar item.
+	/// The similar item.
 	///
 	/// # Example
 	/// ```
@@ -117,7 +117,7 @@ impl <T> StarPair <T> where T : PartialEq + Copy + core::fmt::Debug
 	
 	
 	
-	/// Finds the element which is not `not`, if `not` is not in the star pair, None is returned.
+	/// Finds the element which is not `not`, if both 0 and 1 equal `not`, None is returned.
 	/// # Arguments
 	/// * `not` - The element to not return.
 	/// # Returns

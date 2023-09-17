@@ -112,6 +112,20 @@ mod test
 
 	use crate::util::units::Vector3;
 	use crate::util::aliases::Decimal;
+	
+	//
+	// fn default ( ) -> Self
+	// 
+	#[test]
+	// Not entirely necessary...
+	// Default is just a useful number for basic testing...
+	// The user should choose an ideal value.
+	// Or just use this value, I found it to be a good value... Its really up to the user :P
+	fn test_default ( )
+	{
+		assert!(Specularity::default().specularity_min < 0.1);
+	}
+
 
 	//
 	// fn get_specular ( &self ) -> Specularity
