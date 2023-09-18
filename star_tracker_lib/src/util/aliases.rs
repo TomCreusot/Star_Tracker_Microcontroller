@@ -6,16 +6,21 @@
 
 /// All decimal numbers will use this precision.
 #[cfg(feature = "bit_32")] use core::f32::consts::PI;
+/// All decimal numbers will use this precision.
 #[cfg(feature = "bit_32")] pub type Decimal = f32;
+/// All decimal numbers will use this precision.
 #[cfg(feature = "bit_64")] use core::f64::consts::PI;
+/// All decimal numbers will use this precision.
 #[cfg(feature = "bit_64")] pub type Decimal = f64;
 
 /// All unsigned integers will use this precision.
 #[cfg(feature = "bit_32")] pub type UInt = u32;
+/// All unsigned integers will use this precision.
 #[cfg(feature = "bit_64")] pub type UInt = u64;
 
 /// All signed integers will use this precision.
 #[cfg(feature = "bit_32")] pub type Int = i32;
+/// All signed integers will use this precision.
 #[cfg(feature = "bit_64")] pub type Int = i64;
 
 /// The maximum intensity of a pixel.
@@ -25,6 +30,7 @@ pub type Byte = u8;
 
 /// The machine precision of Decimal.  
 #[cfg(feature = "bit_64")] pub const DECIMAL_PRECISION: Decimal = 2.22E-16 * 10.0;
+/// The machine precision of Decimal.  
 #[cfg(feature = "bit_32")] pub const DECIMAL_PRECISION: Decimal = 1.0E-7 * 10.0;
 
 

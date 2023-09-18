@@ -1,4 +1,4 @@
-//! Implementation of [ExtrinsicParameters](crate::projection::ExtrinsicParameters)
+//! Implementation of ExtrinsicParameters
 use crate::core_include::*;
 
 use super::ExtrinsicParameters;
@@ -37,13 +37,13 @@ impl ExtrinsicParameters
 	}
 
 
-	/// A way of converting a looking direction and an up direction into a rotation transformation.
-	/// There are two implementations; matrix and quaternion.
-	/// This is the [Matrix Version](https://www.geertarien.com/blog/2017/07/30/breakdown-of-the-lookAt-function-in-OpenGL/).
-	/// This is the [Quaternion Version](https://answers.unity.com/questions/467614/what-is-the-source-code-of-quaternionlookrotation.html).
-	/// Observing these, it appears that the quaternion version just uses the matrix version.
-	/// This is a lot of unnecessary computation, thus it was decided to use the conventional matrix.
-	/// This method implements the opengl `LookAt` function.
+	/// A way of converting a looking direction and an up direction into a rotation transformation.  
+	/// There are two implementations; matrix and quaternion.  
+	/// This is the [Matrix Version](https://www.geertarien.com/blog/2017/07/30/breakdown-of-the-lookAt-function-in-OpenGL/).  
+	/// This is the [Quaternion Version](https://answers.unity.com/questions/467614/what-is-the-source-code-of-quaternionlookrotation.html).  
+	/// Observing these, it appears that the quaternion version just uses the matrix version.  
+	/// This is a lot of unnecessary computation, thus it was decided to use the conventional matrix.  
+	/// This method implements the opengl `LookAt` function.  
 	///
 	/// The parameters are equatorial to reduce input checking.
 	/// # Arguments
@@ -51,8 +51,8 @@ impl ExtrinsicParameters
 	/// * `up` - The upwards direction of the camera, Cannot be the same as forward.
 	///
 	/// # Returns
-	/// An ExtrinsicParameter based on the looking direction of the camera.
-	/// If forward is equal to up, Errors::InvalidValue will be produced. 
+	/// An ExtrinsicParameter based on the looking direction of the camera.  
+	/// If forward is equal to up, Errors::InvalidValue will be produced.   
 	///
 	/// # Asserts
 	/// forward != up

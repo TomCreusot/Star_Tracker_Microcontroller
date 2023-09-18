@@ -1,4 +1,4 @@
-//! Implementation of [Equatorial](crate::util::units::Equatorial).
+//! Implementation of Equatorial.
 use core::ops::RangeInclusive;
 
 use crate::util::units::Equatorial;

@@ -50,6 +50,7 @@ use star_tracker_lib::projection::SpaceCamera;
 use star_tracker_lib::projection::SpaceWorld;
 
 use star_tracker_lib::tracking_mode::Constellation;
+use star_tracker_lib::tracking_mode::ConstellationResult;
 use star_tracker_lib::tracking_mode::StarPyramid;
 use star_tracker_lib::tracking_mode::StarPair;
 use star_tracker_lib::tracking_mode::Specularity;
@@ -68,7 +69,7 @@ use star_tracker_lib::attitude_determination::Quest;
 use star_tracker_nix::io::Star;
 use star_tracker_nix::io::Io;
 use star_tracker_nix::tracking_mode::DatabaseGenerator;
-use star_tracker_nix::tracking_mode::SearchTimeout;
+use star_tracker_nix::tracking_mode::AbandonSearchTimeoutFailure;
 use star_tracker_nix::image_processing::CVImage;
 use star_tracker_nix::util::units::Formatted;
 
@@ -84,14 +85,14 @@ This runs through all the images in samples and tries to identify the stars usin
 If you want to understand how the code works, maybe start here?
 
 This accepts command line arguments for inclusive selection of images:
-reset; cargo run --bin demo 16mm_checker_calib_2
+reset; cargo run --bin demo 16mm_checker_2
 
 	  
 	"#);
 
 	let exclusive_folders: Vec<String> = env::args().collect();
 
-	let angle_tolerance  = Degrees(0.06).as_radians();
+	let angle_tolerance  = Degrees(0.09).as_radians();
 	let magnitude_min    = -20.00;
 	let magnitude_max    =   6.69;
 	let double_star_tolerance = angle_tolerance;
@@ -99,6 +100,7 @@ reset; cargo run --bin demo 16mm_checker_calib_2
 
 	// Loose conditions
 	let time_good: u128 = 10000; // ms until auto fail.
+	let fails_good: usize = 10;  // How many triangles can be failed matches until auto fail.
 
 
 	println!("Performing Database Construction");
@@ -278,14 +280,27 @@ reset; cargo run --bin demo 16mm_checker_calib_2
 				&stars_3d, &mut database_iterator,
 				&mut StarTriangleIterator::<10000>::new(),
 				&mut Specularity::default(),
-				&SearchTimeout::start_timer(Duration::from_millis(time_good as u64)),
+				&mut AbandonSearchTimeoutFailure::new(Duration::from_millis(time_good as u64), fails_good),
 				angle_tolerance,
 				4..=4,
 				&mut found_all
 			);
 			let time_tracking = timer.elapsed().as_millis();
 			let mut found_stars : Vec<Match<Vector3>> = Vec::new();
-			if !success { println!("Could not find enough stars, here's the best match") };
+			match success
+			{
+				ConstellationResult::ErrorNoTriangleMatch      { fails } => 
+					println!("FAILED: Could not match any stars; {} failures.", fails),
+
+				ConstellationResult::ErrorAborted              { fails } =>
+					println!("FAILED: Aborted due to AbandonSearch parameter; {} failures.", fails),
+
+				ConstellationResult::ErrorInsufficientPyramids { fails } =>
+					println!("FAILED: Not enough matched stars; {} failures.", fails),
+
+				ConstellationResult::Success                   { fails } =>
+					println!("SUCCESS; with {} fails.", fails),
+			}
 			
 			
 			for i in 0..found_all.size()

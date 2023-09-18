@@ -1,6 +1,4 @@
-//! Implementation of [Degrees](crate::util::units::Degrees),
-//! [Radians](crate::util::units::Radians) and
-//! [Hours](crate::util::units::Hours).
+//! Implementation of Degrees, Radians and Hours.
 use crate::util::aliases::Decimal;
 use crate::util::aliases::M_PI;
 use crate::util::Maths;

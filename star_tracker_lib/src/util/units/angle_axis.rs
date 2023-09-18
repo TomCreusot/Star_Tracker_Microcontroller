@@ -1,4 +1,4 @@
-//! Implementation of [AngleAxis](crate::util::units::AngleAxis).
+//! Implementation of AngleAxis.
 use core_include::*;
 
 use crate::util::units::Quaternion;

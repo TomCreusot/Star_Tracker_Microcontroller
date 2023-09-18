@@ -1,4 +1,4 @@
-//! Implementation for [BasicImage](crate::image_processing::BasicImage).
+//! Implementation for BasicImage.
 use crate::core_include::*;
 
 use crate::util::aliases::Byte;

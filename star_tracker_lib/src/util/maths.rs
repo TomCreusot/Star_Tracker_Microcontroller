@@ -1,5 +1,5 @@
-//! A wrapper for [libm](libm).
-//!
+//! A wrapper for libm.  
+//! This is needed as libm is not included by default into the *no_std* package.
 //!
 pub use libm::fabs;
 pub use libm::fabsf;

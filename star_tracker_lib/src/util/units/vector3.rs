@@ -1,4 +1,4 @@
-//! Implementation for [Vector3](crate::util::units::Vector3).
+//! Implementation for Vector3.
 use core_include::*;
 
 use crate::util::aliases::DECIMAL_PRECISION;

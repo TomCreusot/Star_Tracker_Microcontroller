@@ -1,7 +1,4 @@
-//! Distributes points onto a sphere close to evenly.
-//!
-//!
-//!
+//! Implementation of Distribute.
 
 use rand::prelude::*;
 
@@ -21,7 +18,7 @@ impl Distribute
 {
 
 	/// Sets the points of the input equatorial array as a set of **close** to evenly spaced points.
-	/// This uses the fiboancci golden ratio algorithm.
+	/// This uses the Fibonacci golden ratio algorithm.
 	///
 	/// # Arguments
 	/// * `num_points` - The number of points on the sphere.
@@ -32,10 +29,11 @@ impl Distribute
 	/// use star_tracker_lib::util::aliases::Decimal;
 	/// use star_tracker_lib::util::aliases::M_PI;
 	/// use star_tracker_lib::util::distribution::Distribute;
+	///
 	/// let points = Distribute::angle_to_points(Radians(10.0));
-	/// let mut eq : Vec<Equatorial> = Distribute::fibonacci_latice(points);
+	/// let mut eq : Vec<Equatorial> = Distribute::fibonacci_lattice(points);
 	/// ```
-	pub fn fibonacci_latice ( num_points : usize ) -> Vec<Equatorial>
+	pub fn fibonacci_lattice ( num_points : usize ) -> Vec<Equatorial>
 	{
 		let mut output : Vec<Equatorial> = Vec::with_capacity(num_points);
 		let golden_ratio = (1.0 + (5.0 as Decimal).powf(0.5)) / 2.0;
@@ -55,7 +53,12 @@ impl Distribute
 	}
 	
 	
-	
+	/// Finds the average/min/max/std arc angle between the provided points.  
+	/// Use this to find how distribute the stars are from each other.  
+	/// This does not take into consideration if all the stars are near each other and there is a hole elsewhere.  
+	///
+	/// Use this to identify how clustered stars are from each other.
+	/// It is recommended that you look at `coverage`.
 	pub fn separation ( points: &Vec<Equatorial> ) -> Distribution
 	{
 		let mut dist = Distribution 
@@ -88,7 +91,9 @@ impl Distribute
 		return dist;
 	}
 	
-	/// Uses monti carlo
+	/// From choosing a random point on the unit sphere, this finds the average/min/max/std arc angle to a provided point.  
+	/// Use this to ensure that there will be enough stars with a valid magnitude within the field of view of your lens.  
+	/// This uses the Monti-Carlo simulation, running 10,000 times.
 	pub fn coverage ( points: &Vec<Equatorial> ) -> Distribution
 	{
 		let mut rng = rand::thread_rng();
@@ -130,12 +135,14 @@ impl Distribute
 	
 
 	
-	/// Finds the number of points required to acheive the given angle *With Error*.  
+	/// Finds the number of points required to achieve the given angle *With Error*.  
 	/// This is used for the fibonacci golden sphere.  
 	/// The error is:
+	/// ``` text
 	/// * 43deg < angle           : 0
 	/// * 24.6deg < angle < 43deg : -1
-	/// * angle < 24.6deg         : slowely increasing positive number.
+	/// * angle < 24.6deg         : slowly increasing positive number.
+	/// ```
 	/// As the angle gets smaller, the number of points error becomes higher, however it is insignificant.  
 	/// When the error is negative, the angle is larger than it should be.
 	pub fn angle_to_points ( angle: Radians ) -> usize
@@ -154,8 +161,10 @@ impl Distribute
 	/// Finds the angle between each point given the the number of points to generate.   
 	/// This uses the fibonacci golden sphere.   
 	/// The error is:
+	/// ``` text
 	/// * points < 12: +-2%
 	/// * 12 < points: +-2%
+	/// ```
 	pub fn points_to_angle ( points: usize ) -> Radians
 	{
 		if 12 < points 
@@ -171,29 +180,27 @@ impl Distribute
 
 
 
-// 
-// //###############################################################################################//
-// //###############################################################################################//
-// //
-// //										Unit Tests
-// //
-// //###############################################################################################//
-// //###############################################################################################//
-// 
-// #[cfg(test)]
-// #[allow(unused_must_use)]
-// mod test
-// {
-// 	use crate::util::nix::Distribution;
-// 	use crate::util::nix::Distribute;
-// 
-// 	// use crate::util::util::units::Equatorial;
-// 	// use crate::util::util::units::Radians;
-// 	// use crate::util::util::units::Degrees;
-// 
-// 	#[test]
-// 	fn i_have_not_written_any_tests_for_this ( )
-// 	{
-// 		panic!("Have you tried doing your job.");
-// 	}
-// }
+
+//###############################################################################################//
+//###############################################################################################//
+//
+//										Unit Tests
+//
+//###############################################################################################//
+//###############################################################################################//
+
+#[cfg(test)]
+#[allow(unused_must_use)]
+mod test
+{
+	// This stuff is really hard to test.
+	// I kinda just tested it by hand to ensure it works.
+	// It is not core to the actual program so I left the tests out.
+
+	#[test]
+	fn warning_not_done ( )
+	{
+		let i_have_not_tested_util_distribution_btw = 0;
+	}
+	
+}

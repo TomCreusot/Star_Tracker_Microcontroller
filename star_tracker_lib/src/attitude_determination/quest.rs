@@ -21,17 +21,17 @@ use crate::util::Maths;
 
 impl AttitudeDetermination for Quest
 {
-	/// Call this to retrieve the attitude of the camera.  
-	/// Finds the most likely pointing direction from the given (observed, reference) positions.
+	/// Call this to retrieve the attitude of the camera.   
+	/// Finds the most likely pointing direction from the given (observed, reference) positions.  
 	/// # Arguments
-	/// * `positions` - The (input: observed, output: reference, weighting: __).
+	/// * `positions` - The (input: observed, output: reference, weighting: __).  
 	/// 	The weighting is just a ratio, it does not matter the size, just how it relates to other weightings.
 	/// * `lambda_precision` - 
-	/// 	For quest algorithm, to find the correct attitude, the neuton raphson method is used.
-	/// 	This method will loop and slowly decrease the gap between the current and previous prediction.
-	/// 	Achieving perfect precision comparing the 2 values will take up computation power.
-	/// 	By specifying a precision, the computational requirements are lowered.
-	/// 	To use a default estimate value, you can provide None and it will use LAMBDA_PRECISION.
+	/// 	For quest algorithm, to find the correct attitude, the neuton raphson method is used.  
+	/// 	This method will loop and slowly decrease the gap between the current and previous prediction.  
+	/// 	Achieving perfect precision comparing the 2 values will take up computation power.  
+	/// 	By specifying a precision, the computational requirements are lowered.  
+	/// 	To use a default estimate value, you can provide None and it will use LAMBDA_PRECISION.  
 	/// # Returns
 	/// A quaternion which rotates output to input.
 	/// Use Quaternion.conjugate() to get a rotation from input to output.

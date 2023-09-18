@@ -574,7 +574,6 @@ impl<'a> ChunkIterator for ChunkAreaSearch <'a>
 		}
 		else if self.ra.start < Radians(0.0)
 		{
-			println!("{} {} {}", self.ra.start.to_degrees(), (self.ra.start + Degrees(360.0).as_radians()).to_degrees(), p1.unwrap().ra.to_degrees());
 			valid_ra |= self.ra.start + Degrees(360.0).as_radians() <= p1.unwrap().ra;
 			valid_ra |= self.ra.start + Degrees(360.0).as_radians() <= p2.unwrap().ra;
 		}

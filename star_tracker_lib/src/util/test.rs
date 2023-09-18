@@ -45,6 +45,8 @@ pub trait TestEqual
 	
 	#[inline]
 	#[track_caller]
+	/// This automatically calls an assert if test_close fails.  
+	/// The call stack will display the line which calls this.
 	fn assert_close ( &self, other: &Self, precision: Decimal ) where Self:Debug
 	{
 		assert!(self.test_close(other, precision), 

@@ -218,7 +218,7 @@ pub trait List<T>
 				self.set(ii, self.get(ii + 1))?;
 				ii += 1;
 			}
-			let popped = self.pop_back();
+			let _ = self.pop_back();
 			return Result::Ok(value);
 		}
 		return Result::Err(Errors::OutOfBounds);
@@ -325,7 +325,6 @@ pub trait List<T>
 /// * You have limited memory on your device (i.e. microprocessor).
 /// * You need a reliable system which has a known memory usage.
 /// * You have a slow processor which will make heap allocations slow.  
-/// Refer to [**List**](crate::util::list::List) for more details about which type of list to use.
 ///
 /// # Example
 /// The following example will show the versatility of an array_list.

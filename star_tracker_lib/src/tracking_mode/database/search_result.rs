@@ -1,4 +1,4 @@
-//! Implementation of [SearchResult](crate::tracking_mode::database::SearchResult)
+//! Implementation of SearchResult.
 use crate::core_include::*;
 
 use crate::tracking_mode::database::SearchResult;
@@ -24,8 +24,7 @@ impl SearchResult
 	/// * `pair_a` - The first pair.
 	/// * `pair_b` - The second pair.
 	/// # Returns
-	/// The simmilar item.
-	/// ```
+	/// The similar item.
 	pub fn has_same_star ( pair_a: &SearchResult, pair_b: &SearchResult ) -> bool
 	{
 		return StarPair::has_same(&pair_a.result, &pair_b.result);

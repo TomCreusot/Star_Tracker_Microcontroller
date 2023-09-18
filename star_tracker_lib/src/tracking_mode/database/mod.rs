@@ -1,6 +1,6 @@
 //! The database for the pyramid method is a set of 2 lookup tables (star pairs, star catalogue) and an equation (k-vector)
 //!
-//! # [K-Vector](https://en.everybodywiki.com/K-Vector)
+//! # K-Vector
 //! The k-vector is a fast lookup table which has a time complexity independent of the size of the database.
 //! It uses an equation to locate specific *bins* in the database where the element can be found.
 //!
@@ -182,7 +182,7 @@ pub struct PyramidDatabase <'a>
 }
 
 
-/// This database is required for the [ChunkIteratorRegional](crate::tracking_mode::database::ChunkIteratorRegional).  
+/// This database is required for the ChunkIteratorRegional.  
 /// A list specifying the chunk the star is located in is required as the iterator uses a bitfield.
 #[derive(Clone, Copy)]
 pub struct RegionalDatabase<'a>
@@ -344,7 +344,7 @@ pub struct ChunkIteratorDeclination <'a>
 
 
 
-/// A chunk iterator is a way of optimising the database search process.  
+/// A chunk iterator is a way of optimizing the database search process.  
 /// When searching the database for star matches, the database will return matches from around the entire celestial sphere.  
 /// To ensure that all the pairs are within the same camera frame, a chunk iterator is used to move between each chunk/region.  
 /// This ensures that only stars within the field of view will be used.  

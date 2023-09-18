@@ -153,7 +153,7 @@ pub type Pixel = Vector2Int;
 
 /// An integer version of Vector2.  
 ///
-/// Mainly used for [Pixel](crate::util::units::Pixel).  
+/// Mainly used for Pixel.  
 #[derive(Debug, Copy, Clone, PartialEq)]
 pub struct Vector2Int
 {
@@ -225,8 +225,8 @@ pub struct Vector2
 /// This is to represent cartesian coordinates for doing angle calculations.  
 /// Cartesian is ideal over Equatorial in most circumstances as Equatorial has limited functionality.  
 /// Equatorial coordinates must first be converted to cartesian for most calculations.  
-/// Use [Vector3](crate::util::units::Vector3) when you need to work with the coordinates.  
-/// Use [Equatorial](crate::util::units::Equatorial) when you need to store it as it has 1 less value.  
+/// Use Vector3 when you need to work with the coordinates.  
+/// Use Equatorial when you need to store it as it has 1 less value.  
 /// # Equality
 /// TestEqual and PartialEq are implemented to allow comparisons of equal vectors.  
 /// This ensures that if an equation and expected are off by a few bits, it is still valid.  
@@ -276,7 +276,7 @@ pub struct Vector2
 /// * to_vector2
 /// * to_equatorial
 /// * to_matrix_row
-/// * to_matrix_columm
+/// * to_matrix_column
 /// * to_matrix_column_homo // An extra row with 1 in it.
 #[derive(Copy, Clone)]
 pub struct Vector3
@@ -291,9 +291,9 @@ pub struct Vector3
 //###############################################################################################//
 /// Equatorial Coordinates are coordinates which define a point on a unit sphere.  
 ///
-/// Right Ascension (ra) is defined as the angle around the equator from 0 to 2PI (Don't use 0h to 24h).  
+/// Right Ascension (ra) is defined as the angle around the equator from 0 to 2PI (Don't use 0h to 24h or 0 to 360 deg).  
 /// Declination (dec) is defined as the angle from -PI to PI (Don't use -90 to 90 deg).  
-/// Equatorial must be converted to cartesian [Vector3](crate::util::units::Vector3) to perform any equations.  
+/// Equatorial must be converted to cartesian Vector3 to perform any equations.  
 /// Use Equatorial as an efficient way of storing positions as it is 2 numbers instead of 3.  
 #[derive(Copy, Clone)]
 // #[derive(Deserialize)]
@@ -370,10 +370,53 @@ pub struct CRP
 //###############################################################################################//
 //										---	Matrix ---
 //###############################################################################################//
-/// An n x m matrix.  
+/// An n x m matrix declared on the stack.  
+/// Use for an extensive set of matrix equations and modifications.  
+/// # Some Uses
+/// ```
+/// use star_tracker_lib::util::units::Matrix;
+/// use star_tracker_lib::util::units::MatPos;
+/// use star_tracker_lib::util::units::Vector3;
+/// use star_tracker_lib::util::aliases::Decimal;
 ///
-/// W is the width.  
-/// H is the height.  
+/// let mut matrix: Matrix<3, 2> = Matrix::new(); // A 0 matrix 3 high (3 rows), 2 wide (2 columns).
+/// assert_eq!(matrix.width(), 2);
+/// assert_eq!(matrix.height(), 3);
+///
+/// let eye:    Matrix<2, 2> = Matrix::identity(); // An identity 2x2 matrix.
+/// assert_eq!(eye.get(MatPos{row: 0, col: 0}), 1.0);
+/// assert_eq!(eye.get(MatPos{row: 0, col: 1}), 0.0);
+/// assert_eq!(eye.get(MatPos{row: 1, col: 0}), 0.0);
+/// assert_eq!(eye.get(MatPos{row: 1, col: 1}), 1.0);
+/// assert_eq!(eye.trace(), 2.0); // You can do trace of any size. 
+/// assert_eq!(eye.determinate(), 1.0); // You can do determinate of up to and including 4x4. 
+///
+/// matrix.set(MatPos{row: 1, col: 0}, 10.0); // sets row 1, col 0 to 10.
+/// let mut trans: Matrix<2, 3> = matrix.transposed(); // You can transpose.
+///
+/// trans.insert(MatPos{row: 0, col: 1}, &eye); // Insert the identity matrix into this one.
+/// // Trans (after insert):
+/// // 1	10	0
+/// // 0	1	0
+///
+/// // Matrix multiplication can be done for: 3x3, 3x4, 4x4
+/// // There is also adjoint.
+/// 
+///
+/// // You can create matrices from single values and vectors:
+/// let small_mat: Matrix<1,1> = Matrix::from_decimal(10.0);
+/// let decimal  : Decimal     = small_mat.to_decimal();     // 10.0.
+///
+/// let vec_mut  : Matrix<3,1> = Vector3::to_matrix_column(&Vector3{x: 10.0, y: 20.0, z: 30.0}); // row vec.
+/// let vector   : Vector3     = vec_mut.to_vector3();
+///
+/// let vec_mut_homo : Matrix<4,1> = Vector3::to_matrix_column_homo(&Vector3{x: 10.0, y: 20.0, z: 30.0}); // homogenous column matrix.
+/// let vector       : Vector3     = vec_mut_homo.to_vector3(); // divides by the 4th value.
+///
+/// 
+/// ```
+/// Column is the width or x.  
+/// Row    is the height or y.  
 #[derive(Copy, Clone)]
 pub struct Matrix <const ROW: usize, const COLUMN: usize>
 {
@@ -399,14 +442,42 @@ pub struct MatPos
 //										---	BitField ---
 //###############################################################################################//
 /// Stores a bit field and can do bit operations easily.
+/// Example
+/// ```
+/// use star_tracker_lib::util::units::BitField;
+/// use star_tracker_lib::util::units::BitCompare;
+///
+/// let mut field_lsb : BitField = BitField(0b0011); 
+/// let field_msb : BitField = BitField(0b1100); 
+/// let field_on  : BitField = BitField(0b1111); 
+/// let field_off : BitField = BitField(0b0000);
+///
+/// // Any ensures at least one bit is the same:
+/// assert!(field_lsb.compare(BitCompare::Any(field_on)));   // 0011 & 1111 = true 
+/// assert!(!field_lsb.compare(BitCompare::Any(field_off))); // 0011 & 0000 = false
+/// assert!(!field_lsb.compare(BitCompare::Any(field_msb))); // 0011 & 1100 = false
+///
+/// // All ensures all bits are equal:
+/// assert!(!field_lsb.compare(BitCompare::All(field_on)));   // 0011 == 1111 = false
+/// assert!(field_lsb.compare(BitCompare::All(field_lsb)));  // 0011 == 0011 = true
+///
+/// // Bits can easily be set:
+/// field_lsb.set(3, true); // 0111.
+/// field_lsb.set(4, true); // 1111.
+/// assert!(!field_lsb.compare(BitCompare::All(field_on)));   // 1111 == 1111 = true
+///
+/// ```
 #[derive(Copy, Clone, PartialEq, Debug)]
 pub struct BitField ( pub UInt );
 
-/// Specifies how to compare bit fields.
+/// Specifies how to compare bit fields.  
+/// Refer to [BitField](crate::util::units::BitField) for uses.
 #[derive(Copy, Clone, PartialEq, Debug)]
 pub enum BitCompare
 {
+	/// Bit Or.
 	Any(BitField),
+	/// Bit And.
 	All(BitField),
 }
 

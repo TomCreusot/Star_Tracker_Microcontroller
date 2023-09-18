@@ -8,6 +8,8 @@ use star_tracker_lib::util::err::Error;
 
 use star_tracker_lib::tracking_mode::StarPair;
 use star_tracker_lib::tracking_mode::database::KVector;
+use star_tracker_lib::tracking_mode::AbandonSearchFailures;
+
 // use star_tracker_lib::tracking_mode::database::Database;
 
 pub mod star_database_element;
@@ -39,17 +41,27 @@ pub struct StarDatabaseElement
 
 
 /// A timer to abort a search.
-pub struct SearchTimeout
+/// It is recommended to use [SearchAbortTimeout](crate::tracking_mode::SearchAbortFailure) instead.  
+/// Considering failures is important for the reliability of a result.
+pub struct AbandonSearchTimeout
 {
-	/// When the timere started.
+	/// When the timer started.
 	pub start_time : std::time::Instant,
-	/// How long until giveup.
+	/// How long until give up.
 	pub timeout    : std::time::Duration,
 }
 
 
+/// A timer and counter to abort a search.
+pub struct AbandonSearchTimeoutFailure
+{
+	pub timeout: AbandonSearchTimeout,
+	pub failure: AbandonSearchFailures,
+}
 
-/// Tool to help construct and analyse the database.  
+
+
+/// Tool to help construct and analyze the database.  
 /// This is used instead of implementing a trait for the databases as k_vector, k_pairs and catalogue all have lifetimes.
 pub struct DatabaseGenerator
 {

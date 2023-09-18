@@ -1,7 +1,74 @@
-//! Basic image manipulation/storage and machine vision.
+//! `image_processing` is basic image manipulation/storage and machine vision.
 //!
 //! `image_processing` involves storing an image in a reduced size and performing basic computer vision on the image.
 //! This includes a fast method of blob detection and thresholding to obtain stars.
+//!
+//! # Extracting Stars
+//! ```
+//! use star_tracker_lib::util::aliases::Decimal;
+//! use star_tracker_lib::util::aliases::Byte;
+//! use star_tracker_lib::util::units::Vector2;
+//! use star_tracker_lib::util::units::Pixel;
+//! use star_tracker_lib::util::list::List;
+//! use star_tracker_lib::image_processing::BasicImage;
+//! use star_tracker_lib::image_processing::Blob;
+//! use star_tracker_lib::image_processing::ThresholdGrid;
+//! use star_tracker_lib::image_processing::ThresholdPercent;
+//!
+//! // Read the image in however you want.
+//! // In this case we are creating a black image.
+//! // Lets just assume it is a beautiful star scape...
+//! const img_width:  usize = 808;
+//! const img_height: usize = 608;
+//! let mut img: BasicImage<img_width, img_height> = BasicImage::new();
+//! 
+//! // Nilback or Sauvola thresholding.
+//! // This threshold is a set of grid cells which all have their own threshold for the local area.
+//! // In this case it is 250 (50x50) cells spanning ~12 pixels wide and tall.
+//! const grid_size: usize = 50;
+//! let overshoot  : Byte  = 50; // How much over the mean should be considered the cutoff.
+//! let skip       : usize = 1;  // Only samples every second pixel. This makes the threshold 4 times faster. 
+//! let thresh_grid: ThresholdGrid<grid_size, grid_size> = ThresholdGrid::new(&img, overshoot, skip);
+//!
+//! 
+//! // This is a global threshold where you choose a percentage of pixels to cut off.
+//! // The image generates a histogram and anything under 99.99% is considered background.
+//! // This is less effective as it does not consider bloom.
+//! let percent       : Decimal = 0.9999;
+//! let thresh_percent: ThresholdPercent = ThresholdPercent::new(&img, percent);
+//!
+//! // To view the effects of the threshold, you can use:
+//! // thresh.apply(&mut image);     // To remove the background.
+//! // thresh.apply_bin(&mut image); // To make the image binary.
+//! // This is not nessisary however and will slow the program down...
+//!
+//!
+//! // Now that we have a threshold, we need to find the stars (blobs).
+//! // The implemented blob detection algorithm is the grass fire method.
+//! // This will delete the image so make a copy if you need.
+//! //
+//! // Since this is an embedded project, you need to provide a *stack* for it to store all the neighboring pixels.
+//! // If you are using a computer, provide a Vec, otherwise if you have a limited size, use an arraylist.
+//! // The size of the array list determines roughly how big the blob is.
+//! // You may even want to use this if you are using a PC as it limits the blob size.
+//! // 
+//! // There is also a *min_size*, this specifies the min size the blob can be.
+//! // The bigger the star, the more accurate it is as a centroid between the pixels can be calculated.
+//! // Also single pixels can be hot pixels.
+//! // When searching, this method will skip each min_size pixels to speed up the program.
+//! // It is recommended to set *min_size* to 2.
+//! 
+//!	let mut stack : Vec<Pixel> = Vec::new(); // Infinite sized blobs, use array list for finite size.
+//! let mut blobs : Vec<Blob>  = Vec::new(); // The output.
+//! let blob_min_size = 2;                   // Blobs must be at least 2 pixels big.
+//!
+//! Blob::find_blobs(blob_min_size, &thresh_grid, &mut img, &mut stack, &mut blobs);
+//!	blobs.sort_order(Blob::sort_descending_intensity); // Sort by intensity and/or size for the biggest stars first.
+//!
+//! // to convert this into a useful format, just do this:
+//! let mut stars_2d : Vec<Vector2> = Vec::new();
+//! Blob::to_vector2(&blobs, &mut stars_2d);
+//! ```
 
 pub mod image;
 pub mod basic_image;
@@ -112,7 +179,8 @@ pub trait Threshold
 	}
 }
 
-/// A basic percent threshold.
+/// A basic percent threshold (Worse Than ThresholdGrid).  
+///
 /// This will generate a number based on a percentage brightness of the image.
 pub struct ThresholdPercent
 {
@@ -120,20 +188,10 @@ pub struct ThresholdPercent
 }
 
 
-// /// A varient of threshold which consists of a set of points which specify a local threshold.
-// /// The median/mean/percent is calculated in the local area of each node.
-// /// When the threshold of a pixel is requested, a linear function calculates the expected threshold of the pixel based on neiboring pixels.
-// ///
-// /// These points are equally spaced on the x and y axis being `NUM_H` wide and `NUM_V` high.
-// //pub struct ThresholdNodal <const NUM_H: usize, const NUM_V: usize>
-// //{
-// //	/// Each node is used to represent a local threshold value and position.
-// //	nodes : BasicImage<{NUM_H}, {NUM_V}>,
-// //}
-
-/// Nilback or Sauvola thresholding.
-/// This is the process of dividing the image into regions, each region has its own threshold.
-/// By having multiple regions, if one part of the image has disterbence, it will not effect the other.
+/// Nilback or Sauvola thresholding (Better than PercentThreshold).  
+///
+/// This is the process of dividing the image into regions, each region has its own threshold.  
+/// By having multiple regions, if one part of the image has disturbance, it will not effect the other.  
 pub struct ThresholdGrid <const NUM_H: usize, const NUM_V: usize>
 {
 	/// The size of the image thresholded.
@@ -178,7 +236,7 @@ pub struct ThresholdGrid <const NUM_H: usize, const NUM_V: usize>
 /// // let mut stack_on_heap : Vec<Pixel> = Vec::new();
 ///
 /// // You must have a threshold for the image to know what is foreground.
-/// let thresh = ThresholdPercent::new(&img, 0.5);
+/// let thresh = ThresholdPercent::new(&img, 0.5); // Look at ThresholdGrid for a better threshold.
 ///
 /// // The smallest size a blob is allowed.
 /// let min_size = 2; 

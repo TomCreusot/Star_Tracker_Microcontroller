@@ -1,4 +1,4 @@
-//! Implementation of [BitField](crate::util::units::BitField).
+//! Implementation of BitField.
 use crate::util::units::BitField;
 use crate::util::units::BitCompare;
 use crate::util::aliases::UInt;

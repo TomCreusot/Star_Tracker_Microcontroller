@@ -1,4 +1,4 @@
-//! Implementation of [Matrix](crate::util::units::Matrix).
+//! Implementation of Matrix.
 use core_include::*;
 
 use super::Matrix;

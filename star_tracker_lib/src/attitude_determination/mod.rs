@@ -51,6 +51,33 @@
 //! # [OLEA](https://www.coursera.org/lecture/spacecraft-dynamics-kinematics/6-1-example-of-olae-Jl6Y1)
 //!
 //!
+//! # How To Use
+//! ```
+//! use star_tracker_lib::attitude_determination::AttitudeDetermination;
+//! use star_tracker_lib::attitude_determination::Quest;
+//! use star_tracker_lib::util::units::Quaternion;
+//! use star_tracker_lib::util::units::Vector3;
+//! use star_tracker_lib::util::units::Match;
+//!
+//! // If you setup projection correctly, the points will be relative to the front of the spacecraft.
+//! // In this situation, I decided that was z: +1.
+//! let reference_forward = Vector3{x: 0.0, y: 0.0, z: 1.0};
+//!
+//! // Lets just assume these points are from a valid constellation from tracking_mode.
+//! let found_stars = vec!
+//! [
+//!     // The weight is relative to the other points, the higher the weight the more reliable.
+//! 	Match{input: Vector3{x: 0.0, y: 0.0, z: 1.0}, output: Vector3{x: 0.0, y: 0.0, z: 1.0}, weight: 1.0},
+//! 	Match{input: Vector3{x: 0.0, y: 1.0, z: 0.0}, output: Vector3{x: 0.0, y: 1.0, z: 0.0}, weight: 1.0},
+//! 	Match{input: Vector3{x: 1.0, y: 0.0, z: 0.0}, output: Vector3{x: 1.0, y: 0.0, z: 0.0}, weight: 1.0},
+//! 	Match{input: Vector3{x: 0.0, y: 1.0, z: 1.0}, output: Vector3{x: 0.0, y: 1.0, z: 1.0}, weight: 1.0},
+//! ];
+//!
+//!
+//! let rotate_to_cam  : Quaternion = Quest::estimate(&found_stars, None); // Quaternion to rotate world space to camera space.
+//!	let rotate_to_world: Quaternion = rotate_to_cam.conjugate();           // Quaternion to rotate camera space to world space.
+//!	let world_center = rotate_to_world.rotate_point(reference_forward);    // Rotate spacecraft front to world coordinates
+//! ```
 
 use crate::util::units::Match;
 use crate::util::units::Vector3;
@@ -65,33 +92,33 @@ pub trait AttitudeDetermination
 {
 	/// Finds the most likely pointing direction from the given (observed, reference) positions.
 	/// # Arguments
-	/// * `positions` - The (input: observed, output: reference, weighting: __).
+	/// * `positions` - The (input: observed, output: reference, weighting: __).  
 	/// 	The weighting is just a ratio, it does not matter the size, just how it relates to other weightings.
 	/// * `lambda` - 
-	/// 	For quest algorithm, to find the correct attitude, the neuton raphson method is used.
-	/// 	This method will loop and slowly decrease the gap between the current and previous prediction.
-	/// 	Achieving perfect precision comparing the 2 values will take up computation power.
-	/// 	By specifying a precision, the computational requirements are lowered.
-	/// 	To use a default estimate value, you can provide None and it will use LAMBDA_PRECISION.
+	/// 	For quest algorithm, to find the correct attitude, the neuton raphson method is used.  
+	/// 	This method will loop and slowly decrease the gap between the current and previous prediction.  
+	/// 	Achieving perfect precision comparing the 2 values will take up computation power.  
+	/// 	By specifying a precision, the computational requirements are lowered.  
+	/// 	To use a default estimate value, you can provide None and it will use LAMBDA_PRECISION.  
 	/// # Returns
-	/// A quaternion which rotates output to input.
+	/// A quaternion which rotates output to input.  
 	/// Use Quaternion.conjugate() to get a rotation from input to output. 
 	fn estimate ( positions: &dyn List<Match<Vector3>>, lambda: Option<Decimal> ) -> Quaternion;
 }
 
-/// Formula required for any Wahba based methods.
+/// Formula required for any Wahba based methods.  
 /// Does not solve the problem.
 pub struct Wahba ( );
 
 
-/// Implements AttitudeDetermination through the quest method.  
+/// Implements AttitudeDetermination through the quest method.   
 /// Use `estimate` to estimate the attitude of the camera.
 pub struct Quest( );
 
-/// For quest algorithm, to find the correct attitude, the neuton raphson method is used.
-/// This method will loop and slowly decrease the gap between the current and previous prediction.
-/// Achieving perfect precision comparing the 2 values will take up computation power.
-/// By specifying a precision, the computational requirements are lowered.
+/// For quest algorithm, to find the correct attitude, the neuton raphson method is used.  
+/// This method will loop and slowly decrease the gap between the current and previous prediction.  
+/// Achieving perfect precision comparing the 2 values will take up computation power.  
+/// By specifying a precision, the computational requirements are lowered.  
 const LAMBDA_PRECISION: Decimal = 0.1;
 
 
@@ -128,13 +155,13 @@ mod test
 
 
 
-	// Generates a set of coordinate pairs.
-	// The input coorinate is a random point on a unit sphere.
-	// The output coordinate is that point rotated using `rotation` with an error of `variation`.
-	// When run, the input to output should be close to correct but with some system noise.
+	// Generates a set of coordinate pairs.  
+	// The input coordinate is a random point on a unit sphere.  
+	// The output coordinate is that point rotated using `rotation` with an error of `variation`.  
+	// When run, the input to output should be close to correct but with some system noise.  
 	//
 	// The weight has a random variation specified by `var_weight`, if this is set to 1, 
-	// it means one weight may be double the size, 2 is 2/3, 3 is 3/4...
+	// it means one weight may be double the size, 2 is 2/3, 3 is 3/4...  
 	fn random_coordinates <const N : usize> (
 			rotation : AngleAxis, variation : AngleAxis, var_weight : Decimal
 		) -> ArrayList<Match<Vector3>, N>

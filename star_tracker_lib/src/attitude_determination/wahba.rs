@@ -12,7 +12,7 @@ use crate::util::units::Vector3;
 
 impl Wahba
 {
-/// Attitude Profile Matrix
+/// Attitude Profile Matrix  
 /// B = \sum^n_{i=1} precision_{i} * observed^{T} * reference
 pub fn find_b ( positions: &dyn List<Match<Vector3>> ) -> Matrix<3, 3>
 {
@@ -60,9 +60,9 @@ pub fn find_sigma ( b: &Matrix<3,3> ) -> Decimal
 	return b.trace();
 }
 
-/// An Eigenvector of the K matrix can be used to find the rotation matrix.
-/// The eigenvector must be of the highest eigenvalue.
-/// NOTE: SOMETIMES THE MATRIX IS FLIPPED SO SIGNMA IS AT THE BOTTOM RIGHT.
+/// An Eigenvector of the K matrix can be used to find the rotation matrix.  
+/// The eigenvector must be of the highest eigenvalue.  
+/// NOTE: SOMETIMES THE MATRIX IS FLIPPED SO SIGNMA IS AT THE BOTTOM RIGHT.  
 /// K =
 /// [
 ///  \sigma			Z(1)				Z(2)				Z(3)

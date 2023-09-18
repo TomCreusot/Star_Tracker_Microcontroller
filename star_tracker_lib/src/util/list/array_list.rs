@@ -1,4 +1,4 @@
-//! Implementation of [ArrayList](crate::util::list::ArrayList).
+//! Implementation of ArrayList.
 use crate::core_include::*;
 
 use crate::util::list::ArrayList;

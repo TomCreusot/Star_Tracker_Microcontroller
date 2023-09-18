@@ -1,4 +1,4 @@
-//! Implementation of [CRP](crate::util::units::CRP).
+//! Implementation of CRP.
 use crate::util::aliases::Decimal;
 use crate::util::units::CRP;
 use crate::util::units::Quaternion;

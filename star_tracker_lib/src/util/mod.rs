@@ -1,4 +1,5 @@
-//! crate::util:: contains any tools which may be important for general use in this project.  
+//! `util` is contains any tools which may be important for general use in this project.
+//!    
 //! Everything inside this module is expected to be used in multiple modules.  
 //! 
 //! This includes;

@@ -1,4 +1,4 @@
-//! Implementation of [Quaternion](crate::util::units::Quaternion).
+//! Implementation of Quaternion.
 use crate::util::units::Quaternion;
 use crate::util::units::Vector3;
 use crate::util::units::AngleAxis;

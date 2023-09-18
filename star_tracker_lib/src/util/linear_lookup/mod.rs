@@ -29,10 +29,10 @@ use crate::util::err::Error;
 
 #[cfg(any(feature = "nix", test))] pub mod vec;
 
-/// Designed to share similarities between ArrayList and Arrays 
-/// (also works with Vec if you implement the crate::util::_nix crate instead).  
-/// When constructing the database, it is ideal to store the elements as a Vec.  
-/// When storing the database, it should be stored as an array.  
+/// Designed to share similarities between ArrayList, Vec's and Arrays.  
+/// (also works with Vec if you compile with nix feature).  
+/// When constructing the database, it is ideal to store the elements as a Vec.    
+/// When storing the database, it should be stored as an array.   
 pub trait LinearLookup <T>
 {
 	/// Returns the size of the list (array.len(), vec.len(), array_list.size()).
