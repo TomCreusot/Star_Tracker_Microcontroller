@@ -183,7 +183,7 @@ impl DatabaseGenerator
 		{	// There are more points then the bitfield, that would not work.
 			points_num = BitField::FIELDS as usize;
 		}
-		let chunks = Distribute::fibonacci_latice(points_num);
+		let chunks = Distribute::fibonacci_lattice(points_num);
 		// let angle = Distribute::points_to_angle(points_num);
 		
 		let mut database = Self::gen_database ( stars, fov, chunk_size, tolerance );
@@ -368,7 +368,7 @@ impl DatabaseGenerator
 	{
 		let mut coverage: Decimal = 0.0;
 		let num_points: usize = Distribute::angle_to_points(region);
-		let comparison_points : Vec<Equatorial> = Distribute::fibonacci_latice(num_points);
+		let comparison_points : Vec<Equatorial> = Distribute::fibonacci_lattice(num_points);
 
 		for ii in 0..comparison_points.len()
 		{
@@ -402,7 +402,7 @@ impl DatabaseGenerator
 	{
 		let mut worst_case : usize = usize::MAX;
 		let num_points : usize = Distribute::angle_to_points(region);
-		let comparison_points : Vec<Equatorial> = Distribute::fibonacci_latice(num_points);
+		let comparison_points : Vec<Equatorial> = Distribute::fibonacci_lattice(num_points);
 
 		for ii in 0..comparison_points.len()
 		{
@@ -435,7 +435,7 @@ impl DatabaseGenerator
 	{
 		let mut best_case : usize = 0;
 		let num_points : usize = Distribute::angle_to_points(region);
-		let comparison_points : Vec<Equatorial> = Distribute::fibonacci_latice(num_points);
+		let comparison_points : Vec<Equatorial> = Distribute::fibonacci_lattice(num_points);
 
 		for ii in 0..comparison_points.len()
 		{

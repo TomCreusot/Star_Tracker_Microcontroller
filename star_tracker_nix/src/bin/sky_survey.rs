@@ -46,7 +46,7 @@ fn main (  )
 	
 		
 			
-	let comparison_points : Vec<Equatorial> = Distribute::fibonacci_latice(1000);
+	let comparison_points : Vec<Equatorial> = Distribute::fibonacci_lattice(1000);
 	let mut magnitude_stars : Vec<Equatorial> = Vec::with_capacity(1000);
 
 	let mut smallest_num_stars : Vec<Vec<u32>> = vec![vec![0; MAGNITUDE_RANGE.num]; FOV_RANGE.num];

@@ -190,7 +190,7 @@ This also provides a step by step guide to use the tracking mode algorithm.
 //###############################################################################################//
 
 	let observation_points = Distribute::angle_to_points(SAMPLE_FOV);
-	let observation = Distribute::fibonacci_latice(observation_points);
+	let observation = Distribute::fibonacci_lattice(observation_points);
 	println!("Performing Lost In Space");
 	println!(" - {} orientations", observation_points);
 	println!();
