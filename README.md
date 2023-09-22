@@ -1,58 +1,110 @@
-***WIP (NOT FINNISHED)***
+# Star Tracker Microcontroller
+This project contains all the code to implement a star tracker for a satellite.  
 
-# Star Tracker
-This software is to find the looking direction of a camera given a collection of stars.
-It is designed to run on high powered microcontrollers for low earth orbit cube satellites.
+The software is designed to run on high-powered microcontrollers for low-earth orbit cube satellites.  
+It can also be used on a standard computer using a Ubuntu distribution (or windows through wsl).
+
+## Implementation
+This is a modular library and binary where tracking algorithms can quickly be swapped out.  
+It is written in Rust with no_std so it can be run on a microcontroller, however, it can also run in Ubuntu (see star_tracker_nix).  
+In star_tracker_lib, the following methods are implemented:  
+- Thresholding:   Nilback (adaptive) or Percent (Binary) thresholds are implemented
+- Blob Detection: Grassfire (consuming)
+- Tracking Mode:  Pyramid Method
+- Database:       K-Vector
+- Voting:         QUaternion ESTimator Attitude Determination
+
 
 ## How To Use
-* Ensure you have the correct programs installed, if you have ubuntu you can type ``./setup.sh` and it should download everything automatically.
-* Configure the variables of your sensor by modifying [mod.rs](src/config/mod.rs).
-* run the desired program in [bin](src/bin) by typing `cargo run --bin [program]`
+Ensure you have the correct programs installed, if you have Ubuntu you can type [`./setup.sh`](setup.sh) in the working directory and it should download everything automatically.  
+If there are any compile errors in the following programs, it is likely you are missing some c libraries and need to install them.  
+You should also ensure that cargo and rustup are installed and the rustup version is set to `nightly`.
 
-### `cargo run --bin demo`
-This runs a demo program using the config variables specified, it will read the specified image, output an image with the stars highlighted and then identify the pointing location.  
-*RUN DATABASE_GENERATOR FIRST*
+### [star_tracker_nix](star_tracker_nix/)
+Contained is a set of example programs and useful analysis software.
+To access these, you need to cd into star_tracker_nix.
+
+[**demo**](star_tracker_nix/src/bin/demo.rs)  
+In star_tracker_nix, run `cargo run --bin demo /`  
+This runs a demo program that goes through the images in samples/.  
+These are real images from a range of lenses and fields of view.  
+There are some variables that can be changed inside of the demo code to make it run; faster, more reliably, more confident...  
+You can also select specific images to test, by changing the command line argument from `/` to the name of the file, you can view that specific file.  
+
+[**simulation**](star_tracker_nix/src/bin/simulation.rs)  
+In star_tracker_nix, run `cargo run --bin simulatuion'  
+This will simulate taking a set of photos around the celestial sphere.  
+It has a variety of variables such as error, accepted wait time, field of view, and magnitude ... it is not set to anything special, play around with them.   
+This is used to help identify ways to improve the algorithm and to make sure your hardware is up to spec.  
 
 
-### `cargo run --bin database_generator`
-Generates the database for demo with the specified variables
+[**sky_survey**](star_tracker_nix/src/bin/sky_survey.rs)   
+In star_tracker_nix, run `cargo run --bin sky_survey`  
+This will analyze the Hypacarros database to find what magnitude is required for a specific lens for 100% sky coverage.  
+It may take a while to run.  
+If you want to select specific plot points, you will need to go into the code.  
 
-### `cargo run --bin analyse_database`
-Uses the specified variables to calculate expected size of the database and how reliable the database is.
+[**magnitude**](star_tracker_nix/src/bin/magnitude.rs)  
+In star_tracker_nix, run `cargo run --bin magnitude`  
+This will look at all the corr.fits files inside of samples/ and will identify what the dullest stars were.  
+This is useful to check the spec of your hardware.  
 
-### `cargo run --bin spectral_test`
-Uses the database to find the number of stars in different spectral classes which can be copied into a spreadsheet.
+[**corr_analyser**](star_tracker_nix/src/bin/corr_analyser.rs)  
+In star_tracker_nix, run `cargo run --bin corr_analyser`  
+This will look at all the corr.fits files inside of samples/ and will identify the error of each lens.  
+This is important as if enough stars are outside your error range, the algorithm will fail. 
 
-### `cargo run --bin starfield`
-Generates a sample star image to test the software.
+### embedded
+So you like my code enough to use it...  
+It is up to you to select the HAL and how to flash onto the microcontroller.  
+To get my library on it, you need to put this inside of your cargo.toml in your project.  
+I have not tested this on a microcontroller yet.  
+```
+[dependencies.star_tracker_lib]
+path = "../star_tracker_lib" # The location of star_tracker_lib relative to this cargo.
+default_features = false
 
-### `cargo run --bin sky_survey`
-Creates a set of tables showing how much coverage you will have at specific magnitudes and brightness's.
-This program takes some time to run, if you want to adjust the time, you can alter the number of data points.
+# If you are using a 64-bit system, swap "bit_32" for "bit_64".
+# If you are designing this for the computer add "nix" to the features.
+features = ["bit_32"] 
+```
+
 
 # Navigation
-The code is located in [src](src/), this is divided into the directories:
-* [image_processing](src/image_processing) for blob detection and image thresholding.
-* [nix](src/nix) for any unix specific implementation, this is for generating the database, reading png's and reading config files.
-* [star_tracker](src/star_tracker) for finding matches of unique star sets in a database.
-* [util](src/util) for any useful non-project specific implementations such as an array list and point class.
+The library is located in [star_tracker_lib](star_tracker_lib/).  
+This is divided into the modules:
+* [image_processing](star_tracker_lib/src/image_processing/) for blob detection and image thresholding.
+* [projection](star_tracker_lib/src/projection) for projecting the points on the image into 3d local points.
+* [tracking_mode](star_tracker_lib/src/tracking_mode) for identifying the stars.
+* [attitude_determination](star_tracker_lib/src/attitude_determination) for finding the center with the given stars.
+* [util](star_tracker_lib/src/util) for any useful non-module-specific implementations such as an array list and units.
+  
+An implementation for the computer is located inside [star_tracker_nix](star_tracker_nix/) along with sample code.
 
-[src](src/) contains [database_generator.cc](src/database_generator.cc) which generates a database compatible with the star_tracker code to be used by the microcontroller program.
-It also contains [demo.cc](src/demo.cc) which is the program in the implementation of unix showing how to implement it for a microcontroller.
+A not-finished implementation for the STM32H7 is under development in [star_tracker_embed](star_tracker_embed/).  
+Once again *not finished*.
+
+
+
+## Considerations
+This is a project designed by an engineering student over 4 years.  
+I am not an expert, if you use this and something breaks, that's not my fault.  
+I have not got this working on a microcontroller as flashing microcontrollers in Rust is hard.  
+Although I have a very high test coverage, I cannot account for everything, it is up to you to ensure the tests match your standard.
+
+## Testing
+To test this I used [llvm-cov](https://github.com/taiki-e/cargo-llvm-cov).
 
 ## Built With
-* cargo 1.51.0-nightly (783bc43c6 2021-01-20)
-To implement this method, use command:  
-```
-rustup default nightly-2021-08-20-x86_64-unknown-linux-gnu
-```
-Any version between 2021-03-20 and 2021-08-31 should work.
+* cargo nightly
 
 ## Documentation
-reset;clear;cargo doc --no-deps --lib
+The library has been extensively documented with step-by-step tutorials for each module.   
+To access this, you need to compile the docs:
+```
+cd star_tracker_lib
+cargo doc --no-deps --open 
+```
 
-
-## Contributing
-
-## Authors
-* Tom Creusot - *Initial Creation*
+## Author
+* Tom Creusot
