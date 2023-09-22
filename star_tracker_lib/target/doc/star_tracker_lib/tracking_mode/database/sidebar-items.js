@@ -1,0 +1,1 @@
+window.SIDEBAR_ITEMS = {"mod":["chunk_iterator","database","pyramid_database","regional_database","search_result"],"struct":["ChunkAreaSearch","ChunkIteratorDeclination","ChunkIteratorEquatorial","ChunkIteratorNone","ChunkIteratorRegional","KVector","PyramidDatabase","RegionalDatabase","SearchResult"],"trait":["KVectorSearch"]};

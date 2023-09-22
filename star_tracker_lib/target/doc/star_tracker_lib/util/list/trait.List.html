@@ -1,0 +1,265 @@
+<!DOCTYPE html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"><meta name="generator" content="rustdoc"><meta name="description" content="A set of instructions for a list/arraylist data structure."><title>List in star_tracker_lib::util::list - Rust</title><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../static.files/SourceSerif4-Regular-46f98efaafac5295.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../static.files/FiraSans-Regular-018c141bf0843ffd.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../static.files/FiraSans-Medium-8f9a781e4970d388.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../static.files/SourceCodePro-Regular-562dcc5011b6de7d.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../static.files/SourceSerif4-Bold-a2c9cd1067f8b328.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../static.files/SourceCodePro-Semibold-d899c5a5c4aeb14a.ttf.woff2"><link rel="stylesheet" href="../../../static.files/normalize-76eba96aa4d2e634.css"><link rel="stylesheet" href="../../../static.files/rustdoc-cb6f1f67f1bcd037.css" id="mainThemeStyle"><meta name="rustdoc-vars" data-root-path="../../../" data-static-root-path="../../../static.files/" data-current-crate="star_tracker_lib" data-themes="" data-resource-suffix="" data-rustdoc-version="1.73.0-nightly (8771282d4 2023-07-23)" data-channel="nightly" data-search-js="search-6dfdfced5eff6596.js" data-settings-js="settings-de11bff964e9d4e5.js" data-settings-css="settings-8c76f75bfb6bd192.css" data-theme-light-css="light-6d2c9675f3d09c26.css" data-theme-dark-css="dark-45ceb8f2e522f4d1.css" data-theme-ayu-css="ayu-fd19013d6ce078bf.css" ><script src="../../../static.files/storage-db41da1a38ea3cb8.js"></script><script defer src="sidebar-items.js"></script><script defer src="../../../static.files/main-0795b7d26be81095.js"></script><noscript><link rel="stylesheet" media="(prefers-color-scheme:light)" href="../../../static.files/light-6d2c9675f3d09c26.css"><link rel="stylesheet" media="(prefers-color-scheme:dark)" href="../../../static.files/dark-45ceb8f2e522f4d1.css"><link rel="stylesheet" href="../../../static.files/noscript-cffde32267a19fd6.css"></noscript><link rel="alternate icon" type="image/png" href="../../../static.files/favicon-16x16-8b506e7a72182f1c.png"><link rel="alternate icon" type="image/png" href="../../../static.files/favicon-32x32-422f7d1d52889060.png"><link rel="icon" type="image/svg+xml" href="../../../static.files/favicon-2c020d218678b618.svg"></head><body class="rustdoc trait"><!--[if lte IE 11]><div class="warning">This old browser is unsupported and will most likely display funky things.</div><![endif]--><nav class="mobile-topbar"><button class="sidebar-menu-toggle">&#9776;</button><a class="logo-container" href="../../../star_tracker_lib/index.html"><img class="rust-logo" src="../../../static.files/rust-logo-151179464ae7ed46.svg" alt="logo"></a><h2></h2></nav><nav class="sidebar"><a class="logo-container" href="../../../star_tracker_lib/index.html"><img class="rust-logo" src="../../../static.files/rust-logo-151179464ae7ed46.svg" alt="logo"></a><h2 class="location"><a href="#">List</a></h2><div class="sidebar-elems"><section><h3><a href="#required-methods">Required Methods</a></h3><ul class="block"><li><a href="#tymethod.capacity">capacity</a></li><li><a href="#tymethod.clear">clear</a></li><li><a href="#tymethod.get">get</a></li><li><a href="#tymethod.is_empty">is_empty</a></li><li><a href="#tymethod.is_full">is_full</a></li><li><a href="#tymethod.pop_back">pop_back</a></li><li><a href="#tymethod.push_back">push_back</a></li><li><a href="#tymethod.set">set</a></li><li><a href="#tymethod.size">size</a></li><li><a href="#tymethod.slot">slot</a></li><li><a href="#tymethod.sort_order">sort_order</a></li></ul><h3><a href="#provided-methods">Provided Methods</a></h3><ul class="block"><li><a href="#method.find_match">find_match</a></li><li><a href="#method.pop">pop</a></li><li><a href="#method.remove_diff">remove_diff</a></li></ul><h3><a href="#foreign-impls">Implementations on Foreign Types</a></h3><ul class="block"><li><a href="#impl-List%3CT%3E-for-Vec%3CT%3E">Vec&lt;T&gt;</a></li></ul><h3><a href="#implementors">Implementors</a></h3></section><h2><a href="index.html">In star_tracker_lib::util::list</a></h2></div></nav><main><div class="width-limiter"><nav class="sub"><form class="search-form"><span></span><input class="search-input" name="search" aria-label="Run search in the documentation" autocomplete="off" spellcheck="false" placeholder="Click or press ‘S’ to search, ‘?’ for more options…" type="search"><div id="help-button" title="help" tabindex="-1"><a href="../../../help.html">?</a></div><div id="settings-menu" tabindex="-1"><a href="../../../settings.html" title="settings"><img width="22" height="22" alt="Change settings" src="../../../static.files/wheel-7b819b6101059cd0.svg"></a></div></form></nav><section id="main-content" class="content"><div class="main-heading"><h1>Trait <a href="../../index.html">star_tracker_lib</a>::<wbr><a href="../index.html">util</a>::<wbr><a href="index.html">list</a>::<wbr><a class="trait" href="#">List</a><button id="copy-path" title="Copy item path to clipboard"><img src="../../../static.files/clipboard-7571035ce49a181d.svg" width="19" height="18" alt="Copy item path"></button></h1><span class="out-of-band"><a class="src" href="../../../src/star_tracker_lib/util/list/mod.rs.html#102-313">source</a> · <button id="toggle-all-docs" title="collapse all docs">[<span>&#x2212;</span>]</button></span></div><pre class="rust item-decl"><code>pub trait List&lt;T&gt; {
+<details class="toggle type-contents-toggle"><summary class="hideme"><span>Show 14 methods</span></summary>    // Required methods
+    fn <a href="#tymethod.capacity" class="fn">capacity</a>(&amp;self) -&gt; <a class="primitive" href="https://doc.rust-lang.org/nightly/std/primitive.usize.html">usize</a>;
+<span class="item-spacer"></span>    fn <a href="#tymethod.size" class="fn">size</a>(&amp;self) -&gt; <a class="primitive" href="https://doc.rust-lang.org/nightly/std/primitive.usize.html">usize</a>;
+<span class="item-spacer"></span>    fn <a href="#tymethod.is_full" class="fn">is_full</a>(&amp;self) -&gt; <a class="primitive" href="https://doc.rust-lang.org/nightly/std/primitive.bool.html">bool</a>;
+<span class="item-spacer"></span>    fn <a href="#tymethod.is_empty" class="fn">is_empty</a>(&amp;self) -&gt; <a class="primitive" href="https://doc.rust-lang.org/nightly/std/primitive.bool.html">bool</a>;
+<span class="item-spacer"></span>    fn <a href="#tymethod.get" class="fn">get</a>(&amp;self, index: <a class="primitive" href="https://doc.rust-lang.org/nightly/std/primitive.usize.html">usize</a>) -&gt; T;
+<span class="item-spacer"></span>    fn <a href="#tymethod.set" class="fn">set</a>(&amp;mut self, index: <a class="primitive" href="https://doc.rust-lang.org/nightly/std/primitive.usize.html">usize</a>, value: T) -&gt; <a class="type" href="../err/type.Error.html" title="type star_tracker_lib::util::err::Error">Error</a>&lt;<a class="primitive" href="https://doc.rust-lang.org/nightly/std/primitive.unit.html">()</a>&gt;;
+<span class="item-spacer"></span>    fn <a href="#tymethod.push_back" class="fn">push_back</a>(&amp;mut self, value: T) -&gt; <a class="type" href="../err/type.Error.html" title="type star_tracker_lib::util::err::Error">Error</a>&lt;<a class="primitive" href="https://doc.rust-lang.org/nightly/std/primitive.unit.html">()</a>&gt;;
+<span class="item-spacer"></span>    fn <a href="#tymethod.pop_back" class="fn">pop_back</a>(&amp;mut self) -&gt; <a class="type" href="../err/type.Error.html" title="type star_tracker_lib::util::err::Error">Error</a>&lt;T&gt;;
+<span class="item-spacer"></span>    fn <a href="#tymethod.clear" class="fn">clear</a>(&amp;mut self);
+<span class="item-spacer"></span>    fn <a href="#tymethod.sort_order" class="fn">sort_order</a>(&amp;mut self, in_order: <a class="primitive" href="https://doc.rust-lang.org/nightly/std/primitive.fn.html">fn</a>(_: <a class="primitive" href="https://doc.rust-lang.org/nightly/std/primitive.reference.html">&amp;T</a>, _: <a class="primitive" href="https://doc.rust-lang.org/nightly/std/primitive.reference.html">&amp;T</a>) -&gt; <a class="primitive" href="https://doc.rust-lang.org/nightly/std/primitive.bool.html">bool</a>);
+<span class="item-spacer"></span>    fn <a href="#tymethod.slot" class="fn">slot</a>(&amp;mut self, to_slot: T, in_order: <a class="primitive" href="https://doc.rust-lang.org/nightly/std/primitive.fn.html">fn</a>(_: <a class="primitive" href="https://doc.rust-lang.org/nightly/std/primitive.reference.html">&amp;T</a>, _: <a class="primitive" href="https://doc.rust-lang.org/nightly/std/primitive.reference.html">&amp;T</a>) -&gt; <a class="primitive" href="https://doc.rust-lang.org/nightly/std/primitive.bool.html">bool</a>) -&gt; <a class="primitive" href="https://doc.rust-lang.org/nightly/std/primitive.bool.html">bool</a>;
+
+    // Provided methods
+    fn <a href="#method.pop" class="fn">pop</a>(&amp;mut self, index: <a class="primitive" href="https://doc.rust-lang.org/nightly/std/primitive.usize.html">usize</a>) -&gt; <a class="type" href="../err/type.Error.html" title="type star_tracker_lib::util::err::Error">Error</a>&lt;T&gt; { ... }
+<span class="item-spacer"></span>    fn <a href="#method.find_match" class="fn">find_match</a>(
+        &amp;self,
+        list_b: &amp;dyn <a class="trait" href="trait.List.html" title="trait star_tracker_lib::util::list::List">List</a>&lt;T&gt;,
+        compare: <a class="primitive" href="https://doc.rust-lang.org/nightly/std/primitive.fn.html">fn</a>(_: <a class="primitive" href="https://doc.rust-lang.org/nightly/std/primitive.reference.html">&amp;T</a>, _: <a class="primitive" href="https://doc.rust-lang.org/nightly/std/primitive.reference.html">&amp;T</a>) -&gt; <a class="primitive" href="https://doc.rust-lang.org/nightly/std/primitive.bool.html">bool</a>,
+        out: &amp;mut dyn <a class="trait" href="trait.List.html" title="trait star_tracker_lib::util::list::List">List</a>&lt;T&gt;
+    ) -&gt; <a class="type" href="../err/type.Error.html" title="type star_tracker_lib::util::err::Error">Error</a>&lt;<a class="primitive" href="https://doc.rust-lang.org/nightly/std/primitive.unit.html">()</a>&gt; { ... }
+<span class="item-spacer"></span>    fn <a href="#method.remove_diff" class="fn">remove_diff</a>(
+        &amp;mut self,
+        other: &amp;dyn <a class="trait" href="trait.List.html" title="trait star_tracker_lib::util::list::List">List</a>&lt;T&gt;,
+        compare: <a class="primitive" href="https://doc.rust-lang.org/nightly/std/primitive.fn.html">fn</a>(_: <a class="primitive" href="https://doc.rust-lang.org/nightly/std/primitive.reference.html">&amp;T</a>, _: <a class="primitive" href="https://doc.rust-lang.org/nightly/std/primitive.reference.html">&amp;T</a>) -&gt; <a class="primitive" href="https://doc.rust-lang.org/nightly/std/primitive.bool.html">bool</a>
+    ) { ... }
+</details>}</code></pre><details class="toggle top-doc" open><summary class="hideme"><span>Expand description</span></summary><div class="docblock"><p>A set of instructions for a list/arraylist data structure.</p>
+<p>Vec already is an implementation of a list, however, it is declared on the heap.<br />
+List provides a default implementation which can be used as a heap or stack object.<br />
+The main implementations are for ArrayList or Vec.<br />
+For embedded systems, it is advised to use ArrayList as it is declared on the stack.<br />
+For other systems, it is advised to use the vec implementation as it will never fill up.</p>
+<h2 id="memory-allocation"><a href="#memory-allocation">Memory Allocation</a></h2>
+<p>The heap can cause problems on microprocessors;</p>
+<ul>
+<li>It takes time to allocate memory to the heap as oppose to the stack which is instant.</li>
+<li>The size of the program is variable and it is hard to predict if the system will run out of memory.</li>
+<li>Memory will be fragmented and scattered.<br />
+Consider running a program for a long time which allocates to a single memory location:<div class="example-wrap"><pre class="language-text"><code>The program allocates every location.
+| 0 | 1 | 2 | 3 | 4 | 5 | 6 | 7 | 8 | 9 |
+  u   u   u   u   u   u   u   u   u   u   Free = 0
+
+Some memory is free.
+| 0 | 1 | 2 | 3 | 4 | 5 | 6 | 7 | 8 | 9 |
+  u   u   _   u   u   _   u   _   u   u    Free = 3
+
+Attempt to allocate an array of size 3.
+| 0 | 1 | 2 | 3 | 4 | 5 | 6 | 7 | 8 | 9 |
+  u   u   _   u   u   _   u   _   u   u    Free = 3
+ERROR as the memory is fragmented and the array cannot fit.
+</code></pre></div></li>
+</ul>
+<p>Using a stack ensures that all the memory is available to the processor.<br />
+In big systems (i.e. computer), this is not nessisary to consider due to the processor speed and memory size.  </p>
+</div></details><h2 id="required-methods" class="small-section-header">Required Methods<a href="#required-methods" class="anchor">§</a></h2><div class="methods"><details class="toggle method-toggle" open><summary><section id="tymethod.capacity" class="method"><a class="src rightside" href="../../../src/star_tracker_lib/util/list/mod.rs.html#106">source</a><h4 class="code-header">fn <a href="#tymethod.capacity" class="fn">capacity</a>(&amp;self) -&gt; <a class="primitive" href="https://doc.rust-lang.org/nightly/std/primitive.usize.html">usize</a></h4></section></summary><div class="docblock"><p>Finds the max number of elements that can be stored in the list.<br />
+If invalid list, returns 0.  </p>
+</div></details><details class="toggle method-toggle" open><summary><section id="tymethod.size" class="method"><a class="src rightside" href="../../../src/star_tracker_lib/util/list/mod.rs.html#111">source</a><h4 class="code-header">fn <a href="#tymethod.size" class="fn">size</a>(&amp;self) -&gt; <a class="primitive" href="https://doc.rust-lang.org/nightly/std/primitive.usize.html">usize</a></h4></section></summary><div class="docblock"><p>Finds how many elements are in the list.</p>
+<h5 id="returns"><a href="#returns">Returns</a></h5>
+<p>The size.</p>
+</div></details><details class="toggle method-toggle" open><summary><section id="tymethod.is_full" class="method"><a class="src rightside" href="../../../src/star_tracker_lib/util/list/mod.rs.html#116">source</a><h4 class="code-header">fn <a href="#tymethod.is_full" class="fn">is_full</a>(&amp;self) -&gt; <a class="primitive" href="https://doc.rust-lang.org/nightly/std/primitive.bool.html">bool</a></h4></section></summary><div class="docblock"><p>Checks if the List is at maximum capacity.</p>
+<h5 id="returns-1"><a href="#returns-1">Returns</a></h5>
+<p>True if full.</p>
+</div></details><details class="toggle method-toggle" open><summary><section id="tymethod.is_empty" class="method"><a class="src rightside" href="../../../src/star_tracker_lib/util/list/mod.rs.html#124">source</a><h4 class="code-header">fn <a href="#tymethod.is_empty" class="fn">is_empty</a>(&amp;self) -&gt; <a class="primitive" href="https://doc.rust-lang.org/nightly/std/primitive.bool.html">bool</a></h4></section></summary><div class="docblock"><p>Checks if the List is empty.</p>
+<h5 id="returns-2"><a href="#returns-2">Returns</a></h5>
+<p>True if empty.</p>
+<h5 id="examples"><a href="#examples">Examples</a></h5>
+<p>lst: ArrayList&lt;UInt, 2&gt; = ArrayList::new();</p>
+</div></details><details class="toggle method-toggle" open><summary><section id="tymethod.get" class="method"><a class="src rightside" href="../../../src/star_tracker_lib/util/list/mod.rs.html#131">source</a><h4 class="code-header">fn <a href="#tymethod.get" class="fn">get</a>(&amp;self, index: <a class="primitive" href="https://doc.rust-lang.org/nightly/std/primitive.usize.html">usize</a>) -&gt; T</h4></section></summary><div class="docblock"><p>Gets the element at the specified index.</p>
+<h5 id="arguments"><a href="#arguments">Arguments</a></h5>
+<ul>
+<li>‘index’ - The index of the element to receive.</li>
+</ul>
+<h5 id="returns-3"><a href="#returns-3">Returns</a></h5>
+<p>The value at the index.</p>
+</div></details><details class="toggle method-toggle" open><summary><section id="tymethod.set" class="method"><a class="src rightside" href="../../../src/star_tracker_lib/util/list/mod.rs.html#137">source</a><h4 class="code-header">fn <a href="#tymethod.set" class="fn">set</a>(&amp;mut self, index: <a class="primitive" href="https://doc.rust-lang.org/nightly/std/primitive.usize.html">usize</a>, value: T) -&gt; <a class="type" href="../err/type.Error.html" title="type star_tracker_lib::util::err::Error">Error</a>&lt;<a class="primitive" href="https://doc.rust-lang.org/nightly/std/primitive.unit.html">()</a>&gt;</h4></section></summary><div class="docblock"><p>Sets the element at the specified index.</p>
+<h5 id="arguments-1"><a href="#arguments-1">Arguments</a></h5>
+<ul>
+<li>‘index’ - The index of the element to receive.</li>
+<li>‘value’ - The value to assign.</li>
+</ul>
+</div></details><details class="toggle method-toggle" open><summary><section id="tymethod.push_back" class="method"><a class="src rightside" href="../../../src/star_tracker_lib/util/list/mod.rs.html#142">source</a><h4 class="code-header">fn <a href="#tymethod.push_back" class="fn">push_back</a>(&amp;mut self, value: T) -&gt; <a class="type" href="../err/type.Error.html" title="type star_tracker_lib::util::err::Error">Error</a>&lt;<a class="primitive" href="https://doc.rust-lang.org/nightly/std/primitive.unit.html">()</a>&gt;</h4></section></summary><div class="docblock"><p>Adds an element to the end of the list.</p>
+<h5 id="arguments-2"><a href="#arguments-2">Arguments</a></h5>
+<ul>
+<li>‘value’ - the value to add to the end.</li>
+</ul>
+</div></details><details class="toggle method-toggle" open><summary><section id="tymethod.pop_back" class="method"><a class="src rightside" href="../../../src/star_tracker_lib/util/list/mod.rs.html#147">source</a><h4 class="code-header">fn <a href="#tymethod.pop_back" class="fn">pop_back</a>(&amp;mut self) -&gt; <a class="type" href="../err/type.Error.html" title="type star_tracker_lib::util::err::Error">Error</a>&lt;T&gt;</h4></section></summary><div class="docblock"><p>Removes an element from the end of the list.</p>
+<h5 id="returns-4"><a href="#returns-4">Returns</a></h5>
+<p>The value removed.</p>
+</div></details><details class="toggle method-toggle" open><summary><section id="tymethod.clear" class="method"><a class="src rightside" href="../../../src/star_tracker_lib/util/list/mod.rs.html#150">source</a><h4 class="code-header">fn <a href="#tymethod.clear" class="fn">clear</a>(&amp;mut self)</h4></section></summary><div class="docblock"><p>Sets the counter to 0 so all elements will be override and the list is essentially cleared.</p>
+</div></details><details class="toggle method-toggle" open><summary><section id="tymethod.sort_order" class="method"><a class="src rightside" href="../../../src/star_tracker_lib/util/list/mod.rs.html#155">source</a><h4 class="code-header">fn <a href="#tymethod.sort_order" class="fn">sort_order</a>(&amp;mut self, in_order: <a class="primitive" href="https://doc.rust-lang.org/nightly/std/primitive.fn.html">fn</a>(_: <a class="primitive" href="https://doc.rust-lang.org/nightly/std/primitive.reference.html">&amp;T</a>, _: <a class="primitive" href="https://doc.rust-lang.org/nightly/std/primitive.reference.html">&amp;T</a>) -&gt; <a class="primitive" href="https://doc.rust-lang.org/nightly/std/primitive.bool.html">bool</a>)</h4></section></summary><div class="docblock"><p>Sorts the list</p>
+<h5 id="arguments-3"><a href="#arguments-3">Arguments</a></h5>
+<ul>
+<li>‘in_order’ - A function which returns TRUE if it is in order.</li>
+</ul>
+</div></details><details class="toggle method-toggle" open><summary><section id="tymethod.slot" class="method"><a class="src rightside" href="../../../src/star_tracker_lib/util/list/mod.rs.html#164">source</a><h4 class="code-header">fn <a href="#tymethod.slot" class="fn">slot</a>(&amp;mut self, to_slot: T, in_order: <a class="primitive" href="https://doc.rust-lang.org/nightly/std/primitive.fn.html">fn</a>(_: <a class="primitive" href="https://doc.rust-lang.org/nightly/std/primitive.reference.html">&amp;T</a>, _: <a class="primitive" href="https://doc.rust-lang.org/nightly/std/primitive.reference.html">&amp;T</a>) -&gt; <a class="primitive" href="https://doc.rust-lang.org/nightly/std/primitive.bool.html">bool</a>) -&gt; <a class="primitive" href="https://doc.rust-lang.org/nightly/std/primitive.bool.html">bool</a></h4></section></summary><div class="docblock"><p>Slots an element into the list so it is in sorted order by shifting everything right.</p>
+<h5 id="arguments-4"><a href="#arguments-4">Arguments</a></h5>
+<ul>
+<li><code>to_slot</code> - The element to add.</li>
+<li><code>in_order</code> - The ordering method.</li>
+</ul>
+<h5 id="returns-5"><a href="#returns-5">Returns</a></h5>
+<p>True if inserted, false if there is no space and it will trail the last element.</p>
+</div></details></div><h2 id="provided-methods" class="small-section-header">Provided Methods<a href="#provided-methods" class="anchor">§</a></h2><div class="methods"><details class="toggle method-toggle" open><summary><section id="method.pop" class="method"><a class="src rightside" href="../../../src/star_tracker_lib/util/list/mod.rs.html#205-225">source</a><h4 class="code-header">fn <a href="#method.pop" class="fn">pop</a>(&amp;mut self, index: <a class="primitive" href="https://doc.rust-lang.org/nightly/std/primitive.usize.html">usize</a>) -&gt; <a class="type" href="../err/type.Error.html" title="type star_tracker_lib::util::err::Error">Error</a>&lt;T&gt;</h4></section></summary><div class="docblock"><p>Removes element at index, reduces size of array list, moves everything left right of point.</p>
+<h5 id="arguments-5"><a href="#arguments-5">Arguments</a></h5>
+<ul>
+<li><code>index</code> - The index to remove.</li>
+</ul>
+<h5 id="return"><a href="#return">Return</a></h5>
+<p>index &lt; size  The element at that point.
+size = 0      InvalidSize
+size =&lt; index OutOfBounds</p>
+<h5 id="examples-1"><a href="#examples-1">Examples</a></h5>
+<div class="example-wrap"><pre class="rust rust-example-rendered"><code><span class="kw">use </span>star_tracker_lib::util::list::List;
+<span class="kw">use </span>star_tracker_lib::util::list::ArrayList;
+<span class="kw">let </span><span class="kw-2">mut </span>list: ArrayList&lt;usize, <span class="number">4</span>&gt; = ArrayList::from_array(<span class="kw-2">&amp;</span>[<span class="number">0</span>, <span class="number">1</span>, <span class="number">2</span>, <span class="number">3</span>]);
+
+<span class="macro">assert_eq!</span>((&amp; <span class="kw-2">mut </span>list <span class="kw">as </span><span class="kw-2">&amp;mut </span><span class="kw">dyn </span>List&lt;usize&gt;).pop(<span class="number">1</span>), <span class="prelude-val">Ok</span>(<span class="number">1</span>));
+<span class="macro">assert_eq!</span>(list.size(), <span class="number">3</span>);
+<span class="macro">assert_eq!</span>(list.get(<span class="number">0</span>), <span class="number">0</span>);
+<span class="macro">assert_eq!</span>(list.get(<span class="number">1</span>), <span class="number">2</span>);
+<span class="macro">assert_eq!</span>(list.get(<span class="number">2</span>), <span class="number">3</span>);
+
+<span class="macro">assert_eq!</span>((&amp; <span class="kw-2">mut </span>list <span class="kw">as </span><span class="kw-2">&amp;mut </span><span class="kw">dyn </span>List&lt;usize&gt;).pop(<span class="number">0</span>), <span class="prelude-val">Ok</span>(<span class="number">0</span>));
+<span class="macro">assert_eq!</span>(list.size(), <span class="number">2</span>);
+<span class="macro">assert_eq!</span>(list.get(<span class="number">0</span>), <span class="number">2</span>);
+<span class="macro">assert_eq!</span>(list.get(<span class="number">1</span>), <span class="number">3</span>);
+
+<span class="macro">assert_eq!</span>((<span class="kw-2">&amp;mut </span>list <span class="kw">as </span><span class="kw-2">&amp;mut </span><span class="kw">dyn </span>List&lt;usize&gt;).pop(<span class="number">1</span>), <span class="prelude-val">Ok</span>(<span class="number">3</span>));
+<span class="macro">assert_eq!</span>(list.size(), <span class="number">1</span>);
+<span class="macro">assert_eq!</span>(list.get(<span class="number">0</span>), <span class="number">2</span>);
+
+<span class="macro">assert!</span>((<span class="kw-2">&amp;mut </span>list <span class="kw">as </span><span class="kw-2">&amp;mut </span><span class="kw">dyn </span>List&lt;usize&gt;).pop(<span class="number">1</span>).is_err());
+<span class="macro">assert_eq!</span>(list.size(), <span class="number">1</span>);
+<span class="macro">assert_eq!</span>(list.get(<span class="number">0</span>), <span class="number">2</span>);
+
+<span class="macro">assert_eq!</span>((<span class="kw-2">&amp;mut </span>list <span class="kw">as </span><span class="kw-2">&amp;mut </span><span class="kw">dyn </span>List&lt;usize&gt;).pop(<span class="number">0</span>), <span class="prelude-val">Ok</span>(<span class="number">2</span>));
+<span class="macro">assert_eq!</span>(list.size(), <span class="number">0</span>);
+
+<span class="macro">assert!</span>((<span class="kw-2">&amp;mut </span>list <span class="kw">as </span><span class="kw-2">&amp;mut </span><span class="kw">dyn </span>List&lt;usize&gt;).pop(<span class="number">0</span>).is_err());
+<span class="macro">assert_eq!</span>(list.size(), <span class="number">0</span>);</code></pre></div>
+</div></details><details class="toggle method-toggle" open><summary><section id="method.find_match" class="method"><a class="src rightside" href="../../../src/star_tracker_lib/util/list/mod.rs.html#253-267">source</a><h4 class="code-header">fn <a href="#method.find_match" class="fn">find_match</a>(
+    &amp;self,
+    list_b: &amp;dyn <a class="trait" href="trait.List.html" title="trait star_tracker_lib::util::list::List">List</a>&lt;T&gt;,
+    compare: <a class="primitive" href="https://doc.rust-lang.org/nightly/std/primitive.fn.html">fn</a>(_: <a class="primitive" href="https://doc.rust-lang.org/nightly/std/primitive.reference.html">&amp;T</a>, _: <a class="primitive" href="https://doc.rust-lang.org/nightly/std/primitive.reference.html">&amp;T</a>) -&gt; <a class="primitive" href="https://doc.rust-lang.org/nightly/std/primitive.bool.html">bool</a>,
+    out: &amp;mut dyn <a class="trait" href="trait.List.html" title="trait star_tracker_lib::util::list::List">List</a>&lt;T&gt;
+) -&gt; <a class="type" href="../err/type.Error.html" title="type star_tracker_lib::util::err::Error">Error</a>&lt;<a class="primitive" href="https://doc.rust-lang.org/nightly/std/primitive.unit.html">()</a>&gt;</h4></section></summary><div class="docblock"><p>Finds any associated items and appends self to out.</p>
+<h5 id="arguments-6"><a href="#arguments-6">Arguments</a></h5>
+<ul>
+<li><code>list_b</code> - A list to compare with list_a.</li>
+<li><code>compare</code> - A function to compare the two (usually a == b).</li>
+<li><code>out</code> - The output array which holds the similarities.</li>
+</ul>
+<h5 id="returns-6"><a href="#returns-6">Returns</a></h5>
+<p>Errors::InvalidSize if the list is full and more elements should be added.
+Ok(()) otherwise.</p>
+<h5 id="examples-2"><a href="#examples-2">Examples</a></h5>
+<div class="example-wrap"><pre class="rust rust-example-rendered"><code><span class="kw">use </span>star_tracker_lib::util::list::List;
+<span class="kw">use </span>star_tracker_lib::util::list::ArrayList;
+<span class="kw">let </span><span class="kw-2">mut </span>list_a: ArrayList&lt;usize, <span class="number">10</span>&gt; = ArrayList::new();
+<span class="kw">let </span>list_b: ArrayList&lt;usize, <span class="number">3</span>&gt; = ArrayList::from_array(<span class="kw-2">&amp;</span>[<span class="number">0</span>, <span class="number">1</span>, <span class="number">2</span>]);
+list_a.push_back(<span class="number">1</span>);
+list_a.push_back(<span class="number">2</span>);
+list_a.push_back(<span class="number">3</span>);
+<span class="kw">fn </span>func ( x: <span class="kw-2">&amp;</span>usize, y: <span class="kw-2">&amp;</span>usize ) -&gt; bool {x == y};
+<span class="kw">let </span><span class="kw-2">mut </span>out: ArrayList&lt;usize, <span class="number">10</span>&gt; = ArrayList::new();
+
+list_a.find_match ( <span class="kw-2">&amp;</span>list_b, func, <span class="kw-2">&amp;mut </span>out );
+<span class="macro">assert_eq!</span>(out.size(), <span class="number">2</span>);
+<span class="macro">assert_eq!</span>(out.get(<span class="number">0</span>), <span class="number">1</span>);
+<span class="macro">assert_eq!</span>(out.get(<span class="number">1</span>), <span class="number">2</span>);</code></pre></div>
+</div></details><details class="toggle method-toggle" open><summary><section id="method.remove_diff" class="method"><a class="src rightside" href="../../../src/star_tracker_lib/util/list/mod.rs.html#290-312">source</a><h4 class="code-header">fn <a href="#method.remove_diff" class="fn">remove_diff</a>(
+    &amp;mut self,
+    other: &amp;dyn <a class="trait" href="trait.List.html" title="trait star_tracker_lib::util::list::List">List</a>&lt;T&gt;,
+    compare: <a class="primitive" href="https://doc.rust-lang.org/nightly/std/primitive.fn.html">fn</a>(_: <a class="primitive" href="https://doc.rust-lang.org/nightly/std/primitive.reference.html">&amp;T</a>, _: <a class="primitive" href="https://doc.rust-lang.org/nightly/std/primitive.reference.html">&amp;T</a>) -&gt; <a class="primitive" href="https://doc.rust-lang.org/nightly/std/primitive.bool.html">bool</a>
+)</h4></section></summary><div class="docblock"><p>Removes all elements which do not share the similarities in the compare function and list.</p>
+<h5 id="arguments-7"><a href="#arguments-7">Arguments</a></h5>
+<ul>
+<li><code>other</code> - The list to compare to.</li>
+<li><code>compare</code> - The function to compare the lists together.</li>
+</ul>
+<h5 id="examples-3"><a href="#examples-3">Examples</a></h5>
+<div class="example-wrap"><pre class="rust rust-example-rendered"><code><span class="kw">use </span>star_tracker_lib::util::list::List;
+<span class="kw">use </span>star_tracker_lib::util::list::ArrayList;
+<span class="kw">let </span><span class="kw-2">mut </span>list_a: ArrayList&lt;usize, <span class="number">10</span>&gt; = ArrayList::new();
+<span class="kw">let </span>list_b: ArrayList::&lt;usize, <span class="number">3</span>&gt; = ArrayList::from_array(<span class="kw-2">&amp;</span>[<span class="number">0</span>, <span class="number">1</span>, <span class="number">2</span>]);
+list_a.push_back(<span class="number">1</span>);
+list_a.push_back(<span class="number">2</span>);
+list_a.push_back(<span class="number">3</span>);
+<span class="kw">fn </span>func ( x: <span class="kw-2">&amp;</span>usize, y: <span class="kw-2">&amp;</span>usize ) -&gt; bool {x == y};
+<span class="kw">let </span><span class="kw-2">mut </span>out: ArrayList&lt;usize, <span class="number">0</span>&gt; = ArrayList::new();
+
+list_a.remove_diff( <span class="kw-2">&amp;</span>list_b, func );
+<span class="macro">assert_eq!</span>(out.size(), <span class="number">0</span>);</code></pre></div>
+</div></details></div><h2 id="foreign-impls" class="small-section-header">Implementations on Foreign Types<a href="#foreign-impls" class="anchor">§</a></h2><details class="toggle implementors-toggle"><summary><section id="impl-List%3CT%3E-for-Vec%3CT%3E" class="impl"><a class="src rightside" href="../../../src/star_tracker_lib/util/list/vec.rs.html#7-183">source</a><a href="#impl-List%3CT%3E-for-Vec%3CT%3E" class="anchor">§</a><h3 class="code-header">impl&lt;T&gt; <a class="trait" href="trait.List.html" title="trait star_tracker_lib::util::list::List">List</a>&lt;T&gt; for <a class="struct" href="https://doc.rust-lang.org/nightly/alloc/vec/struct.Vec.html" title="struct alloc::vec::Vec">Vec</a>&lt;T&gt;<span class="where fmt-newline">where
+    T: <a class="trait" href="../../core_include/trait.Clone.html" title="trait star_tracker_lib::core_include::Clone">Clone</a>,</span></h3></section></summary><div class="impl-items"><details class="toggle method-toggle" open><summary><section id="method.capacity" class="method trait-impl"><a class="src rightside" href="../../../src/star_tracker_lib/util/list/vec.rs.html#18-21">source</a><a href="#method.capacity" class="anchor">§</a><h4 class="code-header">fn <a href="#tymethod.capacity" class="fn">capacity</a>(&amp;self) -&gt; <a class="primitive" href="https://doc.rust-lang.org/nightly/std/primitive.usize.html">usize</a></h4></section></summary><div class="docblock"><p>Returns usize::max_value().<br />
+A Vec will not exceed capacity as it will dynamically resize.<br />
+This conflicts with Vec, to use, follow the example.</p>
+<h5 id="example"><a href="#example">Example</a></h5>
+<div class="example-wrap"><pre class="rust rust-example-rendered"><code><span class="kw">use </span>star_tracker_lib::util::list::List;
+<span class="kw">let </span>vec: Vec&lt;usize&gt; = Vec::new();
+List::capacity(<span class="kw-2">&amp;</span>vec); <span class="comment">// This is how to call conflicting packages.</span></code></pre></div>
+</div></details><details class="toggle method-toggle" open><summary><section id="method.size" class="method trait-impl"><a class="src rightside" href="../../../src/star_tracker_lib/util/list/vec.rs.html#25-28">source</a><a href="#method.size" class="anchor">§</a><h4 class="code-header">fn <a href="#tymethod.size" class="fn">size</a>(&amp;self) -&gt; <a class="primitive" href="https://doc.rust-lang.org/nightly/std/primitive.usize.html">usize</a></h4></section></summary><div class="docblock"><p>Finds how many elements are in the list.<br />
+Equivalent to <a href="https://doc.rust-lang.org/std/vec/struct.Vec.html#method.len">Vec.len()</a>.</p>
+</div></details><details class="toggle method-toggle" open><summary><section id="method.is_full" class="method trait-impl"><a class="src rightside" href="../../../src/star_tracker_lib/util/list/vec.rs.html#32-35">source</a><a href="#method.is_full" class="anchor">§</a><h4 class="code-header">fn <a href="#tymethod.is_full" class="fn">is_full</a>(&amp;self) -&gt; <a class="primitive" href="https://doc.rust-lang.org/nightly/std/primitive.bool.html">bool</a></h4></section></summary><div class="docblock"><p>Returns false.<br />
+A vec is never full as it will dynamically resize.  </p>
+</div></details><details class="toggle method-toggle" open><summary><section id="method.is_empty" class="method trait-impl"><a class="src rightside" href="../../../src/star_tracker_lib/util/list/vec.rs.html#39-42">source</a><a href="#method.is_empty" class="anchor">§</a><h4 class="code-header">fn <a href="#tymethod.is_empty" class="fn">is_empty</a>(&amp;self) -&gt; <a class="primitive" href="https://doc.rust-lang.org/nightly/std/primitive.bool.html">bool</a></h4></section></summary><div class="docblock"><p>Returns true if empty.<br />
+Equivalent to <a href="https://doc.rust-lang.org/std/vec/struct.Vec.html#method.is_empty">Vec::is_empty()</a>.</p>
+</div></details><details class="toggle method-toggle" open><summary><section id="method.get" class="method trait-impl"><a class="src rightside" href="../../../src/star_tracker_lib/util/list/vec.rs.html#46-49">source</a><a href="#method.get" class="anchor">§</a><h4 class="code-header">fn <a href="#tymethod.get" class="fn">get</a>(&amp;self, index: <a class="primitive" href="https://doc.rust-lang.org/nightly/std/primitive.usize.html">usize</a>) -&gt; T</h4></section></summary><div class="docblock"><p>Gets the element at the specified index.<br />
+Equivalent to <code>vec[index];</code></p>
+</div></details><details class="toggle method-toggle" open><summary><section id="method.set" class="method trait-impl"><a class="src rightside" href="../../../src/star_tracker_lib/util/list/vec.rs.html#53-61">source</a><a href="#method.set" class="anchor">§</a><h4 class="code-header">fn <a href="#tymethod.set" class="fn">set</a>(&amp;mut self, index: <a class="primitive" href="https://doc.rust-lang.org/nightly/std/primitive.usize.html">usize</a>, value: T) -&gt; <a class="type" href="../err/type.Error.html" title="type star_tracker_lib::util::err::Error">Error</a>&lt;<a class="primitive" href="https://doc.rust-lang.org/nightly/std/primitive.unit.html">()</a>&gt;</h4></section></summary><div class="docblock"><p>Sets the element at the specified index.
+Equivalent to <code>vec[index] = value;</code></p>
+</div></details><details class="toggle method-toggle" open><summary><section id="method.push_back" class="method trait-impl"><a class="src rightside" href="../../../src/star_tracker_lib/util/list/vec.rs.html#65-69">source</a><a href="#method.push_back" class="anchor">§</a><h4 class="code-header">fn <a href="#tymethod.push_back" class="fn">push_back</a>(&amp;mut self, value: T) -&gt; <a class="type" href="../err/type.Error.html" title="type star_tracker_lib::util::err::Error">Error</a>&lt;<a class="primitive" href="https://doc.rust-lang.org/nightly/std/primitive.unit.html">()</a>&gt;</h4></section></summary><div class="docblock"><p>Adds an element to the end of the list.
+Equivalent to <a href="https://doc.rust-lang.org/std/vec/struct.Vec.html#method.push">vec.push(value)</a>.</p>
+</div></details><details class="toggle method-toggle" open><summary><section id="method.pop_back" class="method trait-impl"><a class="src rightside" href="../../../src/star_tracker_lib/util/list/vec.rs.html#74-81">source</a><a href="#method.pop_back" class="anchor">§</a><h4 class="code-header">fn <a href="#tymethod.pop_back" class="fn">pop_back</a>(&amp;mut self) -&gt; <a class="type" href="../err/type.Error.html" title="type star_tracker_lib::util::err::Error">Error</a>&lt;T&gt;</h4></section></summary><div class="docblock"><p>Removes an element from the end of the list.
+Equivalent to <a href="https://doc.rust-lang.org/std/vec/struct.Vec.html#method.pop">vec.pop()</a>.</p>
+</div></details><details class="toggle method-toggle" open><summary><section id="method.clear" class="method trait-impl"><a class="src rightside" href="../../../src/star_tracker_lib/util/list/vec.rs.html#86-89">source</a><a href="#method.clear" class="anchor">§</a><h4 class="code-header">fn <a href="#tymethod.clear" class="fn">clear</a>(&amp;mut self)</h4></section></summary><div class="docblock"><p>Sets the counter to 0 so all elements will be override and the list is essentialy cleared.
+Equivalent to <a href="https://doc.rust-lang.org/std/vec/struct.Vec.html#method.clear">vec.clear()</a>.</p>
+</div></details><details class="toggle method-toggle" open><summary><section id="method.sort_order" class="method trait-impl"><a class="src rightside" href="../../../src/star_tracker_lib/util/list/vec.rs.html#108-122">source</a><a href="#method.sort_order" class="anchor">§</a><h4 class="code-header">fn <a href="#tymethod.sort_order" class="fn">sort_order</a>(&amp;mut self, in_order: <a class="primitive" href="https://doc.rust-lang.org/nightly/std/primitive.fn.html">fn</a>(_: <a class="primitive" href="https://doc.rust-lang.org/nightly/std/primitive.reference.html">&amp;T</a>, _: <a class="primitive" href="https://doc.rust-lang.org/nightly/std/primitive.reference.html">&amp;T</a>) -&gt; <a class="primitive" href="https://doc.rust-lang.org/nightly/std/primitive.bool.html">bool</a>)</h4></section></summary><div class="docblock"><p>Sorts list based on the input function.<br />
+VERY SLOW!!!
+The list uses the same logic as the array list.</p>
+<h5 id="arguments-8"><a href="#arguments-8">Arguments</a></h5>
+<ul>
+<li>‘in_order’ - A function which returns TRUE if it is in order.</li>
+</ul>
+<h5 id="examples-4"><a href="#examples-4">Examples</a></h5>
+<div class="example-wrap"><pre class="rust rust-example-rendered"><code><span class="kw">use </span>star_tracker_lib::util::list::List;
+<span class="kw">fn </span>ascending ( small: &amp; u32, large: &amp; u32 ) -&gt; bool { <span class="kw">return </span>small &lt; large; }
+
+<span class="kw">let </span><span class="kw-2">mut </span>lst: Vec&lt;u32&gt; = Vec::new();
+lst.push_back(<span class="number">1</span>);          <span class="comment">// 1
+</span>lst.push_back(<span class="number">0</span>);          <span class="comment">// 1 0
+</span>lst.sort_order(ascending);
+<span class="macro">assert_eq!</span>(lst.get(<span class="number">0</span>), <span class="number">0</span>);
+<span class="macro">assert_eq!</span>(lst.get(<span class="number">1</span>), <span class="number">1</span>); <span class="comment">// 0 1</span></code></pre></div>
+</div></details><details class="toggle method-toggle" open><summary><section id="method.slot" class="method trait-impl"><a class="src rightside" href="../../../src/star_tracker_lib/util/list/vec.rs.html#158-182">source</a><a href="#method.slot" class="anchor">§</a><h4 class="code-header">fn <a href="#tymethod.slot" class="fn">slot</a>(&amp;mut self, to_slot: T, in_order: <a class="primitive" href="https://doc.rust-lang.org/nightly/std/primitive.fn.html">fn</a>(_: <a class="primitive" href="https://doc.rust-lang.org/nightly/std/primitive.reference.html">&amp;T</a>, _: <a class="primitive" href="https://doc.rust-lang.org/nightly/std/primitive.reference.html">&amp;T</a>) -&gt; <a class="primitive" href="https://doc.rust-lang.org/nightly/std/primitive.bool.html">bool</a>) -&gt; <a class="primitive" href="https://doc.rust-lang.org/nightly/std/primitive.bool.html">bool</a></h4></section></summary><div class="docblock"><p>Slots an element into the list so it is in sorted order by shifting everything right.</p>
+<h5 id="arguments-9"><a href="#arguments-9">Arguments</a></h5>
+<ul>
+<li><code>to_slot</code> - The element to add.</li>
+<li><code>in_order</code> - A function which returns TRUE if it is in order.</li>
+</ul>
+<p>This means that the first argument is a smaller index than the second.</p>
+<h5 id="returns-7"><a href="#returns-7">Returns</a></h5>
+<p>True if inserted, false if there is no space and it will trail the last element</p>
+<h5 id="examples-5"><a href="#examples-5">Examples</a></h5>
+<div class="example-wrap"><pre class="rust rust-example-rendered"><code><span class="kw">use </span>star_tracker_lib::util::list::List;
+<span class="kw">fn </span>sort_ascending ( small: &amp; i32, large: &amp; i32 ) -&gt; bool { <span class="kw">return </span>small &lt; large; }
+
+<span class="kw">let </span><span class="kw-2">mut </span>input: Vec&lt;i32&gt; = Vec::new();
+
+<span class="comment">// The list is not full, elements will be added until it is full.
+</span><span class="kw">let </span><span class="kw-2">mut </span>to_slot = <span class="number">0</span>;
+<span class="macro">assert!</span>(input.slot(to_slot, sort_ascending)); <span class="comment">// 0
+</span>to_slot = <span class="number">2</span>;
+<span class="macro">assert!</span>(input.slot(to_slot, sort_ascending)); <span class="comment">// 0 2
+</span>to_slot = <span class="number">3</span>;
+<span class="macro">assert!</span>(input.slot(to_slot, sort_ascending)); <span class="comment">// 0 2 3
+</span>to_slot = <span class="number">1</span>;
+<span class="macro">assert!</span>(input.slot(to_slot, sort_ascending)); <span class="comment">// 0 1 2 3
+</span>to_slot = <span class="number">5</span>;
+<span class="macro">assert!</span>(input.slot(to_slot, sort_ascending)); <span class="comment">// 0 1 2 3 5
+</span>to_slot = <span class="number">4</span>;
+<span class="macro">assert!</span>(input.slot(to_slot, sort_ascending)); <span class="comment">// 0 1 2 3 4 5</span></code></pre></div>
+</div></details></div></details><h2 id="implementors" class="small-section-header">Implementors<a href="#implementors" class="anchor">§</a></h2><div id="implementors-list"><section id="impl-List%3CT%3E-for-ArrayList%3CT,+N%3E" class="impl"><a class="src rightside" href="../../../src/star_tracker_lib/util/list/array_list.rs.html#72-393">source</a><a href="#impl-List%3CT%3E-for-ArrayList%3CT,+N%3E" class="anchor">§</a><h3 class="code-header">impl&lt;T, const N: <a class="primitive" href="https://doc.rust-lang.org/nightly/std/primitive.usize.html">usize</a>&gt; <a class="trait" href="trait.List.html" title="trait star_tracker_lib::util::list::List">List</a>&lt;T&gt; for <a class="struct" href="struct.ArrayList.html" title="struct star_tracker_lib::util::list::ArrayList">ArrayList</a>&lt;T, N&gt;<span class="where fmt-newline">where
+    T: <a class="trait" href="../../core_include/trait.Clone.html" title="trait star_tracker_lib::core_include::Clone">Clone</a>,</span></h3></section></div><script src="../../../implementors/star_tracker_lib/util/list/trait.List.js" data-ignore-extern-crates="alloc" async></script></section></div></main></body></html>

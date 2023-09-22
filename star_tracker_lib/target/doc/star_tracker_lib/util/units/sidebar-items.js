@@ -1,0 +1,1 @@
+window.SIDEBAR_ITEMS = {"enum":["BitCompare"],"mod":["angle_axis","angles","bit_field","crp","equatorial","matrix","quaternion","unit_ops","vector2","vector3"],"struct":["AngleAxis","BitField","CRP","Degrees","Equatorial","Hours","MatPos","Match","Matrix","Quaternion","Radians","Vector2","Vector2Int","Vector3"],"type":["Pixel"]};

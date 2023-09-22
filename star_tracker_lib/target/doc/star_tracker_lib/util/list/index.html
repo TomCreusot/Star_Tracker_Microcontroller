@@ -1,0 +1,50 @@
+<!DOCTYPE html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"><meta name="generator" content="rustdoc"><meta name="description" content="A universal implementation of an array list, this is setup for a static ArrayList and Vec."><title>star_tracker_lib::util::list - Rust</title><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../static.files/SourceSerif4-Regular-46f98efaafac5295.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../static.files/FiraSans-Regular-018c141bf0843ffd.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../static.files/FiraSans-Medium-8f9a781e4970d388.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../static.files/SourceCodePro-Regular-562dcc5011b6de7d.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../static.files/SourceSerif4-Bold-a2c9cd1067f8b328.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../static.files/SourceCodePro-Semibold-d899c5a5c4aeb14a.ttf.woff2"><link rel="stylesheet" href="../../../static.files/normalize-76eba96aa4d2e634.css"><link rel="stylesheet" href="../../../static.files/rustdoc-cb6f1f67f1bcd037.css" id="mainThemeStyle"><meta name="rustdoc-vars" data-root-path="../../../" data-static-root-path="../../../static.files/" data-current-crate="star_tracker_lib" data-themes="" data-resource-suffix="" data-rustdoc-version="1.73.0-nightly (8771282d4 2023-07-23)" data-channel="nightly" data-search-js="search-6dfdfced5eff6596.js" data-settings-js="settings-de11bff964e9d4e5.js" data-settings-css="settings-8c76f75bfb6bd192.css" data-theme-light-css="light-6d2c9675f3d09c26.css" data-theme-dark-css="dark-45ceb8f2e522f4d1.css" data-theme-ayu-css="ayu-fd19013d6ce078bf.css" ><script src="../../../static.files/storage-db41da1a38ea3cb8.js"></script><script defer src="../../../static.files/main-0795b7d26be81095.js"></script><noscript><link rel="stylesheet" media="(prefers-color-scheme:light)" href="../../../static.files/light-6d2c9675f3d09c26.css"><link rel="stylesheet" media="(prefers-color-scheme:dark)" href="../../../static.files/dark-45ceb8f2e522f4d1.css"><link rel="stylesheet" href="../../../static.files/noscript-cffde32267a19fd6.css"></noscript><link rel="alternate icon" type="image/png" href="../../../static.files/favicon-16x16-8b506e7a72182f1c.png"><link rel="alternate icon" type="image/png" href="../../../static.files/favicon-32x32-422f7d1d52889060.png"><link rel="icon" type="image/svg+xml" href="../../../static.files/favicon-2c020d218678b618.svg"></head><body class="rustdoc mod"><!--[if lte IE 11]><div class="warning">This old browser is unsupported and will most likely display funky things.</div><![endif]--><nav class="mobile-topbar"><button class="sidebar-menu-toggle">&#9776;</button><a class="logo-container" href="../../../star_tracker_lib/index.html"><img class="rust-logo" src="../../../static.files/rust-logo-151179464ae7ed46.svg" alt="logo"></a><h2></h2></nav><nav class="sidebar"><a class="logo-container" href="../../../star_tracker_lib/index.html"><img class="rust-logo" src="../../../static.files/rust-logo-151179464ae7ed46.svg" alt="logo"></a><h2 class="location"><a href="#">Module list</a></h2><div class="sidebar-elems"><section><ul class="block"><li><a href="#modules">Modules</a></li><li><a href="#structs">Structs</a></li><li><a href="#traits">Traits</a></li></ul></section></div></nav><main><div class="width-limiter"><nav class="sub"><form class="search-form"><span></span><input class="search-input" name="search" aria-label="Run search in the documentation" autocomplete="off" spellcheck="false" placeholder="Click or press ‘S’ to search, ‘?’ for more options…" type="search"><div id="help-button" title="help" tabindex="-1"><a href="../../../help.html">?</a></div><div id="settings-menu" tabindex="-1"><a href="../../../settings.html" title="settings"><img width="22" height="22" alt="Change settings" src="../../../static.files/wheel-7b819b6101059cd0.svg"></a></div></form></nav><section id="main-content" class="content"><div class="main-heading"><h1>Module <a href="../../index.html">star_tracker_lib</a>::<wbr><a href="../index.html">util</a>::<wbr><a class="mod" href="#">list</a><button id="copy-path" title="Copy item path to clipboard"><img src="../../../static.files/clipboard-7571035ce49a181d.svg" width="19" height="18" alt="Copy item path"></button></h1><span class="out-of-band"><a class="src" href="../../../src/star_tracker_lib/util/list/mod.rs.html#1-600">source</a> · <button id="toggle-all-docs" title="collapse all docs">[<span>&#x2212;</span>]</button></span></div><details class="toggle top-doc" open><summary class="hideme"><span>Expand description</span></summary><div class="docblock"><p>A universal implementation of an array list, this is setup for a static ArrayList and Vec.</p>
+<p>To enable the feature for Vec, you must compile with the feature “nix”.</p>
+<p>Vec already is an implementation of a list, however, it is declared on the heap.<br />
+List provides a default implementation which can be used as a heap or stack object.<br />
+The main implementations are for ArrayList or Vec.<br />
+For embedded systems, it is advised to use ArrayList as it is declared on the stack.<br />
+For other systems, it is advised to use the vec implementation as it will never fill up.</p>
+<h2 id="array-list-structure"><a href="#array-list-structure">Array List Structure</a></h2>
+<p>An array list is an oversized array with a pointer.<br />
+Like a stack, elements can be appended to the end and popped from the end quick and easily.<br />
+However, unlike a stack, an array_list is designed to access elements throughout like an array or linked list.<br />
+Consider the following diagram.</p>
+<div class="example-wrap"><pre class="language-text"><code>| 0 | 1 | 2 | 3 | 4 | 5 | pointer = 0
+  x   x   x   x   x   x
+
+Add an element (3).
+| 0 | 1 | 2 | 3 | 4 | 5 | pointer = 1
+  3   x   x   x   x   x
+Add some elements (2, 5, 4).
+| 0 | 1 | 2 | 3 | 4 | 5 | pointer = 4
+  3   2   5   4   x   x
+
+Returns 3: arraylist.get(0)
+Returns 2: arraylist.get(1)
+Returns 5: arraylist.get(2)
+Returns 4: arraylist.get(3)
+</code></pre></div><h2 id="memory-allocation"><a href="#memory-allocation">Memory Allocation</a></h2>
+<p>The heap can cause problems on microprocessors;</p>
+<ul>
+<li>It takes time to allocate memory to the heap as oppose to the stack which is instant.</li>
+<li>The size of the program is variable and it is hard to predict if the system will run out of memory.</li>
+<li>Memory will be fragmented and scattered.<br />
+Consider running a program for a long time which allocates to a single memory location:<div class="example-wrap"><pre class="language-text"><code>The program allocates every location.
+| 0 | 1 | 2 | 3 | 4 | 5 | 6 | 7 | 8 | 9 |
+  u   u   u   u   u   u   u   u   u   u   Free = 0
+
+Some memory is free.
+| 0 | 1 | 2 | 3 | 4 | 5 | 6 | 7 | 8 | 9 |
+  u   u   _   u   u   _   u   _   u   u    Free = 3
+
+Attempt to allocate an array of size 3.
+| 0 | 1 | 2 | 3 | 4 | 5 | 6 | 7 | 8 | 9 |
+  u   u   _   u   u   _   u   _   u   u    Free = 3
+ERROR as the memory is fragmented and the array cannot fit.
+</code></pre></div></li>
+</ul>
+<p>Using a stack ensures that all the memory is available to the processor.<br />
+In big systems (i.e. computer), this is not nessisary to consider due to the processor speed and memory size.  </p>
+</div></details><h2 id="modules" class="small-section-header"><a href="#modules">Modules</a></h2><ul class="item-table"><li><div class="item-name"><a class="mod" href="array_list/index.html" title="mod star_tracker_lib::util::list::array_list">array_list</a></div><div class="desc docblock-short">Implementation of ArrayList.</div></li><li><div class="item-name"><a class="mod" href="list_iterator/index.html" title="mod star_tracker_lib::util::list::list_iterator">list_iterator</a></div><div class="desc docblock-short">Implementation of <a href="list_iterator/index.html" title="mod star_tracker_lib::util::list::list_iterator">ListIterator</a>.</div></li><li><div class="item-name"><a class="mod" href="vec/index.html" title="mod star_tracker_lib::util::list::vec">vec</a></div><div class="desc docblock-short">Addition to <a href="index.html" title="mod star_tracker_lib::util::list">Linear Lookup</a> for Vec.</div></li></ul><h2 id="structs" class="small-section-header"><a href="#structs">Structs</a></h2><ul class="item-table"><li><div class="item-name"><a class="struct" href="struct.ArrayList.html" title="struct star_tracker_lib::util::list::ArrayList">ArrayList</a></div><div class="desc docblock-short">An implementation of an Array List with no allocations to the heap.</div></li><li><div class="item-name"><a class="struct" href="struct.ListIterator.html" title="struct star_tracker_lib::util::list::ListIterator">ListIterator</a></div><div class="desc docblock-short">Due to limitations with lifetimes and types, the default ToIterator trait cannot be used.<br />
+Instead the iterator statically creates a new iterator from an input list.</div></li></ul><h2 id="traits" class="small-section-header"><a href="#traits">Traits</a></h2><ul class="item-table"><li><div class="item-name"><a class="trait" href="trait.List.html" title="trait star_tracker_lib::util::list::List">List</a></div><div class="desc docblock-short">A set of instructions for a list/arraylist data structure.</div></li></ul></section></div></main></body></html>

@@ -1,0 +1,1 @@
+window.SIDEBAR_ITEMS = {"mod":["array_list","list_iterator","vec"],"struct":["ArrayList","ListIterator"],"trait":["List"]};

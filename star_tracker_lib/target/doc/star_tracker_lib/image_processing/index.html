@@ -1,0 +1,68 @@
+<!DOCTYPE html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"><meta name="generator" content="rustdoc"><meta name="description" content="`image_processing` is basic image manipulation/storage and machine vision."><title>star_tracker_lib::image_processing - Rust</title><link rel="preload" as="font" type="font/woff2" crossorigin href="../../static.files/SourceSerif4-Regular-46f98efaafac5295.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../static.files/FiraSans-Regular-018c141bf0843ffd.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../static.files/FiraSans-Medium-8f9a781e4970d388.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../static.files/SourceCodePro-Regular-562dcc5011b6de7d.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../static.files/SourceSerif4-Bold-a2c9cd1067f8b328.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../static.files/SourceCodePro-Semibold-d899c5a5c4aeb14a.ttf.woff2"><link rel="stylesheet" href="../../static.files/normalize-76eba96aa4d2e634.css"><link rel="stylesheet" href="../../static.files/rustdoc-cb6f1f67f1bcd037.css" id="mainThemeStyle"><meta name="rustdoc-vars" data-root-path="../../" data-static-root-path="../../static.files/" data-current-crate="star_tracker_lib" data-themes="" data-resource-suffix="" data-rustdoc-version="1.73.0-nightly (8771282d4 2023-07-23)" data-channel="nightly" data-search-js="search-6dfdfced5eff6596.js" data-settings-js="settings-de11bff964e9d4e5.js" data-settings-css="settings-8c76f75bfb6bd192.css" data-theme-light-css="light-6d2c9675f3d09c26.css" data-theme-dark-css="dark-45ceb8f2e522f4d1.css" data-theme-ayu-css="ayu-fd19013d6ce078bf.css" ><script src="../../static.files/storage-db41da1a38ea3cb8.js"></script><script defer src="../../static.files/main-0795b7d26be81095.js"></script><noscript><link rel="stylesheet" media="(prefers-color-scheme:light)" href="../../static.files/light-6d2c9675f3d09c26.css"><link rel="stylesheet" media="(prefers-color-scheme:dark)" href="../../static.files/dark-45ceb8f2e522f4d1.css"><link rel="stylesheet" href="../../static.files/noscript-cffde32267a19fd6.css"></noscript><link rel="alternate icon" type="image/png" href="../../static.files/favicon-16x16-8b506e7a72182f1c.png"><link rel="alternate icon" type="image/png" href="../../static.files/favicon-32x32-422f7d1d52889060.png"><link rel="icon" type="image/svg+xml" href="../../static.files/favicon-2c020d218678b618.svg"></head><body class="rustdoc mod"><!--[if lte IE 11]><div class="warning">This old browser is unsupported and will most likely display funky things.</div><![endif]--><nav class="mobile-topbar"><button class="sidebar-menu-toggle">&#9776;</button><a class="logo-container" href="../../star_tracker_lib/index.html"><img class="rust-logo" src="../../static.files/rust-logo-151179464ae7ed46.svg" alt="logo"></a><h2></h2></nav><nav class="sidebar"><a class="logo-container" href="../../star_tracker_lib/index.html"><img class="rust-logo" src="../../static.files/rust-logo-151179464ae7ed46.svg" alt="logo"></a><h2 class="location"><a href="#">Module image_processing</a></h2><div class="sidebar-elems"><section><ul class="block"><li><a href="#reexports">Re-exports</a></li><li><a href="#modules">Modules</a></li><li><a href="#structs">Structs</a></li><li><a href="#traits">Traits</a></li></ul></section></div></nav><main><div class="width-limiter"><nav class="sub"><form class="search-form"><span></span><input class="search-input" name="search" aria-label="Run search in the documentation" autocomplete="off" spellcheck="false" placeholder="Click or press ‘S’ to search, ‘?’ for more options…" type="search"><div id="help-button" title="help" tabindex="-1"><a href="../../help.html">?</a></div><div id="settings-menu" tabindex="-1"><a href="../../settings.html" title="settings"><img width="22" height="22" alt="Change settings" src="../../static.files/wheel-7b819b6101059cd0.svg"></a></div></form></nav><section id="main-content" class="content"><div class="main-heading"><h1>Module <a href="../index.html">star_tracker_lib</a>::<wbr><a class="mod" href="#">image_processing</a><button id="copy-path" title="Copy item path to clipboard"><img src="../../static.files/clipboard-7571035ce49a181d.svg" width="19" height="18" alt="Copy item path"></button></h1><span class="out-of-band"><a class="src" href="../../src/star_tracker_lib/image_processing/mod.rs.html#1-354">source</a> · <button id="toggle-all-docs" title="collapse all docs">[<span>&#x2212;</span>]</button></span></div><details class="toggle top-doc" open><summary class="hideme"><span>Expand description</span></summary><div class="docblock"><p><code>image_processing</code> is basic image manipulation/storage and machine vision.</p>
+<p><code>image_processing</code> involves storing an image in a reduced size and performing basic computer vision on the image.
+This includes a fast method of blob detection and thresholding to obtain stars.</p>
+<h2 id="extracting-stars"><a href="#extracting-stars">Extracting Stars</a></h2>
+<div class="example-wrap"><pre class="rust rust-example-rendered"><code><span class="kw">use </span>star_tracker_lib::util::aliases::Decimal;
+<span class="kw">use </span>star_tracker_lib::util::aliases::Byte;
+<span class="kw">use </span>star_tracker_lib::util::units::Vector2;
+<span class="kw">use </span>star_tracker_lib::util::units::Pixel;
+<span class="kw">use </span>star_tracker_lib::util::list::List;
+<span class="kw">use </span>star_tracker_lib::image_processing::BasicImage;
+<span class="kw">use </span>star_tracker_lib::image_processing::Blob;
+<span class="kw">use </span>star_tracker_lib::image_processing::ThresholdGrid;
+<span class="kw">use </span>star_tracker_lib::image_processing::ThresholdPercent;
+
+<span class="comment">// Read the image in however you want.
+// In this case we are creating a black image.
+// Lets just assume it is a beautiful star scape...
+</span><span class="kw">const </span>img_width:  usize = <span class="number">808</span>;
+<span class="kw">const </span>img_height: usize = <span class="number">608</span>;
+<span class="kw">let </span><span class="kw-2">mut </span>img: BasicImage&lt;img_width, img_height&gt; = BasicImage::new();
+ 
+<span class="comment">// Nilback or Sauvola thresholding.
+// This threshold is a set of grid cells which all have their own threshold for the local area.
+// In this case it is 250 (50x50) cells spanning ~12 pixels wide and tall.
+</span><span class="kw">const </span>grid_size: usize = <span class="number">50</span>;
+<span class="kw">let </span>overshoot  : Byte  = <span class="number">50</span>; <span class="comment">// How much over the mean should be considered the cutoff.
+</span><span class="kw">let </span>skip       : usize = <span class="number">1</span>;  <span class="comment">// Only samples every second pixel. This makes the threshold 4 times faster. 
+</span><span class="kw">let </span>thresh_grid: ThresholdGrid&lt;grid_size, grid_size&gt; = ThresholdGrid::new(<span class="kw-2">&amp;</span>img, overshoot, skip);
+
+ 
+<span class="comment">// This is a global threshold where you choose a percentage of pixels to cut off.
+// The image generates a histogram and anything under 99.99% is considered background.
+// This is less effective as it does not consider bloom.
+</span><span class="kw">let </span>percent       : Decimal = <span class="number">0.9999</span>;
+<span class="kw">let </span>thresh_percent: ThresholdPercent = ThresholdPercent::new(<span class="kw-2">&amp;</span>img, percent);
+
+<span class="comment">// To view the effects of the threshold, you can use:
+// thresh.apply(&amp;mut image);     // To remove the background.
+// thresh.apply_bin(&amp;mut image); // To make the image binary.
+// This is not nessisary however and will slow the program down...
+
+
+// Now that we have a threshold, we need to find the stars (blobs).
+// The implemented blob detection algorithm is the grass fire method.
+// This will delete the image so make a copy if you need.
+//
+// Since this is an embedded project, you need to provide a *stack* for it to store all the neighboring pixels.
+// If you are using a computer, provide a Vec, otherwise if you have a limited size, use an arraylist.
+// The size of the array list determines roughly how big the blob is.
+// You may even want to use this if you are using a PC as it limits the blob size.
+// 
+// There is also a *min_size*, this specifies the min size the blob can be.
+// The bigger the star, the more accurate it is as a centroid between the pixels can be calculated.
+// Also single pixels can be hot pixels.
+// When searching, this method will skip each min_size pixels to speed up the program.
+// It is recommended to set *min_size* to 2.
+ 
+</span><span class="kw">let </span><span class="kw-2">mut </span>stack : Vec&lt;Pixel&gt; = Vec::new(); <span class="comment">// Infinite sized blobs, use array list for finite size.
+</span><span class="kw">let </span><span class="kw-2">mut </span>blobs : Vec&lt;Blob&gt;  = Vec::new(); <span class="comment">// The output.
+</span><span class="kw">let </span>blob_min_size = <span class="number">2</span>;                   <span class="comment">// Blobs must be at least 2 pixels big.
+
+</span>Blob::find_blobs(blob_min_size, <span class="kw-2">&amp;</span>thresh_grid, <span class="kw-2">&amp;mut </span>img, <span class="kw-2">&amp;mut </span>stack, <span class="kw-2">&amp;mut </span>blobs);
+blobs.sort_order(Blob::sort_descending_intensity); <span class="comment">// Sort by intensity and/or size for the biggest stars first.
+
+// to convert this into a useful format, just do this:
+</span><span class="kw">let </span><span class="kw-2">mut </span>stars_2d : Vec&lt;Vector2&gt; = Vec::new();
+Blob::to_vector2(<span class="kw-2">&amp;</span>blobs, <span class="kw-2">&amp;mut </span>stars_2d);</code></pre></div>
+</div></details><h2 id="reexports" class="small-section-header"><a href="#reexports">Re-exports</a></h2><ul class="item-table"><li><div class="item-name" id="reexport.Image"><code>pub use crate::image_processing::image::<a class="trait" href="image/trait.Image.html" title="trait star_tracker_lib::image_processing::image::Image">Image</a>;</code></div></li></ul><h2 id="modules" class="small-section-header"><a href="#modules">Modules</a></h2><ul class="item-table"><li><div class="item-name"><a class="mod" href="basic_image/index.html" title="mod star_tracker_lib::image_processing::basic_image">basic_image</a></div><div class="desc docblock-short">Implementation for BasicImage.</div></li><li><div class="item-name"><a class="mod" href="blob/index.html" title="mod star_tracker_lib::image_processing::blob">blob</a></div><div class="desc docblock-short">Implementation of Blob.</div></li><li><div class="item-name"><a class="mod" href="image/index.html" title="mod star_tracker_lib::image_processing::image">image</a></div><div class="desc docblock-short">The trait Image.</div></li><li><div class="item-name"><a class="mod" href="threshold/index.html" title="mod star_tracker_lib::image_processing::threshold">threshold</a></div><div class="desc docblock-short">implementation of <a href="trait.Threshold.html" title="trait star_tracker_lib::image_processing::Threshold">The threshold trait</a>.</div></li></ul><h2 id="structs" class="small-section-header"><a href="#structs">Structs</a></h2><ul class="item-table"><li><div class="item-name"><a class="struct" href="struct.BasicImage.html" title="struct star_tracker_lib::image_processing::BasicImage">BasicImage</a></div><div class="desc docblock-short">This is a struct to store a raw image and can provide basic image thresholding.</div></li><li><div class="item-name"><a class="struct" href="struct.Blob.html" title="struct star_tracker_lib::image_processing::Blob">Blob</a></div><div class="desc docblock-short">A set of connected pixels in the foreground representing a star.</div></li><li><div class="item-name"><a class="struct" href="struct.ThresholdGrid.html" title="struct star_tracker_lib::image_processing::ThresholdGrid">ThresholdGrid</a></div><div class="desc docblock-short">Nilback or Sauvola thresholding (Better than PercentThreshold).</div></li><li><div class="item-name"><a class="struct" href="struct.ThresholdPercent.html" title="struct star_tracker_lib::image_processing::ThresholdPercent">ThresholdPercent</a></div><div class="desc docblock-short">A basic percent threshold (Worse Than ThresholdGrid).</div></li></ul><h2 id="traits" class="small-section-header"><a href="#traits">Traits</a></h2><ul class="item-table"><li><div class="item-name"><a class="trait" href="trait.Threshold.html" title="trait star_tracker_lib::image_processing::Threshold">Threshold</a></div><div class="desc docblock-short">A trait to help specify if a pixel is the foreground (stars) or background (space) of the image.</div></li></ul></section></div></main></body></html>
