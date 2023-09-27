@@ -1,0 +1,246 @@
+<!DOCTYPE html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"><meta name="generator" content="rustdoc"><meta name="description" content="src"><title>star_tracker_lib - Rust</title><link rel="preload" as="font" type="font/woff2" crossorigin href="../static.files/SourceSerif4-Regular-46f98efaafac5295.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../static.files/FiraSans-Regular-018c141bf0843ffd.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../static.files/FiraSans-Medium-8f9a781e4970d388.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../static.files/SourceCodePro-Regular-562dcc5011b6de7d.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../static.files/SourceSerif4-Bold-a2c9cd1067f8b328.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../static.files/SourceCodePro-Semibold-d899c5a5c4aeb14a.ttf.woff2"><link rel="stylesheet" href="../static.files/normalize-76eba96aa4d2e634.css"><link rel="stylesheet" href="../static.files/rustdoc-cb6f1f67f1bcd037.css" id="mainThemeStyle"><meta name="rustdoc-vars" data-root-path="../" data-static-root-path="../static.files/" data-current-crate="star_tracker_lib" data-themes="" data-resource-suffix="" data-rustdoc-version="1.73.0-nightly (8771282d4 2023-07-23)" data-channel="nightly" data-search-js="search-6dfdfced5eff6596.js" data-settings-js="settings-de11bff964e9d4e5.js" data-settings-css="settings-8c76f75bfb6bd192.css" data-theme-light-css="light-6d2c9675f3d09c26.css" data-theme-dark-css="dark-45ceb8f2e522f4d1.css" data-theme-ayu-css="ayu-fd19013d6ce078bf.css" ><script src="../static.files/storage-db41da1a38ea3cb8.js"></script><script defer src="../crates.js"></script><script defer src="../static.files/main-0795b7d26be81095.js"></script><noscript><link rel="stylesheet" media="(prefers-color-scheme:light)" href="../static.files/light-6d2c9675f3d09c26.css"><link rel="stylesheet" media="(prefers-color-scheme:dark)" href="../static.files/dark-45ceb8f2e522f4d1.css"><link rel="stylesheet" href="../static.files/noscript-cffde32267a19fd6.css"></noscript><link rel="alternate icon" type="image/png" href="../static.files/favicon-16x16-8b506e7a72182f1c.png"><link rel="alternate icon" type="image/png" href="../static.files/favicon-32x32-422f7d1d52889060.png"><link rel="icon" type="image/svg+xml" href="../static.files/favicon-2c020d218678b618.svg"></head><body class="rustdoc mod crate"><!--[if lte IE 11]><div class="warning">This old browser is unsupported and will most likely display funky things.</div><![endif]--><nav class="mobile-topbar"><button class="sidebar-menu-toggle">&#9776;</button><a class="logo-container" href="../star_tracker_lib/index.html"><img class="rust-logo" src="../static.files/rust-logo-151179464ae7ed46.svg" alt="logo"></a><h2></h2></nav><nav class="sidebar"><a class="logo-container" href="../star_tracker_lib/index.html"><img class="rust-logo" src="../static.files/rust-logo-151179464ae7ed46.svg" alt="logo"></a><h2 class="location"><a href="#">Crate star_tracker_lib</a></h2><div class="sidebar-elems"><ul class="block"><li class="version">Version 0.1.0</li><li><a id="all-types" href="all.html">All Items</a></li></ul><section><ul class="block"><li><a href="#modules">Modules</a></li><li><a href="#macros">Macros</a></li></ul></section></div></nav><main><div class="width-limiter"><nav class="sub"><form class="search-form"><span></span><input class="search-input" name="search" aria-label="Run search in the documentation" autocomplete="off" spellcheck="false" placeholder="Click or press ‘S’ to search, ‘?’ for more options…" type="search"><div id="help-button" title="help" tabindex="-1"><a href="../help.html">?</a></div><div id="settings-menu" tabindex="-1"><a href="../settings.html" title="settings"><img width="22" height="22" alt="Change settings" src="../static.files/wheel-7b819b6101059cd0.svg"></a></div></form></nav><section id="main-content" class="content"><div class="main-heading"><h1>Crate <a class="mod" href="#">star_tracker_lib</a><button id="copy-path" title="Copy item path to clipboard"><img src="../static.files/clipboard-7571035ce49a181d.svg" width="19" height="18" alt="Copy item path"></button></h1><span class="out-of-band"><a class="src" href="../src/star_tracker_lib/lib.rs.html#1-322">source</a> · <button id="toggle-all-docs" title="collapse all docs">[<span>&#x2212;</span>]</button></span></div><details class="toggle top-doc" open><summary class="hideme"><span>Expand description</span></summary><div class="docblock"><h2 id="src"><a href="#src">src</a></h2>
+<p>This is a functional star tracker library which use the Pyramid Tracking method.<br />
+It has been designed to run on any platform as it is <code>no_std</code>.<br />
+To run the algorithm, you will need to have access to <code>star_tracker_nix</code> which is a companion crate.<br />
+On that crate you will have access to a set of binaries such as <code>demo</code> and <code>simulation</code> which will show the functionality of the algorithm.<br />
+This can be run on a microcontroller, however that has not been setup yet so you will need to write a HAL.</p>
+<p>This algorithm has thorough test harnesses as is fast.<br />
+If you used this package, please hit the star :P.</p>
+<p>P.S. If you are to use this in your project, you are declaring that you have thoroughly tested this code and accept the risks.<br />
+I don’t take any responsibility if your project breaks or anything, use at your own risk.</p>
+<h2 id="how-to-use"><a href="#how-to-use">How To Use</a></h2>
+<p>I have tested this using ubuntu and ubuntu wsl on windows and got it working.<br />
+If you cloned the repository, you should have access to setup.sh, that should download all the stuff you need to run this.<br />
+You may need to install other things and if your on a different platform, I have not tested it.</p>
+<p><code>star_tracker_lib</code> does not have a way of constructing the database and you are required to use <code>star_tracker_nix</code> to create it.<br />
+In <code>star_tracker_lib</code> there is <code>demo</code> look at that for an example onto how to get this working, or look below.<br />
+Anyway, here is the code to run the star tracker once you have constructed the database.</p>
+<h3 id="step-1-image-processing"><a href="#step-1-image-processing">STEP 1: Image Processing</a></h3>
+<div class="example-wrap"><pre class="rust rust-example-rendered"><code><span class="kw">use </span>star_tracker_lib::util::aliases::Decimal;
+<span class="kw">use </span>star_tracker_lib::util::aliases::Byte;
+<span class="kw">use </span>star_tracker_lib::util::units::Vector2;
+<span class="kw">use </span>star_tracker_lib::util::units::Pixel;
+<span class="kw">use </span>star_tracker_lib::util::list::List;
+<span class="kw">use </span>star_tracker_lib::image_processing::BasicImage;
+<span class="kw">use </span>star_tracker_lib::image_processing::Blob;
+<span class="kw">use </span>star_tracker_lib::image_processing::ThresholdGrid;
+<span class="kw">use </span>star_tracker_lib::image_processing::ThresholdPercent;
+
+<span class="comment">// Read the image in however you want.
+// In this case we are creating a black image.
+// Lets just assume it is a beautiful star scape...
+</span><span class="kw">const </span>img_width:  usize = <span class="number">808</span>;
+<span class="kw">const </span>img_height: usize = <span class="number">608</span>;
+<span class="kw">let </span><span class="kw-2">mut </span>img: BasicImage&lt;img_width, img_height&gt; = BasicImage::new();
+ 
+<span class="comment">// Nilback or Sauvola thresholding.
+// This threshold is a set of grid cells which all have their own threshold for the local area.
+// In this case it is 250 (50x50) cells spanning ~12 pixels wide and tall.
+</span><span class="kw">const </span>grid_size: usize = <span class="number">50</span>;
+<span class="kw">let </span>overshoot  : Byte  = <span class="number">50</span>; <span class="comment">// How much over the mean should be considered the cutoff.
+</span><span class="kw">let </span>skip       : usize = <span class="number">1</span>;  <span class="comment">// Only samples every second pixel. This makes the threshold 4 times faster. 
+</span><span class="kw">let </span>thresh_grid: ThresholdGrid&lt;grid_size, grid_size&gt; = ThresholdGrid::new(<span class="kw-2">&amp;</span>img, overshoot, skip);
+
+ 
+<span class="comment">// This is a global threshold where you choose a percentage of pixels to cut off.
+// The image generates a histogram and anything under 99.99% is considered background.
+// This is less effective as it does not consider bloom.
+</span><span class="kw">let </span>percent       : Decimal = <span class="number">0.9999</span>;
+<span class="kw">let </span>thresh_percent: ThresholdPercent = ThresholdPercent::new(<span class="kw-2">&amp;</span>img, percent);
+
+<span class="comment">// To view the effects of the threshold, you can use:
+// thresh.apply(&amp;mut image);     // To remove the background.
+// thresh.apply_bin(&amp;mut image); // To make the image binary.
+// This is not nessisary however and will slow the program down...
+
+
+// Now that we have a threshold, we need to find the stars (blobs).
+// The implemented blob detection algorithm is the grass fire method.
+// This will delete the image so make a copy if you need.
+//
+// Since this is an embedded project, you need to provide a *stack* for it to store all the neighboring pixels.
+// If you are using a computer, provide a Vec, otherwise if you have a limited size, use an arraylist.
+// The size of the array list determines roughly how big the blob is.
+// You may even want to use this if you are using a PC as it limits the blob size.
+// 
+// There is also a *min_size*, this specifies the min size the blob can be.
+// The bigger the star, the more accurate it is as a centroid between the pixels can be calculated.
+// Also single pixels can be hot pixels.
+// When searching, this method will skip each min_size pixels to speed up the program.
+// It is recommended to set *min_size* to 2.
+ 
+</span><span class="kw">let </span><span class="kw-2">mut </span>stack : Vec&lt;Pixel&gt; = Vec::new(); <span class="comment">// Infinite sized blobs, use array list for finite size.
+</span><span class="kw">let </span><span class="kw-2">mut </span>blobs : Vec&lt;Blob&gt;  = Vec::new(); <span class="comment">// The output.
+</span><span class="kw">let </span>blob_min_size = <span class="number">2</span>;                   <span class="comment">// Blobs must be at least 2 pixels big.
+
+</span>Blob::find_blobs(blob_min_size, <span class="kw-2">&amp;</span>thresh_grid, <span class="kw-2">&amp;mut </span>img, <span class="kw-2">&amp;mut </span>stack, <span class="kw-2">&amp;mut </span>blobs);
+blobs.sort_order(Blob::sort_descending_intensity); <span class="comment">// Sort by intensity and/or size for the biggest stars first.
+
+// to convert this into a useful format, just do this:
+</span><span class="kw">let </span><span class="kw-2">mut </span>stars_2d : Vec&lt;Vector2&gt; = Vec::new();
+Blob::to_vector2(<span class="kw-2">&amp;</span>blobs, <span class="kw-2">&amp;mut </span>stars_2d);
+ 
+<span class="comment">// You can feed the stars_2d into the next step.
+// This is the exact sub-pixel position of the stars relative to the image sensor. </span></code></pre></div>
+<h3 id="step-2-projection"><a href="#step-2-projection">STEP 2: Projection</a></h3>
+<div class="example-wrap"><pre class="rust rust-example-rendered"><code><span class="kw">use </span>star_tracker_lib::projection::IntrinsicParameters;
+<span class="kw">use </span>star_tracker_lib::projection::ExtrinsicParameters;
+<span class="kw">use </span>star_tracker_lib::projection::SpaceImage;
+<span class="kw">use </span>star_tracker_lib::projection::SpaceCamera;
+<span class="kw">use </span>star_tracker_lib::projection::SpaceWorld;
+
+<span class="kw">use </span>star_tracker_lib::util::units::Degrees;
+<span class="kw">use </span>star_tracker_lib::util::units::Vector2;
+<span class="kw">use </span>star_tracker_lib::util::units::Vector3;
+<span class="kw">use </span>star_tracker_lib::util::units::Equatorial;
+<span class="kw">use </span>star_tracker_lib::util::aliases::Decimal;
+
+
+<span class="kw">let </span>fov = Degrees(<span class="number">20.0</span>).to_radians();
+<span class="kw">let </span>img_width: Decimal  = <span class="number">100.0</span>;
+<span class="kw">let </span>img_height: Decimal = <span class="number">100.0</span>;
+
+<span class="comment">// If you know the field of view, just use the pixel size as the sensor size...
+</span><span class="kw">let </span>sensor_horizontal = (img_width.powf(<span class="number">2.0</span>) + img_height.powf(<span class="number">2.0</span>)).sqrt();
+<span class="kw">let </span>img_center = Vector2{x: img_width / <span class="number">2.0</span>, y: img_height / <span class="number">2.0</span>};
+
+<span class="comment">// Creates the intrinsic parameters from the field of view.
+</span><span class="kw">let </span>intrinsic_projection = IntrinsicParameters::from_fov(fov, sensor_horizontal, img_center);
+
+<span class="comment">// Creates the extrinsic parameters.
+// Using *look_at* sets a point which is forward and a direction which is up.
+// With this, you can specify what orientation the camera is relative to the spacecraft.
+</span><span class="kw">let </span>reference_forward = Vector3{x: <span class="number">0.0</span>, y: <span class="number">0.0</span>, z: <span class="number">1.0</span>}.to_equatorial();
+<span class="kw">let </span>reference_up      = Vector3{x: <span class="number">0.0</span>, y: <span class="number">1.0</span>, z: <span class="number">0.0</span>}.to_equatorial();
+<span class="kw">let </span>extrinsic_projection = ExtrinsicParameters::look_at(reference_forward, reference_up)
+	.expect(<span class="string">&quot;Ensure extrinsic projection up and forward are not the same value.&quot;</span>);
+
+<span class="comment">// Use a for loop here where you convert all of the stars_2d into 3d points.
+// The points should be output as a vec or array list.
+</span><span class="kw">let </span>point       : SpaceImage  = SpaceImage(Vector2{x: img_width / <span class="number">2.0</span>, y: img_height / <span class="number">2.0</span>}); <span class="comment">// Center of image.
+</span><span class="kw">let </span>camera_space: SpaceCamera = intrinsic_projection.from_image(point);                      <span class="comment">// 3d local coordinates.
+</span><span class="kw">let </span>world_space : SpaceWorld  = extrinsic_projection.from_image(camera_space);              <span class="comment">// 3d satellite coords.
+ 
+</span></code></pre></div>
+<h3 id="step-3-tracking-mode"><a href="#step-3-tracking-mode">STEP 3: Tracking Mode</a></h3>
+<p>This requires the database code in <em>star_tracker_nix</em> to construct the database.</p>
+
+<div class="example-wrap ignore"><a href="#" class="tooltip" title="This example is not tested">ⓘ</a><pre class="rust rust-example-rendered"><code><span class="kw">use </span>star_tracker_lib::tracking_mode::database::MockDatabase;
+<span class="kw">use </span>star_tracker_lib::tracking_mode::database::Database;
+<span class="kw">use </span>star_tracker_lib::tracking_mode::AbandonSearchFailures;
+<span class="kw">use </span>star_tracker_lib::tracking_mode::StarTriangleIterator;
+<span class="kw">use </span>star_tracker_lib::tracking_mode::ConstellationResult;
+<span class="kw">use </span>star_tracker_lib::tracking_mode::AbandonSearch;
+<span class="kw">use </span>star_tracker_lib::tracking_mode::Constellation;
+<span class="kw">use </span>star_tracker_lib::tracking_mode::Specularity;
+
+<span class="kw">use </span>star_tracker_lib::util::units::Equatorial;
+<span class="kw">use </span>star_tracker_lib::util::units::Degrees;
+<span class="kw">use </span>star_tracker_lib::util::units::Vector3;
+<span class="kw">use </span>star_tracker_lib::util::units::Match;
+<span class="kw">use </span>star_tracker_lib::util::list::List;
+
+<span class="comment">// To construct the database, use the tools in *star_tracker_nix*, look at demo.
+</span><span class="kw">let </span>database_iterator = <span class="comment">// database goes here.
+
+
+// Pretend these are image values which have been projected onto a unit sphere from the previous step.
+</span><span class="kw">let </span>stars_3d: Vec&lt;Equatorial&gt; = <span class="macro">vec!</span>[];
+
+<span class="comment">// This is a way for increasing the speed of the algorithm.
+// Just use an array size which is large and you can fit...
+</span><span class="kw">const </span>SOME_LARGE_ARRAY_SIZE: usize = <span class="number">1000</span>;
+<span class="kw">let </span>iterator = StarTriangleIterator::&lt;SOME_LARGE_ARRAY_SIZE&gt;::new();
+
+<span class="comment">// The algorithm tries to create a triangle with a set of stars. 
+// If the triangle is flipped, it is not a proper match.
+// Specularity is a way of doing this.
+// There is a min specularity where it is effectively a strait line.
+// In this case, if the specularity is below this number, specularity is ignored.
+// Specularity::default() has a good value, however if this isn&#39;t working for you, have a play around.
+// Look in *Specularity* for more details.
+</span><span class="kw">let </span>specularity = Specularity::default();
+
+<span class="comment">// This will abort the program if it is taking too long.
+// This abort uses the number of fails.
+// The algorithm will try and construct a triangle with 3 stars, if it cannot, a fail occurs.
+// This is set so if it cannot make a triangle 10 times in a row, it will abort.
+// It is important to abort early as a success usually takes less than 5 times.
+// The more fails, the more likely it will be incorrect and unreliable.
+// You should also team this up with a timer, however this is not platform specific so make your own.
+// There is a timer and fails counter abort in *star_tracker_nix* used by *demo*. 
+</span><span class="kw">let </span>fails_good = <span class="number">10</span>;   <span class="comment">// Unsuccessful matches.
+</span><span class="kw">let </span><span class="kw-2">mut </span>abort = AbandonSearchFailures::new(fails_good);
+
+
+<span class="comment">// How inaccurate is the lens?
+// You will need to test the lens.
+// Use nova.astrometry.net and get the corr file, put it through corr_analyzer in star_tracker_nix.
+// Don&#39;t use an error above 0.1 degrees as it will likely fail.
+</span><span class="kw">let </span>angle_tolerance = Degrees(<span class="number">0.08</span>).to_radians();
+
+
+
+<span class="comment">// The min and max (inclusive) required stars.
+// If not enough stars can be formed into a constellation, the search will continue and will eventually fail.
+// If there is too many stars in the constellation, the algorithm will end early on the upper bounds to save time.
+// The pyramid method should use 4 stars, so it is set to 4.
+</span><span class="kw">let </span>required_stars = <span class="number">4</span>..=<span class="number">4</span>;
+
+
+<span class="kw">let </span><span class="kw-2">mut </span>output: Vec&lt;Match&lt;usize&gt;&gt; = Vec::new();
+
+
+<span class="kw">let </span>success = Constellation::find_all (
+	<span class="kw-2">&amp;</span>stars_3d, <span class="kw-2">&amp;mut </span>database_iterator, <span class="kw-2">&amp;mut </span>iterator,
+	<span class="kw-2">&amp;mut </span>specularity, <span class="kw-2">&amp;mut </span>abort, angle_tolerance, required_stars, <span class="kw-2">&amp;mut </span>output 
+);
+
+<span class="kw">match </span>success
+{
+	ConstellationResult::ErrorNoTriangleMatch      { fails } =&gt; 
+		<span class="macro">println!</span>(<span class="string">&quot;FAILED: Could not match any stars; {} failures.&quot;</span>, fails),
+
+	ConstellationResult::ErrorAborted              { fails } =&gt;
+		<span class="macro">println!</span>(<span class="string">&quot;FAILED: Aborted due to AbandonSearch parameter; {} failures.&quot;</span>, fails),
+
+	ConstellationResult::ErrorInsufficientPyramids { fails } =&gt;
+		<span class="macro">println!</span>(<span class="string">&quot;FAILED: Not enough matched stars; {} failures.&quot;</span>, fails),
+
+	ConstellationResult::Success                   { fails } =&gt;
+		<span class="macro">println!</span>(<span class="string">&quot;SUCCESS; with {} fails.&quot;</span>, fails),
+}
+
+<span class="comment">// In a success do a loop and convert all the matches in output into vector 3 positions.
+// output.input: the index of the observed stars that you projected from previously.
+// output.output: the index of the stars in the database.
+// Weight: just copy that across.</span></code></pre></div>
+<h3 id="step-4-attitude-determination"><a href="#step-4-attitude-determination">STEP 4: Attitude Determination</a></h3>
+<div class="example-wrap"><pre class="rust rust-example-rendered"><code><span class="kw">use </span>star_tracker_lib::attitude_determination::AttitudeDetermination;
+<span class="kw">use </span>star_tracker_lib::attitude_determination::Quest;
+<span class="kw">use </span>star_tracker_lib::util::units::Quaternion;
+<span class="kw">use </span>star_tracker_lib::util::units::Vector3;
+<span class="kw">use </span>star_tracker_lib::util::units::Match;
+
+<span class="comment">// If you setup projection correctly, the points will be relative to the front of the spacecraft.
+// In this situation, I decided that was z: +1.
+</span><span class="kw">let </span>reference_forward = Vector3{x: <span class="number">0.0</span>, y: <span class="number">0.0</span>, z: <span class="number">1.0</span>};
+
+<span class="comment">// Lets just assume these points are from a valid constellation from tracking_mode.
+</span><span class="kw">let </span>found_stars = <span class="macro">vec!
+</span>[
+    <span class="comment">// The weight is relative to the other points, the higher the weight the more reliable.
+	</span>Match{input: Vector3{x: <span class="number">0.0</span>, y: <span class="number">0.0</span>, z: <span class="number">1.0</span>}, output: Vector3{x: <span class="number">0.0</span>, y: <span class="number">0.0</span>, z: <span class="number">1.0</span>}, weight: <span class="number">1.0</span>},
+	Match{input: Vector3{x: <span class="number">0.0</span>, y: <span class="number">1.0</span>, z: <span class="number">0.0</span>}, output: Vector3{x: <span class="number">0.0</span>, y: <span class="number">1.0</span>, z: <span class="number">0.0</span>}, weight: <span class="number">1.0</span>},
+	Match{input: Vector3{x: <span class="number">1.0</span>, y: <span class="number">0.0</span>, z: <span class="number">0.0</span>}, output: Vector3{x: <span class="number">1.0</span>, y: <span class="number">0.0</span>, z: <span class="number">0.0</span>}, weight: <span class="number">1.0</span>},
+	Match{input: Vector3{x: <span class="number">0.0</span>, y: <span class="number">1.0</span>, z: <span class="number">1.0</span>}, output: Vector3{x: <span class="number">0.0</span>, y: <span class="number">1.0</span>, z: <span class="number">1.0</span>}, weight: <span class="number">1.0</span>},
+];
+
+
+<span class="kw">let </span>rotate_to_cam  : Quaternion = Quest::estimate(<span class="kw-2">&amp;</span>found_stars, <span class="prelude-val">None</span>); <span class="comment">// Quaternion to rotate world space to camera space.
+</span><span class="kw">let </span>rotate_to_world: Quaternion = rotate_to_cam.conjugate();           <span class="comment">// Quaternion to rotate camera space to world space.
+</span><span class="kw">let </span>world_center = rotate_to_world.rotate_point(reference_forward);    <span class="comment">// Rotate spacecraft front to world coordinates</span></code></pre></div>
+<p>All code in this library has been written Tom Creusot.  </p>
+</div></details><h2 id="modules" class="small-section-header"><a href="#modules">Modules</a></h2><ul class="item-table"><li><div class="item-name"><a class="mod" href="attitude_determination/index.html" title="mod star_tracker_lib::attitude_determination">attitude_determination</a></div><div class="desc docblock-short"><code>attitude_determination</code> is the process of <strong>voting</strong> for the most likely attitude, this is the final step in the process.</div></li><li><div class="item-name"><a class="mod" href="core_include/index.html" title="mod star_tracker_lib::core_include">core_include</a></div><div class="desc docblock-short"><code>core_include</code> is All the no_std packages.</div></li><li><div class="item-name"><a class="mod" href="image_processing/index.html" title="mod star_tracker_lib::image_processing">image_processing</a></div><div class="desc docblock-short"><code>image_processing</code> is basic image manipulation/storage and machine vision.</div></li><li><div class="item-name"><a class="mod" href="projection/index.html" title="mod star_tracker_lib::projection">projection</a></div><div class="desc docblock-short"><code>projection</code> is a module which can convert between 2D camera space and 3D world space.</div></li><li><div class="item-name"><a class="mod" href="tracking_mode/index.html" title="mod star_tracker_lib::tracking_mode">tracking_mode</a></div><div class="desc docblock-short"><code>tracking_mode</code> is the method of matching the stars found in the image to a database.</div></li><li><div class="item-name"><a class="mod" href="util/index.html" title="mod star_tracker_lib::util">util</a></div><div class="desc docblock-short"><code>util</code> is contains any tools which may be important for general use in this project.</div></li></ul><h2 id="macros" class="small-section-header"><a href="#macros">Macros</a></h2><ul class="item-table"><li><div class="item-name"><a class="macro" href="macro.pilot_finder_array.html" title="macro star_tracker_lib::pilot_finder_array">pilot_finder_array</a></div><div class="desc docblock-short">Creates a PilotFinder using vectors.
+This allows it to store as many arc angle matches as it needs.</div></li><li><div class="item-name"><a class="macro" href="macro.pilot_finder_vec.html" title="macro star_tracker_lib::pilot_finder_vec">pilot_finder_vec</a></div><div class="desc docblock-short">Creates a PilotFinder using vectors.
+This allows it to store as many arc angle matches as it needs.</div></li></ul></section></div></main></body></html>

@@ -1,0 +1,1 @@
+window.SIDEBAR_ITEMS = {"constant":["DECIMAL_PRECISION","M_PI"],"type":["Byte","Decimal","Int","UInt"]};
