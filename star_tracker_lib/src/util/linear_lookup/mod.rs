@@ -95,12 +95,95 @@ impl <T, const N: usize> LinearLookup<T> for [T; N] where T: Clone, T: Copy
 }
 
 
+//###############################################################################################//
+//									--- CArray ---
+//###############################################################################################//
+
+/// An array which can be used to wrap rust in c.
+///  
+/// # Example (C code)
+/// ``` C
+/// static size_t size   = 5;
+/// static float array[] = {1, 2, 3, 4, 5};
+/// 
+/// typedef struct CArray {
+///     size_t size;
+///     void* array;
+/// } CArray;
+/// 
+/// CArray get_array ( )
+/// {
+///     CArray arr;
+///     arr.size  = size;
+///     arr.array = (void*)array;
+///     return arr;
+/// }
+/// ```
+///
+/// # Example (Rust code)
+/// ``` ignore
+/// use star_tracker_lib::util::linear_lookup::LinearLookup;
+/// use star_tracker_lib::util::linear_lookup::CArray;
+///
+/// extern "C"
+/// {
+///  	// Ensure the rust code is compiled with the c code.
+/// 	pub fn get_array ( ) -> CArray;
+/// }
+///
+/// // fn function ( )
+/// //{
+/// //	unsafe{ let image = get_image(); }
+/// //}
+/// ```
+#[repr(C)]
+pub struct CArray<T>
+{
+	array: *mut T,
+	size : usize
+}
+
+impl <T> CArray<T>
+{
+	pub fn new<const N: usize> ( array: &mut [T; N] ) -> Self
+	{
+		Self { array: array.as_mut_ptr(), size: N }
+	}
+}
+
+impl <T> LinearLookup<T> for CArray<T> where T: Clone, T: Copy
+{
+	fn size ( &self ) -> usize { self.size }
+
+	fn get ( &self, index: usize ) -> T  
+	{
+		unsafe
+		{
+			return *self.array.add(index);
+		}
+	}
+
+	fn set ( &mut self, index: usize, val: T )	-> Error<()>
+	{ 
+		if self.size < index
+		{
+			return Result::Err(Errors::OutOfBounds);
+		}
+		unsafe
+		{
+			*self.array.add(index) = val; 
+			return Result::Ok(());
+		}
+	}
+}
+
+
 
 //###############################################################################################//
 //###############################################################################################//
 //
 //										Unit Tests
-//	This is abit unnessisary...
+//	This is a bit unnecessary...
 //###############################################################################################//
 //###############################################################################################//
 
@@ -109,6 +192,7 @@ impl <T, const N: usize> LinearLookup<T> for [T; N] where T: Clone, T: Copy
 mod test
 {
 	use crate::util::linear_lookup::LinearLookup;
+	use crate::util::linear_lookup::CArray;
 	use crate::util::list::ArrayList;
 	use crate::util::err::Error;
 	use crate::util::err::Errors;
@@ -130,6 +214,28 @@ mod test
 		assert_eq!(list.set(4, 3), Err(Errors::OutOfBounds));
 		return Ok(());
 	}
+
+
+	
+	#[test]
+	// These methods are really basic.
+	// Im just going to test everything together.
+	pub fn test_c_array ( ) -> Error<()>
+	{
+		let mut array = [1, 2, 3];
+		let mut list: CArray<i32> = CArray::new(&mut array);
+		assert_eq!(list.size(), 3);
+		assert_eq!(list.get(0), 1);
+		assert_eq!(list.get(1), 2);
+		assert_eq!(list.get(2), 3);
+		
+		assert_eq!(list.set(0, 3), Ok(()));
+		assert_eq!(list.get(0), 3);
+		
+		assert_eq!(list.set(4, 3), Err(Errors::OutOfBounds));
+		return Ok(());
+	}
+	
 
 	
 	#[test]

@@ -72,6 +72,7 @@
 
 pub mod image;
 pub mod basic_image;
+pub mod c_image;
 pub mod blob;
 pub mod threshold;
 
@@ -128,6 +129,64 @@ pub struct BasicImage <const WIDTH : usize, const HEIGHT : usize>
 	img : [[Byte; WIDTH]; HEIGHT],
 }
 
+
+
+/// If you have rust code wrapped inside a c binary, you can use this to access the array.
+///
+/// # Example (C code)
+/// ``` C
+/// 
+/// static size_t width  = 5;
+/// static size_t height = 5;
+/// static unsigned char image[] = 
+/// {
+///  11, 12, 13, 14, 15,
+///  21, 22, 23, 24, 25,
+///  31, 32, 33, 34, 35,
+///  41, 42, 43, 44, 45,
+///  51, 52, 53, 54, 55
+/// };
+/// 
+/// typedef struct CImage
+/// {
+/// 	size_t width;
+/// 	size_t height;
+/// 	unsigned char* img;
+/// } CImage;
+/// 
+/// CImage get_image ( )
+/// {
+///     CImage img;
+///     img.width  = width;
+///     img.height = height;
+///     img.img  = image;
+///     return img;
+/// } 
+///
+/// ```
+///
+/// # Example (Rust code)
+/// ``` ignore
+/// use star_tracker_lib::image_processing::CImage;
+///
+/// extern "C"
+/// {
+///  	// Ensure the rust code is compiled with the c code.
+/// 	pub fn get_image ( ) -> CImage;
+/// }
+///
+/// fn function ( )
+/// {
+/// 	unsafe{ let image = get_image(); }
+/// }
+/// ```
+#[repr(C)]
+pub struct CImage
+{
+	width:  usize,
+	height: usize,
+	img: *mut Byte,
+}
 
 //###############################################################################################//
 //										---	Threshold ---
