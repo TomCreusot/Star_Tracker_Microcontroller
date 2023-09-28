@@ -10,7 +10,7 @@ use crate::util::list::List;
 
 
 
-impl<'a, T> ListIterator<'a, T>
+impl<'a, T: Clone> ListIterator<'a, T>
 {
 	/// Input the list to be iterated from.
 	pub fn new ( list: &'a dyn List<T> ) -> ListIterator<'a, T>
@@ -19,7 +19,7 @@ impl<'a, T> ListIterator<'a, T>
 	}
 }
 
-impl <'a, T> Iterator for ListIterator<'a, T> {
+impl <'a, T: Clone> Iterator for ListIterator<'a, T> {
 
 	type Item = T;
 

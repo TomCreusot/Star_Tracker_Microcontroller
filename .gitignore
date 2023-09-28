@@ -13,8 +13,11 @@ Cargo.lock
 star_tracker_lib/target/*
 star_tracker_nix/target/*
 star_tracker_embed/target/*
+star_tracker_rp/target/*
+star_tracker_rp/build/*
 star_tracker_nix/results/*
 star_tracker_nix/database/*
+.vscode/*
 
 !/star_tracker_lib/target/doc/
 star_tracker_lib/target/doc/*

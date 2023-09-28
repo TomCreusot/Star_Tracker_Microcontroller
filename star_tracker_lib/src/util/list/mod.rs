@@ -53,7 +53,7 @@
 //!    ```
 //!  
 //! Using a stack ensures that all the memory is available to the processor.  
-//! In big systems (i.e. computer), this is not nessisary to consider due to the processor speed and memory size.  
+//! In big systems (i.e. computer), this is not necessary to consider due to the processor speed and memory size.  
 #[cfg(any(feature = "nix", test))] pub mod vec;
 pub mod list_iterator;
 pub mod array_list;
@@ -98,8 +98,8 @@ use crate::util::err::Errors;
 ///    ```
 ///  
 /// Using a stack ensures that all the memory is available to the processor.  
-/// In big systems (i.e. computer), this is not nessisary to consider due to the processor speed and memory size.  
-pub trait List<T>
+/// In big systems (i.e. computer), this is not necessary to consider due to the processor speed and memory size.  
+pub trait List<T> where T: Clone
 {
 	/// Finds the max number of elements that can be stored in the list.  
 	/// If invalid list, returns 0.  
@@ -113,7 +113,7 @@ pub trait List<T>
 	/// Checks if the List is at maximum capacity.
 	/// # Returns
 	/// True if full.
-	fn is_full ( &self ) -> bool;
+	fn is_full ( &self ) -> bool { self.size() == self.capacity() }
 
 	/// Checks if the List is empty.
 	/// # Returns
@@ -121,7 +121,7 @@ pub trait List<T>
 	///
 	/// # Examples
 	/// lst: ArrayList<UInt, 2> = ArrayList::new();
-	fn is_empty ( &self ) -> bool;
+	fn is_empty ( &self ) -> bool { self.size() == 0 }
 
 	/// Gets the element at the specified index.
 	/// # Arguments
@@ -152,7 +152,21 @@ pub trait List<T>
 	/// Sorts the list
 	/// # Arguments
 	/// * 'in_order' - A function which returns TRUE if it is in order.
-	fn sort_order ( &mut self, in_order: fn (& T, & T) -> bool );
+	fn sort_order ( &mut self, in_order: fn (& T, & T) -> bool )
+	{
+		for ii in 0..self.size()
+		{
+			let mut jj: usize = ii;
+
+			let mut temp: T = self.get(jj).clone();
+			while jj > 0 && in_order(&mut temp, &mut self.get(jj - 1))
+			{
+				let _ =self.set(jj, self.get(jj - 1).clone());
+				jj -= 1;
+			}
+			let _ = self.set(jj, temp);
+		}
+	}
 
 	/// Slots an element into the list so it is in sorted order by shifting everything right.
 	/// # Arguments
@@ -161,8 +175,42 @@ pub trait List<T>
 	///
 	/// # Returns
 	/// True if inserted, false if there is no space and it will trail the last element.
-	fn slot ( &mut self, to_slot: T, in_order: fn (& T, & T) -> bool ) -> bool;
+	fn slot ( &mut self, to_slot: T, in_order: fn (& T, & T) -> bool ) -> bool
+	{
+		for ii in 0..self.size()
+		{
+			// If must slot in the middle.
+			if in_order(&to_slot, &self.get(ii))
+			{
+				let mut to_move: T;
+				let mut to_insert = to_slot.clone();
+				let mut jj = ii;
+				while jj < self.size()
+				{
+					to_move = self.get(jj);
+					let _ = self.set(jj, to_insert);
+					to_insert = to_move.clone();
+					jj += 1;
+				}
 
+				if jj < self.capacity()
+				{
+					let _ = self.push_back(to_insert);
+				}
+
+				return true;
+			}
+		}
+		// If there is room to add it at the end.
+		if self.size() < self.capacity()
+		{
+			let some = self.push_back(to_slot);
+			return some.is_ok();
+		}
+
+		// Nowhere to fit.
+		return false;
+	}
 
 	/// Removes element at index, reduces size of array list, moves everything left right of point.
 	/// # Arguments
@@ -437,7 +485,7 @@ pub struct ArrayList <T, const N: usize>
 /// ```
 #[derive(Copy)]
 #[derive(Clone)]
-pub struct ListIterator <'a, T>
+pub struct ListIterator <'a, T: Clone>
 {
 	list : &'a dyn List <T>,
 	index: usize,

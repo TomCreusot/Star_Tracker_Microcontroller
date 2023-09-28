@@ -42,7 +42,7 @@ use star_tracker_lib::projection::SpaceWorld;
 use star_tracker_nix::io::Star;
 use star_tracker_nix::io::Io;
 use star_tracker_nix::tracking_mode::DatabaseGenerator;
-use star_tracker_nix::tracking_mode::SearchTimeout;
+use star_tracker_nix::tracking_mode::AbandonSearchTimeoutFailure;
 
 
 pub fn main ( )
@@ -90,6 +90,7 @@ This also provides a step by step guide to use the tracking mode algorithm.
 
 	// Loose conditions
 	const TIME_GOOD             : u128 = 80; // ms until autofail.
+	const FAILURE_GOOD          : usize = 10; // # of triangle failures until a failure.
 
 //###############################################################################################//
 //
@@ -266,7 +267,7 @@ This also provides a step by step guide to use the tracking mode algorithm.
 			&observable, &mut database_iterator,
 			&mut StarTriangleIterator::<1000>::new(),
 			&mut star_tracker_lib::pilot_finder_vec!(), &mut Specularity::default(), ANGLE_TOLERANCE, 
-			&SearchTimeout::start_timer(Duration::from_millis(TIME_GOOD as u64)));
+			&mut AbandonSearchTimeoutFailure::new(Duration::from_millis(TIME_GOOD as u64), FAILURE_GOOD));
 		
 
 		let time = timer.elapsed();
@@ -355,22 +356,6 @@ This also provides a step by step guide to use the tracking mode algorithm.
 
 
 
-
-
-
-
-
-
-
-
-
-
-
-
-pub fn run_test ( )
-{
-	
-}
 
 
 

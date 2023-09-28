@@ -22,7 +22,7 @@ use crate::tracking_mode::KVectorGenerator;
 impl DatabaseGenerator
 {
 	/// The required magnitude to ensure there are 4 stars in the image in any orientation with the specified field of view.
-	pub fn recomended_magnitude ( fov: Radians ) -> Decimal
+	pub fn recommended_magnitude ( fov: Radians ) -> Decimal
 	{
 		let magnitude_reduction = [
 			6.69, // 10
@@ -66,7 +66,9 @@ impl DatabaseGenerator
 			2.62, // 86
 			2.62, // 88
 		];
-		return magnitude_reduction[((fov.to_degrees().0 - 10.0) / 2.0).round() as usize];
+		let mut idx = ((fov.to_degrees().0 - 10.0) / 2.0).round() as usize;
+		if magnitude_reduction.len() <= idx { idx = magnitude_reduction.len() - 1; }
+		return magnitude_reduction[idx];
 	}
 
 

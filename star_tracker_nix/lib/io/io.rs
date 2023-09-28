@@ -49,6 +49,22 @@ impl Io
 	}
 
 
+	pub fn write_to_file ( path: &str, content: &String ) {
+		let path = Path::new(path);
+		let display = path.display();
+
+		// Open a file in write-only mode, returns `io::Result<File>`
+		let mut file = match File::create(&path)
+		{
+			Err(why) => panic!("couldn't create {}: {}", display, why),
+			Ok(file) => file,
+		};
+
+		// Write the content strings to `file`, returns `io::Result<()>`
+		file.write_all(content.as_bytes()).expect("Could not write to file");
+	}
+
+
 
 
 	/// Reads the hipparcos star database.

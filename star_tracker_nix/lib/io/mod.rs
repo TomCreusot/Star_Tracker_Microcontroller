@@ -1,3 +1,42 @@
+//! This module handles interactions with the database and sample sets.  
+//!
+//! # Star
+//! 
+//! # Template
+//!
+//! # IO
+//! 
+//! # Sample
+//! Recursively reads through the sample directory.  
+//! The sample directory should contain a set of folders containing dark frames, corr files and images.
+//! This is to test the algorithm on actual images.
+//! The correct structure is:
+//!
+//! ``` ignore
+//! > cargo.toml
+//! > samples
+//!   > dark frame (optional)
+//!	  > cam_1
+//!	  | > dark_frame.png        # In the camera 1, the dark frame will consistently be the same.
+//!	  | > lens_1/                
+//!	  | | > stars_1			
+//!	  | | | > img_1.png
+//!	  | | | > log.json		# Log specifies the location of the image and field of view.
+//!	  | | > stars_2
+//!	  | | | > img_1
+//!	  | | | > log.json      # img_1 is of a different area of img_2, to get an error value, the must be provided for all images.
+//!   |
+//!	  | > lens_2/
+//!	  | | > log.json          # You can use a log file for all images of the same fov, however, you dont get pointing error.
+//!	  | | > corr.fits         # If you want a corr.fits file included.
+//!	  | | > img_1
+//!	  | | > img_2
+//!	  | | > img_3
+//!
+//!   > cam_2_lens_1
+//!   | > dark_frame.png        # This is needed somewhere in the hierarchy.
+//!
+//! ```
 use star_tracker_lib::util::units::Equatorial;
 use star_tracker_lib::util::units::Vector2;
 use star_tracker_lib::util::units::Radians;

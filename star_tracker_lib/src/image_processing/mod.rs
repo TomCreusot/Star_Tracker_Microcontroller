@@ -40,7 +40,7 @@
 //! // To view the effects of the threshold, you can use:
 //! // thresh.apply(&mut image);     // To remove the background.
 //! // thresh.apply_bin(&mut image); // To make the image binary.
-//! // This is not nessisary however and will slow the program down...
+//! // This is not necessary however and will slow the program down...
 //!
 //!
 //! // Now that we have a threshold, we need to find the stars (blobs).

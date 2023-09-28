@@ -152,7 +152,7 @@ reset; cargo run --bin demo 16mm_checker_2
 			let mut img = CVImage::read(&img);
 			let dark_frame = CVImage::read(&sample.file_dark);
 			
-			let magnitude = DatabaseGenerator::recomended_magnitude(fov);
+			let magnitude = DatabaseGenerator::recommended_magnitude(fov);
 			
 			let stars_limit_mag_2  = DatabaseGenerator::limit_magnitude (&stars_limit_double, magnitude_min, magnitude);
 			let stars_limit_reg    = DatabaseGenerator::limit_regions(&stars_limit_mag_2, region_size, region_num);

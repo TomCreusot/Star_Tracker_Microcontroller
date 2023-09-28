@@ -57,7 +57,7 @@
 //! // To view the effects of the threshold, you can use:
 //! // thresh.apply(&mut image);     // To remove the background.
 //! // thresh.apply_bin(&mut image); // To make the image binary.
-//! // This is not nessisary however and will slow the program down...
+//! // This is not necessary however and will slow the program down...
 //!
 //!
 //! // Now that we have a threshold, we need to find the stars (blobs).
@@ -258,7 +258,8 @@
 //! 
 //! All code in this library has been written Tom Creusot.  
 	
-	#![cfg_attr(any(test, feature = "nix"),  allow(unused_imports))] // Stops maths import error.
+	#![allow(unused_imports)]
+	// #![cfg_attr(any(test, feature = "nix"),  allow(unused_imports))] // Stops maths import error.
 	#![feature(no_coverage)]                        // If a file should not be tested.
 	#![feature(let_chains)]                         // Allows a while let loop better (constellation).
 	#![feature(int_roundings)]                      // Allows div_ceil
