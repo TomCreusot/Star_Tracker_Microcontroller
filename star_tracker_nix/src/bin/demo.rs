@@ -73,10 +73,21 @@ use star_tracker_nix::tracking_mode::AbandonSearchTimeoutFailure;
 use star_tracker_nix::image_processing::CVImage;
 use star_tracker_nix::util::units::Formatted;
 
+
+
+use star_tracker_lib::image_processing::ImageWord;
+use star_tracker_lib::util::word::WordList;
+use star_tracker_lib::util::word::WordSize;
+use star_tracker_lib::util::err::Unsafe;
+
+
+
+
 use std::env;
 
 pub fn main ( )
 {
+	env::set_var("RUST_BACKTRACE", "1");
 	println!(r#"
 	
 	
@@ -178,54 +189,55 @@ reset; cargo run --bin demo 16mm_checker_2
 //							--- Image Processing / Blob Detection ---
 //################################################################################################//
 
-			// Removing Dark Frame from Image.
-			for x in 0..img.width() {
-				for y in 0..img.height() {
-					let px = Pixel{x: x, y: y};
-					if 10 < dark_frame.get(px) { img.set(px, 0); } } 
-			}
+		println!("Image Processing");
+		// Removing Dark Frame from Image.
+		for x in 0..img.width() {
+			for y in 0..img.height() {
+				let px = Pixel{x: x, y: y};
+				if 10 < dark_frame.get(px) { img.set(px, 0); } } 
+		}
 
-			// The image to be examined will be consumed.
-			// To have a visualization, you will need a copy.
-			let mut img_consumable = CVImage::new(Pixel{x: img.width(), y: img.height()});
-			img.copy_to(&mut img_consumable).unwrap();
-			
-			
-			// Create a threshold using a semi adaptive threshold.
-			let timer = std::time::Instant::now();
-			let thresh = ThresholdGrid::<50, 50>::new(&img, 50, 1);
-			let time_thresh = timer.elapsed().as_millis();
-			
-			
-			// Find the blobs in the image.
-			let timer = std::time::Instant::now();
-			let mut stack : Vec<Pixel> = Vec::new(); // Infinite sized blobs.
-			let mut blobs : Vec<Blob>  = Vec::new();
-			let blob_min_size = 2;
-			Blob::find_blobs(blob_min_size, &thresh, &mut img_consumable, &mut stack, &mut blobs);
-			
-			// Convert the blobs into positions.
-			let mut stars_2d : Vec<Vector2> = Vec::new();
-			blobs.sort_order(Blob::sort_descending_intensity);
-			Blob::to_vector2(&blobs, &mut stars_2d);
-			let time_blob = timer.elapsed().as_millis();
-			
+		// The image to be examined will be consumed.
+		// To have a visualization, you will need a copy.
+		// I am using a word image as it stores the image better.
+		// It is slightly slower though.
+		let mut img_consumable = star_tracker_lib::create_image_word_nix!(Pixel{x: img.width(), y: img.height()}, 32, 8);
+		let _ = img_consumable.copy_from(&img);
+
+
+		// Create a threshold using a semi adaptive threshold.
+		let timer = std::time::Instant::now();
+		let thresh = ThresholdGrid::<50, 50>::new(&img, 50, 1);
+		let time_thresh = timer.elapsed().as_millis();
 		
-			// Visualizes the stars.
-			let mut img_thresh = CVImage::duplicate(&img);
-			thresh.apply_bin(&mut img_thresh);
+		// Find the blobs in the image.
+		let timer = std::time::Instant::now();
+		let mut stack : Vec<Pixel> = Vec::new(); // Infinite sized blobs.
+		let mut blobs : Vec<Blob>  = Vec::new();
+		let blob_min_size = 2;
+		Blob::find_blobs(blob_min_size, &thresh, &mut img_consumable, &mut stack, &mut blobs);
 
-			for i in 0..stars_2d.size()
-			{
-				let color = Scalar::new(0.0, 100.0, 255.0, 100.0); // Red color (BGR format)
-				let thickness = 1;
-				let radius    = 10;
-				let px_pt = Point::new(stars_2d.get(i).x as i32, stars_2d.get(i).y as i32);
-				circle(&mut img_thresh.0, px_pt, radius, color, thickness, 1, 0).unwrap();
-			}
+		// Convert the blobs into positions.
+		let mut stars_2d : Vec<Vector2> = Vec::new();
+		blobs.sort_order(Blob::sort_descending_intensity);
+		Blob::to_vector2(&blobs, &mut stars_2d);
+		let time_blob = timer.elapsed().as_millis();
+		
+		// Visualizes the stars.
+		let mut img_thresh = CVImage::duplicate(&img);
+		thresh.apply_bin(&mut img_thresh);
 
-			let _ = imshow("Thresholded", &img_thresh.0);
-			println!("Found: {} stars in image.\n", stars_2d.len());
+		for i in 0..stars_2d.size()
+		{
+			let color = Scalar::new(0.0, 100.0, 255.0, 100.0); // Red color (BGR format)
+			let thickness = 1;
+			let radius    = 10;
+			let px_pt = Point::new(stars_2d.get(i).x as i32, stars_2d.get(i).y as i32);
+			circle(&mut img_thresh.0, px_pt, radius, color, thickness, 1, 0).unwrap();
+		}
+
+		let _ = imshow("Thresholded", &img_thresh.0);
+		println!("Found: {} stars in image.\n", stars_2d.len());
 
 
 //################################################################################################//
@@ -302,6 +314,8 @@ reset; cargo run --bin demo 16mm_checker_2
 					println!("SUCCESS; with {} fails.", fails),
 			}
 			
+			if 0 < found_all.size()
+			{
 			
 			for i in 0..found_all.size()
 			{
@@ -362,6 +376,7 @@ reset; cargo run --bin demo 16mm_checker_2
 			let _ = imshow("Image", &img.0);
 			let _ = wait_key(0).unwrap();
 		}
+	}
 	}
 
 }

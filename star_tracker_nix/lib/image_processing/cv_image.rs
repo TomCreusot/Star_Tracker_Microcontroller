@@ -101,7 +101,7 @@ impl CVImage
 	pub fn duplicate ( from: &dyn Image ) -> Self
 	{
 		let mut img = Self::new(Pixel{x: from.width(), y: from.height()});
-		from.copy_to(&mut img).expect("?");
+		img.copy_from(from).expect("?");
 		return img;
 	}
 }

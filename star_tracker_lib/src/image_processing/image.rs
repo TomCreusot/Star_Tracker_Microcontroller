@@ -44,10 +44,13 @@ pub trait Image
 	/// # Example
 	/// ```
 	/// use star_tracker_lib::util::units::Pixel;
-	/// use star_tracker_lib::image_processing::BasicImage;
+	/// use star_tracker_lib::image_processing::ImageBasic;
 	/// use star_tracker_lib::image_processing::Image;
 	///
-	/// let mut img : BasicImage<3, 3> = BasicImage::new();
+	/// const WIDTH : usize = 3;
+	/// const HEIGHT: usize = 3;
+	/// let mut img_array = [[0; WIDTH]; HEIGHT];
+	/// let mut img = ImageBasic::new(&mut img_array);
 	/// img.set(Pixel{x: 0, y: 0}, 10);
 	/// img.set(Pixel{x: 2, y: 0}, 20);
 	/// img.set(Pixel{x: 0, y: 2}, 32);
@@ -81,12 +84,16 @@ pub trait Image
 	///
 	/// # Example
 	/// ```
-	/// use star_tracker_lib::image_processing::BasicImage;
+	/// use star_tracker_lib::image_processing::ImageBasic;
 	/// use star_tracker_lib::image_processing::Image;
 	/// use star_tracker_lib::util::aliases::UInt;
 	/// use star_tracker_lib::util::aliases::Byte;
 	/// use star_tracker_lib::util::units::Pixel;
-	/// let mut img : BasicImage<3, 3> = BasicImage::new();
+	///
+	/// const WIDTH : usize = 3;
+	/// const HEIGHT: usize = 3;
+	/// let mut img_array = [[0; WIDTH]; HEIGHT];
+	/// let mut img = ImageBasic::new(&mut img_array);
 	/// let mut hist : [UInt; Byte::max_value() as usize + 1] = [0; Byte::MAX as usize + 1];
 	/// img.set(Pixel{x: 0, y: 0}, 10);
 	/// img.set(Pixel{x: 2, y: 0}, 20);
@@ -122,35 +129,42 @@ pub trait Image
 	}
 
 
-	/// Copies an image over to another image.
+	/// Copies an image over to this image.
 	/// The is mainly for nix.
 	/// This can be useful to duplicate an image before blob detection.
 	/// # Arguments
-	/// * `to` - The image to be overwritten.
+	/// * `from` - The image to copy from.
 	/// # Returns
 	/// Error if invalid.
 	///
 	/// # Example
 	/// ```
 	/// use star_tracker_lib::util::units::Pixel;
-	/// use star_tracker_lib::image_processing::BasicImage;
+	/// use star_tracker_lib::image_processing::ImageBasic;
 	/// use star_tracker_lib::image_processing::Image;
 	///
-	/// let mut from: BasicImage<2, 2> = BasicImage::new();
+	/// const WIDTH : usize = 2;
+	/// const HEIGHT: usize = 2;
+	/// let mut img_array = [[0; WIDTH]; HEIGHT];
+	/// let mut from = ImageBasic::new(&mut img_array);
 	/// from.set(Pixel{x: 0, y: 0}, 1);
 	/// from.set(Pixel{x: 0, y: 1}, 2);
 	/// from.set(Pixel{x: 1, y: 0}, 3);
 	/// from.set(Pixel{x: 1, y: 1}, 4);
-	/// let mut to: BasicImage<2, 2> = BasicImage::new();
-	/// assert!(from.copy_to(&mut to).is_ok());
+	///
+	/// const WIDTH_2 : usize = 2;
+	/// const HEIGHT_2: usize = 2;
+	/// let mut img_array = [[0; WIDTH_2]; HEIGHT_2];
+	/// let mut to = ImageBasic::new(&mut img_array);
+	/// assert!(to.copy_from(&from).is_ok());
 	/// assert_eq!(to.get(Pixel{x: 0, y: 0}), from.get(Pixel{x: 0, y: 0}));
 	/// assert_eq!(to.get(Pixel{x: 0, y: 1}), from.get(Pixel{x: 0, y: 1}));
 	/// assert_eq!(to.get(Pixel{x: 1, y: 0}), from.get(Pixel{x: 1, y: 0}));
 	/// assert_eq!(to.get(Pixel{x: 1, y: 1}), from.get(Pixel{x: 1, y: 1}));
 	/// ```
-	fn copy_to ( &self, to: &mut dyn Image ) -> Error<()>
+	fn copy_from ( &mut self, from: &dyn Image ) -> Error<()>
 	{
-		if self.width() != to.width() || self.height() != to.height()
+		if self.width() != from.width() || self.height() != from.height()
 		{
 			return Result::Err(Errors::InvalidSize);
 		}
@@ -160,11 +174,15 @@ pub trait Image
 			for yy in 0..self.height()
 			{
 				let px = Pixel{x: xx, y: yy};
-				to.set(px, self.get(px));
+				self.set(px, from.get(px));
 			}
 		}
 		return Result::Ok(());
 	}
+
+
+	/// Returns 8 as it is 8 bit.
+	fn bits ( &self ) -> usize { 8 }
 }
 
 
@@ -186,7 +204,10 @@ mod test
 	use crate::util::units::Pixel;
 	use image_processing::*;
 
-
+	pub fn get_image <const W: usize, const H: usize> ( ) -> [[Byte; W]; H]
+	{
+		[[0;W]; H]
+	}
 
 //###############################################################################################//
 //
@@ -201,14 +222,16 @@ mod test
 // pub fn valid_pixel    ( &self, Pixel ) -> bool
 // pub histogram         ( &self, &mut [UInt] )
 // pub percent_threshold ( &self, Decimal, &[UInt] ) -> Byte
-// pub copy_to           ( &self, &mut dyn Image) -. Error<()>
+// pub copy_from         ( &self, &mut dyn Image) -. Error<()>
+// pub bits              ( &self ) -> usize
 //
 //###############################################################################################//
 //										~ reset ~												 //
 #[test]
 fn test_reset ( )
 {
-	let mut img : BasicImage<3, 3> = BasicImage::new();
+	let mut arr = get_image();
+	let mut img : ImageBasic<3, 3> = ImageBasic::new(&mut arr);
 	img.set(Pixel{x: 0, y: 0}, 10);
 	img.set(Pixel{x: 2, y: 0}, 20);
 	img.set(Pixel{x: 0, y: 2}, 32);
@@ -231,7 +254,8 @@ fn test_reset ( )
 	#[test]
 	fn test_valid_pixel_safe ( )
 	{
-		let img : BasicImage<10, 10> = BasicImage::new();
+		let mut arr = get_image();
+		let img : ImageBasic<10, 10> = ImageBasic::new(&mut arr);
 		assert!(img.valid_pixel(Pixel{x: 0, y: 0}));
 		assert!(img.valid_pixel(Pixel{x: 9, y: 9}));
 		assert!(img.valid_pixel(Pixel{x: 0, y: 9}));
@@ -242,7 +266,8 @@ fn test_reset ( )
 	#[cfg_attr(coverage, no_coverage)]
 	fn test_valid_pixel_unsafe ( )
 	{
-		let img : BasicImage<10, 10> = BasicImage::new();
+		let mut arr = get_image();
+		let img : ImageBasic<10, 10> = ImageBasic::new(&mut arr);
 		assert!(!img.valid_pixel(Pixel{x: 10, y: 10}));
 		assert!(!img.valid_pixel(Pixel{x: 0, y: 10}));
 		assert!(!img.valid_pixel(Pixel{x: 0, y: 10}));
@@ -256,7 +281,8 @@ fn test_reset ( )
 	#[test]
 	fn test_histogram_256_bars ( )
 	{
-		let mut img : BasicImage<3, 3> = BasicImage::new();
+		let mut arr = get_image();
+		let mut img : ImageBasic<3, 3> = ImageBasic::new(&mut arr);
 		let mut hist : [UInt; Byte::max_value() as usize + 1] = [0; Byte::MAX as usize + 1];
 		img.set(Pixel{x: 0, y: 0}, 10);
 		img.set(Pixel{x: 2, y: 0}, 20);
@@ -274,7 +300,8 @@ fn test_reset ( )
 	#[test]
 	fn test_histogram_2_bar ( )
 	{
-		let mut img : BasicImage<3, 3> = BasicImage::new();
+		let mut arr = get_image();
+		let mut img : ImageBasic<3, 3> = ImageBasic::new(&mut arr);
 		let mut hist : [UInt; 2] = [0; 2];
 		img.set(Pixel{x: 2, y: 2}, Byte::MAX / 2 + 1);
 		img.histogram(&mut hist).expect("This should be valid.");
@@ -285,7 +312,8 @@ fn test_reset ( )
 	#[test]
 	fn test_histogram_1_bar ( )
 	{
-		let mut img : BasicImage<3, 3> = BasicImage::new();
+		let mut arr = get_image();
+		let mut img : ImageBasic<3, 3> = ImageBasic::new(&mut arr);
 		let mut hist : [UInt; 1] = [0; 1];
 		img.set(Pixel{x: 2, y: 2}, Byte::MAX);
 		img.histogram(&mut hist).expect("This should be valid.");
@@ -295,7 +323,8 @@ fn test_reset ( )
 	#[test]
 	fn test_histogram_fail ( )
 	{
-		let img        : BasicImage<3, 3> = BasicImage::new();
+		let mut arr = get_image();
+		let img        : ImageBasic<3, 3> = ImageBasic::new(&mut arr);
 		let mut hist_small : [UInt; 0] = [];
 		let mut hist_large : [UInt; Byte::MAX as usize + 2] = [0; Byte::MAX as usize + 2];
 		assert!(img.histogram(&mut hist_small).is_err());
@@ -304,17 +333,19 @@ fn test_reset ( )
 
 
 
-//										~ copy_to ~												 //
+//										~ copy_from ~											 //
 	#[test]
 	fn test_copy_to ( )
 	{
-		let mut from: BasicImage<2, 2> = BasicImage::new();
+		let mut arr_1 = get_image();
+		let mut arr_2 = get_image();
+		let mut from: ImageBasic<2, 2> = ImageBasic::new(&mut arr_1);
 		from.set(Pixel{x: 0, y: 0}, 1);
 		from.set(Pixel{x: 0, y: 1}, 2);
 		from.set(Pixel{x: 1, y: 0}, 3);
 		from.set(Pixel{x: 1, y: 1}, 4);
-		let mut to: BasicImage<2, 2> = BasicImage::new();
-		assert!(from.copy_to(&mut to).is_ok());
+		let mut to: ImageBasic<2, 2> = ImageBasic::new(&mut arr_2);
+		assert!(to.copy_from(&from).is_ok());
 		assert_eq!(to.get(Pixel{x: 0, y: 0}), from.get(Pixel{x: 0, y: 0}));
 		assert_eq!(to.get(Pixel{x: 0, y: 1}), from.get(Pixel{x: 0, y: 1}));
 		assert_eq!(to.get(Pixel{x: 1, y: 0}), from.get(Pixel{x: 1, y: 0}));
@@ -324,9 +355,21 @@ fn test_reset ( )
 	#[test]
 	fn test_copy_to_error ( )
 	{
-		let mut from: BasicImage<2, 2> = BasicImage::new();
-		let mut to  : BasicImage<2, 3> = BasicImage::new();
-		assert!(from.copy_to(&mut to).is_err());
-		assert!(to.copy_to(&mut from).is_err());
+		let mut arr_1 = get_image();
+		let mut arr_2 = get_image();
+		let mut from: ImageBasic<2, 2> = ImageBasic::new(&mut arr_1);
+		let mut to  : ImageBasic<2, 3> = ImageBasic::new(&mut arr_2);
+		assert!(from.copy_from(&to).is_err());
+		assert!(to.copy_from(&from).is_err());
+	}
+	
+	
+	//										~ bits ~												 //
+	fn test_bits ( )
+	{
+		let mut arr = get_image();
+		let img: ImageBasic<2, 2> = ImageBasic::new(&mut arr);
+		assert_eq!(img.bits(), 8);
+
 	}
 }

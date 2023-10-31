@@ -27,7 +27,7 @@
 //! use star_tracker_lib::util::units::Vector2;
 //! use star_tracker_lib::util::units::Pixel;
 //! use star_tracker_lib::util::list::List;
-//! use star_tracker_lib::image_processing::BasicImage;
+//! use star_tracker_lib::image_processing::ImageBasic;
 //! use star_tracker_lib::image_processing::Blob;
 //! use star_tracker_lib::image_processing::ThresholdGrid;
 //! use star_tracker_lib::image_processing::ThresholdPercent;
@@ -37,7 +37,8 @@
 //! // Lets just assume it is a beautiful star scape...
 //! const img_width:  usize = 808;
 //! const img_height: usize = 608;
-//! let mut img: BasicImage<img_width, img_height> = BasicImage::new();
+//! let mut img_array = [[0; img_width]; img_height];
+//! let mut img = ImageBasic::new(&mut img_array);
 //! 
 //! // Nilback or Sauvola thresholding.
 //! // This threshold is a set of grid cells which all have their own threshold for the local area.
@@ -258,33 +259,33 @@
 //! 
 //! All code in this library has been written Tom Creusot.  
 	
-	#![allow(unused_imports)]
-	// #![cfg_attr(any(test, feature = "nix"),  allow(unused_imports))] // Stops maths import error.
-	#![feature(no_coverage)]                        // If a file should not be tested.
-	#![feature(let_chains)]                         // Allows a while let loop better (constellation).
-	#![feature(int_roundings)]                      // Allows div_ceil
-	#![feature(generic_const_exprs)]                // Newer version of associated_type_defaults.
-	#![feature(const_fn_floating_point_arithmetic)] // allows constant Degrees.as_radians() function.
-	#![cfg_attr(not(any(test, feature = "nix")), no_std)]       // When not test, there must be no_std.
+#![allow(unused_imports)]
+// #![cfg_attr(any(test, feature = "nix"),  allow(unused_imports))] // Stops maths import error.
+#![feature(no_coverage)]                        // If a file should not be tested.
+#![feature(let_chains)]                         // Allows a while let loop better (constellation).
+#![feature(int_roundings)]                      // Allows div_ceil
+#![feature(generic_const_exprs)]                // Newer version of associated_type_defaults.
+#![feature(const_fn_floating_point_arithmetic)] // allows constant Degrees.as_radians() function.
+#![cfg_attr(not(any(test, feature = "nix")), no_std)]       // When not test, there must be no_std.
+
+#[cfg(all(feature = "bit_32", feature = "bit_64"))]
+compile_error!("To specify the size of a float, compile with either the feature bit_32 or bit_64 enabled.\nEnsure only one is enabled.");
+#[cfg(not(any(feature = "bit_32", feature = "bit_64")))]
+compile_error!("To specify the size of a float, compile with either the feature bit_32 or bit_64 enabled.\nEnsure only one is enabled.");
+
+
+extern crate libm;
+
+#[cfg(any(test, feature = "nix"))] 
+#[macro_use]
+extern crate core;    // std alternative.
 	
-	#[cfg(all(feature = "bit_32", feature = "bit_64"))]
-	compile_error!("To specify the size of a float, compile with either the feature bit_32 or bit_64 enabled.\nEnsure only one is enabled.");
-	#[cfg(not(any(feature = "bit_32", feature = "bit_64")))]
-	compile_error!("To specify the size of a float, compile with either the feature bit_32 or bit_64 enabled.\nEnsure only one is enabled.");
 	
-	
-	extern crate libm;
-	
-	#[cfg(any(test, feature = "nix"))] 
-	#[macro_use]
-	extern crate core;    // std alternative.
-	
-	
-	#[cfg(any(test, feature = "nix"))]  extern crate mockall; // Test Mocks.
-	#[cfg(any(test, feature = "nix"))]  extern crate rand;    // Testing randomness.
-	
-	#[allow(dead_code)] pub mod util;
-	#[allow(dead_code)] pub mod image_processing;
+#[cfg(any(test, feature = "nix"))]  extern crate mockall; // Test Mocks.
+#[cfg(any(test, feature = "nix"))]  extern crate rand;    // Testing randomness.
+
+#[allow(dead_code)] pub mod util;
+#[allow(dead_code)] pub mod image_processing;
 #[allow(dead_code)] pub mod attitude_determination;
 #[allow(dead_code)] pub mod tracking_mode;
 #[allow(dead_code)] pub mod projection;

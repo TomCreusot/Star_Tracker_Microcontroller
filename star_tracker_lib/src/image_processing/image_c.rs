@@ -1,11 +1,11 @@
-//! Implementation for CImage.
+//! Implementation for ImageC.
 use crate::core_include::*;
 
 use crate::util::aliases::Byte;
 use crate::util::units::Pixel;
-use crate::image_processing::CImage;
+use crate::image_processing::ImageC;
 use crate::image_processing::Image;
-impl CImage
+impl ImageC
 {
 //###############################################################################################//
 //										---	Constructors ---
@@ -13,14 +13,14 @@ impl CImage
 
 	/// When passing the c image to rust, use this.
 	/// Or just call it from a c struct.
-	pub fn new ( ptr: *mut Byte, size: Pixel ) -> CImage	
+	pub fn new ( ptr: *mut Byte, size: Pixel ) -> ImageC	
 	{	
-		CImage { img: ptr, width: size.x, height: size.y }
+		ImageC { img: ptr, width: size.x, height: size.y }
 	}
 }
 
 
-impl Image for CImage
+impl Image for ImageC
 {
 //###############################################################################################//
 //										---	Accessors ---
@@ -84,7 +84,7 @@ mod test
 {
 	use crate::util::aliases::Byte;
 	use crate::util::units::Pixel;
-	use image_processing::CImage;
+	use image_processing::ImageC;
 	use image_processing::Image;
 	
 //###############################################################################################//
@@ -104,7 +104,7 @@ mod test
 	{
 		let mut image = [0, 1, 2, /* \n */10, 11, 12];
 		let size  = Pixel{x: 3, y: 2};
-		let img = CImage::new(image.as_mut_ptr(), size);
+		let img = ImageC::new(image.as_mut_ptr(), size);
 		assert_eq!(img.width, 3);
 		assert_eq!(img.height, 2);
 		unsafe
@@ -122,7 +122,7 @@ mod test
 	{
 		let mut image = [0, 1, 2, /* \n */10, 11, 12];
 		let size  = Pixel{x: 3, y: 2};
-		let img = CImage::new(image.as_mut_ptr(), size);
+		let img = ImageC::new(image.as_mut_ptr(), size);
 		
 		assert_eq!(img.get(Pixel{x: 0, y: 0}), 0);
 		assert_eq!(img.get(Pixel{x: 1, y: 0}), 1);
@@ -139,7 +139,7 @@ mod test
 	{
 		let mut image = [0, 1, 2, /* \n */10, 11, 12];
 		let size  = Pixel{x: 3, y: 2};
-		let img = CImage::new(image.as_mut_ptr(), size);
+		let img = ImageC::new(image.as_mut_ptr(), size);
 		
 		assert_eq!(img.get(Pixel{x: 3, y: 0}), 10);
 		assert_eq!(img.get(Pixel{x: 4, y: 0}), 11);
@@ -153,7 +153,7 @@ mod test
 	{
 		let mut image = [0, 0, 0, /* \n */0, 0, 0];
 		let size  = Pixel{x: 3, y: 2};
-		let mut img = CImage::new(image.as_mut_ptr(), size);
+		let mut img = ImageC::new(image.as_mut_ptr(), size);
 		
 		img.set(Pixel{x : 0, y: 0}, 1);  assert_eq!(img.get(Pixel{x: 0, y: 0}), 1);
 		img.set(Pixel{x : 1, y: 0}, 2);  assert_eq!(img.get(Pixel{x: 1, y: 0}), 2);
@@ -170,7 +170,7 @@ mod test
 	{
 		let mut image = [0, 1, 2, /* \n */10, 11, 12];
 		let size  = Pixel{x: 3, y: 2};
-		let mut img = CImage::new(image.as_mut_ptr(), size);
+		let mut img = ImageC::new(image.as_mut_ptr(), size);
 		
 		img.set(Pixel{x : 3, y: 0}, 1);  assert_eq!(img.get(Pixel{x: 0, y: 1}), 1);
 		img.set(Pixel{x : 4, y: 0}, 2);  assert_eq!(img.get(Pixel{x: 1, y: 1}), 2);
@@ -185,7 +185,7 @@ mod test
 	{
 		let mut image = [0, 1, 2, /* \n */10, 11, 12];
 		let size  = Pixel{x: 3, y: 2};
-		let img = CImage::new(image.as_mut_ptr(), size);
+		let img = ImageC::new(image.as_mut_ptr(), size);
 		assert_eq!(img.width(), size.x);		
 	}
 	
@@ -195,7 +195,7 @@ mod test
 	{
 		let mut image = [0, 1, 2, /* \n */10, 11, 12];
 		let size  = Pixel{x: 3, y: 2};
-		let img = CImage::new(image.as_mut_ptr(), size);
+		let img = ImageC::new(image.as_mut_ptr(), size);
 		assert_eq!(img.height(), size.y);		
 	}
 

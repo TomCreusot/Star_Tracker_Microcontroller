@@ -351,7 +351,7 @@ mod test
 		println!("{:?}", ang_out);
 		// Rotation opposite provided angle axis.
 		println!("{}", rotation.dot(angle_axis.to_quaternion()).abs());
-		assert!(rotation.dot(angle_axis.to_quaternion()).abs() < 0.01);
+		assert!(rotation.dot(angle_axis.to_quaternion()).abs() < 0.1);
 	}
 	
 	

@@ -263,7 +263,7 @@ pub trait List<T> where T: Clone
 			let mut ii = index;
 			while ii < self.size() - 1
 			{
-				self.set(ii, self.get(ii + 1))?;
+				let _ = self.set(ii, self.get(ii + 1));
 				ii += 1;
 			}
 			let _ = self.pop_back();
@@ -307,7 +307,7 @@ pub trait List<T> where T: Clone
 			{
 				if compare(&self.get(ii), &list_b.get(jj)) && !out.is_full()
 				{
-					out.push_back(self.get(ii))?; // No more room to fit elements.
+					let _ = out.push_back(self.get(ii)); // No more room to fit elements.
 				}
 			}
 		}

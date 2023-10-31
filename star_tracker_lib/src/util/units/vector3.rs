@@ -132,6 +132,7 @@ impl Vector3
 	/// ```
 	pub fn angle_distance ( &self, oth: Vector3 ) -> Radians
 	{
+		let warning_there_is_a_panic_here_btw = 1;
 		let dot = self.dot(oth);
 
 		let mag_cur = self.magnitude();

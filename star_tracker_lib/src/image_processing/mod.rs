@@ -10,7 +10,7 @@
 //! use star_tracker_lib::util::units::Vector2;
 //! use star_tracker_lib::util::units::Pixel;
 //! use star_tracker_lib::util::list::List;
-//! use star_tracker_lib::image_processing::BasicImage;
+//! use star_tracker_lib::image_processing::ImageBasic;
 //! use star_tracker_lib::image_processing::Blob;
 //! use star_tracker_lib::image_processing::ThresholdGrid;
 //! use star_tracker_lib::image_processing::ThresholdPercent;
@@ -20,7 +20,8 @@
 //! // Lets just assume it is a beautiful star scape...
 //! const img_width:  usize = 808;
 //! const img_height: usize = 608;
-//! let mut img: BasicImage<img_width, img_height> = BasicImage::new();
+//! let mut img_array = [[0; img_width]; img_height];
+//! let mut img = ImageBasic::new(&mut img_array);
 //! 
 //! // Nilback or Sauvola thresholding.
 //! // This threshold is a set of grid cells which all have their own threshold for the local area.
@@ -71,17 +72,21 @@
 //! ```
 
 pub mod image;
-pub mod basic_image;
-pub mod c_image;
+pub mod image_cropped;
+pub mod image_basic;
+pub mod image_word;
+pub mod image_c;
 pub mod blob;
 pub mod threshold;
 
 use crate::core_include::*;
 
+use crate::util::linear_lookup::LinearLookup;
+use crate::util::units::Vector2;
+use crate::util::units::Pixel;
 use crate::util::aliases::Byte;
 use crate::util::aliases::UInt;
-use crate::util::units::Pixel;
-use crate::util::units::Vector2;
+use crate::util::word::WordList;
 
 pub use crate::image_processing::image::Image;
 //###############################################################################################//
@@ -97,16 +102,34 @@ pub use crate::image_processing::image::Image;
 /// * Create a histogram of the different pixel intensities.
 /// * Provide a threshold value which isolates the background from the foreground.
 /// ```
-/// use star_tracker_lib::image_processing::{Image, BasicImage};
-/// use star_tracker_lib::util::aliases::{UInt, Byte};
+/// use star_tracker_lib::image_processing::ImageBasic;
+/// use star_tracker_lib::image_processing::Image;
+/// use star_tracker_lib::util::aliases::Byte;
+/// use star_tracker_lib::util::aliases::UInt;
 /// use star_tracker_lib::util::list::ArrayList;
 /// use star_tracker_lib::util::units::Pixel;
+/// use star_tracker_lib::create_image_basic;
 ///
 /// const WIDTH : usize = 10;
 /// const HEIGHT: usize = 5;
-/// let mut img : BasicImage<WIDTH, HEIGHT> = BasicImage::new();     // Creates a black image.
-/// assert_eq!(img.width(), WIDTH);     // The maximum width of the image.
-/// assert_eq!(img.height(), HEIGHT);   // The maximum height of the image.
+/// let mut img_array = [[0; WIDTH]; HEIGHT];
+/// let mut img = ImageBasic::new(&mut img_array);   // Creates a black image.
+/// 
+/// // OR
+///
+/// let mut img_array = [
+/// [0, 0, 0, 0],
+/// [0, 0, 0, 0],
+/// [0, 0, 0, 0],
+/// [0, 0, 0, 0]];
+/// let mut img = ImageBasic::new(&mut img_array);
+///
+/// // OR
+/// 
+/// let mut img = create_image_basic!(WIDTH, HEIGHT);
+///
+/// assert_eq!(img.width(), WIDTH);                  // The maximum width of the image.
+/// assert_eq!(img.height(), HEIGHT);                // The maximum height of the image.
 ///
 /// assert_eq!(img.get(Pixel{x: 9, y: 4}), 0);          // Every pixel defaults at 0.
 /// img.set(Pixel{x: 9, y: 4}, 10);                     // Sets (9,4) to 10.
@@ -123,12 +146,100 @@ pub use crate::image_processing::image::Image;
 /// assert_eq!(hist[100], 1);                            // 1 pixel is at intensity of 100.
 /// assert_eq!(hist[200], 2);                            // 2 pixels are at the intensity of 200.
 /// ```
-pub struct BasicImage <const WIDTH : usize, const HEIGHT : usize>
+pub struct ImageBasic <'a, const WIDTH : usize, const HEIGHT : usize>
 {
 	/// The image.
-	img : [[Byte; WIDTH]; HEIGHT],
+	pub img : &'a mut [[Byte; WIDTH]; HEIGHT],
 }
 
+
+
+
+/// This pretends an image is larger than it is.  
+/// It allows you to crop an image down while keeping the position of the pixels where they would be.  
+/// 1. Crop an image from the center.
+/// 2. Input the image into this class with the size.
+/// # Example
+/// ```
+/// use star_tracker_lib::image_processing::ImageCropped;
+/// use star_tracker_lib::image_processing::ImageBasic;
+/// use star_tracker_lib::image_processing::Image;
+/// use star_tracker_lib::util::units::Pixel;
+/// use star_tracker_lib::create_image_basic;
+/// 
+/// let mut img = create_image_basic!(400, 400);
+/// img.set(Pixel{x: 0, y: 0}, 10);
+///
+/// let mut img = ImageCropped::new(&mut img, Pixel{x: 808, y: 608});
+/// assert_eq!(img.get(Pixel{x: (808 / 4), y: (608 / 4)}), 10);
+/// ```
+pub struct ImageCropped <'a>
+{
+	pub img       : &'a mut dyn Image,
+	pub size_fake : Pixel
+
+
+}
+
+
+
+/// Images store pixels as Bytes (8 bit).  
+/// Computers store variables in "words", this is based on the architecture of your machine.
+/// An 8 bit microcontroller will store images efficiently as the word and pixel size are the same.  
+/// However, if you have a 32 bit microcontroller, each pixel is 4x the size. For a 2d image, this will take up 16x the space.
+///
+/// This image stores a set of bytes in each word ensuring efficient storage.  
+/// Unfortunately, it will be slightly slower to run.  
+///
+/// If you want to copy an image to a file to be compiled on a microcontroller, the following code can do so.   
+/// # Example Build Script SIM
+/// ```
+/// use star_tracker_lib::create_image_word_nix;
+/// use star_tracker_lib::create_image_basic; // Or whatever you want to read images as.
+/// use star_tracker_lib::util::aliases::Byte;
+/// use star_tracker_lib::util::units::Pixel;
+/// use star_tracker_lib::util::word::WordList;
+/// use star_tracker_lib::util::word::WordSize;
+/// use star_tracker_lib::image_processing::Image;
+/// use star_tracker_lib::image_processing::ImageWord;
+/// use star_tracker_lib::image_processing::ImageBasic;
+///
+/// // Read in the image from png or json ...
+/// let mut img_from_png = create_image_basic!(10, 11);
+///
+/// let size = Pixel{x: img_from_png.width(), y: img_from_png.height()};
+/// let pixel_size = 8;  // 8 bits.
+/// let word_size = 32; // The architecture of the target device.
+///	let mut img_word  = create_image_word_nix!(size, word_size, pixel_size);
+/// img_word.copy_from(&mut img_from_png);
+///
+/// // Write image to file.
+/// ```
+///
+/// // If your not simulating an image, you can use this to create a blank image.
+/// # Example On Board 
+/// ```
+/// use star_tracker_lib::create_image_word;
+/// use star_tracker_lib::util::aliases::Byte;
+/// use star_tracker_lib::util::units::Pixel;
+/// use star_tracker_lib::util::word::WordList;
+/// use star_tracker_lib::util::word::WordSize;
+/// use star_tracker_lib::image_processing::ImageWord;
+///
+/// const size      : Pixel = Pixel{x: 100, y: 110};
+/// const word_size : usize = 32; // The architecture of the device.
+/// const pixel_size: usize = 8;  // 8 bit pixels
+///	let mut img_word = create_image_word!(size, word_size, pixel_size);
+///
+/// // You can now use the image for image related stuff.
+/// ```
+pub struct ImageWord <'a>
+{
+	/// Public for macro, DO NOT PLAY WITH.
+	pub img: &'a mut WordList<'a>,
+	/// Public for macro, DO NOT PLAY WITH.
+	pub size: Pixel,
+}
 
 
 /// If you have rust code wrapped inside a c binary, you can use this to access the array.
@@ -147,16 +258,16 @@ pub struct BasicImage <const WIDTH : usize, const HEIGHT : usize>
 ///  51, 52, 53, 54, 55
 /// };
 /// 
-/// typedef struct CImage
+/// typedef struct ImageC
 /// {
 /// 	size_t width;
 /// 	size_t height;
 /// 	unsigned char* img;
-/// } CImage;
+/// } ImageC;
 /// 
-/// CImage get_image ( )
+/// ImageC get_image ( )
 /// {
-///     CImage img;
+///     ImageC img;
 ///     img.width  = width;
 ///     img.height = height;
 ///     img.img  = image;
@@ -167,12 +278,12 @@ pub struct BasicImage <const WIDTH : usize, const HEIGHT : usize>
 ///
 /// # Example (Rust code)
 /// ``` ignore
-/// use star_tracker_lib::image_processing::CImage;
+/// use star_tracker_lib::image_processing::ImageC;
 ///
 /// extern "C"
 /// {
 ///  	// Ensure the rust code is compiled with the c code.
-/// 	pub fn get_image ( ) -> CImage;
+/// 	pub fn get_image ( ) -> ImageC;
 /// }
 ///
 /// fn function ( )
@@ -181,7 +292,7 @@ pub struct BasicImage <const WIDTH : usize, const HEIGHT : usize>
 /// }
 /// ```
 #[repr(C)]
-pub struct CImage
+pub struct ImageC
 {
 	width:  usize,
 	height: usize,
@@ -257,7 +368,7 @@ pub struct ThresholdGrid <const NUM_H: usize, const NUM_V: usize>
 	size : Pixel,
 
 	/// Each grid cell manages its own threshold.
-	cells : BasicImage<{NUM_H}, {NUM_V}>,
+	cells : [[Byte; NUM_H]; NUM_V],
 }
 
 
@@ -273,12 +384,16 @@ pub struct ThresholdGrid <const NUM_H: usize, const NUM_V: usize>
 /// # Example
 /// ```
 /// use star_tracker_lib::image_processing::Blob;
-/// use star_tracker_lib::image_processing::BasicImage;
+/// use star_tracker_lib::image_processing::ImageBasic;
 /// use star_tracker_lib::image_processing::Image;
 /// use star_tracker_lib::image_processing::ThresholdPercent;			
 /// use star_tracker_lib::util::units::Pixel;
 /// use star_tracker_lib::util::list::{List, ArrayList};
-/// let mut img : BasicImage<3, 3> = BasicImage::new();
+///
+/// const WIDTH : usize = 3;
+/// const HEIGHT: usize = 3;
+/// let mut img_array = [[0; WIDTH]; HEIGHT];
+/// let mut img = ImageBasic::new(&mut img_array);
 /// img.set(Pixel{x: 0, y: 0}, 1); // 1 1 0
 /// img.set(Pixel{x: 1, y: 0}, 1); // 1 0 0
 /// img.set(Pixel{x: 0, y: 1}, 1); // 0 0 1
@@ -338,19 +453,24 @@ pub struct Blob
 #[allow(unused_must_use)]
 mod test
 {
-	use crate::image_processing::BasicImage;
+	use crate::image_processing::ImageBasic;
 	use crate::image_processing::Image;
 	use crate::image_processing::ThresholdPercent;
 	use crate::image_processing::Threshold;
 	
 	use crate::util::units::Pixel;
+	use crate::util::aliases::Byte;
+
+	pub fn get_image <const W: usize, const H: usize> ( ) -> [[Byte; W]; H] { [[0;W]; H] }
+
 
 	#[test]
 	fn test_threshold_apply (  )
 	{
 		let thresh = ThresholdPercent{threshold: 10};
 
-		let mut img : BasicImage<3, 3> = BasicImage::new();
+		let mut arr = get_image();
+		let mut img : ImageBasic<3, 3> = ImageBasic::new(&mut arr);
 		img.set(Pixel{x: 0, y: 0}, 9);  // 9,  10, 9
 		img.set(Pixel{x: 1, y: 0}, 10); // 10, 9,  10
 		img.set(Pixel{x: 2, y: 0}, 9);  // 9,  10, 9
@@ -380,10 +500,11 @@ mod test
 
 	#[test]
 	fn test_threshold_apply_bin (  )
-	{
+	{		
 		let thresh = ThresholdPercent{threshold: 10};
-
-		let mut img : BasicImage<3, 3> = BasicImage::new();
+		
+		let mut arr = get_image();
+		let mut img : ImageBasic<3, 3> = ImageBasic::new(&mut arr);
 		img.set(Pixel{x: 0, y: 0}, 9);  // 9,  10, 9
 		img.set(Pixel{x: 1, y: 0}, 10); // 10, 9,  10
 		img.set(Pixel{x: 2, y: 0}, 9);  // 9,  10, 9

@@ -37,10 +37,10 @@ pub type Error<T> = Result<T, Errors>;
 #[derive(Debug, Copy, Clone, PartialEq)]
 pub enum Errors
 {
-	/// The index exceeds a linear datastructures size.  
+	/// The index exceeds a linear data structures size.  
 	/// This could be get() or set() from a list.  
 	OutOfBounds,
-	/// The current action will make a datastructure exceed its allocated size.  
+	/// The current action will make a data structure exceed its allocated size.  
 	/// This could be trying to push an element into a full ArrayList.  
 	InvalidSize,
 	/// The provided value is not valid in the given context.
@@ -59,8 +59,27 @@ pub enum Errors
 
 
 
+//###############################################################################################//
+//									---	Unsafe ---
+//###############################################################################################//
 
+/// Explicitly states that a return value can be dangerous if returned.
+pub struct Unsafe <'a, T, R>
+{
+	pub value:  &'a mut T,
+	pub reason: R
+}
 
+impl <'a, T, R> Unsafe <'a, T, R> where R: Copy
+{
+	pub fn new ( value: &'a mut T, reason: R ) -> Self
+	{
+		Self { value: value, reason: reason }
+	}
+
+	pub fn get_unsafe_value ( &mut self ) -> & mut T { &mut self.value }
+
+}
 
 
 

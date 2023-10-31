@@ -1,29 +1,72 @@
-//! Implementation for BasicImage.
+//! Implementation for ImageBasic.
 use crate::core_include::*;
 
 use crate::util::aliases::Byte;
 use crate::util::units::Pixel;
-use crate::image_processing::BasicImage;
+use crate::image_processing::ImageBasic;
 use crate::image_processing::Image;
-impl <const WIDTH : usize, const HEIGHT : usize> BasicImage <WIDTH, HEIGHT>
+
+
+
+/// Creates a black image of the given size.
+/// # Arguments
+/// * `x` - The horizontal size of the x image (Constant).
+/// * `y` - The vertical size of the image (Constant).
+/// 
+/// # Returns
+/// A basic image of the given size.
+///
+///
+/// # Example
+/// ```
+/// use star_tracker_lib::image_processing::ImageBasic;
+/// use star_tracker_lib::image_processing::Image;
+/// use star_tracker_lib::create_image_basic;
+/// 
+/// const WIDTH:  usize = 10;
+/// const HEIGHT: usize = 11;
+/// let img = create_image_basic!(WIDTH, HEIGHT);
+///
+/// assert_eq!(img.width(),  WIDTH);
+/// assert_eq!(img.height(), HEIGHT);
+/// ```
+#[macro_export]
+macro_rules! create_image_basic {
+	($x:expr, $y:expr) => 
+	{
+		ImageBasic{img: &mut [[0; $x]; $y]}
+	}
+}
+
+
+
+impl <'a, const WIDTH: usize, const HEIGHT: usize> ImageBasic <'a, WIDTH, HEIGHT>
 {
 //###############################################################################################//
 //										---	Constructors ---
 //###############################################################################################//
 
-	/// Creates an image with the default value of 0.
+	/// Imports an image from a multidimensional array.  
+	/// Can be used if an image is stored elsewhere.
+	///
 	/// # Example
 	/// ```
-	/// use star_tracker_lib::image_processing::{BasicImage, Image};
+	/// use star_tracker_lib::image_processing::{ImageBasic, Image};
 	/// use star_tracker_lib::util::units::Pixel;
-	/// let img : BasicImage<1, 1> = BasicImage::new();
+	/// use star_tracker_lib::create_image_basic;
+	/// 
+	/// const WIDTH:  usize = 1;
+	/// const HEIGHT: usize = 10;
+	/// 
+	/// let mut arr = [[0; WIDTH]; HEIGHT];
+	/// let img = ImageBasic::new(&mut arr);
 	/// assert_eq!(img.get(Pixel{x: 0, y: 0}), 0);
 	/// ```
-	pub fn new ( ) -> BasicImage<WIDTH, HEIGHT>	{	BasicImage { img: [[0; WIDTH]; HEIGHT] }	}
+	pub fn new ( img: &'a mut [[Byte; WIDTH]; HEIGHT] ) -> Self { ImageBasic { img: img } }
 }
 
 
-impl <const WIDTH : usize, const HEIGHT : usize> Image for BasicImage <WIDTH, HEIGHT>
+impl <'a, const WIDTH : usize, const HEIGHT : usize> Image for ImageBasic <'a, WIDTH, HEIGHT>
 {
 //###############################################################################################//
 //										---	Accessors ---
@@ -35,9 +78,14 @@ impl <const WIDTH : usize, const HEIGHT : usize> Image for BasicImage <WIDTH, HE
 	///
 	///	# Example
 	/// ```
-	/// use star_tracker_lib::image_processing::{BasicImage, Image};
+	/// use star_tracker_lib::image_processing::{ImageBasic, Image};
 	/// use star_tracker_lib::util::units::Pixel;
-	///	let img : BasicImage<1, 1> = BasicImage::new();
+	///
+	/// use star_tracker_lib::create_image_basic;
+	/// 
+	/// const WIDTH:  usize = 1;
+	/// const HEIGHT: usize = 1;
+	/// let img = create_image_basic!(WIDTH, HEIGHT);
 	/// assert_eq!(img.get(Pixel{x: 0, y: 0}), 0);
 	/// ```
 	fn get ( &self, pixel : Pixel ) -> Byte
@@ -52,9 +100,13 @@ impl <const WIDTH : usize, const HEIGHT : usize> Image for BasicImage <WIDTH, HE
 	///
 	///	# Example
 	/// ```
-	/// use star_tracker_lib::image_processing::{BasicImage, Image};
-	/// use star_tracker_lib::util::units::Pixel;
-	///	let mut  img : BasicImage<1, 1> = BasicImage::new();
+	/// use star_tracker_lib::image_processing::{ImageBasic, Image};
+	/// use star_tracker_lib::util::units::Pixel;	
+	/// use star_tracker_lib::create_image_basic;
+	/// 
+	/// const WIDTH:  usize = 1;
+	/// const HEIGHT: usize = 1;
+	/// let mut img = create_image_basic!(WIDTH, HEIGHT);
 	/// img.set(Pixel{x: 0, y: 0}, 10);
 	/// assert_eq!(img.get(Pixel{x: 0, y: 0}), 10);
 	/// ```
@@ -68,26 +120,12 @@ impl <const WIDTH : usize, const HEIGHT : usize> Image for BasicImage <WIDTH, HE
 	/// Returns the width of the image.
 	///	# Returns
 	///	The width of the image.
-	///
-	/// # Example
-	/// ```
-	///	use star_tracker_lib::image_processing::{BasicImage, Image};
-	///	let img : BasicImage<10, 0> = BasicImage::new();
-	/// assert_eq!(img.width(), 10);
-	/// ```
 	fn width ( &self ) -> usize	{	return WIDTH;	}
 
 
 	/// Returns the height of the image.
 	///	# Returns
 	///	The height of the image.
-	///
-	/// # Example
-	/// ```
-	/// use star_tracker_lib::image_processing::{BasicImage, Image};
-	///	let img : BasicImage<0, 10> = BasicImage::new();
-	/// assert_eq!(img.height(), 10);
-	/// ```
 	fn height ( &self ) -> usize	{	return HEIGHT;	}
 }
 
@@ -110,9 +148,11 @@ impl <const WIDTH : usize, const HEIGHT : usize> Image for BasicImage <WIDTH, HE
 mod test
 {
 	use crate::util::units::Pixel;
-	use image_processing::BasicImage;
+	use image_processing::ImageBasic;
 	use image_processing::Image;
-	
+	use image_processing::Byte;
+
+
 //###############################################################################################//
 //
 //										Basic Image
@@ -128,55 +168,55 @@ mod test
 	#[test]
 	fn test_get_in_bounds ( )
 	{
-		let img : BasicImage<10, 10> = BasicImage::new();
+		let img = create_image_basic!(10, 10);
 		assert_eq!(0, img.get(Pixel{x: 0, y: 0}));
 		assert_eq!(0, img.get(Pixel{x: 9, y: 9}));
 	}
-
-
+	
+	
 	#[test]
 	#[should_panic]
 	fn test_get_out_of_bounds ( )
 	{
-		let img : BasicImage<10, 10> = BasicImage::new();
+		let img = create_image_basic!(10, 10);
 		img.get(Pixel{x: 10, y: 10});
 	}
-
-
-
-//											~ set ~												 //
+	
+	
+	
+	//											~ set ~												 //
 	#[test]
 	fn test_set_in_bounds ( )
 	{
-		let mut img : BasicImage<10, 10> = BasicImage::new();
+		let mut img = create_image_basic!(10, 10);
 		img.set(Pixel{x: 0, y: 0}, 10);
 		img.set(Pixel{x: 9, y: 9}, 11);
 		assert_eq!(10, img.get(Pixel{x: 0, y: 0}));
 		assert_eq!(11, img.get(Pixel{x: 9, y: 9}));
 	}
-
+	
 	#[test]
 	#[should_panic]
 	fn test_set_out_of_bounds ( )
 	{
-		let mut img : BasicImage<10, 10> = BasicImage::new();
+		let mut img = create_image_basic!(10, 10);
 		img.set(Pixel{x: 10, y: 10}, 0);
 	}
-
-
-//											~ width ~											 //
+	
+	
+	//											~ width ~											 //
 	#[test]
 	fn test_width ( )
 	{
-		let img : BasicImage<10, 11> = BasicImage::new();
-		assert_eq!(10, img.width());
+		let img = create_image_basic!(9, 10);
+		assert_eq!(9, img.width());
 	}
-
-//											~ height ~											 //
+	
+	//											~ height ~											 //
 	#[test]
 	fn test_height ( )
 	{
-		let img : BasicImage<10, 11> = BasicImage::new();
+		let img = create_image_basic!(10, 11);
 		assert_eq!(11, img.height());
 	}
 
