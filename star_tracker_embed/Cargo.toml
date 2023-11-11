@@ -1,35 +1,76 @@
 [package]
 name = "star_tracker_embed"
 version = "0.1.0"
-# edition = "2021"
+edition = "2021"
 
 
 
-[target.thumbv7em-none-eabihf]
-# use Tlink.c script from the cortex-m-rt crate
-rustflags = [
-	"-C", "link-arg=-Tlink.x",
-]
+# [target.thumbv7em-none-eabihf]
+# # use Tlink.c script from the cortex-m-rt crate
 
-[dependencies.stm32h7xx-hal]
-version = "^0"
-features = ["stm32h743v", "usb_hs", "rt"]
+# rustflags = [
+# 	"-C", "link-arg=-Tlink.x",
+# ]
+
+# [dependencies.stm32h7xx-hal]
+# version = "^0"
+# features = ["stm32h747cm7", "usb_hs", "rt"]
 
 
 [dependencies]
 star_tracker_lib = {path = "../star_tracker_lib", features=["bit_32"]}
 
-cortex-m = "^0.7.7"      # Access to the generic ARM peripherals
+futures = { version = "0.3.17", default-features = false, features = ["async-await"] }
+
+defmt = "0.3"
+defmt-rtt = "0.4"
+panic-probe = { version = "0.3", features = ["print-defmt"] }
+critical-section = "1.1"
+
 cortex-m-rt = "^0.7.3"  # Startup code for the ARM Core
-panic-halt = "^0.2.0"    # Panic handler
-usb-device = "0.2.9"
-usbd-serial = "0.1.1"
-# panic-semihosting = "0.6.0"
-# stm32h7xx-hal = {version = "0.13.1", features = ["stm32h743v","rt"]}
-cfg-if = "1.0.0"
-log = "0.4.17"
-# embed = "0.1.1"
-# cargo-embed = "0.16.0"
+# panic-halt = "^0.2.0"    # Panic handler
+# usb-device = "0.2.9"
+# usbd-serial = "0.1.1"
+# cfg-if = "1.0.0"
+# log = "0.4.17"
+
+rand_core = "0.6.3"
+static_cell = { version = "1.1", features = ["nightly"]}
 
 
-# rustc_plugin = "0.5.35"
+[dependencies.cortex-m]
+version = "^0.7.7"      # Access to the generic ARM peripherals
+features = ["inline-asm", "critical-section-single-core"]
+
+
+[dependencies.embassy-stm32]
+# version  = "0.1.0"
+git      = "https://github.com/embassy-rs/embassy"
+features = ["nightly", "defmt", "stm32h755zi-cm7", "time-driver-any", "exti", "memory-x", "unstable-pac", "unstable-traits"] 
+
+[dependencies.embassy-sync]
+# version = "0.3.0", 
+git      = "https://github.com/embassy-rs/embassy"
+features = ["defmt"] 
+
+[dependencies.embassy-executor]
+# version = "0.3.0"
+git      = "https://github.com/embassy-rs/embassy"
+features = ["nightly", "arch-cortex-m", "executor-thread", "defmt", "integrated-timers"]
+
+[dependencies.embassy-time]
+version = "0.1.5"
+git      = "https://github.com/embassy-rs/embassy"
+features = ["defmt", "defmt-timestamp-uptime", "unstable-traits", "tick-hz-32_768"]
+
+[dependencies.embassy-net]
+git      = "https://github.com/embassy-rs/embassy"
+features = ["defmt", "nightly", "tcp", "dhcpv4", "medium-ethernet", "proto-ipv6"]
+
+[dependencies.embedded-io-async]
+# version = "0.5.0"
+
+[dependencies.embassy-usb]
+# version = "0.1.0"
+git      = "https://github.com/embassy-rs/embassy"
+features = ["defmt"] 

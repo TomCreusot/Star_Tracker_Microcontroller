@@ -1,23 +1,33 @@
-# [target.'cfg(all(target_arch = "arm", target_os = "none"))']
+# # [target.'cfg(all(target_arch = "arm", target_os = "none"))']
+# # rustflags = [
+# # 	"-C", "link-arg=-Tlink.x",
+# # ]
+# # 
+# [target.thumbv7em-none-eabihf]
+# # use Tlink.c script from the cortex-m-rt crate
 # rustflags = [
 # 	"-C", "link-arg=-Tlink.x",
 # ]
-# 
+
+
+
+# [build]
+# target = "thumbv7em-none-eabihf"
+# # 
+# # 
+# # # [target]
+# # # 
+# # # 
+
+# # [alias]
+# # xtask = "run -p xtask --"
+
+
 [target.thumbv7em-none-eabihf]
-# use Tlink.c script from the cortex-m-rt crate
-rustflags = [
-	"-C", "link-arg=-Tlink.x",
-]
-
-
+runner = 'probe-rs run --chip STM32H755ZITx'
 
 [build]
-target = "thumbv7em-none-eabihf"
-# 
-# 
-# # [target]
-# # 
-# # 
+target = "thumbv7em-none-eabihf" # Cortex-M4F and Cortex-M7F (with FPU)
 
-# [alias]
-# xtask = "run -p xtask --"
+[env]
+DEFMT_LOG = "trace"

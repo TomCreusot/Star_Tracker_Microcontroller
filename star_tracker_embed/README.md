@@ -1,6 +1,20 @@
 # WIP
-Currently not working...  
-Im trying to figure out how to program a microcontroller, but I have no idea how to flash.
+Designed for the stm32h755 or other stm32h7x microcontroller's.
 
-Anyway, this probably is not relevent for you as this is specific for a specific microcontroller, you will have to design one for your microcontroller.  
-soz.
+This uses probe-rs, if you are using wsl, you need to follow this [manual](https://devblogs.microsoft.com/commandline/connecting-usb-devices-to-wsl/):
+
+1. In Ubuntu
+```
+sudo apt install linux-tools-5.4.0-77-generic hwdata
+sudo update-alternatives --install /usr/local/bin/usbip usbip /usr/lib/linux-tools/5.4.0-77-generic/usbip 20
+
+# install probe-rs
+# config rules
+```
+
+2. In powershell (ADMIN)
+```
+usbipd wsl list
+usbipd wsl attach --busid <busid (stlink)>  # Removes access from windows and adds access to ubuntu.
+usbipd wsl detach --busid <busid (stlink)>  # Removes access from ubuntu and adds access to windows.
+```
