@@ -200,11 +200,11 @@ mod test
 //
 //										Constructors
 //
-// pub fn look_at ( Equatoria, Equaorial ) -> Error<Self>
+// pub fn look_at ( Equatorial, Equatorial ) -> Error<Self>
 //
 //###############################################################################################//
 
-	#[no_coverage]
+	#[coverage(off)]
 	#[test]
 	// Checks if the forward vector is always the center of the output.
 	fn test_look_at_center ( ) -> Error<()>
@@ -258,7 +258,7 @@ mod test
 	}
 
 
-	#[no_coverage]
+	#[coverage(off)]
 	#[test]
 	// Ensures the output is not flipped.
 	// * A point on the axis adjacent to forward and up must be on the correct side after the transform.
@@ -289,7 +289,7 @@ mod test
 	}
 
 
-	#[no_coverage]
+	#[coverage(off)]
 	#[test]
 	// Ensures the output is not flipped.
 	// * A point on the plane of forward and up must be on the correct point after the transform.
@@ -324,7 +324,7 @@ mod test
 	}
 
 
-	#[no_coverage]
+	#[coverage(off)]
 	#[test]
 	// Errors::InvalidValue should be returned if the inputs are equal.
 	fn test_look_at_error ( )

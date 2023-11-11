@@ -20,8 +20,10 @@ use star_tracker_lib::util::aliases::M_PI;
 use star_tracker_lib::util::units::Radians;
 use star_tracker_lib::util::units::Degrees;
 use star_tracker_lib::util::units::Hours;
+use star_tracker_lib::util::units::Match;
 use star_tracker_lib::util::units::Equatorial;
 use star_tracker_lib::util::distribution::Distribute;
+use star_tracker_lib::util::linear_lookup::LinearLookup;
 
 
 use star_tracker_lib::tracking_mode::Constellation;
@@ -30,6 +32,7 @@ use star_tracker_lib::tracking_mode::Specularity;
 use star_tracker_lib::tracking_mode::StarTriangleIterator;
 use star_tracker_lib::tracking_mode::AbandonSearch;
 use star_tracker_lib::tracking_mode::PilotFinder;
+use star_tracker_lib::tracking_mode::database::ChunkIterator;
 use star_tracker_lib::tracking_mode::database::ChunkIteratorNone;
 use star_tracker_lib::tracking_mode::database::ChunkIteratorRegional;
 use star_tracker_lib::tracking_mode::database::ChunkIteratorEquatorial;
@@ -47,6 +50,7 @@ use star_tracker_nix::tracking_mode::AbandonSearchTimeoutFailure;
 
 pub fn main ( )
 {
+	std::env::set_var("RUST_BACKTRACE", "1");
 	println!(r#"
 	
 	
@@ -126,6 +130,7 @@ This also provides a step by step guide to use the tracking mode algorithm.
 	println!(" - {} stars when double star reduced.", stars_limit_double.len());
 	println!(" - {} stars when region reduced.", stars_limit_reg.len());
 
+	// Set to true to provide coverage report
 	if false
 	{
 		println!("\n");
@@ -263,22 +268,27 @@ This also provides a step by step guide to use the tracking mode algorithm.
 		// Actual Algorithm
 		let timer : std::time::Instant = std::time::Instant::now();
 		// 
-		let constellation : Constellation = Constellation::find(
+		let mut found_all : Vec<Match<usize>> = Vec::new();
+
+		let success = Constellation::find(
 			&observable, &mut database_iterator,
 			&mut StarTriangleIterator::<1000>::new(),
-			&mut star_tracker_lib::pilot_finder_vec!(), &mut Specularity::default(), ANGLE_TOLERANCE, 
-			&mut AbandonSearchTimeoutFailure::new(Duration::from_millis(TIME_GOOD as u64), FAILURE_GOOD));
+			&mut Specularity::default(),
+			&mut AbandonSearchTimeoutFailure::new(Duration::from_millis(TIME_GOOD as u64), FAILURE_GOOD),
+			ANGLE_TOLERANCE,
+			4..=4,
+			&mut found_all,
+		);
 		
-
 		let time = timer.elapsed();
-		match print_result(test_num, time, constellation, center, rotation, observable, TIME_GOOD)
+		match print_result(test_num, time, found_all, center, rotation, observable, database.catalogue, TIME_GOOD)
 		{
-			Result::Pyramid      =>{num_pyramid        +=1; avg_time_pyramid  += time.as_millis();}
-			Result::Triangle     =>{num_triangle       +=1; avg_time_triangle += time.as_millis();}
-			Result::Error        =>{num_error          +=1; avg_time_error    += time.as_millis();}
-			Result::ErrorPyramid =>{num_error_pyramid  +=1; avg_time_error    += time.as_millis();}
-			Result::ErrorTriangle=>{num_error_triangle +=1; avg_time_error    += time.as_millis();}
-			Result::ErrorTime    =>{num_error_time +=1; avg_time_cap += time.as_millis(); }
+			Result::Pyramid       =>{num_pyramid        +=1; avg_time_pyramid  += time.as_millis();}
+			Result::Triangle      =>{num_triangle       +=1; avg_time_triangle += time.as_millis();}
+			Result::Error         =>{num_error          +=1; avg_time_error    += time.as_millis();}
+			Result::ErrorPyramid  =>{num_error_pyramid  +=1; avg_time_error    += time.as_millis();}
+			Result::ErrorTriangle =>{num_error_triangle +=1; avg_time_error    += time.as_millis();}
+			Result::ErrorTime     =>{num_error_time +=1; avg_time_cap          += time.as_millis();}
 		}
 		test_num+=1;
 	}
@@ -361,7 +371,6 @@ This also provides a step by step guide to use the tracking mode algorithm.
 
 
 
-
 #[derive(PartialEq)]
 enum Result
 {
@@ -381,7 +390,14 @@ enum Result
 
 
 
-fn print_result ( test_num: usize, time: std::time::Duration, constellation : Constellation, location: Equatorial, rotation: ExtrinsicParameters, stars: Vec<Equatorial>, time_good: u128 ) -> Result
+fn print_result ( 
+	test_num: usize, 
+	time: std::time::Duration, 
+	constellation : Vec<Match<usize>>, 
+	location: Equatorial, 
+	rotation: ExtrinsicParameters, 
+	stars_image: Vec<Equatorial>, stars_database: &dyn LinearLookup<Equatorial>,
+	time_good: u128 ) -> Result
 {
 	let result : Result;
 
@@ -394,22 +410,22 @@ fn print_result ( test_num: usize, time: std::time::Duration, constellation : Co
 	let tm = time.as_millis();
 	let time_color = if tm < time_good { color_good } else { color_bad };
 
-	print!("{}\t|\t{}\t|\t{}{:4.0} ms  ", test_num, stars.len(), time_color, tm);
+	print!("{}\t|\t{}\t|\t{}{:4.0} ms  ", test_num, stars_image.len(), time_color, tm);
 	print!("{}\t|\t", color_normal);
 	
-	match constellation
+	match constellation.len()
 	{
-		Constellation::Pyramid(pyramid) =>	// Success (4 stars identified or more)
+		4 =>	// Success (4 stars identified or more)
 		{
-			let rotated_out_1 = rotation.to_image(SpaceWorld(pyramid.output.0.to_vector3()));
-			let dist_1 = rotated_out_1.0.angle_distance(pyramid.input.0.to_vector3()).to_degrees();
-			let rotated_out_2 = rotation.to_image(SpaceWorld(pyramid.output.1.to_vector3()));
-			let dist_2 = rotated_out_2.0.angle_distance(pyramid.input.1.to_vector3()).to_degrees();
-			let rotated_out_3 = rotation.to_image(SpaceWorld(pyramid.output.2.to_vector3()));
-			let dist_3 = rotated_out_3.0.angle_distance(pyramid.input.2.to_vector3()).to_degrees();
-			let rotated_out_4 = rotation.to_image(SpaceWorld(pyramid.output.3.to_vector3()));
-			let dist_4 = rotated_out_4.0.angle_distance(pyramid.input.3.to_vector3()).to_degrees();
-
+			let rotated_out_1 = rotation.to_image(SpaceWorld(stars_database.get(constellation[0].output).to_vector3()));
+			let dist_1 = rotated_out_1.0.angle_distance(     stars_image[constellation[0].input ].to_vector3()).to_degrees();
+			let rotated_out_2 = rotation.to_image(SpaceWorld(stars_database.get(constellation[1].output).to_vector3()));
+			let dist_2 = rotated_out_2.0.angle_distance(     stars_image[constellation[1].input ].to_vector3()).to_degrees();
+			let rotated_out_3 = rotation.to_image(SpaceWorld(stars_database.get(constellation[2].output).to_vector3()));
+			let dist_3 = rotated_out_3.0.angle_distance(     stars_image[constellation[2].input ].to_vector3()).to_degrees();
+			let rotated_out_4 = rotation.to_image(SpaceWorld(stars_database.get(constellation[3].output).to_vector3()));
+			let dist_4 = rotated_out_4.0.angle_distance(     stars_image[constellation[3].input ].to_vector3()).to_degrees();
+			
 			let max_dist : Degrees = Degrees(0.1);
 			let v_1 = dist_1 < max_dist;
 			let v_2 = dist_2 < max_dist;
@@ -429,21 +445,23 @@ fn print_result ( test_num: usize, time: std::time::Duration, constellation : Co
 				result = Result::ErrorPyramid;
 			}
 		}
-		Constellation::Triangle(triangle) =>	// Mild Success (3 stars identified)
+		
+		
+		3 =>	// Mild Success (3 stars identified)
 		{
-			let rotated_out_1 = rotation.to_image(SpaceWorld(triangle.output.0.to_vector3()));
-			let dist_1 = rotated_out_1.0.angle_distance(triangle.input.0.to_vector3()).to_degrees();
-			let rotated_out_2 = rotation.to_image(SpaceWorld(triangle.output.1.to_vector3()));
-			let dist_2 = rotated_out_2.0.angle_distance(triangle.input.1.to_vector3()).to_degrees();
-			let rotated_out_3 = rotation.to_image(SpaceWorld(triangle.output.2.to_vector3()));
-			let dist_3 = rotated_out_3.0.angle_distance(triangle.input.2.to_vector3()).to_degrees();
-
+			let rotated_out_1 = rotation.to_image(SpaceWorld(stars_database.get(constellation[0].output).to_vector3()));
+			let dist_1 = rotated_out_1.0.angle_distance(     stars_image   [constellation[0].input ].to_vector3()).to_degrees();
+			let rotated_out_2 = rotation.to_image(SpaceWorld(stars_database.get(constellation[1].output).to_vector3()));
+			let dist_2 = rotated_out_2.0.angle_distance(     stars_image   [constellation[1].input ].to_vector3()).to_degrees();
+			let rotated_out_3 = rotation.to_image(SpaceWorld(stars_database.get(constellation[2].output).to_vector3()));
+			let dist_3 = rotated_out_3.0.angle_distance(     stars_image   [constellation[2].input ].to_vector3()).to_degrees();
+			
 			let max_dist : Degrees = Degrees(0.1);
 			let v_1 = dist_1 < max_dist;
 			let v_2 = dist_2 < max_dist;
 			let v_3 = dist_3 < max_dist;
-
-
+			
+			
 			if v_1 && v_2 && v_3
 			{
 				print!("{}Triangle\t", color_ok);
@@ -457,11 +475,15 @@ fn print_result ( test_num: usize, time: std::time::Duration, constellation : Co
 				result = Result::ErrorTriangle;
 			}
 		}
-		Constellation::None => 				// No stars identified.
+		
+		
+		0 => 				// No stars identified.
 		{
 			print!("{}FAILED\t\tF F F F", color_bad);
 			result = Result::Error;
 		}
+		
+		_ => panic!("There should only be these options"),
 	}
 	print!("{}\t\t|\t{}", color_normal, print_standard_equatorial(location));
 	

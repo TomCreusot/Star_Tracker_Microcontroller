@@ -30,10 +30,11 @@ impl <const N: usize> TriangleConstruct for StarTriangleIterator<N>
 	{
 		self.index_p = -1;
 		let mut tries : Option<Match<StarTriangle<usize>>> = Option::None;
+		if stars.size() < 3 { return tries; }
 		'_outer: loop // This is the correct use of a do while loop.
 		{
 
-			// Once all possiblities for a single kernal step are exhausted.
+			// Once all possibilities for a single kernal step are exhausted.
 			// The kernal will step, new stars will be chosen and a list of database matches are generated.
 			while !StarTriangleIterator::<N>::step(
 				&mut self.index_a, &mut self.index_b, &mut self.index_c,
@@ -241,6 +242,8 @@ impl<const N: usize> StarTriangleIterator<N>
 	fn prep_new_kernel ( &mut self, stars: &dyn List<Equatorial>,
 		database: &mut dyn ChunkIterator ) -> bool
 	{
+		if stars.size() < 3 { return false; }
+
 		// Steps to the next region.
 		// If at final region, steps to next kernal.
 		// If at final kernal, aborts iteration.
@@ -270,7 +273,7 @@ impl<const N: usize> StarTriangleIterator<N>
 		database.find_close_ref_region(side_b, self.angle_tolerance, &mut self.pair_b);
 		database.find_close_ref_region(side_c, self.angle_tolerance, &mut self.pair_c);
 
-		// With new arrays, the iterations must go back to the begining.
+		// With new arrays, the iterations must go back to the beginning.
 		self.index_a = -1;
 		self.index_b = 0;
 		self.index_c = 0;
@@ -280,7 +283,7 @@ impl<const N: usize> StarTriangleIterator<N>
 	
 
 
-	/// When all the possible pilots are exausted for a given input star, moves to a new input.
+	/// When all the possible pilots are exhausted for a given input star, moves to a new input.
 	/// # Arguments
 	/// * `stars` - The stars in the image.
 	/// * `database` - The database where the stars can be searched.
@@ -418,13 +421,52 @@ mod test
 		iterator.begin(angle, &stars);
 
 		let mut chunk = MockChunkIterator::new();
-		chunk.expect_next().times(1).returning(| | false);
-		chunk.expect_begin().times(1).returning(|| return);
-		chunk.expect_find_close_ref_region().times(0);
+		assert_eq!(None, iterator.next(&stars, &mut chunk));
+		assert_eq!(-1, iterator.index_p); // Pilot should be reset.
+	}
+
+	#[test]
+	// If the kernel cannot progress (due to no stars), none is returned,
+	fn test_next_one_star ( )
+	{
+		let mut stars : Vec<Equatorial> = Vec::new();
+		stars.push_back(Equatorial::north());
+		let angle = Radians(0.123);
+		const NUM_MATCH : usize = 4;
+		let mut iterator: StarTriangleIterator<NUM_MATCH> = StarTriangleIterator::new();
+		iterator.begin(angle, &stars);
+		let mut chunk = MockChunkIterator::new();
 
 		assert_eq!(None, iterator.next(&stars, &mut chunk));
 		assert_eq!(-1, iterator.index_p); // Pilot should be reset.
 	}
+
+	#[test]
+	// This should run prep_new_kernel now
+	fn test_three_star ( )
+	{
+		let mut stars : Vec<Equatorial> = Vec::new();
+		stars.push_back(Equatorial{ra: Radians(0.0), dec: Radians(0.0)});
+		stars.push_back(Equatorial{ra: Radians(1.0), dec: Radians(0.0)});
+		stars.push_back(Equatorial{ra: Radians(2.0), dec: Radians(0.0)});
+		let angle = Radians(0.123);
+		const NUM_MATCH : usize = 4;
+		let mut iterator: StarTriangleIterator<NUM_MATCH> = StarTriangleIterator::new();
+		iterator.begin(angle, &stars);
+
+		let mut chunk = MockChunkIterator::new();
+		let mut first = false;
+		chunk.expect_begin().times(2).returning(|| return); // 1 combination + final check.
+		chunk.expect_next().times(3).returning(
+			move | | { let val = first; first = !first; return val; });
+		chunk.expect_find_close_ref_region().times(6).returning(|_,_,_| ());
+
+		// Should loop until finished
+		assert_eq!(None, iterator.next(&stars, &mut chunk));
+		
+		assert_eq!(-1, iterator.index_p); // Pilot should be reset.
+	}
+
 
 
 
@@ -875,10 +917,6 @@ mod test
 		iterator.begin(angle, &stars);
 
 		let mut chunk = MockChunkIterator::new();
-		chunk.expect_find_close_ref_region().times(0);
-		chunk.expect_next().times(1).returning(|| return false);
-		chunk.expect_begin().times(1).returning(|| return );
-
 		assert!(!iterator.prep_new_kernel(&stars, &mut chunk));
 	}
 

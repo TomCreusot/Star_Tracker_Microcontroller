@@ -1,4 +1,4 @@
-//! This is a set of units and coordinates which are used throught the project.  
+//! This is a set of units and coordinates which are used throughout the project.  
 //!
 //! Try to use these as much as possible as it is more explicit and avoids silly mistakes.  
 pub mod unit_ops;

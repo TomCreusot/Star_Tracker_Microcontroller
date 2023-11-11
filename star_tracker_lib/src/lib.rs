@@ -261,7 +261,7 @@
 	
 #![allow(unused_imports)]
 // #![cfg_attr(any(test, feature = "nix"),  allow(unused_imports))] // Stops maths import error.
-#![feature(no_coverage)]                        // If a file should not be tested.
+#![feature(coverage_attribute)]                        // If a file should not be tested.
 #![feature(let_chains)]                         // Allows a while let loop better (constellation).
 #![feature(int_roundings)]                      // Allows div_ceil
 #![feature(generic_const_exprs)]                // Newer version of associated_type_defaults.

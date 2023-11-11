@@ -132,7 +132,7 @@ mod test
 	//
 
 	#[test]
-	#[no_coverage]
+	#[coverage(off)]
 	fn test_get_specular_valid_size ( )
 	{
 		let spec = Specularity::new(239.0);

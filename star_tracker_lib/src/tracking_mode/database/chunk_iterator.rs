@@ -1615,7 +1615,7 @@ fn test_regional_same_region_last_element ( )
 	}
 
 	// Tests an entire ra band.
-	#[no_coverage]
+	#[coverage(off)]
 	#[track_caller]
 	fn test_band ( iter : &mut ChunkIteratorEquatorial, angle: Radians, 
 			dec_min: Radians, dec_max: Radians, dec_eq: Radians )
@@ -2123,7 +2123,7 @@ fn test_regional_same_region_last_element ( )
 
 
 	#[test]	
-	#[cfg_attr(coverage, no_coverage)]
+	#[cfg_attr(coverage, coverage(off))]
 	// If the region wraps around, the stars on the inner side will be inside.
 	fn test_area_search_same_region_inside_wrap ( )
 	{

@@ -105,9 +105,6 @@ pub mod database;
 pub mod chunk_iterator;
 pub mod search_result;
 /// The database equation which points to the star pair database.
-///
-///
-///
 #[derive(Copy, Clone)]
 pub struct KVector
 {
@@ -123,7 +120,7 @@ pub struct KVector
 	/// The largest value in the database.
 	pub max_value     : Radians,
 
-	/// The number of kvector elements.
+	/// The number of k vector elements.
 	pub num_bins      : usize,
 }
 
@@ -132,14 +129,14 @@ pub struct KVector
 pub trait KVectorSearch
 {
 	/// Gets the index of where the value is located in the star pair list.
-	/// This may include the neigbouring bins as it is on the edge of the bin.
+	/// This may include the neighboring bins as it is on the edge of the bin.
 	/// i.e.
 	/// If the bin tolerance is 10:
 	/// [1: (0 to 10), 2: (10 to 20), 3: (20 to 30)],
 	/// If you enter 19, you will receive 2 and 3.
 	/// If you enter 15, you will receive 1, 2 and 3.
 	/// # Arguments
-	/// * `value` - The value of the angular interstar distance.
+	/// * `value` - The value of the angular inter star distance.
 	fn get_bins ( &self, value: Radians, tolerance: Radians ) -> Error<Range<usize>>;
 }
 
@@ -173,7 +170,7 @@ pub struct PyramidDatabase <'a>
 	
 	/// Pairs of stars in order of separation.  
 	/// The separation is not provided, use the `k_lookup`, `k_vector` to find stars with a specific separation.  
-	/// This points to the `cataloge`, where each element in the star pair is an index of the catalogue.
+	/// This points to the `catalogs`, where each element in the star pair is an index of the catalogue.
 	pub pairs:     &'a dyn LinearLookup<StarPair<usize>>,
 	
 	/// The stars location in the sky.
@@ -202,7 +199,7 @@ pub struct RegionalDatabase<'a>
 
 	/// Pairs of stars in order of separation.  
 	/// The separation is not provided, use the `k_lookup`, `k_vector` to find stars with a specific separation.  
-	/// This points to the `cataloge`, where each element in the star pair is an index of the catalogue.
+	/// This points to the `catalog`, where each element in the star pair is an index of the catalogue.
 	pub pairs:     &'a dyn LinearLookup<StarPair<usize>>,
 
 	/// The stars location in the sky.

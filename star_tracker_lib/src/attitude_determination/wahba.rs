@@ -111,7 +111,7 @@ mod test
 	use util::test::TestEqual;
 	use util::list::ArrayList;
 
-	#[no_coverage]
+	#[coverage(off)]
 	fn assert_close ( a : Decimal, b : Decimal )
 	{
 		if a.test_equal(&b)
@@ -121,7 +121,7 @@ mod test
 	}
 
 
-	#[no_coverage]
+	#[coverage(off)]
 	fn gen_b ( ) -> Matrix<3,3>
 	{
 		let mut b : Matrix<3,3> = Matrix::new();

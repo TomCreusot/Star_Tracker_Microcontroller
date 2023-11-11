@@ -136,7 +136,7 @@ reset; cargo run --bin demo 16mm_checker_2
 	
 	for sample in samples
 	{
-		for img in &sample.file_img
+		for image_index in 0..sample.file_img.len()
 		{
 
 
@@ -144,7 +144,7 @@ reset; cargo run --bin demo 16mm_checker_2
 			let mut is_exclusive = false;
 			for i in 1..exclusive_folders.len()
 			{
-				is_exclusive |= sample.file_img[0].contains(&exclusive_folders[i]);
+				is_exclusive |= sample.file_img[image_index].contains(&exclusive_folders[i]);
 			}
 			if !is_exclusive { continue; }
 
@@ -155,12 +155,12 @@ reset; cargo run --bin demo 16mm_checker_2
 			let fov : Radians;
 			if let Some(fov_) = fov_file { fov = fov_; }
 			else                         { continue;   }
-			println!("\n\n\n\n{}, fov: {}", sample.dir, fov.to_degrees());
+			println!("\n\n\n\n{}, fov: {}", sample.file_img[image_index], fov.to_degrees());
 			
 			let region_size = fov / 2.0;
 			let region_num = 8;
 			
-			let mut img = CVImage::read(&img);
+			let mut img = CVImage::read(&sample.file_img[image_index]);
 			let dark_frame = CVImage::read(&sample.file_dark);
 			
 			let magnitude = DatabaseGenerator::recommended_magnitude(fov);
@@ -288,7 +288,7 @@ reset; cargo run --bin demo 16mm_checker_2
 			// Finds a `constellation` which is 4 stars forming a pyramid shape.
 			// Refer to star_tracker_lib::tracking_mode::{mod, Constellation::find}
 			let mut found_all : Vec<Match<usize>> = Vec::new();
-			let success = Constellation::find_all (
+			let success = Constellation::find (
 				&stars_3d, &mut database_iterator,
 				&mut StarTriangleIterator::<10000>::new(),
 				&mut Specularity::default(),

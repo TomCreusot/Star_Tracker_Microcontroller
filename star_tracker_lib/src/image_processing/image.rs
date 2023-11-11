@@ -263,7 +263,7 @@ fn test_reset ( )
 	}
 
 	#[test]
-	#[cfg_attr(coverage, no_coverage)]
+	#[cfg_attr(coverage, coverage(off))]
 	fn test_valid_pixel_unsafe ( )
 	{
 		let mut arr = get_image();
@@ -335,7 +335,7 @@ fn test_reset ( )
 
 //										~ copy_from ~											 //
 	#[test]
-	fn test_copy_to ( )
+	fn test_copy_from ( )
 	{
 		let mut arr_1 = get_image();
 		let mut arr_2 = get_image();
@@ -353,7 +353,7 @@ fn test_reset ( )
 	}
 
 	#[test]
-	fn test_copy_to_error ( )
+	fn test_copy_from_error ( )
 	{
 		let mut arr_1 = get_image();
 		let mut arr_2 = get_image();

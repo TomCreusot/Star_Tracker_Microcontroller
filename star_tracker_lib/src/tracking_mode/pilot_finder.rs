@@ -180,7 +180,7 @@ mod test
 	
 	// Creates a search result with error 0.
 	// Input the star pair first and second pos.
-	#[no_coverage]
+	#[coverage(off)]
 	fn sr ( a: usize, b: usize ) -> SearchResult
 	{
 		return SearchResult{result: StarPair(a, b), error: 0.0};

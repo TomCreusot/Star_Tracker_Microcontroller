@@ -407,7 +407,7 @@ mod test
 	use crate::util::aliases::Decimal;
 	use crate::util::aliases::Byte;
 
-	#[no_coverage]
+	#[cfg_attr(coverage, coverage(off))]
 	fn assert_close ( a: Decimal, b: Decimal )
 	{
 		if (a - b).abs() > DECIMAL_PRECISION_TEST
@@ -902,7 +902,7 @@ mod test
 
 //										~ sort_descending_intensity ~							 //
 	#[test]
-	#[cfg_attr(coverage, no_coverage)]
+	#[cfg_attr(coverage, coverage(off))]
 	fn test_sort_descending_intensity ( )
 	{
 		let brightest = Blob{size: 0, intensity: 1, centroid: Vector2{x: 0.0, y: 0.0}};
@@ -913,7 +913,7 @@ mod test
 
 //										~ sort_descending_size_intensity ~						 //
 	#[test]
-	#[cfg_attr(coverage, no_coverage)]
+	#[cfg_attr(coverage, coverage(off))]
 	fn test_sort_descending_size_intensity ( )
 	{
 		let brightest = Blob{size: 10, intensity: 1, centroid: Vector2{x: 0.0, y: 0.0}};
