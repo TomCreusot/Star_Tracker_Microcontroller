@@ -139,8 +139,8 @@ impl <T, const N: usize> LinearLookup<T> for [T; N] where T: Clone, T: Copy
 #[repr(C)]
 pub struct CArray<T>
 {
-	array: *mut T,
-	size : usize
+	pub array: *mut T,
+	pub size : usize
 }
 
 impl <T> CArray<T>

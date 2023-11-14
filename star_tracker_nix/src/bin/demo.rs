@@ -234,6 +234,7 @@ reset; cargo run --bin demo 16mm_checker_2
 			let radius    = 10;
 			let px_pt = Point::new(stars_2d.get(i).x as i32, stars_2d.get(i).y as i32);
 			circle(&mut img_thresh.0, px_pt, radius, color, thickness, 1, 0).unwrap();
+			println!("{:.2} {:.2}", stars_2d[i].x, stars_2d[i].y);
 		}
 
 		let _ = imshow("Thresholded", &img_thresh.0);
@@ -353,6 +354,7 @@ reset; cargo run --bin demo 16mm_checker_2
 
 			println!();
 			println!("Found Center: {}", world_center.to_equatorial().formatted());
+			println!("Found Center: {}", world_center.to_equatorial());
 			
 			
 			if sample.file_log != "" && sample.file_img.size() == 1

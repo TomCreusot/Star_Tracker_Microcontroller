@@ -365,10 +365,12 @@ pub struct ThresholdPercent
 pub struct ThresholdGrid <const NUM_H: usize, const NUM_V: usize>
 {
 	/// The size of the image thresholded.
-	size : Pixel,
-
+	/// DONT TOUCH.
+	pub size : Pixel,
+	
 	/// Each grid cell manages its own threshold.
-	cells : [[Byte; NUM_H]; NUM_V],
+	/// DONT TOUCH.
+	pub cells : [[Byte; NUM_H]; NUM_V],
 }
 
 

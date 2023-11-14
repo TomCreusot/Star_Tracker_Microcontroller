@@ -1,0 +1,1016 @@
+ARM GAS  /tmp/ccTwI3Zw.s 			page 1
+
+
+   1              		.cpu cortex-m7
+   2              		.eabi_attribute 27, 1
+   3              		.eabi_attribute 28, 1
+   4              		.eabi_attribute 20, 1
+   5              		.eabi_attribute 21, 1
+   6              		.eabi_attribute 23, 3
+   7              		.eabi_attribute 24, 1
+   8              		.eabi_attribute 25, 1
+   9              		.eabi_attribute 26, 1
+  10              		.eabi_attribute 30, 1
+  11              		.eabi_attribute 34, 1
+  12              		.eabi_attribute 18, 4
+  13              		.file	"system_stm32h7xx_dualcore_boot_cm4_cm7.c"
+  14              		.text
+  15              	.Ltext0:
+  16              		.cfi_sections	.debug_frame
+  17              		.section	.text.SystemInit,"ax",%progbits
+  18              		.align	1
+  19              		.global	SystemInit
+  20              		.arch armv7e-m
+  21              		.syntax unified
+  22              		.thumb
+  23              		.thumb_func
+  24              		.fpu fpv4-sp-d16
+  26              	SystemInit:
+  27              	.LFB132:
+  28              		.file 1 "../../Common/Src/system_stm32h7xx_dualcore_boot_cm4_cm7.c"
+   1:../../Common/Src/system_stm32h7xx_dualcore_boot_cm4_cm7.c **** /**
+   2:../../Common/Src/system_stm32h7xx_dualcore_boot_cm4_cm7.c ****   ******************************************************************************
+   3:../../Common/Src/system_stm32h7xx_dualcore_boot_cm4_cm7.c ****   * @file    system_stm32h7xx_dualcore_boot_cm4_cm7.c
+   4:../../Common/Src/system_stm32h7xx_dualcore_boot_cm4_cm7.c ****   * @author  MCD Application Team
+   5:../../Common/Src/system_stm32h7xx_dualcore_boot_cm4_cm7.c ****   * @brief   CMSIS Cortex-Mx Device Peripheral Access Layer System Source File.
+   6:../../Common/Src/system_stm32h7xx_dualcore_boot_cm4_cm7.c ****   *          This provides system initialization template function is case of
+   7:../../Common/Src/system_stm32h7xx_dualcore_boot_cm4_cm7.c ****   *          an application using a dual core STM32H7 device where
+   8:../../Common/Src/system_stm32h7xx_dualcore_boot_cm4_cm7.c ****   *          Cortex-M7 and Cortex-M4 boot are enabled at the FLASH option bytes
+   9:../../Common/Src/system_stm32h7xx_dualcore_boot_cm4_cm7.c ****   *
+  10:../../Common/Src/system_stm32h7xx_dualcore_boot_cm4_cm7.c ****   *   This file provides two functions and one global variable to be called from
+  11:../../Common/Src/system_stm32h7xx_dualcore_boot_cm4_cm7.c ****   *   user application:
+  12:../../Common/Src/system_stm32h7xx_dualcore_boot_cm4_cm7.c ****   *      - SystemInit(): This function is called at startup just after reset and
+  13:../../Common/Src/system_stm32h7xx_dualcore_boot_cm4_cm7.c ****   *                      before branch to main program. This call is made inside
+  14:../../Common/Src/system_stm32h7xx_dualcore_boot_cm4_cm7.c ****   *                      the "startup_stm32h7xx.s" file.
+  15:../../Common/Src/system_stm32h7xx_dualcore_boot_cm4_cm7.c ****   *
+  16:../../Common/Src/system_stm32h7xx_dualcore_boot_cm4_cm7.c ****   *      - SystemCoreClock variable: Contains the core clock, it can be used
+  17:../../Common/Src/system_stm32h7xx_dualcore_boot_cm4_cm7.c ****   *                                  by the user application to setup the SysTick
+  18:../../Common/Src/system_stm32h7xx_dualcore_boot_cm4_cm7.c ****   *                                  timer or configure other parameters.
+  19:../../Common/Src/system_stm32h7xx_dualcore_boot_cm4_cm7.c ****   *
+  20:../../Common/Src/system_stm32h7xx_dualcore_boot_cm4_cm7.c ****   *      - SystemCoreClockUpdate(): Updates the variable SystemCoreClock and must
+  21:../../Common/Src/system_stm32h7xx_dualcore_boot_cm4_cm7.c ****   *                                 be called whenever the core clock is changed
+  22:../../Common/Src/system_stm32h7xx_dualcore_boot_cm4_cm7.c ****   *                                 during program execution.
+  23:../../Common/Src/system_stm32h7xx_dualcore_boot_cm4_cm7.c ****   *
+  24:../../Common/Src/system_stm32h7xx_dualcore_boot_cm4_cm7.c ****   *
+  25:../../Common/Src/system_stm32h7xx_dualcore_boot_cm4_cm7.c ****   ******************************************************************************
+  26:../../Common/Src/system_stm32h7xx_dualcore_boot_cm4_cm7.c ****   * @attention
+  27:../../Common/Src/system_stm32h7xx_dualcore_boot_cm4_cm7.c ****   *
+  28:../../Common/Src/system_stm32h7xx_dualcore_boot_cm4_cm7.c ****   * Copyright (c) 2017 STMicroelectronics.
+  29:../../Common/Src/system_stm32h7xx_dualcore_boot_cm4_cm7.c ****   * All rights reserved.
+  30:../../Common/Src/system_stm32h7xx_dualcore_boot_cm4_cm7.c ****   *
+ARM GAS  /tmp/ccTwI3Zw.s 			page 2
+
+
+  31:../../Common/Src/system_stm32h7xx_dualcore_boot_cm4_cm7.c ****   * This software is licensed under terms that can be found in the LICENSE file
+  32:../../Common/Src/system_stm32h7xx_dualcore_boot_cm4_cm7.c ****   * in the root directory of this software component.
+  33:../../Common/Src/system_stm32h7xx_dualcore_boot_cm4_cm7.c ****   * If no LICENSE file comes with this software, it is provided AS-IS.
+  34:../../Common/Src/system_stm32h7xx_dualcore_boot_cm4_cm7.c ****   *
+  35:../../Common/Src/system_stm32h7xx_dualcore_boot_cm4_cm7.c ****   ******************************************************************************
+  36:../../Common/Src/system_stm32h7xx_dualcore_boot_cm4_cm7.c ****   */
+  37:../../Common/Src/system_stm32h7xx_dualcore_boot_cm4_cm7.c **** 
+  38:../../Common/Src/system_stm32h7xx_dualcore_boot_cm4_cm7.c **** /** @addtogroup CMSIS
+  39:../../Common/Src/system_stm32h7xx_dualcore_boot_cm4_cm7.c ****   * @{
+  40:../../Common/Src/system_stm32h7xx_dualcore_boot_cm4_cm7.c ****   */
+  41:../../Common/Src/system_stm32h7xx_dualcore_boot_cm4_cm7.c **** 
+  42:../../Common/Src/system_stm32h7xx_dualcore_boot_cm4_cm7.c **** /** @addtogroup stm32h7xx_system
+  43:../../Common/Src/system_stm32h7xx_dualcore_boot_cm4_cm7.c ****   * @{
+  44:../../Common/Src/system_stm32h7xx_dualcore_boot_cm4_cm7.c ****   */
+  45:../../Common/Src/system_stm32h7xx_dualcore_boot_cm4_cm7.c **** 
+  46:../../Common/Src/system_stm32h7xx_dualcore_boot_cm4_cm7.c **** /** @addtogroup STM32H7xx_System_Private_Includes
+  47:../../Common/Src/system_stm32h7xx_dualcore_boot_cm4_cm7.c ****   * @{
+  48:../../Common/Src/system_stm32h7xx_dualcore_boot_cm4_cm7.c ****   */
+  49:../../Common/Src/system_stm32h7xx_dualcore_boot_cm4_cm7.c **** 
+  50:../../Common/Src/system_stm32h7xx_dualcore_boot_cm4_cm7.c **** #include "stm32h7xx.h"
+  51:../../Common/Src/system_stm32h7xx_dualcore_boot_cm4_cm7.c **** #include <math.h>
+  52:../../Common/Src/system_stm32h7xx_dualcore_boot_cm4_cm7.c **** 
+  53:../../Common/Src/system_stm32h7xx_dualcore_boot_cm4_cm7.c **** #if !defined  (HSE_VALUE)
+  54:../../Common/Src/system_stm32h7xx_dualcore_boot_cm4_cm7.c **** #define HSE_VALUE    ((uint32_t)25000000) /*!< Value of the External oscillator in Hz */
+  55:../../Common/Src/system_stm32h7xx_dualcore_boot_cm4_cm7.c **** #endif /* HSE_VALUE */
+  56:../../Common/Src/system_stm32h7xx_dualcore_boot_cm4_cm7.c **** 
+  57:../../Common/Src/system_stm32h7xx_dualcore_boot_cm4_cm7.c **** #if !defined  (CSI_VALUE)
+  58:../../Common/Src/system_stm32h7xx_dualcore_boot_cm4_cm7.c ****   #define CSI_VALUE    ((uint32_t)4000000) /*!< Value of the Internal oscillator in Hz*/
+  59:../../Common/Src/system_stm32h7xx_dualcore_boot_cm4_cm7.c **** #endif /* CSI_VALUE */
+  60:../../Common/Src/system_stm32h7xx_dualcore_boot_cm4_cm7.c **** 
+  61:../../Common/Src/system_stm32h7xx_dualcore_boot_cm4_cm7.c **** #if !defined  (HSI_VALUE)
+  62:../../Common/Src/system_stm32h7xx_dualcore_boot_cm4_cm7.c ****   #define HSI_VALUE    ((uint32_t)64000000) /*!< Value of the Internal oscillator in Hz*/
+  63:../../Common/Src/system_stm32h7xx_dualcore_boot_cm4_cm7.c **** #endif /* HSI_VALUE */
+  64:../../Common/Src/system_stm32h7xx_dualcore_boot_cm4_cm7.c **** 
+  65:../../Common/Src/system_stm32h7xx_dualcore_boot_cm4_cm7.c **** 
+  66:../../Common/Src/system_stm32h7xx_dualcore_boot_cm4_cm7.c **** /**
+  67:../../Common/Src/system_stm32h7xx_dualcore_boot_cm4_cm7.c ****   * @}
+  68:../../Common/Src/system_stm32h7xx_dualcore_boot_cm4_cm7.c ****   */
+  69:../../Common/Src/system_stm32h7xx_dualcore_boot_cm4_cm7.c **** 
+  70:../../Common/Src/system_stm32h7xx_dualcore_boot_cm4_cm7.c **** /** @addtogroup STM32H7xx_System_Private_TypesDefinitions
+  71:../../Common/Src/system_stm32h7xx_dualcore_boot_cm4_cm7.c ****   * @{
+  72:../../Common/Src/system_stm32h7xx_dualcore_boot_cm4_cm7.c ****   */
+  73:../../Common/Src/system_stm32h7xx_dualcore_boot_cm4_cm7.c **** 
+  74:../../Common/Src/system_stm32h7xx_dualcore_boot_cm4_cm7.c **** /**
+  75:../../Common/Src/system_stm32h7xx_dualcore_boot_cm4_cm7.c ****   * @}
+  76:../../Common/Src/system_stm32h7xx_dualcore_boot_cm4_cm7.c ****   */
+  77:../../Common/Src/system_stm32h7xx_dualcore_boot_cm4_cm7.c **** 
+  78:../../Common/Src/system_stm32h7xx_dualcore_boot_cm4_cm7.c **** /** @addtogroup STM32H7xx_System_Private_Defines
+  79:../../Common/Src/system_stm32h7xx_dualcore_boot_cm4_cm7.c ****   * @{
+  80:../../Common/Src/system_stm32h7xx_dualcore_boot_cm4_cm7.c ****   */
+  81:../../Common/Src/system_stm32h7xx_dualcore_boot_cm4_cm7.c **** 
+  82:../../Common/Src/system_stm32h7xx_dualcore_boot_cm4_cm7.c **** /************************* Miscellaneous Configuration ************************/
+  83:../../Common/Src/system_stm32h7xx_dualcore_boot_cm4_cm7.c **** /* Note: Following vector table addresses must be defined in line with linker
+  84:../../Common/Src/system_stm32h7xx_dualcore_boot_cm4_cm7.c ****          configuration. */
+  85:../../Common/Src/system_stm32h7xx_dualcore_boot_cm4_cm7.c **** /*!< Uncomment the following line if you need to relocate the vector table
+  86:../../Common/Src/system_stm32h7xx_dualcore_boot_cm4_cm7.c ****      anywhere in FLASH BANK1 or AXI SRAM, else the vector table is kept at the automatic
+  87:../../Common/Src/system_stm32h7xx_dualcore_boot_cm4_cm7.c ****      remap of boot address selected */
+ARM GAS  /tmp/ccTwI3Zw.s 			page 3
+
+
+  88:../../Common/Src/system_stm32h7xx_dualcore_boot_cm4_cm7.c **** /* #define USER_VECT_TAB_ADDRESS */
+  89:../../Common/Src/system_stm32h7xx_dualcore_boot_cm4_cm7.c **** 
+  90:../../Common/Src/system_stm32h7xx_dualcore_boot_cm4_cm7.c **** #if defined(USER_VECT_TAB_ADDRESS)
+  91:../../Common/Src/system_stm32h7xx_dualcore_boot_cm4_cm7.c **** #if defined(CORE_CM4)
+  92:../../Common/Src/system_stm32h7xx_dualcore_boot_cm4_cm7.c **** /*!< Uncomment the following line if you need to relocate your vector Table
+  93:../../Common/Src/system_stm32h7xx_dualcore_boot_cm4_cm7.c ****      in D2 AXI SRAM else user remap will be done in FLASH BANK2. */
+  94:../../Common/Src/system_stm32h7xx_dualcore_boot_cm4_cm7.c **** /* #define VECT_TAB_SRAM */
+  95:../../Common/Src/system_stm32h7xx_dualcore_boot_cm4_cm7.c **** #if defined(VECT_TAB_SRAM)
+  96:../../Common/Src/system_stm32h7xx_dualcore_boot_cm4_cm7.c **** #define VECT_TAB_BASE_ADDRESS   D2_AXISRAM_BASE   /*!< Vector Table base address field.
+  97:../../Common/Src/system_stm32h7xx_dualcore_boot_cm4_cm7.c ****                                                        This value must be a multiple of 0x400. */
+  98:../../Common/Src/system_stm32h7xx_dualcore_boot_cm4_cm7.c **** #define VECT_TAB_OFFSET         0x00000000U       /*!< Vector Table base offset field.
+  99:../../Common/Src/system_stm32h7xx_dualcore_boot_cm4_cm7.c ****                                                        This value must be a multiple of 0x400. */
+ 100:../../Common/Src/system_stm32h7xx_dualcore_boot_cm4_cm7.c **** #else
+ 101:../../Common/Src/system_stm32h7xx_dualcore_boot_cm4_cm7.c **** #define VECT_TAB_BASE_ADDRESS   FLASH_BANK2_BASE  /*!< Vector Table base address field.
+ 102:../../Common/Src/system_stm32h7xx_dualcore_boot_cm4_cm7.c ****                                                        This value must be a multiple of 0x400. */
+ 103:../../Common/Src/system_stm32h7xx_dualcore_boot_cm4_cm7.c **** #define VECT_TAB_OFFSET         0x00000000U       /*!< Vector Table base offset field.
+ 104:../../Common/Src/system_stm32h7xx_dualcore_boot_cm4_cm7.c ****                                                        This value must be a multiple of 0x400. */
+ 105:../../Common/Src/system_stm32h7xx_dualcore_boot_cm4_cm7.c **** #endif /* VECT_TAB_SRAM */
+ 106:../../Common/Src/system_stm32h7xx_dualcore_boot_cm4_cm7.c **** #elif defined(CORE_CM7)
+ 107:../../Common/Src/system_stm32h7xx_dualcore_boot_cm4_cm7.c **** /*!< Uncomment the following line if you need to relocate your vector Table
+ 108:../../Common/Src/system_stm32h7xx_dualcore_boot_cm4_cm7.c ****      in D1 AXI SRAM else user remap will be done in FLASH BANK1. */
+ 109:../../Common/Src/system_stm32h7xx_dualcore_boot_cm4_cm7.c **** /* #define VECT_TAB_SRAM */
+ 110:../../Common/Src/system_stm32h7xx_dualcore_boot_cm4_cm7.c **** #if defined(VECT_TAB_SRAM)
+ 111:../../Common/Src/system_stm32h7xx_dualcore_boot_cm4_cm7.c **** #define VECT_TAB_BASE_ADDRESS   D1_AXISRAM_BASE   /*!< Vector Table base address field.
+ 112:../../Common/Src/system_stm32h7xx_dualcore_boot_cm4_cm7.c ****                                                        This value must be a multiple of 0x400. */
+ 113:../../Common/Src/system_stm32h7xx_dualcore_boot_cm4_cm7.c **** #define VECT_TAB_OFFSET         0x00000000U       /*!< Vector Table base offset field.
+ 114:../../Common/Src/system_stm32h7xx_dualcore_boot_cm4_cm7.c ****                                                        This value must be a multiple of 0x400. */
+ 115:../../Common/Src/system_stm32h7xx_dualcore_boot_cm4_cm7.c **** #else
+ 116:../../Common/Src/system_stm32h7xx_dualcore_boot_cm4_cm7.c **** #define VECT_TAB_BASE_ADDRESS   FLASH_BANK1_BASE  /*!< Vector Table base address field.
+ 117:../../Common/Src/system_stm32h7xx_dualcore_boot_cm4_cm7.c ****                                                        This value must be a multiple of 0x400. */
+ 118:../../Common/Src/system_stm32h7xx_dualcore_boot_cm4_cm7.c **** #define VECT_TAB_OFFSET         0x00000000U       /*!< Vector Table base offset field.
+ 119:../../Common/Src/system_stm32h7xx_dualcore_boot_cm4_cm7.c ****                                                        This value must be a multiple of 0x400. */
+ 120:../../Common/Src/system_stm32h7xx_dualcore_boot_cm4_cm7.c **** #endif /* VECT_TAB_SRAM */
+ 121:../../Common/Src/system_stm32h7xx_dualcore_boot_cm4_cm7.c **** #else
+ 122:../../Common/Src/system_stm32h7xx_dualcore_boot_cm4_cm7.c **** #error Please #define CORE_CM4 or CORE_CM7
+ 123:../../Common/Src/system_stm32h7xx_dualcore_boot_cm4_cm7.c **** #endif /* CORE_CM4 */
+ 124:../../Common/Src/system_stm32h7xx_dualcore_boot_cm4_cm7.c **** #endif /* USER_VECT_TAB_ADDRESS */
+ 125:../../Common/Src/system_stm32h7xx_dualcore_boot_cm4_cm7.c **** /******************************************************************************/
+ 126:../../Common/Src/system_stm32h7xx_dualcore_boot_cm4_cm7.c **** 
+ 127:../../Common/Src/system_stm32h7xx_dualcore_boot_cm4_cm7.c **** /**
+ 128:../../Common/Src/system_stm32h7xx_dualcore_boot_cm4_cm7.c ****   * @}
+ 129:../../Common/Src/system_stm32h7xx_dualcore_boot_cm4_cm7.c ****   */
+ 130:../../Common/Src/system_stm32h7xx_dualcore_boot_cm4_cm7.c **** 
+ 131:../../Common/Src/system_stm32h7xx_dualcore_boot_cm4_cm7.c **** /** @addtogroup STM32H7xx_System_Private_Macros
+ 132:../../Common/Src/system_stm32h7xx_dualcore_boot_cm4_cm7.c ****   * @{
+ 133:../../Common/Src/system_stm32h7xx_dualcore_boot_cm4_cm7.c ****   */
+ 134:../../Common/Src/system_stm32h7xx_dualcore_boot_cm4_cm7.c **** 
+ 135:../../Common/Src/system_stm32h7xx_dualcore_boot_cm4_cm7.c **** /**
+ 136:../../Common/Src/system_stm32h7xx_dualcore_boot_cm4_cm7.c ****   * @}
+ 137:../../Common/Src/system_stm32h7xx_dualcore_boot_cm4_cm7.c ****   */
+ 138:../../Common/Src/system_stm32h7xx_dualcore_boot_cm4_cm7.c **** 
+ 139:../../Common/Src/system_stm32h7xx_dualcore_boot_cm4_cm7.c **** /** @addtogroup STM32H7xx_System_Private_Variables
+ 140:../../Common/Src/system_stm32h7xx_dualcore_boot_cm4_cm7.c ****   * @{
+ 141:../../Common/Src/system_stm32h7xx_dualcore_boot_cm4_cm7.c ****   */
+ 142:../../Common/Src/system_stm32h7xx_dualcore_boot_cm4_cm7.c ****   /* This variable is updated in three ways:
+ 143:../../Common/Src/system_stm32h7xx_dualcore_boot_cm4_cm7.c ****       1) by calling CMSIS function SystemCoreClockUpdate()
+ 144:../../Common/Src/system_stm32h7xx_dualcore_boot_cm4_cm7.c ****       2) by calling HAL API function HAL_RCC_GetHCLKFreq()
+ARM GAS  /tmp/ccTwI3Zw.s 			page 4
+
+
+ 145:../../Common/Src/system_stm32h7xx_dualcore_boot_cm4_cm7.c ****       3) each time HAL_RCC_ClockConfig() is called to configure the system clock frequency
+ 146:../../Common/Src/system_stm32h7xx_dualcore_boot_cm4_cm7.c ****          Note: If you use this function to configure the system clock; then there
+ 147:../../Common/Src/system_stm32h7xx_dualcore_boot_cm4_cm7.c ****                is no need to call the 2 first functions listed above, since SystemCoreClock
+ 148:../../Common/Src/system_stm32h7xx_dualcore_boot_cm4_cm7.c ****                variable is updated automatically.
+ 149:../../Common/Src/system_stm32h7xx_dualcore_boot_cm4_cm7.c ****   */
+ 150:../../Common/Src/system_stm32h7xx_dualcore_boot_cm4_cm7.c ****   uint32_t SystemCoreClock = 64000000;
+ 151:../../Common/Src/system_stm32h7xx_dualcore_boot_cm4_cm7.c ****   uint32_t SystemD2Clock = 64000000;
+ 152:../../Common/Src/system_stm32h7xx_dualcore_boot_cm4_cm7.c ****   const  uint8_t D1CorePrescTable[16] = {0, 0, 0, 0, 1, 2, 3, 4, 1, 2, 3, 4, 6, 7, 8, 9};
+ 153:../../Common/Src/system_stm32h7xx_dualcore_boot_cm4_cm7.c **** 
+ 154:../../Common/Src/system_stm32h7xx_dualcore_boot_cm4_cm7.c **** /**
+ 155:../../Common/Src/system_stm32h7xx_dualcore_boot_cm4_cm7.c ****   * @}
+ 156:../../Common/Src/system_stm32h7xx_dualcore_boot_cm4_cm7.c ****   */
+ 157:../../Common/Src/system_stm32h7xx_dualcore_boot_cm4_cm7.c **** 
+ 158:../../Common/Src/system_stm32h7xx_dualcore_boot_cm4_cm7.c **** /** @addtogroup STM32H7xx_System_Private_FunctionPrototypes
+ 159:../../Common/Src/system_stm32h7xx_dualcore_boot_cm4_cm7.c ****   * @{
+ 160:../../Common/Src/system_stm32h7xx_dualcore_boot_cm4_cm7.c ****   */
+ 161:../../Common/Src/system_stm32h7xx_dualcore_boot_cm4_cm7.c **** 
+ 162:../../Common/Src/system_stm32h7xx_dualcore_boot_cm4_cm7.c **** /**
+ 163:../../Common/Src/system_stm32h7xx_dualcore_boot_cm4_cm7.c ****   * @}
+ 164:../../Common/Src/system_stm32h7xx_dualcore_boot_cm4_cm7.c ****   */
+ 165:../../Common/Src/system_stm32h7xx_dualcore_boot_cm4_cm7.c **** 
+ 166:../../Common/Src/system_stm32h7xx_dualcore_boot_cm4_cm7.c **** /** @addtogroup STM32H7xx_System_Private_Functions
+ 167:../../Common/Src/system_stm32h7xx_dualcore_boot_cm4_cm7.c ****   * @{
+ 168:../../Common/Src/system_stm32h7xx_dualcore_boot_cm4_cm7.c ****   */
+ 169:../../Common/Src/system_stm32h7xx_dualcore_boot_cm4_cm7.c **** 
+ 170:../../Common/Src/system_stm32h7xx_dualcore_boot_cm4_cm7.c **** /**
+ 171:../../Common/Src/system_stm32h7xx_dualcore_boot_cm4_cm7.c ****   * @brief  Setup the microcontroller system
+ 172:../../Common/Src/system_stm32h7xx_dualcore_boot_cm4_cm7.c ****   *         Initialize the FPU setting and  vector table location
+ 173:../../Common/Src/system_stm32h7xx_dualcore_boot_cm4_cm7.c ****   *         configuration.
+ 174:../../Common/Src/system_stm32h7xx_dualcore_boot_cm4_cm7.c ****   * @param  None
+ 175:../../Common/Src/system_stm32h7xx_dualcore_boot_cm4_cm7.c ****   * @retval None
+ 176:../../Common/Src/system_stm32h7xx_dualcore_boot_cm4_cm7.c ****   */
+ 177:../../Common/Src/system_stm32h7xx_dualcore_boot_cm4_cm7.c **** void SystemInit (void)
+ 178:../../Common/Src/system_stm32h7xx_dualcore_boot_cm4_cm7.c **** {
+  29              		.loc 1 178 1 view -0
+  30              		.cfi_startproc
+  31              		@ args = 0, pretend = 0, frame = 0
+  32              		@ frame_needed = 0, uses_anonymous_args = 0
+  33              		@ link register save eliminated.
+ 179:../../Common/Src/system_stm32h7xx_dualcore_boot_cm4_cm7.c ****   /* FPU settings ------------------------------------------------------------*/
+ 180:../../Common/Src/system_stm32h7xx_dualcore_boot_cm4_cm7.c ****   #if (__FPU_PRESENT == 1) && (__FPU_USED == 1)
+ 181:../../Common/Src/system_stm32h7xx_dualcore_boot_cm4_cm7.c ****     SCB->CPACR |= ((3UL << (10*2))|(3UL << (11*2)));  /* set CP10 and CP11 Full Access */
+  34              		.loc 1 181 5 view .LVU1
+  35              		.loc 1 181 16 is_stmt 0 view .LVU2
+  36 0000 054B     		ldr	r3, .L2
+  37 0002 D3F88820 		ldr	r2, [r3, #136]
+  38 0006 42F47002 		orr	r2, r2, #15728640
+  39 000a C3F88820 		str	r2, [r3, #136]
+ 182:../../Common/Src/system_stm32h7xx_dualcore_boot_cm4_cm7.c ****   #endif
+ 183:../../Common/Src/system_stm32h7xx_dualcore_boot_cm4_cm7.c **** 
+ 184:../../Common/Src/system_stm32h7xx_dualcore_boot_cm4_cm7.c ****     /*SEVONPEND enabled so that an interrupt coming from the CPU(n) interrupt signal is
+ 185:../../Common/Src/system_stm32h7xx_dualcore_boot_cm4_cm7.c ****      detectable by the CPU after a WFI/WFE instruction.*/
+ 186:../../Common/Src/system_stm32h7xx_dualcore_boot_cm4_cm7.c ****  SCB->SCR |= SCB_SCR_SEVONPEND_Msk;
+  40              		.loc 1 186 2 is_stmt 1 view .LVU3
+  41              		.loc 1 186 11 is_stmt 0 view .LVU4
+  42 000e 1A69     		ldr	r2, [r3, #16]
+  43 0010 42F01002 		orr	r2, r2, #16
+ARM GAS  /tmp/ccTwI3Zw.s 			page 5
+
+
+  44 0014 1A61     		str	r2, [r3, #16]
+ 187:../../Common/Src/system_stm32h7xx_dualcore_boot_cm4_cm7.c **** 
+ 188:../../Common/Src/system_stm32h7xx_dualcore_boot_cm4_cm7.c **** #if defined(CORE_CM7)
+ 189:../../Common/Src/system_stm32h7xx_dualcore_boot_cm4_cm7.c ****   /* Reset the RCC clock configuration to the default reset state ------------*/
+ 190:../../Common/Src/system_stm32h7xx_dualcore_boot_cm4_cm7.c ****    /* Increasing the CPU frequency */
+ 191:../../Common/Src/system_stm32h7xx_dualcore_boot_cm4_cm7.c ****   if(FLASH_LATENCY_DEFAULT  > (READ_BIT((FLASH->ACR), FLASH_ACR_LATENCY)))
+ 192:../../Common/Src/system_stm32h7xx_dualcore_boot_cm4_cm7.c ****   {
+ 193:../../Common/Src/system_stm32h7xx_dualcore_boot_cm4_cm7.c ****     /* Program the new number of wait states to the LATENCY bits in the FLASH_ACR register */
+ 194:../../Common/Src/system_stm32h7xx_dualcore_boot_cm4_cm7.c ****     MODIFY_REG(FLASH->ACR, FLASH_ACR_LATENCY, (uint32_t)(FLASH_LATENCY_DEFAULT));
+ 195:../../Common/Src/system_stm32h7xx_dualcore_boot_cm4_cm7.c ****   }
+ 196:../../Common/Src/system_stm32h7xx_dualcore_boot_cm4_cm7.c **** 
+ 197:../../Common/Src/system_stm32h7xx_dualcore_boot_cm4_cm7.c ****   /* Set HSION bit */
+ 198:../../Common/Src/system_stm32h7xx_dualcore_boot_cm4_cm7.c ****   RCC->CR |= RCC_CR_HSION;
+ 199:../../Common/Src/system_stm32h7xx_dualcore_boot_cm4_cm7.c **** 
+ 200:../../Common/Src/system_stm32h7xx_dualcore_boot_cm4_cm7.c ****   /* Reset CFGR register */
+ 201:../../Common/Src/system_stm32h7xx_dualcore_boot_cm4_cm7.c ****   RCC->CFGR = 0x00000000;
+ 202:../../Common/Src/system_stm32h7xx_dualcore_boot_cm4_cm7.c **** 
+ 203:../../Common/Src/system_stm32h7xx_dualcore_boot_cm4_cm7.c ****   /* Reset HSEON, HSECSSON, CSION, HSI48ON, CSIKERON, PLL1ON, PLL2ON and PLL3ON bits */
+ 204:../../Common/Src/system_stm32h7xx_dualcore_boot_cm4_cm7.c ****   RCC->CR &= 0xEAF6ED7FU;
+ 205:../../Common/Src/system_stm32h7xx_dualcore_boot_cm4_cm7.c **** 
+ 206:../../Common/Src/system_stm32h7xx_dualcore_boot_cm4_cm7.c ****    /* Decreasing the number of wait states because of lower CPU frequency */
+ 207:../../Common/Src/system_stm32h7xx_dualcore_boot_cm4_cm7.c ****   if(FLASH_LATENCY_DEFAULT  < (READ_BIT((FLASH->ACR), FLASH_ACR_LATENCY)))
+ 208:../../Common/Src/system_stm32h7xx_dualcore_boot_cm4_cm7.c ****   {
+ 209:../../Common/Src/system_stm32h7xx_dualcore_boot_cm4_cm7.c ****     /* Program the new number of wait states to the LATENCY bits in the FLASH_ACR register */
+ 210:../../Common/Src/system_stm32h7xx_dualcore_boot_cm4_cm7.c ****     MODIFY_REG(FLASH->ACR, FLASH_ACR_LATENCY, (uint32_t)(FLASH_LATENCY_DEFAULT));
+ 211:../../Common/Src/system_stm32h7xx_dualcore_boot_cm4_cm7.c ****   }
+ 212:../../Common/Src/system_stm32h7xx_dualcore_boot_cm4_cm7.c **** 
+ 213:../../Common/Src/system_stm32h7xx_dualcore_boot_cm4_cm7.c ****   /* Reset D1CFGR register */
+ 214:../../Common/Src/system_stm32h7xx_dualcore_boot_cm4_cm7.c ****   RCC->D1CFGR = 0x00000000;
+ 215:../../Common/Src/system_stm32h7xx_dualcore_boot_cm4_cm7.c **** 
+ 216:../../Common/Src/system_stm32h7xx_dualcore_boot_cm4_cm7.c ****   /* Reset D2CFGR register */
+ 217:../../Common/Src/system_stm32h7xx_dualcore_boot_cm4_cm7.c ****   RCC->D2CFGR = 0x00000000;
+ 218:../../Common/Src/system_stm32h7xx_dualcore_boot_cm4_cm7.c **** 
+ 219:../../Common/Src/system_stm32h7xx_dualcore_boot_cm4_cm7.c ****   /* Reset D3CFGR register */
+ 220:../../Common/Src/system_stm32h7xx_dualcore_boot_cm4_cm7.c ****   RCC->D3CFGR = 0x00000000;
+ 221:../../Common/Src/system_stm32h7xx_dualcore_boot_cm4_cm7.c **** 
+ 222:../../Common/Src/system_stm32h7xx_dualcore_boot_cm4_cm7.c ****   /* Reset PLLCKSELR register */
+ 223:../../Common/Src/system_stm32h7xx_dualcore_boot_cm4_cm7.c ****   RCC->PLLCKSELR = 0x02020200;
+ 224:../../Common/Src/system_stm32h7xx_dualcore_boot_cm4_cm7.c **** 
+ 225:../../Common/Src/system_stm32h7xx_dualcore_boot_cm4_cm7.c ****   /* Reset PLLCFGR register */
+ 226:../../Common/Src/system_stm32h7xx_dualcore_boot_cm4_cm7.c ****   RCC->PLLCFGR = 0x01FF0000;
+ 227:../../Common/Src/system_stm32h7xx_dualcore_boot_cm4_cm7.c ****   /* Reset PLL1DIVR register */
+ 228:../../Common/Src/system_stm32h7xx_dualcore_boot_cm4_cm7.c ****   RCC->PLL1DIVR = 0x01010280;
+ 229:../../Common/Src/system_stm32h7xx_dualcore_boot_cm4_cm7.c ****   /* Reset PLL1FRACR register */
+ 230:../../Common/Src/system_stm32h7xx_dualcore_boot_cm4_cm7.c ****   RCC->PLL1FRACR = 0x00000000;
+ 231:../../Common/Src/system_stm32h7xx_dualcore_boot_cm4_cm7.c **** 
+ 232:../../Common/Src/system_stm32h7xx_dualcore_boot_cm4_cm7.c ****   /* Reset PLL2DIVR register */
+ 233:../../Common/Src/system_stm32h7xx_dualcore_boot_cm4_cm7.c ****   RCC->PLL2DIVR = 0x01010280;
+ 234:../../Common/Src/system_stm32h7xx_dualcore_boot_cm4_cm7.c **** 
+ 235:../../Common/Src/system_stm32h7xx_dualcore_boot_cm4_cm7.c ****   /* Reset PLL2FRACR register */
+ 236:../../Common/Src/system_stm32h7xx_dualcore_boot_cm4_cm7.c **** 
+ 237:../../Common/Src/system_stm32h7xx_dualcore_boot_cm4_cm7.c ****   RCC->PLL2FRACR = 0x00000000;
+ 238:../../Common/Src/system_stm32h7xx_dualcore_boot_cm4_cm7.c ****   /* Reset PLL3DIVR register */
+ 239:../../Common/Src/system_stm32h7xx_dualcore_boot_cm4_cm7.c ****   RCC->PLL3DIVR = 0x01010280;
+ 240:../../Common/Src/system_stm32h7xx_dualcore_boot_cm4_cm7.c **** 
+ 241:../../Common/Src/system_stm32h7xx_dualcore_boot_cm4_cm7.c ****   /* Reset PLL3FRACR register */
+ 242:../../Common/Src/system_stm32h7xx_dualcore_boot_cm4_cm7.c ****   RCC->PLL3FRACR = 0x00000000;
+ARM GAS  /tmp/ccTwI3Zw.s 			page 6
+
+
+ 243:../../Common/Src/system_stm32h7xx_dualcore_boot_cm4_cm7.c **** 
+ 244:../../Common/Src/system_stm32h7xx_dualcore_boot_cm4_cm7.c ****   /* Reset HSEBYP bit */
+ 245:../../Common/Src/system_stm32h7xx_dualcore_boot_cm4_cm7.c ****   RCC->CR &= 0xFFFBFFFFU;
+ 246:../../Common/Src/system_stm32h7xx_dualcore_boot_cm4_cm7.c **** 
+ 247:../../Common/Src/system_stm32h7xx_dualcore_boot_cm4_cm7.c ****   /* Disable all interrupts */
+ 248:../../Common/Src/system_stm32h7xx_dualcore_boot_cm4_cm7.c ****   RCC->CIER = 0x00000000;
+ 249:../../Common/Src/system_stm32h7xx_dualcore_boot_cm4_cm7.c **** 
+ 250:../../Common/Src/system_stm32h7xx_dualcore_boot_cm4_cm7.c ****   /* Enable CortexM7 HSEM EXTI line (line 78)*/
+ 251:../../Common/Src/system_stm32h7xx_dualcore_boot_cm4_cm7.c ****   EXTI_D2->EMR3 |= 0x4000UL;
+ 252:../../Common/Src/system_stm32h7xx_dualcore_boot_cm4_cm7.c **** 
+ 253:../../Common/Src/system_stm32h7xx_dualcore_boot_cm4_cm7.c ****   if((DBGMCU->IDCODE & 0xFFFF0000U) < 0x20000000U)
+ 254:../../Common/Src/system_stm32h7xx_dualcore_boot_cm4_cm7.c ****   {
+ 255:../../Common/Src/system_stm32h7xx_dualcore_boot_cm4_cm7.c ****     /* if stm32h7 revY*/
+ 256:../../Common/Src/system_stm32h7xx_dualcore_boot_cm4_cm7.c ****     /* Change  the switch matrix read issuing capability to 1 for the AXI SRAM target (Target 7) */
+ 257:../../Common/Src/system_stm32h7xx_dualcore_boot_cm4_cm7.c ****     *((__IO uint32_t*)0x51008108) = 0x000000001U;
+ 258:../../Common/Src/system_stm32h7xx_dualcore_boot_cm4_cm7.c ****   }
+ 259:../../Common/Src/system_stm32h7xx_dualcore_boot_cm4_cm7.c **** 
+ 260:../../Common/Src/system_stm32h7xx_dualcore_boot_cm4_cm7.c **** #endif /* CORE_CM7*/
+ 261:../../Common/Src/system_stm32h7xx_dualcore_boot_cm4_cm7.c **** 
+ 262:../../Common/Src/system_stm32h7xx_dualcore_boot_cm4_cm7.c **** #if defined(CORE_CM4)
+ 263:../../Common/Src/system_stm32h7xx_dualcore_boot_cm4_cm7.c ****   /* Configure the Vector Table location add offset address for cortex-M4 ------------------*/
+ 264:../../Common/Src/system_stm32h7xx_dualcore_boot_cm4_cm7.c **** #if defined(USER_VECT_TAB_ADDRESS)
+ 265:../../Common/Src/system_stm32h7xx_dualcore_boot_cm4_cm7.c ****   SCB->VTOR = VECT_TAB_BASE_ADDRESS | VECT_TAB_OFFSET; /* Vector Table Relocation in Internal D2 AX
+ 266:../../Common/Src/system_stm32h7xx_dualcore_boot_cm4_cm7.c **** #endif /* USER_VECT_TAB_ADDRESS */
+ 267:../../Common/Src/system_stm32h7xx_dualcore_boot_cm4_cm7.c **** 
+ 268:../../Common/Src/system_stm32h7xx_dualcore_boot_cm4_cm7.c **** #elif defined(CORE_CM7)
+ 269:../../Common/Src/system_stm32h7xx_dualcore_boot_cm4_cm7.c ****   /*
+ 270:../../Common/Src/system_stm32h7xx_dualcore_boot_cm4_cm7.c ****    * Disable the FMC bank1 (enabled after reset).
+ 271:../../Common/Src/system_stm32h7xx_dualcore_boot_cm4_cm7.c ****    * This, prevents CPU speculation access on this bank which blocks the use of FMC during
+ 272:../../Common/Src/system_stm32h7xx_dualcore_boot_cm4_cm7.c ****    * 24us. During this time the others FMC master (such as LTDC) cannot use it!
+ 273:../../Common/Src/system_stm32h7xx_dualcore_boot_cm4_cm7.c ****    */
+ 274:../../Common/Src/system_stm32h7xx_dualcore_boot_cm4_cm7.c ****   FMC_Bank1_R->BTCR[0] = 0x000030D2;
+ 275:../../Common/Src/system_stm32h7xx_dualcore_boot_cm4_cm7.c **** 
+ 276:../../Common/Src/system_stm32h7xx_dualcore_boot_cm4_cm7.c ****   /* Configure the Vector Table location -------------------------------------*/
+ 277:../../Common/Src/system_stm32h7xx_dualcore_boot_cm4_cm7.c **** #if defined(USER_VECT_TAB_ADDRESS)
+ 278:../../Common/Src/system_stm32h7xx_dualcore_boot_cm4_cm7.c ****   SCB->VTOR = VECT_TAB_BASE_ADDRESS | VECT_TAB_OFFSET; /* Vector Table Relocation in Internal D1 AX
+ 279:../../Common/Src/system_stm32h7xx_dualcore_boot_cm4_cm7.c **** #endif /* USER_VECT_TAB_ADDRESS */
+ 280:../../Common/Src/system_stm32h7xx_dualcore_boot_cm4_cm7.c **** 
+ 281:../../Common/Src/system_stm32h7xx_dualcore_boot_cm4_cm7.c **** #else
+ 282:../../Common/Src/system_stm32h7xx_dualcore_boot_cm4_cm7.c **** #error Please #define CORE_CM4 or CORE_CM7
+ 283:../../Common/Src/system_stm32h7xx_dualcore_boot_cm4_cm7.c **** #endif /* CORE_CM4 */
+ 284:../../Common/Src/system_stm32h7xx_dualcore_boot_cm4_cm7.c **** }
+  45              		.loc 1 284 1 view .LVU5
+  46 0016 7047     		bx	lr
+  47              	.L3:
+  48              		.align	2
+  49              	.L2:
+  50 0018 00ED00E0 		.word	-536810240
+  51              		.cfi_endproc
+  52              	.LFE132:
+  54              		.section	.text.SystemCoreClockUpdate,"ax",%progbits
+  55              		.align	1
+  56              		.global	SystemCoreClockUpdate
+  57              		.syntax unified
+  58              		.thumb
+  59              		.thumb_func
+  60              		.fpu fpv4-sp-d16
+ARM GAS  /tmp/ccTwI3Zw.s 			page 7
+
+
+  62              	SystemCoreClockUpdate:
+  63              	.LFB133:
+ 285:../../Common/Src/system_stm32h7xx_dualcore_boot_cm4_cm7.c **** 
+ 286:../../Common/Src/system_stm32h7xx_dualcore_boot_cm4_cm7.c **** /**
+ 287:../../Common/Src/system_stm32h7xx_dualcore_boot_cm4_cm7.c ****    * @brief  Update SystemCoreClock variable according to Clock Register Values.
+ 288:../../Common/Src/system_stm32h7xx_dualcore_boot_cm4_cm7.c ****   *         The SystemCoreClock variable contains the core clock , it can
+ 289:../../Common/Src/system_stm32h7xx_dualcore_boot_cm4_cm7.c ****   *         be used by the user application to setup the SysTick timer or configure
+ 290:../../Common/Src/system_stm32h7xx_dualcore_boot_cm4_cm7.c ****   *         other parameters.
+ 291:../../Common/Src/system_stm32h7xx_dualcore_boot_cm4_cm7.c ****   *
+ 292:../../Common/Src/system_stm32h7xx_dualcore_boot_cm4_cm7.c ****   * @note   Each time the core clock changes, this function must be called
+ 293:../../Common/Src/system_stm32h7xx_dualcore_boot_cm4_cm7.c ****   *         to update SystemCoreClock variable value. Otherwise, any configuration
+ 294:../../Common/Src/system_stm32h7xx_dualcore_boot_cm4_cm7.c ****   *         based on this variable will be incorrect.
+ 295:../../Common/Src/system_stm32h7xx_dualcore_boot_cm4_cm7.c ****   *
+ 296:../../Common/Src/system_stm32h7xx_dualcore_boot_cm4_cm7.c ****   * @note   - The system frequency computed by this function is not the real
+ 297:../../Common/Src/system_stm32h7xx_dualcore_boot_cm4_cm7.c ****   *           frequency in the chip. It is calculated based on the predefined
+ 298:../../Common/Src/system_stm32h7xx_dualcore_boot_cm4_cm7.c ****   *           constant and the selected clock source:
+ 299:../../Common/Src/system_stm32h7xx_dualcore_boot_cm4_cm7.c ****   *
+ 300:../../Common/Src/system_stm32h7xx_dualcore_boot_cm4_cm7.c ****   *           - If SYSCLK source is CSI, SystemCoreClock will contain the CSI_VALUE(*)
+ 301:../../Common/Src/system_stm32h7xx_dualcore_boot_cm4_cm7.c ****   *           - If SYSCLK source is HSI, SystemCoreClock will contain the HSI_VALUE(**)
+ 302:../../Common/Src/system_stm32h7xx_dualcore_boot_cm4_cm7.c ****   *           - If SYSCLK source is HSE, SystemCoreClock will contain the HSE_VALUE(***)
+ 303:../../Common/Src/system_stm32h7xx_dualcore_boot_cm4_cm7.c ****   *           - If SYSCLK source is PLL, SystemCoreClock will contain the CSI_VALUE(*),
+ 304:../../Common/Src/system_stm32h7xx_dualcore_boot_cm4_cm7.c ****   *             HSI_VALUE(**) or HSE_VALUE(***) multiplied/divided by the PLL factors.
+ 305:../../Common/Src/system_stm32h7xx_dualcore_boot_cm4_cm7.c ****   *
+ 306:../../Common/Src/system_stm32h7xx_dualcore_boot_cm4_cm7.c ****   *         (*) CSI_VALUE is a constant defined in stm32h7xx_hal.h file (default value
+ 307:../../Common/Src/system_stm32h7xx_dualcore_boot_cm4_cm7.c ****   *             4 MHz) but the real value may vary depending on the variations
+ 308:../../Common/Src/system_stm32h7xx_dualcore_boot_cm4_cm7.c ****   *             in voltage and temperature.
+ 309:../../Common/Src/system_stm32h7xx_dualcore_boot_cm4_cm7.c ****   *         (**) HSI_VALUE is a constant defined in stm32h7xx_hal.h file (default value
+ 310:../../Common/Src/system_stm32h7xx_dualcore_boot_cm4_cm7.c ****   *             64 MHz) but the real value may vary depending on the variations
+ 311:../../Common/Src/system_stm32h7xx_dualcore_boot_cm4_cm7.c ****   *             in voltage and temperature.
+ 312:../../Common/Src/system_stm32h7xx_dualcore_boot_cm4_cm7.c ****   *
+ 313:../../Common/Src/system_stm32h7xx_dualcore_boot_cm4_cm7.c ****   *         (***)HSE_VALUE is a constant defined in stm32h7xx_hal.h file (default value
+ 314:../../Common/Src/system_stm32h7xx_dualcore_boot_cm4_cm7.c ****   *              25 MHz), user has to ensure that HSE_VALUE is same as the real
+ 315:../../Common/Src/system_stm32h7xx_dualcore_boot_cm4_cm7.c ****   *              frequency of the crystal used. Otherwise, this function may
+ 316:../../Common/Src/system_stm32h7xx_dualcore_boot_cm4_cm7.c ****   *              have wrong result.
+ 317:../../Common/Src/system_stm32h7xx_dualcore_boot_cm4_cm7.c ****   *
+ 318:../../Common/Src/system_stm32h7xx_dualcore_boot_cm4_cm7.c ****   *         - The result of this function could be not correct when using fractional
+ 319:../../Common/Src/system_stm32h7xx_dualcore_boot_cm4_cm7.c ****   *           value for HSE crystal.
+ 320:../../Common/Src/system_stm32h7xx_dualcore_boot_cm4_cm7.c ****   * @param  None
+ 321:../../Common/Src/system_stm32h7xx_dualcore_boot_cm4_cm7.c ****   * @retval None
+ 322:../../Common/Src/system_stm32h7xx_dualcore_boot_cm4_cm7.c ****   */
+ 323:../../Common/Src/system_stm32h7xx_dualcore_boot_cm4_cm7.c **** void SystemCoreClockUpdate (void)
+ 324:../../Common/Src/system_stm32h7xx_dualcore_boot_cm4_cm7.c **** {
+  64              		.loc 1 324 1 is_stmt 1 view -0
+  65              		.cfi_startproc
+  66              		@ args = 0, pretend = 0, frame = 0
+  67              		@ frame_needed = 0, uses_anonymous_args = 0
+  68              		@ link register save eliminated.
+  69 0000 10B4     		push	{r4}
+  70              	.LCFI0:
+  71              		.cfi_def_cfa_offset 4
+  72              		.cfi_offset 4, -4
+ 325:../../Common/Src/system_stm32h7xx_dualcore_boot_cm4_cm7.c ****   uint32_t pllp, pllsource, pllm, pllfracen, hsivalue, tmp;
+  73              		.loc 1 325 3 view .LVU7
+ 326:../../Common/Src/system_stm32h7xx_dualcore_boot_cm4_cm7.c ****   uint32_t common_system_clock;
+  74              		.loc 1 326 3 view .LVU8
+ 327:../../Common/Src/system_stm32h7xx_dualcore_boot_cm4_cm7.c ****   float_t fracn1, pllvco;
+  75              		.loc 1 327 3 view .LVU9
+ARM GAS  /tmp/ccTwI3Zw.s 			page 8
+
+
+ 328:../../Common/Src/system_stm32h7xx_dualcore_boot_cm4_cm7.c **** 
+ 329:../../Common/Src/system_stm32h7xx_dualcore_boot_cm4_cm7.c ****   /* Get SYSCLK source -------------------------------------------------------*/
+ 330:../../Common/Src/system_stm32h7xx_dualcore_boot_cm4_cm7.c **** 
+ 331:../../Common/Src/system_stm32h7xx_dualcore_boot_cm4_cm7.c ****   switch (RCC->CFGR & RCC_CFGR_SWS)
+  76              		.loc 1 331 3 view .LVU10
+  77              		.loc 1 331 14 is_stmt 0 view .LVU11
+  78 0002 7B4B     		ldr	r3, .L18
+  79 0004 1B69     		ldr	r3, [r3, #16]
+  80              		.loc 1 331 21 view .LVU12
+  81 0006 03F03803 		and	r3, r3, #56
+  82              		.loc 1 331 3 view .LVU13
+  83 000a 182B     		cmp	r3, #24
+  84 000c 00F2E580 		bhi	.L5
+  85 0010 DFE813F0 		tbh	[pc, r3, lsl #1]
+  86              	.L7:
+  87 0014 1B00     		.2byte	(.L10-.L7)/2
+  88 0016 E300     		.2byte	(.L5-.L7)/2
+  89 0018 E300     		.2byte	(.L5-.L7)/2
+  90 001a E300     		.2byte	(.L5-.L7)/2
+  91 001c E300     		.2byte	(.L5-.L7)/2
+  92 001e E300     		.2byte	(.L5-.L7)/2
+  93 0020 E300     		.2byte	(.L5-.L7)/2
+  94 0022 E300     		.2byte	(.L5-.L7)/2
+  95 0024 1900     		.2byte	(.L9-.L7)/2
+  96 0026 E300     		.2byte	(.L5-.L7)/2
+  97 0028 E300     		.2byte	(.L5-.L7)/2
+  98 002a E300     		.2byte	(.L5-.L7)/2
+  99 002c E300     		.2byte	(.L5-.L7)/2
+ 100 002e E300     		.2byte	(.L5-.L7)/2
+ 101 0030 E300     		.2byte	(.L5-.L7)/2
+ 102 0032 E300     		.2byte	(.L5-.L7)/2
+ 103 0034 EB00     		.2byte	(.L15-.L7)/2
+ 104 0036 E300     		.2byte	(.L5-.L7)/2
+ 105 0038 E300     		.2byte	(.L5-.L7)/2
+ 106 003a E300     		.2byte	(.L5-.L7)/2
+ 107 003c E300     		.2byte	(.L5-.L7)/2
+ 108 003e E300     		.2byte	(.L5-.L7)/2
+ 109 0040 E300     		.2byte	(.L5-.L7)/2
+ 110 0042 E300     		.2byte	(.L5-.L7)/2
+ 111 0044 3700     		.2byte	(.L6-.L7)/2
+ 112              		.p2align 1
+ 113              	.L9:
+ 114 0046 6B4B     		ldr	r3, .L18+4
+ 115 0048 06E0     		b	.L8
+ 116              	.L10:
+ 332:../../Common/Src/system_stm32h7xx_dualcore_boot_cm4_cm7.c ****   {
+ 333:../../Common/Src/system_stm32h7xx_dualcore_boot_cm4_cm7.c ****   case RCC_CFGR_SWS_HSI:  /* HSI used as system clock source */
+ 334:../../Common/Src/system_stm32h7xx_dualcore_boot_cm4_cm7.c ****     common_system_clock = (uint32_t) (HSI_VALUE >> ((RCC->CR & RCC_CR_HSIDIV)>> 3));
+ 117              		.loc 1 334 5 is_stmt 1 view .LVU14
+ 118              		.loc 1 334 57 is_stmt 0 view .LVU15
+ 119 004a 694B     		ldr	r3, .L18
+ 120 004c 1B68     		ldr	r3, [r3]
+ 121              		.loc 1 334 78 view .LVU16
+ 122 004e C3F3C103 		ubfx	r3, r3, #3, #2
+ 123              		.loc 1 334 25 view .LVU17
+ 124 0052 694A     		ldr	r2, .L18+8
+ 125 0054 22FA03F3 		lsr	r3, r2, r3
+ARM GAS  /tmp/ccTwI3Zw.s 			page 9
+
+
+ 126              	.LVL0:
+ 335:../../Common/Src/system_stm32h7xx_dualcore_boot_cm4_cm7.c ****     break;
+ 127              		.loc 1 335 5 is_stmt 1 view .LVU18
+ 128              	.L8:
+ 336:../../Common/Src/system_stm32h7xx_dualcore_boot_cm4_cm7.c **** 
+ 337:../../Common/Src/system_stm32h7xx_dualcore_boot_cm4_cm7.c ****   case RCC_CFGR_SWS_CSI:  /* CSI used as system clock  source */
+ 338:../../Common/Src/system_stm32h7xx_dualcore_boot_cm4_cm7.c ****     common_system_clock = CSI_VALUE;
+ 339:../../Common/Src/system_stm32h7xx_dualcore_boot_cm4_cm7.c ****     break;
+ 340:../../Common/Src/system_stm32h7xx_dualcore_boot_cm4_cm7.c **** 
+ 341:../../Common/Src/system_stm32h7xx_dualcore_boot_cm4_cm7.c ****   case RCC_CFGR_SWS_HSE:  /* HSE used as system clock  source */
+ 342:../../Common/Src/system_stm32h7xx_dualcore_boot_cm4_cm7.c ****     common_system_clock = HSE_VALUE;
+ 343:../../Common/Src/system_stm32h7xx_dualcore_boot_cm4_cm7.c ****     break;
+ 344:../../Common/Src/system_stm32h7xx_dualcore_boot_cm4_cm7.c **** 
+ 345:../../Common/Src/system_stm32h7xx_dualcore_boot_cm4_cm7.c ****   case RCC_CFGR_SWS_PLL1:  /* PLL1 used as system clock  source */
+ 346:../../Common/Src/system_stm32h7xx_dualcore_boot_cm4_cm7.c **** 
+ 347:../../Common/Src/system_stm32h7xx_dualcore_boot_cm4_cm7.c ****     /* PLL_VCO = (HSE_VALUE or HSI_VALUE or CSI_VALUE/ PLLM) * PLLN
+ 348:../../Common/Src/system_stm32h7xx_dualcore_boot_cm4_cm7.c ****     SYSCLK = PLL_VCO / PLLR
+ 349:../../Common/Src/system_stm32h7xx_dualcore_boot_cm4_cm7.c ****     */
+ 350:../../Common/Src/system_stm32h7xx_dualcore_boot_cm4_cm7.c ****     pllsource = (RCC->PLLCKSELR & RCC_PLLCKSELR_PLLSRC);
+ 351:../../Common/Src/system_stm32h7xx_dualcore_boot_cm4_cm7.c ****     pllm = ((RCC->PLLCKSELR & RCC_PLLCKSELR_DIVM1)>> 4)  ;
+ 352:../../Common/Src/system_stm32h7xx_dualcore_boot_cm4_cm7.c ****     pllfracen = ((RCC->PLLCFGR & RCC_PLLCFGR_PLL1FRACEN)>>RCC_PLLCFGR_PLL1FRACEN_Pos);
+ 353:../../Common/Src/system_stm32h7xx_dualcore_boot_cm4_cm7.c ****     fracn1 = (float_t)(uint32_t)(pllfracen* ((RCC->PLL1FRACR & RCC_PLL1FRACR_FRACN1)>> 3));
+ 354:../../Common/Src/system_stm32h7xx_dualcore_boot_cm4_cm7.c **** 
+ 355:../../Common/Src/system_stm32h7xx_dualcore_boot_cm4_cm7.c ****     if (pllm != 0U)
+ 356:../../Common/Src/system_stm32h7xx_dualcore_boot_cm4_cm7.c ****     {
+ 357:../../Common/Src/system_stm32h7xx_dualcore_boot_cm4_cm7.c ****       switch (pllsource)
+ 358:../../Common/Src/system_stm32h7xx_dualcore_boot_cm4_cm7.c ****       {
+ 359:../../Common/Src/system_stm32h7xx_dualcore_boot_cm4_cm7.c ****         case RCC_PLLCKSELR_PLLSRC_HSI:  /* HSI used as PLL clock source */
+ 360:../../Common/Src/system_stm32h7xx_dualcore_boot_cm4_cm7.c **** 
+ 361:../../Common/Src/system_stm32h7xx_dualcore_boot_cm4_cm7.c ****         hsivalue = (HSI_VALUE >> ((RCC->CR & RCC_CR_HSIDIV)>> 3)) ;
+ 362:../../Common/Src/system_stm32h7xx_dualcore_boot_cm4_cm7.c ****         pllvco = ( (float_t)hsivalue / (float_t)pllm) * ((float_t)(uint32_t)(RCC->PLL1DIVR & RCC_PL
+ 363:../../Common/Src/system_stm32h7xx_dualcore_boot_cm4_cm7.c **** 
+ 364:../../Common/Src/system_stm32h7xx_dualcore_boot_cm4_cm7.c ****         break;
+ 365:../../Common/Src/system_stm32h7xx_dualcore_boot_cm4_cm7.c **** 
+ 366:../../Common/Src/system_stm32h7xx_dualcore_boot_cm4_cm7.c ****         case RCC_PLLCKSELR_PLLSRC_CSI:  /* CSI used as PLL clock source */
+ 367:../../Common/Src/system_stm32h7xx_dualcore_boot_cm4_cm7.c ****           pllvco = ((float_t)CSI_VALUE / (float_t)pllm) * ((float_t)(uint32_t)(RCC->PLL1DIVR & RCC_
+ 368:../../Common/Src/system_stm32h7xx_dualcore_boot_cm4_cm7.c ****         break;
+ 369:../../Common/Src/system_stm32h7xx_dualcore_boot_cm4_cm7.c **** 
+ 370:../../Common/Src/system_stm32h7xx_dualcore_boot_cm4_cm7.c ****         case RCC_PLLCKSELR_PLLSRC_HSE:  /* HSE used as PLL clock source */
+ 371:../../Common/Src/system_stm32h7xx_dualcore_boot_cm4_cm7.c ****           pllvco = ((float_t)HSE_VALUE / (float_t)pllm) * ((float_t)(uint32_t)(RCC->PLL1DIVR & RCC_
+ 372:../../Common/Src/system_stm32h7xx_dualcore_boot_cm4_cm7.c ****         break;
+ 373:../../Common/Src/system_stm32h7xx_dualcore_boot_cm4_cm7.c **** 
+ 374:../../Common/Src/system_stm32h7xx_dualcore_boot_cm4_cm7.c ****       default:
+ 375:../../Common/Src/system_stm32h7xx_dualcore_boot_cm4_cm7.c ****           hsivalue = (HSI_VALUE >> ((RCC->CR & RCC_CR_HSIDIV)>> 3)) ;
+ 376:../../Common/Src/system_stm32h7xx_dualcore_boot_cm4_cm7.c ****           pllvco = ((float_t)hsivalue / (float_t)pllm) * ((float_t)(uint32_t)(RCC->PLL1DIVR & RCC_P
+ 377:../../Common/Src/system_stm32h7xx_dualcore_boot_cm4_cm7.c ****         break;
+ 378:../../Common/Src/system_stm32h7xx_dualcore_boot_cm4_cm7.c ****       }
+ 379:../../Common/Src/system_stm32h7xx_dualcore_boot_cm4_cm7.c ****       pllp = (((RCC->PLL1DIVR & RCC_PLL1DIVR_P1) >>9) + 1U ) ;
+ 380:../../Common/Src/system_stm32h7xx_dualcore_boot_cm4_cm7.c ****       common_system_clock =  (uint32_t)(float_t)(pllvco/(float_t)pllp);
+ 381:../../Common/Src/system_stm32h7xx_dualcore_boot_cm4_cm7.c ****     }
+ 382:../../Common/Src/system_stm32h7xx_dualcore_boot_cm4_cm7.c ****     else
+ 383:../../Common/Src/system_stm32h7xx_dualcore_boot_cm4_cm7.c ****     {
+ 384:../../Common/Src/system_stm32h7xx_dualcore_boot_cm4_cm7.c ****       common_system_clock = 0U;
+ 385:../../Common/Src/system_stm32h7xx_dualcore_boot_cm4_cm7.c ****     }
+ 386:../../Common/Src/system_stm32h7xx_dualcore_boot_cm4_cm7.c ****     break;
+ 387:../../Common/Src/system_stm32h7xx_dualcore_boot_cm4_cm7.c **** 
+ 388:../../Common/Src/system_stm32h7xx_dualcore_boot_cm4_cm7.c ****   default:
+ARM GAS  /tmp/ccTwI3Zw.s 			page 10
+
+
+ 389:../../Common/Src/system_stm32h7xx_dualcore_boot_cm4_cm7.c ****     common_system_clock = (uint32_t) (HSI_VALUE >> ((RCC->CR & RCC_CR_HSIDIV)>> 3));
+ 390:../../Common/Src/system_stm32h7xx_dualcore_boot_cm4_cm7.c ****     break;
+ 391:../../Common/Src/system_stm32h7xx_dualcore_boot_cm4_cm7.c ****   }
+ 392:../../Common/Src/system_stm32h7xx_dualcore_boot_cm4_cm7.c **** 
+ 393:../../Common/Src/system_stm32h7xx_dualcore_boot_cm4_cm7.c ****   /* Compute SystemClock frequency --------------------------------------------------*/
+ 394:../../Common/Src/system_stm32h7xx_dualcore_boot_cm4_cm7.c ****   tmp = D1CorePrescTable[(RCC->D1CFGR & RCC_D1CFGR_D1CPRE)>> RCC_D1CFGR_D1CPRE_Pos];
+ 129              		.loc 1 394 3 view .LVU19
+ 130              		.loc 1 394 30 is_stmt 0 view .LVU20
+ 131 0058 6548     		ldr	r0, .L18
+ 132 005a 8269     		ldr	r2, [r0, #24]
+ 133              		.loc 1 394 59 view .LVU21
+ 134 005c C2F30322 		ubfx	r2, r2, #8, #4
+ 135              		.loc 1 394 25 view .LVU22
+ 136 0060 6649     		ldr	r1, .L18+12
+ 137 0062 8A5C     		ldrb	r2, [r1, r2]	@ zero_extendqisi2
+ 138              	.LVL1:
+ 395:../../Common/Src/system_stm32h7xx_dualcore_boot_cm4_cm7.c **** 
+ 396:../../Common/Src/system_stm32h7xx_dualcore_boot_cm4_cm7.c ****   /* common_system_clock frequency : CM7 CPU frequency  */
+ 397:../../Common/Src/system_stm32h7xx_dualcore_boot_cm4_cm7.c ****   common_system_clock >>= tmp;
+ 139              		.loc 1 397 3 is_stmt 1 view .LVU23
+ 140              		.loc 1 397 23 is_stmt 0 view .LVU24
+ 141 0064 D340     		lsrs	r3, r3, r2
+ 142              	.LVL2:
+ 398:../../Common/Src/system_stm32h7xx_dualcore_boot_cm4_cm7.c **** 
+ 399:../../Common/Src/system_stm32h7xx_dualcore_boot_cm4_cm7.c ****   /* SystemD2Clock frequency : CM4 CPU, AXI and AHBs Clock frequency  */
+ 400:../../Common/Src/system_stm32h7xx_dualcore_boot_cm4_cm7.c ****   SystemD2Clock = (common_system_clock >> ((D1CorePrescTable[(RCC->D1CFGR & RCC_D1CFGR_HPRE)>> RCC_
+ 143              		.loc 1 400 3 is_stmt 1 view .LVU25
+ 144              		.loc 1 400 66 is_stmt 0 view .LVU26
+ 145 0066 8269     		ldr	r2, [r0, #24]
+ 146              	.LVL3:
+ 147              		.loc 1 400 93 view .LVU27
+ 148 0068 02F00F02 		and	r2, r2, #15
+ 149              		.loc 1 400 61 view .LVU28
+ 150 006c 8A5C     		ldrb	r2, [r1, r2]	@ zero_extendqisi2
+ 151              		.loc 1 400 118 view .LVU29
+ 152 006e 02F01F02 		and	r2, r2, #31
+ 153              		.loc 1 400 40 view .LVU30
+ 154 0072 D340     		lsrs	r3, r3, r2
+ 155              	.LVL4:
+ 156              		.loc 1 400 17 view .LVU31
+ 157 0074 624A     		ldr	r2, .L18+16
+ 158 0076 1360     		str	r3, [r2]
+ 401:../../Common/Src/system_stm32h7xx_dualcore_boot_cm4_cm7.c **** 
+ 402:../../Common/Src/system_stm32h7xx_dualcore_boot_cm4_cm7.c **** #if defined(CORE_CM4)
+ 403:../../Common/Src/system_stm32h7xx_dualcore_boot_cm4_cm7.c ****   SystemCoreClock = SystemD2Clock;
+ 159              		.loc 1 403 3 is_stmt 1 view .LVU32
+ 160              		.loc 1 403 19 is_stmt 0 view .LVU33
+ 161 0078 624A     		ldr	r2, .L18+20
+ 162 007a 1360     		str	r3, [r2]
+ 404:../../Common/Src/system_stm32h7xx_dualcore_boot_cm4_cm7.c **** #else
+ 405:../../Common/Src/system_stm32h7xx_dualcore_boot_cm4_cm7.c ****   SystemCoreClock = common_system_clock;
+ 406:../../Common/Src/system_stm32h7xx_dualcore_boot_cm4_cm7.c **** #endif /* CORE_CM4 */
+ 407:../../Common/Src/system_stm32h7xx_dualcore_boot_cm4_cm7.c **** }
+ 163              		.loc 1 407 1 view .LVU34
+ 164 007c 5DF8044B 		ldr	r4, [sp], #4
+ 165              	.LCFI1:
+ 166              		.cfi_remember_state
+ARM GAS  /tmp/ccTwI3Zw.s 			page 11
+
+
+ 167              		.cfi_restore 4
+ 168              		.cfi_def_cfa_offset 0
+ 169 0080 7047     		bx	lr
+ 170              	.L6:
+ 171              	.LCFI2:
+ 172              		.cfi_restore_state
+ 350:../../Common/Src/system_stm32h7xx_dualcore_boot_cm4_cm7.c ****     pllm = ((RCC->PLLCKSELR & RCC_PLLCKSELR_DIVM1)>> 4)  ;
+ 173              		.loc 1 350 5 is_stmt 1 view .LVU35
+ 350:../../Common/Src/system_stm32h7xx_dualcore_boot_cm4_cm7.c ****     pllm = ((RCC->PLLCKSELR & RCC_PLLCKSELR_DIVM1)>> 4)  ;
+ 174              		.loc 1 350 21 is_stmt 0 view .LVU36
+ 175 0082 5B49     		ldr	r1, .L18
+ 176 0084 886A     		ldr	r0, [r1, #40]
+ 350:../../Common/Src/system_stm32h7xx_dualcore_boot_cm4_cm7.c ****     pllm = ((RCC->PLLCKSELR & RCC_PLLCKSELR_DIVM1)>> 4)  ;
+ 177              		.loc 1 350 15 view .LVU37
+ 178 0086 00F00300 		and	r0, r0, #3
+ 179              	.LVL5:
+ 351:../../Common/Src/system_stm32h7xx_dualcore_boot_cm4_cm7.c ****     pllfracen = ((RCC->PLLCFGR & RCC_PLLCFGR_PLL1FRACEN)>>RCC_PLLCFGR_PLL1FRACEN_Pos);
+ 180              		.loc 1 351 5 is_stmt 1 view .LVU38
+ 351:../../Common/Src/system_stm32h7xx_dualcore_boot_cm4_cm7.c ****     pllfracen = ((RCC->PLLCFGR & RCC_PLLCFGR_PLL1FRACEN)>>RCC_PLLCFGR_PLL1FRACEN_Pos);
+ 181              		.loc 1 351 17 is_stmt 0 view .LVU39
+ 182 008a 8C6A     		ldr	r4, [r1, #40]
+ 351:../../Common/Src/system_stm32h7xx_dualcore_boot_cm4_cm7.c ****     pllfracen = ((RCC->PLLCFGR & RCC_PLLCFGR_PLL1FRACEN)>>RCC_PLLCFGR_PLL1FRACEN_Pos);
+ 183              		.loc 1 351 10 view .LVU40
+ 184 008c C4F30513 		ubfx	r3, r4, #4, #6
+ 185              	.LVL6:
+ 352:../../Common/Src/system_stm32h7xx_dualcore_boot_cm4_cm7.c ****     fracn1 = (float_t)(uint32_t)(pllfracen* ((RCC->PLL1FRACR & RCC_PLL1FRACR_FRACN1)>> 3));
+ 186              		.loc 1 352 5 is_stmt 1 view .LVU41
+ 352:../../Common/Src/system_stm32h7xx_dualcore_boot_cm4_cm7.c ****     fracn1 = (float_t)(uint32_t)(pllfracen* ((RCC->PLL1FRACR & RCC_PLL1FRACR_FRACN1)>> 3));
+ 187              		.loc 1 352 22 is_stmt 0 view .LVU42
+ 188 0090 CA6A     		ldr	r2, [r1, #44]
+ 352:../../Common/Src/system_stm32h7xx_dualcore_boot_cm4_cm7.c ****     fracn1 = (float_t)(uint32_t)(pllfracen* ((RCC->PLL1FRACR & RCC_PLL1FRACR_FRACN1)>> 3));
+ 189              		.loc 1 352 15 view .LVU43
+ 190 0092 02F0010C 		and	ip, r2, #1
+ 191              	.LVL7:
+ 353:../../Common/Src/system_stm32h7xx_dualcore_boot_cm4_cm7.c **** 
+ 192              		.loc 1 353 5 is_stmt 1 view .LVU44
+ 353:../../Common/Src/system_stm32h7xx_dualcore_boot_cm4_cm7.c **** 
+ 193              		.loc 1 353 50 is_stmt 0 view .LVU45
+ 194 0096 4A6B     		ldr	r2, [r1, #52]
+ 353:../../Common/Src/system_stm32h7xx_dualcore_boot_cm4_cm7.c **** 
+ 195              		.loc 1 353 85 view .LVU46
+ 196 0098 C2F3CC02 		ubfx	r2, r2, #3, #13
+ 353:../../Common/Src/system_stm32h7xx_dualcore_boot_cm4_cm7.c **** 
+ 197              		.loc 1 353 23 view .LVU47
+ 198 009c 0CFB02F2 		mul	r2, ip, r2
+ 353:../../Common/Src/system_stm32h7xx_dualcore_boot_cm4_cm7.c **** 
+ 199              		.loc 1 353 12 view .LVU48
+ 200 00a0 07EE902A 		vmov	s15, r2	@ int
+ 201 00a4 F8EE677A 		vcvt.f32.u32	s15, s15
+ 202              	.LVL8:
+ 355:../../Common/Src/system_stm32h7xx_dualcore_boot_cm4_cm7.c ****     {
+ 203              		.loc 1 355 5 is_stmt 1 view .LVU49
+ 355:../../Common/Src/system_stm32h7xx_dualcore_boot_cm4_cm7.c ****     {
+ 204              		.loc 1 355 8 is_stmt 0 view .LVU50
+ 205 00a8 14F47C7F 		tst	r4, #1008
+ 206 00ac D4D0     		beq	.L8
+ 357:../../Common/Src/system_stm32h7xx_dualcore_boot_cm4_cm7.c ****       {
+ARM GAS  /tmp/ccTwI3Zw.s 			page 12
+
+
+ 207              		.loc 1 357 7 is_stmt 1 view .LVU51
+ 208 00ae 0128     		cmp	r0, #1
+ 209 00b0 59D0     		beq	.L11
+ 210 00b2 0228     		cmp	r0, #2
+ 211 00b4 74D0     		beq	.L12
+ 212 00b6 18B3     		cbz	r0, .L17
+ 375:../../Common/Src/system_stm32h7xx_dualcore_boot_cm4_cm7.c ****           pllvco = ((float_t)hsivalue / (float_t)pllm) * ((float_t)(uint32_t)(RCC->PLL1DIVR & RCC_P
+ 213              		.loc 1 375 11 view .LVU52
+ 375:../../Common/Src/system_stm32h7xx_dualcore_boot_cm4_cm7.c ****           pllvco = ((float_t)hsivalue / (float_t)pllm) * ((float_t)(uint32_t)(RCC->PLL1DIVR & RCC_P
+ 214              		.loc 1 375 41 is_stmt 0 view .LVU53
+ 215 00b8 4D48     		ldr	r0, .L18
+ 216              	.LVL9:
+ 375:../../Common/Src/system_stm32h7xx_dualcore_boot_cm4_cm7.c ****           pllvco = ((float_t)hsivalue / (float_t)pllm) * ((float_t)(uint32_t)(RCC->PLL1DIVR & RCC_P
+ 217              		.loc 1 375 41 view .LVU54
+ 218 00ba 0168     		ldr	r1, [r0]
+ 375:../../Common/Src/system_stm32h7xx_dualcore_boot_cm4_cm7.c ****           pllvco = ((float_t)hsivalue / (float_t)pllm) * ((float_t)(uint32_t)(RCC->PLL1DIVR & RCC_P
+ 219              		.loc 1 375 62 view .LVU55
+ 220 00bc C1F3C101 		ubfx	r1, r1, #3, #2
+ 375:../../Common/Src/system_stm32h7xx_dualcore_boot_cm4_cm7.c ****           pllvco = ((float_t)hsivalue / (float_t)pllm) * ((float_t)(uint32_t)(RCC->PLL1DIVR & RCC_P
+ 221              		.loc 1 375 20 view .LVU56
+ 222 00c0 4D4A     		ldr	r2, .L18+8
+ 223 00c2 CA40     		lsrs	r2, r2, r1
+ 224              	.LVL10:
+ 376:../../Common/Src/system_stm32h7xx_dualcore_boot_cm4_cm7.c ****         break;
+ 225              		.loc 1 376 11 is_stmt 1 view .LVU57
+ 376:../../Common/Src/system_stm32h7xx_dualcore_boot_cm4_cm7.c ****         break;
+ 226              		.loc 1 376 21 is_stmt 0 view .LVU58
+ 227 00c4 07EE102A 		vmov	s14, r2	@ int
+ 228 00c8 F8EE476A 		vcvt.f32.u32	s13, s14
+ 376:../../Common/Src/system_stm32h7xx_dualcore_boot_cm4_cm7.c ****         break;
+ 229              		.loc 1 376 41 view .LVU59
+ 230 00cc 07EE103A 		vmov	s14, r3	@ int
+ 231 00d0 B8EE476A 		vcvt.f32.u32	s12, s14
+ 376:../../Common/Src/system_stm32h7xx_dualcore_boot_cm4_cm7.c ****         break;
+ 232              		.loc 1 376 39 view .LVU60
+ 233 00d4 86EE867A 		vdiv.f32	s14, s13, s12
+ 376:../../Common/Src/system_stm32h7xx_dualcore_boot_cm4_cm7.c ****         break;
+ 234              		.loc 1 376 82 view .LVU61
+ 235 00d8 036B     		ldr	r3, [r0, #48]
+ 236              	.LVL11:
+ 376:../../Common/Src/system_stm32h7xx_dualcore_boot_cm4_cm7.c ****         break;
+ 237              		.loc 1 376 68 view .LVU62
+ 238 00da C3F30803 		ubfx	r3, r3, #0, #9
+ 376:../../Common/Src/system_stm32h7xx_dualcore_boot_cm4_cm7.c ****         break;
+ 239              		.loc 1 376 59 view .LVU63
+ 240 00de 06EE903A 		vmov	s13, r3	@ int
+ 241 00e2 F8EE666A 		vcvt.f32.u32	s13, s13
+ 376:../../Common/Src/system_stm32h7xx_dualcore_boot_cm4_cm7.c ****         break;
+ 242              		.loc 1 376 121 view .LVU64
+ 243 00e6 9FED486A 		vldr.32	s12, .L18+24
+ 244 00ea 67EE867A 		vmul.f32	s15, s15, s12
+ 245              	.LVL12:
+ 376:../../Common/Src/system_stm32h7xx_dualcore_boot_cm4_cm7.c ****         break;
+ 246              		.loc 1 376 112 view .LVU65
+ 247 00ee 76EEA77A 		vadd.f32	s15, s13, s15
+ 376:../../Common/Src/system_stm32h7xx_dualcore_boot_cm4_cm7.c ****         break;
+ 248              		.loc 1 376 139 view .LVU66
+ARM GAS  /tmp/ccTwI3Zw.s 			page 13
+
+
+ 249 00f2 F7EE006A 		vmov.f32	s13, #1.0e+0
+ 250 00f6 77EEA67A 		vadd.f32	s15, s15, s13
+ 376:../../Common/Src/system_stm32h7xx_dualcore_boot_cm4_cm7.c ****         break;
+ 251              		.loc 1 376 18 view .LVU67
+ 252 00fa 27EE277A 		vmul.f32	s14, s14, s15
+ 253              	.LVL13:
+ 377:../../Common/Src/system_stm32h7xx_dualcore_boot_cm4_cm7.c ****       }
+ 254              		.loc 1 377 9 is_stmt 1 view .LVU68
+ 255 00fe 22E0     		b	.L14
+ 256              	.LVL14:
+ 257              	.L17:
+ 361:../../Common/Src/system_stm32h7xx_dualcore_boot_cm4_cm7.c ****         pllvco = ( (float_t)hsivalue / (float_t)pllm) * ((float_t)(uint32_t)(RCC->PLL1DIVR & RCC_PL
+ 258              		.loc 1 361 9 view .LVU69
+ 361:../../Common/Src/system_stm32h7xx_dualcore_boot_cm4_cm7.c ****         pllvco = ( (float_t)hsivalue / (float_t)pllm) * ((float_t)(uint32_t)(RCC->PLL1DIVR & RCC_PL
+ 259              		.loc 1 361 39 is_stmt 0 view .LVU70
+ 260 0100 0846     		mov	r0, r1
+ 261              	.LVL15:
+ 361:../../Common/Src/system_stm32h7xx_dualcore_boot_cm4_cm7.c ****         pllvco = ( (float_t)hsivalue / (float_t)pllm) * ((float_t)(uint32_t)(RCC->PLL1DIVR & RCC_PL
+ 262              		.loc 1 361 39 view .LVU71
+ 263 0102 0968     		ldr	r1, [r1]
+ 361:../../Common/Src/system_stm32h7xx_dualcore_boot_cm4_cm7.c ****         pllvco = ( (float_t)hsivalue / (float_t)pllm) * ((float_t)(uint32_t)(RCC->PLL1DIVR & RCC_PL
+ 264              		.loc 1 361 60 view .LVU72
+ 265 0104 C1F3C101 		ubfx	r1, r1, #3, #2
+ 361:../../Common/Src/system_stm32h7xx_dualcore_boot_cm4_cm7.c ****         pllvco = ( (float_t)hsivalue / (float_t)pllm) * ((float_t)(uint32_t)(RCC->PLL1DIVR & RCC_PL
+ 266              		.loc 1 361 18 view .LVU73
+ 267 0108 3B4A     		ldr	r2, .L18+8
+ 268 010a CA40     		lsrs	r2, r2, r1
+ 269              	.LVL16:
+ 362:../../Common/Src/system_stm32h7xx_dualcore_boot_cm4_cm7.c **** 
+ 270              		.loc 1 362 9 is_stmt 1 view .LVU74
+ 362:../../Common/Src/system_stm32h7xx_dualcore_boot_cm4_cm7.c **** 
+ 271              		.loc 1 362 20 is_stmt 0 view .LVU75
+ 272 010c 07EE102A 		vmov	s14, r2	@ int
+ 273 0110 F8EE476A 		vcvt.f32.u32	s13, s14
+ 362:../../Common/Src/system_stm32h7xx_dualcore_boot_cm4_cm7.c **** 
+ 274              		.loc 1 362 40 view .LVU76
+ 275 0114 07EE103A 		vmov	s14, r3	@ int
+ 276 0118 B8EE476A 		vcvt.f32.u32	s12, s14
+ 362:../../Common/Src/system_stm32h7xx_dualcore_boot_cm4_cm7.c **** 
+ 277              		.loc 1 362 38 view .LVU77
+ 278 011c 86EE867A 		vdiv.f32	s14, s13, s12
+ 362:../../Common/Src/system_stm32h7xx_dualcore_boot_cm4_cm7.c **** 
+ 279              		.loc 1 362 81 view .LVU78
+ 280 0120 036B     		ldr	r3, [r0, #48]
+ 281              	.LVL17:
+ 362:../../Common/Src/system_stm32h7xx_dualcore_boot_cm4_cm7.c **** 
+ 282              		.loc 1 362 67 view .LVU79
+ 283 0122 C3F30803 		ubfx	r3, r3, #0, #9
+ 362:../../Common/Src/system_stm32h7xx_dualcore_boot_cm4_cm7.c **** 
+ 284              		.loc 1 362 58 view .LVU80
+ 285 0126 06EE903A 		vmov	s13, r3	@ int
+ 286 012a F8EE666A 		vcvt.f32.u32	s13, s13
+ 362:../../Common/Src/system_stm32h7xx_dualcore_boot_cm4_cm7.c **** 
+ 287              		.loc 1 362 120 view .LVU81
+ 288 012e 9FED366A 		vldr.32	s12, .L18+24
+ 289 0132 67EE867A 		vmul.f32	s15, s15, s12
+ 290              	.LVL18:
+ARM GAS  /tmp/ccTwI3Zw.s 			page 14
+
+
+ 362:../../Common/Src/system_stm32h7xx_dualcore_boot_cm4_cm7.c **** 
+ 291              		.loc 1 362 111 view .LVU82
+ 292 0136 76EEA77A 		vadd.f32	s15, s13, s15
+ 362:../../Common/Src/system_stm32h7xx_dualcore_boot_cm4_cm7.c **** 
+ 293              		.loc 1 362 138 view .LVU83
+ 294 013a F7EE006A 		vmov.f32	s13, #1.0e+0
+ 295 013e 77EEA67A 		vadd.f32	s15, s15, s13
+ 362:../../Common/Src/system_stm32h7xx_dualcore_boot_cm4_cm7.c **** 
+ 296              		.loc 1 362 16 view .LVU84
+ 297 0142 27EE277A 		vmul.f32	s14, s14, s15
+ 298              	.LVL19:
+ 364:../../Common/Src/system_stm32h7xx_dualcore_boot_cm4_cm7.c **** 
+ 299              		.loc 1 364 9 is_stmt 1 view .LVU85
+ 300              	.L14:
+ 379:../../Common/Src/system_stm32h7xx_dualcore_boot_cm4_cm7.c ****       common_system_clock =  (uint32_t)(float_t)(pllvco/(float_t)pllp);
+ 301              		.loc 1 379 7 view .LVU86
+ 379:../../Common/Src/system_stm32h7xx_dualcore_boot_cm4_cm7.c ****       common_system_clock =  (uint32_t)(float_t)(pllvco/(float_t)pllp);
+ 302              		.loc 1 379 20 is_stmt 0 view .LVU87
+ 303 0146 2A4B     		ldr	r3, .L18
+ 304 0148 1B6B     		ldr	r3, [r3, #48]
+ 379:../../Common/Src/system_stm32h7xx_dualcore_boot_cm4_cm7.c ****       common_system_clock =  (uint32_t)(float_t)(pllvco/(float_t)pllp);
+ 305              		.loc 1 379 50 view .LVU88
+ 306 014a C3F34623 		ubfx	r3, r3, #9, #7
+ 379:../../Common/Src/system_stm32h7xx_dualcore_boot_cm4_cm7.c ****       common_system_clock =  (uint32_t)(float_t)(pllvco/(float_t)pllp);
+ 307              		.loc 1 379 12 view .LVU89
+ 308 014e 0133     		adds	r3, r3, #1
+ 309              	.LVL20:
+ 380:../../Common/Src/system_stm32h7xx_dualcore_boot_cm4_cm7.c ****     }
+ 310              		.loc 1 380 7 is_stmt 1 view .LVU90
+ 380:../../Common/Src/system_stm32h7xx_dualcore_boot_cm4_cm7.c ****     }
+ 311              		.loc 1 380 57 is_stmt 0 view .LVU91
+ 312 0150 07EE903A 		vmov	s15, r3	@ int
+ 313 0154 F8EE677A 		vcvt.f32.u32	s15, s15
+ 380:../../Common/Src/system_stm32h7xx_dualcore_boot_cm4_cm7.c ****     }
+ 314              		.loc 1 380 40 view .LVU92
+ 315 0158 C7EE276A 		vdiv.f32	s13, s14, s15
+ 380:../../Common/Src/system_stm32h7xx_dualcore_boot_cm4_cm7.c ****     }
+ 316              		.loc 1 380 27 view .LVU93
+ 317 015c FCEEE67A 		vcvt.u32.f32	s15, s13
+ 318 0160 17EE903A 		vmov	r3, s15	@ int
+ 319              	.LVL21:
+ 380:../../Common/Src/system_stm32h7xx_dualcore_boot_cm4_cm7.c ****     }
+ 320              		.loc 1 380 27 view .LVU94
+ 321 0164 78E7     		b	.L8
+ 322              	.LVL22:
+ 323              	.L11:
+ 367:../../Common/Src/system_stm32h7xx_dualcore_boot_cm4_cm7.c ****         break;
+ 324              		.loc 1 367 11 is_stmt 1 view .LVU95
+ 367:../../Common/Src/system_stm32h7xx_dualcore_boot_cm4_cm7.c ****         break;
+ 325              		.loc 1 367 42 is_stmt 0 view .LVU96
+ 326 0166 07EE103A 		vmov	s14, r3	@ int
+ 327 016a F8EE476A 		vcvt.f32.u32	s13, s14
+ 367:../../Common/Src/system_stm32h7xx_dualcore_boot_cm4_cm7.c ****         break;
+ 328              		.loc 1 367 40 view .LVU97
+ 329 016e 9FED276A 		vldr.32	s12, .L18+28
+ 330 0172 86EE267A 		vdiv.f32	s14, s12, s13
+ 367:../../Common/Src/system_stm32h7xx_dualcore_boot_cm4_cm7.c ****         break;
+ARM GAS  /tmp/ccTwI3Zw.s 			page 15
+
+
+ 331              		.loc 1 367 83 view .LVU98
+ 332 0176 1E4B     		ldr	r3, .L18
+ 333              	.LVL23:
+ 367:../../Common/Src/system_stm32h7xx_dualcore_boot_cm4_cm7.c ****         break;
+ 334              		.loc 1 367 83 view .LVU99
+ 335 0178 1B6B     		ldr	r3, [r3, #48]
+ 367:../../Common/Src/system_stm32h7xx_dualcore_boot_cm4_cm7.c ****         break;
+ 336              		.loc 1 367 69 view .LVU100
+ 337 017a C3F30803 		ubfx	r3, r3, #0, #9
+ 367:../../Common/Src/system_stm32h7xx_dualcore_boot_cm4_cm7.c ****         break;
+ 338              		.loc 1 367 60 view .LVU101
+ 339 017e 06EE903A 		vmov	s13, r3	@ int
+ 340 0182 F8EE666A 		vcvt.f32.u32	s13, s13
+ 367:../../Common/Src/system_stm32h7xx_dualcore_boot_cm4_cm7.c ****         break;
+ 341              		.loc 1 367 122 view .LVU102
+ 342 0186 9FED206A 		vldr.32	s12, .L18+24
+ 343 018a 67EE867A 		vmul.f32	s15, s15, s12
+ 344              	.LVL24:
+ 367:../../Common/Src/system_stm32h7xx_dualcore_boot_cm4_cm7.c ****         break;
+ 345              		.loc 1 367 113 view .LVU103
+ 346 018e 76EEA77A 		vadd.f32	s15, s13, s15
+ 367:../../Common/Src/system_stm32h7xx_dualcore_boot_cm4_cm7.c ****         break;
+ 347              		.loc 1 367 140 view .LVU104
+ 348 0192 F7EE006A 		vmov.f32	s13, #1.0e+0
+ 349 0196 77EEA67A 		vadd.f32	s15, s15, s13
+ 367:../../Common/Src/system_stm32h7xx_dualcore_boot_cm4_cm7.c ****         break;
+ 350              		.loc 1 367 18 view .LVU105
+ 351 019a 27EE277A 		vmul.f32	s14, s14, s15
+ 352              	.LVL25:
+ 368:../../Common/Src/system_stm32h7xx_dualcore_boot_cm4_cm7.c **** 
+ 353              		.loc 1 368 9 is_stmt 1 view .LVU106
+ 354 019e D2E7     		b	.L14
+ 355              	.LVL26:
+ 356              	.L12:
+ 371:../../Common/Src/system_stm32h7xx_dualcore_boot_cm4_cm7.c ****         break;
+ 357              		.loc 1 371 11 view .LVU107
+ 371:../../Common/Src/system_stm32h7xx_dualcore_boot_cm4_cm7.c ****         break;
+ 358              		.loc 1 371 42 is_stmt 0 view .LVU108
+ 359 01a0 07EE103A 		vmov	s14, r3	@ int
+ 360 01a4 F8EE476A 		vcvt.f32.u32	s13, s14
+ 371:../../Common/Src/system_stm32h7xx_dualcore_boot_cm4_cm7.c ****         break;
+ 361              		.loc 1 371 40 view .LVU109
+ 362 01a8 9FED196A 		vldr.32	s12, .L18+32
+ 363 01ac 86EE267A 		vdiv.f32	s14, s12, s13
+ 371:../../Common/Src/system_stm32h7xx_dualcore_boot_cm4_cm7.c ****         break;
+ 364              		.loc 1 371 83 view .LVU110
+ 365 01b0 0F4B     		ldr	r3, .L18
+ 366              	.LVL27:
+ 371:../../Common/Src/system_stm32h7xx_dualcore_boot_cm4_cm7.c ****         break;
+ 367              		.loc 1 371 83 view .LVU111
+ 368 01b2 1B6B     		ldr	r3, [r3, #48]
+ 371:../../Common/Src/system_stm32h7xx_dualcore_boot_cm4_cm7.c ****         break;
+ 369              		.loc 1 371 69 view .LVU112
+ 370 01b4 C3F30803 		ubfx	r3, r3, #0, #9
+ 371:../../Common/Src/system_stm32h7xx_dualcore_boot_cm4_cm7.c ****         break;
+ 371              		.loc 1 371 60 view .LVU113
+ 372 01b8 06EE903A 		vmov	s13, r3	@ int
+ARM GAS  /tmp/ccTwI3Zw.s 			page 16
+
+
+ 373 01bc F8EE666A 		vcvt.f32.u32	s13, s13
+ 371:../../Common/Src/system_stm32h7xx_dualcore_boot_cm4_cm7.c ****         break;
+ 374              		.loc 1 371 122 view .LVU114
+ 375 01c0 9FED116A 		vldr.32	s12, .L18+24
+ 376 01c4 67EE867A 		vmul.f32	s15, s15, s12
+ 377              	.LVL28:
+ 371:../../Common/Src/system_stm32h7xx_dualcore_boot_cm4_cm7.c ****         break;
+ 378              		.loc 1 371 113 view .LVU115
+ 379 01c8 76EEA77A 		vadd.f32	s15, s13, s15
+ 371:../../Common/Src/system_stm32h7xx_dualcore_boot_cm4_cm7.c ****         break;
+ 380              		.loc 1 371 140 view .LVU116
+ 381 01cc F7EE006A 		vmov.f32	s13, #1.0e+0
+ 382 01d0 77EEA67A 		vadd.f32	s15, s15, s13
+ 371:../../Common/Src/system_stm32h7xx_dualcore_boot_cm4_cm7.c ****         break;
+ 383              		.loc 1 371 18 view .LVU117
+ 384 01d4 27EE277A 		vmul.f32	s14, s14, s15
+ 385              	.LVL29:
+ 372:../../Common/Src/system_stm32h7xx_dualcore_boot_cm4_cm7.c **** 
+ 386              		.loc 1 372 9 is_stmt 1 view .LVU118
+ 387 01d8 B5E7     		b	.L14
+ 388              	.LVL30:
+ 389              	.L5:
+ 389:../../Common/Src/system_stm32h7xx_dualcore_boot_cm4_cm7.c ****     break;
+ 390              		.loc 1 389 5 view .LVU119
+ 389:../../Common/Src/system_stm32h7xx_dualcore_boot_cm4_cm7.c ****     break;
+ 391              		.loc 1 389 57 is_stmt 0 view .LVU120
+ 392 01da 054B     		ldr	r3, .L18
+ 393 01dc 1B68     		ldr	r3, [r3]
+ 389:../../Common/Src/system_stm32h7xx_dualcore_boot_cm4_cm7.c ****     break;
+ 394              		.loc 1 389 78 view .LVU121
+ 395 01de C3F3C103 		ubfx	r3, r3, #3, #2
+ 389:../../Common/Src/system_stm32h7xx_dualcore_boot_cm4_cm7.c ****     break;
+ 396              		.loc 1 389 25 view .LVU122
+ 397 01e2 054A     		ldr	r2, .L18+8
+ 398 01e4 22FA03F3 		lsr	r3, r2, r3
+ 399              	.LVL31:
+ 390:../../Common/Src/system_stm32h7xx_dualcore_boot_cm4_cm7.c ****   }
+ 400              		.loc 1 390 5 is_stmt 1 view .LVU123
+ 401 01e8 36E7     		b	.L8
+ 402              	.LVL32:
+ 403              	.L15:
+ 342:../../Common/Src/system_stm32h7xx_dualcore_boot_cm4_cm7.c ****     break;
+ 404              		.loc 1 342 25 is_stmt 0 view .LVU124
+ 405 01ea 0A4B     		ldr	r3, .L18+36
+ 406 01ec 34E7     		b	.L8
+ 407              	.L19:
+ 408 01ee 00BF     		.align	2
+ 409              	.L18:
+ 410 01f0 00440258 		.word	1476543488
+ 411 01f4 00093D00 		.word	4000000
+ 412 01f8 0090D003 		.word	64000000
+ 413 01fc 00000000 		.word	.LANCHOR0
+ 414 0200 00000000 		.word	.LANCHOR1
+ 415 0204 00000000 		.word	.LANCHOR2
+ 416 0208 00000039 		.word	956301312
+ 417 020c 0024744A 		.word	1249125376
+ 418 0210 20BCBE4B 		.word	1270791200
+ARM GAS  /tmp/ccTwI3Zw.s 			page 17
+
+
+ 419 0214 40787D01 		.word	25000000
+ 420              		.cfi_endproc
+ 421              	.LFE133:
+ 423              		.global	D1CorePrescTable
+ 424              		.global	SystemD2Clock
+ 425              		.global	SystemCoreClock
+ 426              		.section	.data.SystemCoreClock,"aw"
+ 427              		.align	2
+ 428              		.set	.LANCHOR2,. + 0
+ 431              	SystemCoreClock:
+ 432 0000 0090D003 		.word	64000000
+ 433              		.section	.data.SystemD2Clock,"aw"
+ 434              		.align	2
+ 435              		.set	.LANCHOR1,. + 0
+ 438              	SystemD2Clock:
+ 439 0000 0090D003 		.word	64000000
+ 440              		.section	.rodata.D1CorePrescTable,"a"
+ 441              		.align	2
+ 442              		.set	.LANCHOR0,. + 0
+ 445              	D1CorePrescTable:
+ 446 0000 00000000 		.ascii	"\000\000\000\000\001\002\003\004\001\002\003\004\006"
+ 446      01020304 
+ 446      01020304 
+ 446      06
+ 447 000d 070809   		.ascii	"\007\010\011"
+ 448              		.text
+ 449              	.Letext0:
+ 450              		.file 2 "/usr/lib/gcc/arm-none-eabi/10.3.1/include/stdint.h"
+ 451              		.file 3 "../../Drivers/CMSIS/Include/core_cm4.h"
+ 452              		.file 4 "../../Drivers/CMSIS/Device/ST/STM32H7xx/Include/system_stm32h7xx.h"
+ 453              		.file 5 "../../Drivers/CMSIS/Device/ST/STM32H7xx/Include/stm32h755xx.h"
+ 454              		.file 6 "/usr/include/newlib/math.h"
+ARM GAS  /tmp/ccTwI3Zw.s 			page 18
+
+
+DEFINED SYMBOLS
+                            *ABS*:0000000000000000 system_stm32h7xx_dualcore_boot_cm4_cm7.c
+     /tmp/ccTwI3Zw.s:18     .text.SystemInit:0000000000000000 $t
+     /tmp/ccTwI3Zw.s:26     .text.SystemInit:0000000000000000 SystemInit
+     /tmp/ccTwI3Zw.s:50     .text.SystemInit:0000000000000018 $d
+     /tmp/ccTwI3Zw.s:55     .text.SystemCoreClockUpdate:0000000000000000 $t
+     /tmp/ccTwI3Zw.s:62     .text.SystemCoreClockUpdate:0000000000000000 SystemCoreClockUpdate
+     /tmp/ccTwI3Zw.s:87     .text.SystemCoreClockUpdate:0000000000000014 $d
+     /tmp/ccTwI3Zw.s:112    .text.SystemCoreClockUpdate:0000000000000046 $t
+     /tmp/ccTwI3Zw.s:410    .text.SystemCoreClockUpdate:00000000000001f0 $d
+     /tmp/ccTwI3Zw.s:445    .rodata.D1CorePrescTable:0000000000000000 D1CorePrescTable
+     /tmp/ccTwI3Zw.s:438    .data.SystemD2Clock:0000000000000000 SystemD2Clock
+     /tmp/ccTwI3Zw.s:431    .data.SystemCoreClock:0000000000000000 SystemCoreClock
+     /tmp/ccTwI3Zw.s:427    .data.SystemCoreClock:0000000000000000 $d
+     /tmp/ccTwI3Zw.s:434    .data.SystemD2Clock:0000000000000000 $d
+     /tmp/ccTwI3Zw.s:441    .rodata.D1CorePrescTable:0000000000000000 $d
+
+NO UNDEFINED SYMBOLS

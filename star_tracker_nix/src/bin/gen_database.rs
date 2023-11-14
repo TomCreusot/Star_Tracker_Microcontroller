@@ -105,6 +105,19 @@ OPTIONAL:
 		The dullest star brightness allowed.
 		By having this too high, the database will be bigger, if the magnitude is too low, you wont have enough coverage.
 		The default value is calculated based on the input field of view, you probably should just use that.
+
+	mem_section_k_vector:
+		In a microcontroller, the memory can be fragmented.
+		Sometimes you need to specify memory locations `#[link_section = ".my_section"]`.
+		If you want the k_vector to be stored somewhere specific, specify `.my_section`.
+	mem_section_pairs:
+		In a microcontroller, the memory can be fragmented.
+		Sometimes you need to specify memory locations `#[link_section = ".my_section"]`.
+		If you want the star pairs to be stored somewhere specific, specify `.my_section`.
+	mem_section_catalogue:
+		In a microcontroller, the memory can be fragmented.
+		Sometimes you need to specify memory locations `#[link_section = ".my_section"]`.
+		If you want the catalogue to be stored somewhere specific, specify `.my_section`.
 	"#);
 	env::set_var("RUST_BACKTRACE", "1");
 	let args: Vec<String> = env::args().collect();
@@ -130,11 +143,29 @@ OPTIONAL:
 	if let Some(val) = json.get("magnitude_max") { magnitude_max = val.as_f64().expect("INVALID TYPE IN LOG `magnitude_max") as Decimal; }
 
 	let mut region_size: Radians = fov / 2.0;
-	if let Some(val) = json.get("region_size") 
-	{ region_size = Degrees(val.as_f64().expect("INVALID TYPE IN LOG `region_size") as Decimal).to_radians(); }
+	if let Some(val) = json.get("region_size_deg") 
+	{ region_size = Degrees(val.as_f64().expect("INVALID TYPE IN LOG `region_size_deg") as Decimal).to_radians(); }
 	
 	let mut region_num: usize = 8;
-	if let Some(val) = json.get("region_num") { region_num = val.as_i64().expect("INVALID TYPE IN LOG `region_num`") as usize; }
+	if let Some(val) = json.get("region_num_stars") { region_num = val.as_i64().expect("INVALID TYPE IN LOG `region_num_stars`") as usize; }
+	
+	let mut mem_section_k_vector: String = "".to_string();
+	if let Some(val) = json.get("mem_section_k_vector") 
+	{ mem_section_k_vector = format!("#[link_section = \"{:?}\"]", val.as_str().expect("INVALID TYPE IN LOG `mem_section_pairs`") as &str) }
+
+	let mut mem_section_pairs: String = "".to_string();
+	if let Some(val) = json.get("mem_section_pairs") 
+	{ mem_section_pairs = format!("#[link_section = \"{:?}\"]", val.as_str().expect("INVALID TYPE IN LOG `mem_section_pairs`") as &str) }
+
+	let mut mem_section_catalogue: String = "".to_string();
+	if let Some(val) = json.get("mem_section_catalogue") 
+	{ mem_section_catalogue = format!("#[link_section = \"{:?}\"]", val.as_str().expect("INVALID TYPE IN LOG `mem_section_pairs`") as &str) }
+
+
+
+
+
+
 	std::mem::drop(file_config);
 	
 	let double_star_tolerance = angle_tolerance * 2.0;
@@ -182,6 +213,14 @@ OPTIONAL:
 			database.catalogue.get(i).ra.0, database.catalogue.get(i).dec.0).to_string());
 	}
 
+	println!("K Vector:  {} elements      \t {} B at 32bit \t {} B at 64bit", database.k_vector.size(), database.k_vector.size() * 4, database.k_vector.size() * 8);
+	println!("Star Pair: {} elements   \t {} B at 32bit \t {} B at 64bit", database.pairs.size(), database.pairs.size() * 8, database.pairs.size() * 16);
+	println!("Catalogue: {} elements    \t {} B at 32bit \t {} B at 64bit", database.catalogue.size(), database.catalogue.size() * 8, database.catalogue.size() * 16);
+	println!("\n                              \t~{} kB @ 32 bit \t\t ~{} kB @ 64 bit", 
+		(database.k_vector.size() * 4 + database.pairs.size() * 8 + database.catalogue.size() * 8).div_ceil(1000),
+		(database.k_vector.size() * 8 + database.pairs.size() * 16 + database.catalogue.size() * 16).div_ceil(1000),
+	);
+
 	let output = format!(r#"
 //! This is a generated file from gen_database with the configuration of:
 //! {}	field of view
@@ -195,6 +234,8 @@ use star_tracker_lib::util::units::Equatorial;
 use star_tracker_lib::tracking_mode::StarPair;
 use star_tracker_lib::tracking_mode::database::KVector;
 use star_tracker_lib::tracking_mode::database::PyramidDatabase;
+
+pub const angle_tolerance: Radians = Radians({});
 
 pub const DATABASE: PyramidDatabase = PyramidDatabase
 {{
@@ -216,19 +257,19 @@ pub const K_LOOKUP: KVector = KVector
 	num_bins:  {},
 }};
 
-
+{}
 pub const K_VECTOR: [usize; {}] = 
 [
 {}
 ];
 
-
+{}
 pub const PAIRS: [StarPair<usize>; {}] = 
 [
 {}
 ];
 
-
+{}
 pub const CATALOGUE: [Equatorial; {}] =
 [
 {}
@@ -237,15 +278,14 @@ pub const CATALOGUE: [Equatorial; {}] =
 	
 	"#, 
 	fov.to_degrees(), angle_tolerance.to_degrees(), magnitude_max, region_size.to_degrees(), region_num,
+	angle_tolerance.0,
 	database.fov.0,
 	database.k_lookup.gradient, database.k_lookup.intercept, 
 	database.k_lookup.min_value.0, database.k_lookup.max_value.0, database.k_lookup.num_bins,
-	database.k_vector.size(),
-	k_vector_str,
-	database.pairs.size(),
-	pairs_str,
-	database.catalogue.size(),
-	catalog_str
+	
+	mem_section_k_vector, database.k_vector.size(), k_vector_str,
+	mem_section_pairs, database.pairs.size(), pairs_str,
+	mem_section_catalogue, database.catalogue.size(), catalog_str
 );
 
 

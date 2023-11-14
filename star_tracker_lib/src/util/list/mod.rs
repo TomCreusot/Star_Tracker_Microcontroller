@@ -457,8 +457,10 @@ pub trait List<T> where T: Clone
 // 		compare: fn(&T, &T) -> bool, out: &mut dyn List<T> )
 pub struct ArrayList <T, const N: usize>
 {
-	array: [T; N],
-	end:   usize,
+	/// DONT TOUCH
+	pub array: [T; N],
+	/// DONT TOUCH
+	pub end:   usize,
 }
 
 
