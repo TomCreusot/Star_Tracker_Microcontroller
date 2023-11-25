@@ -6,7 +6,7 @@ use crate::util::aliases::UInt;
 impl BitField
 {
 	/// The number of elements the bit field can represent.
-	pub const FIELDS : usize = core::mem::size_of::<UInt>();
+	pub const FIELDS : usize = UInt::BITS as usize;
 	
 	pub const ALL : BitField = BitField(UInt::MAX);
 	
