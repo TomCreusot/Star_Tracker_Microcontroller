@@ -180,6 +180,7 @@ OPTIONAL:
 	stars.sort();
 
 	println!("\tLimiting Magnitude.");
+	println!("\t Max Magnitude {}", magnitude_max);
 	let stars_limit_mag    = DatabaseGenerator::limit_magnitude (&stars, magnitude_min, magnitude_max);
 	println!("\tLimiting Double Stars.");
 	let stars_limit_double = DatabaseGenerator::limit_double_stars(&stars_limit_mag, double_star_tolerance);
@@ -189,7 +190,7 @@ OPTIONAL:
 	println!("\tCreating Database.");	
 
 	let gen : DatabaseGenerator = DatabaseGenerator::gen_database_regional
-		(&stars_limit_reg, fov, fov / 1.5, angle_tolerance);
+		(&stars_limit_reg, fov, fov / 1.3, angle_tolerance);
 	let database = gen.get_database_regional();
 
 

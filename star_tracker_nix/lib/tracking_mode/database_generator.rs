@@ -2,14 +2,11 @@ use super::DatabaseGenerator;
 
 use star_tracker_lib::tracking_mode::StarPair;
 use star_tracker_lib::tracking_mode::database::PyramidDatabase;
-use star_tracker_lib::tracking_mode::database::RegionalDatabase;
 use star_tracker_lib::tracking_mode::database::KVector;
 
 use star_tracker_lib::util::distribution::Distribute;
 use star_tracker_lib::util::aliases::Decimal;
-use star_tracker_lib::util::aliases::UInt;
 use star_tracker_lib::util::units::Equatorial;
-use star_tracker_lib::util::units::BitField;
 use star_tracker_lib::util::units::Radians;
 use star_tracker_lib::util::list::List;
 
@@ -92,26 +89,6 @@ impl DatabaseGenerator
 		};
 	}
 
-	
-	/// Returns a regional database.  
-	/// Ensure to call gen_database_regional before this.  
-	/// gen_database will be sufficient to create this database.
-	pub fn get_database_regional ( &self ) -> RegionalDatabase
-	{
-		assert_ne!(self.num_fields, 0, 
-			"To use this database you muse use gen_database_regional instead of gen_database.");
-		return RegionalDatabase {
-			fov       : self.fov,
-			num_fields: self.num_fields, 
-			k_lookup  : self.k_lookup,
-			k_vector  : &self.k_vector,
-			pairs     : &self.pairs,
-			catalogue : &self.catalogue,
-			catalogue_field: &self.catalogue_field,
-		};
-	}
-	
-
 
 
 
@@ -157,59 +134,12 @@ impl DatabaseGenerator
 			catalogue:       catalogue,
 			fov:             fov,
 			k_lookup:        k_lookup,
-			catalogue_field: Vec::new(),
-			num_fields:      0,
 		};
 	}
 	
 	
 
 	
-	/// Creates a database on the heap.
-	/// The database is only valid while the lifetime of `k_vector`, `pairs` and `catalogue` exist.  
-	/// This generates the regional database for the regional chunk iterator.  
-	/// You can also use this for PyramidDatabase as it is just some extra fields.  
-	/// # Arguments
-	/// * `stars`     - The stars to be inserted into the database.
-	/// * `fov`       - The field of view of the sensor, .
-	/// * `tolerance` - The allowed error of a star pair until it is not considered a match.
-	/// * `chunk_size`- The size of a chunk in the ChunkRegionalIterator.
-	/// # Returns
-	/// The database with the lifetime of all the passed in variables.
-	pub fn gen_database_regional ( 
-		stars: &Vec<Star>, fov: Radians, chunk_size: Radians, tolerance: Radians ) -> Self
-	{
-		let mut points_num = Distribute::angle_to_points(fov);
-
-		if (BitField::FIELDS as usize) < points_num
-		{	// There are more points then the bitfield, that would not work.
-			points_num = BitField::FIELDS as usize;
-		}
-		let chunks = Distribute::fibonacci_lattice(points_num);
-		// let angle = Distribute::points_to_angle(points_num);
-		
-		let mut database = Self::gen_database ( stars, fov, chunk_size, tolerance );
-		let mut catalogue_field = Vec::with_capacity(database.catalogue.len()); 
-		for star in &database.catalogue
-		{
-			let mut field = BitField(0);
-			for chunk in 0..chunks.len()
-			{
-				field.set(chunk, star.angle_distance(chunks[chunk]) < chunk_size);
-				
-			}
-			catalogue_field.push(field);
-		}
-		
-		database.catalogue_field = catalogue_field;
-		database.num_fields = points_num as UInt;
-		return database;
-	}
-
-
-
-
-
 
 
 	/// Returns a set of stars which achieves the maximum star coverage with the least overlaps.

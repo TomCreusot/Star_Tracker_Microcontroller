@@ -8,9 +8,7 @@ use crate::core_include::*;
 use crate::tracking_mode::database::Database;
 use crate::tracking_mode::database::SearchResult;
 use crate::tracking_mode::database::ChunkAreaSearch;
-use crate::tracking_mode::database::RegionalDatabase;
 use crate::tracking_mode::database::ChunkIteratorNone;
-use crate::tracking_mode::database::ChunkIteratorRegional;
 use crate::tracking_mode::database::ChunkIteratorEquatorial;
 use crate::tracking_mode::database::ChunkIteratorDeclination;
 
@@ -256,88 +254,6 @@ impl <'a> ChunkIterator for ChunkIteratorDeclination <'a>
 	
 	
 }
-
-
-
-
-
-
-
-
-
-
-
-
-impl<'a> ChunkIteratorRegional <'a>
-{
-	/// Constructs the iterator.  
-	/// To run the iterator;  
-	/// 1. Call new and pass in the database.  
-	/// 2. Call begin.  
-	/// 3. Call next.  
-	/// 4. Use `same_region` to check the region is correct and call `next` to move to the next location.
-	pub fn new ( database: &'a RegionalDatabase ) -> Self
-	{
-		return Self { database: database, index: 0, started: false }
-	}
-}
-
-impl<'a> ChunkIterator for ChunkIteratorRegional <'a>
-{
-	/// Resets the iterator.  
-	/// Call this to return to the start, then call next.
-	fn begin ( &mut self )
-	{
-		self.index = 0;
-		self.started = false;
-	}
-
-	/// Steps to the next region.
-	/// This must be called to begin.
-	/// If there is no more regions, next will return false.
-	fn next ( &mut self ) -> bool
-	{
-		if self.started
-		{
-			self.index += 1;
-		}
-		else
-		{
-			self.started = true;
-		}
-		
-		return self.index < self.database.num_fields;
-	}
-
-	/// Returns the database this iterator holds.
-	fn get_database ( &self ) -> &dyn Database { return self.database; }
-
-	/// Returns true if the pair at the provided index fits the current region.
-	fn same_region ( &self, pair_index: usize ) -> bool
-	{
-		let pair = self.database.get_pairs(pair_index);
-		let chunk_1  = self.database.catalogue_field.get(pair.0);
-		let chunk_2  = self.database.catalogue_field.get(pair.1);
-		
-		let current_chunk = BitField(1 << self.index);
-		
-		return 
-			chunk_1.compare(BitCompare::Any(current_chunk)) ||
-			chunk_2.compare(BitCompare::Any(current_chunk));
-	}
-}
-
-
-
-
-
-
-
-
-
-
-
-
 
 
 

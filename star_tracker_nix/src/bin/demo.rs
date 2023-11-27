@@ -71,9 +71,8 @@ use star_tracker_nix::io::Io;
 use star_tracker_nix::tracking_mode::DatabaseGenerator;
 use star_tracker_nix::tracking_mode::AbandonSearchTimeoutFailure;
 use star_tracker_nix::image_processing::CVImage;
+use star_tracker_nix::image_processing::Color;
 use star_tracker_nix::util::units::Formatted;
-
-
 
 use star_tracker_lib::image_processing::ImageWord;
 use star_tracker_lib::util::word::WordList;
@@ -102,16 +101,17 @@ reset; cargo run --bin demo 16mm_checker_2
 	"#);
 
 	let exclusive_folders: Vec<String> = env::args().collect();
+	let mut sky_map = CVImage::new(Pixel{x: 1280, y: 720});
 
-	let angle_tolerance  = Degrees(0.09).as_radians();
+	let angle_tolerance  = Degrees(0.05).as_radians();
 	let magnitude_min    = -20.00;
-	let magnitude_max    =   6.69;
+	let magnitude_max    =   5.9;
 	let double_star_tolerance = angle_tolerance;
 
 
 	// Loose conditions
-	let time_good: u128 = 10000; // ms until auto fail.
-	let fails_good: usize = 10;  // How many triangles can be failed matches until auto fail.
+	let time_good: u128 = 5000; // ms until auto fail.
+	let fails_good: usize = 500;  // How many triangles can be failed matches until auto fail.
 
 
 	println!("Performing Database Construction");
@@ -130,14 +130,22 @@ reset; cargo run --bin demo 16mm_checker_2
 	println!("\tLimiting Similar.");
 	// let stars_limit_sim    = DatabaseGenerator::limit_similar(&stars_limit_double, Degrees(0.0001).to_radians());
 	
+	// draw(magnitude_min, magnitude_max, stars_limit_mag, &mut sky_map);
 	println!("\tCreating Database.");
 	
+	let mut fails_bands : Vec<Vec<String>> = Vec::new();
+	for i in 0..1000 { fails_bands.push(Vec::new()); fails_bands[i] = Vec::new();}
+
+	let mut num_fails = 0;
+	let mut num_success = 0;
+	let mut time_success = 0;
 	let samples = star_tracker_nix::io::Sample::load_samples();
 	
 	for sample in samples
 	{
 		for image_index in 0..sample.file_img.len()
 		{
+
 
 
 			// Allows you to choose the folder images.
@@ -148,6 +156,8 @@ reset; cargo run --bin demo 16mm_checker_2
 			}
 			if !is_exclusive { continue; }
 
+			if sample.file_img.contains(&"sky-wipe".to_string()) { continue; }
+
 
 			
 			// The Diagonal field of view.
@@ -157,7 +167,7 @@ reset; cargo run --bin demo 16mm_checker_2
 			else                         { continue;   }
 			println!("\n\n\n\n{}, fov: {}", sample.file_img[image_index], fov.to_degrees());
 			
-			let region_size = fov / 2.0;
+			let region_size = Degrees(10.0).to_radians();//fov / 2.0;
 			let region_num = 8;
 			
 			let mut img = CVImage::read(&sample.file_img[image_index]);
@@ -169,7 +179,7 @@ reset; cargo run --bin demo 16mm_checker_2
 			let stars_limit_reg    = DatabaseGenerator::limit_regions(&stars_limit_mag_2, region_size, region_num);
 
 
-			let gen : DatabaseGenerator = DatabaseGenerator::gen_database(&stars_limit_reg, fov, fov / 1.5, angle_tolerance);
+			let gen : DatabaseGenerator = DatabaseGenerator::gen_database(&stars_limit_reg, fov, fov / 1.1, angle_tolerance);
 			// let gen : DatabaseGenerator = DatabaseGenerator::gen_database_regional(&stars_limit_reg, fov, fov, TrackingConstsTest::ANGLE_TOLERANCE);
 			let database = gen.get_database();
 			// let database = gen.get_database_regional();
@@ -177,17 +187,23 @@ reset; cargo run --bin demo 16mm_checker_2
 			// let mut database_iterator = ChunkIteratorRegional::new(&database);
 			// let mut database_iterator = ChunkIteratorEquatorial::new(&database, Degrees(45.0).as_radians(), 0.3);
 			// let mut database_iterator = ChunkIteratorDeclination::new(&database, Degrees(21.0).as_radians(), 0.2, ChunkIteratorDeclination::randomise_none);
-			let mut database_iterator = ChunkIteratorDeclination::new(&database, fov, 1.25, ChunkIteratorDeclination::randomise_parity);
+			// let mut database_iterator = ChunkIteratorDeclination::new(&database, Degrees(10.0).as_radians(), 1.0, ChunkIteratorDeclination::randomise_parity);
+			let mut database_iterator = ChunkIteratorDeclination::new(&database, Degrees(20.0).as_radians(), 1.2, ChunkIteratorDeclination::randomise_parity);
 
 			// let mut database_iterator = ChunkAreaSearch::from_point(&database, center, Degrees(35.954).as_radians());
+			// let mut database_iterator = 
+			// ChunkAreaSearch::from_range(&database, Degrees, Degrees(35.954).as_radians());
 
 
+			// let mut database_iterator = ChunkAreaSearch::from_range(&database, Degrees(0.0).to_radians()..Degrees(360.0).to_radians(), Degrees(-7.3).to_radians()-fov/1.2..Degrees(-7.3).to_radians()+fov/1.2);
 
 
 
 //################################################################################################//
 //							--- Image Processing / Blob Detection ---
 //################################################################################################//
+
+		imshow("BEFORE", &img.0);
 
 		println!("Image Processing");
 		// Removing Dark Frame from Image.
@@ -196,6 +212,28 @@ reset; cargo run --bin demo 16mm_checker_2
 				let px = Pixel{x: x, y: y};
 				if 10 < dark_frame.get(px) { img.set(px, 0); } } 
 		}
+		
+		let mut img_actual = CVImage::new(Pixel{x: 808, y: 608});
+		for x in 0..img_actual.width() {
+			for y in 0..img_actual.height() {
+				let px = Pixel{x: x, y: y};
+				star_tracker_nix::image_processing::NixImage::set(&mut img_actual, px, Color::Black);
+			}
+		}
+
+		let corrections = sample.get_corr();
+		if let Some(corr) = corrections
+		{
+			for cor in corr
+			{
+				let mut color = Scalar::new(255.0, 255.0, 255.0, 0.0); // Red color (BGR format)
+				let thickness = 1;
+				let radius    = 10;
+				let px_pt = Point::new(cor.image_px.x as i32, cor.image_px.y as i32);
+				circle(&mut img_actual.0, px_pt, radius, color, thickness, 1, 0).unwrap();
+			}
+		}
+
 
 		// The image to be examined will be consumed.
 		// To have a visualization, you will need a copy.
@@ -207,7 +245,8 @@ reset; cargo run --bin demo 16mm_checker_2
 
 		// Create a threshold using a semi adaptive threshold.
 		let timer = std::time::Instant::now();
-		let thresh = ThresholdGrid::<50, 50>::new(&img, 50, 1);
+		let thresh = ThresholdGrid::<50, 50>::new(&img, 20, 3);
+		// let thresh = ThresholdPercent::new(&img, 0.9999);
 		let time_thresh = timer.elapsed().as_millis();
 		
 		// Find the blobs in the image.
@@ -225,19 +264,18 @@ reset; cargo run --bin demo 16mm_checker_2
 		
 		// Visualizes the stars.
 		let mut img_thresh = CVImage::duplicate(&img);
-		thresh.apply_bin(&mut img_thresh);
+		// thresh.apply_bin(&mut img_thresh);
 
 		for i in 0..stars_2d.size()
 		{
 			let color = Scalar::new(0.0, 100.0, 255.0, 100.0); // Red color (BGR format)
-			let thickness = 1;
-			let radius    = 10;
+			let thickness = 3;
+			let radius    = 20;
 			let px_pt = Point::new(stars_2d.get(i).x as i32, stars_2d.get(i).y as i32);
 			circle(&mut img_thresh.0, px_pt, radius, color, thickness, 1, 0).unwrap();
-			println!("{:.2} {:.2}", stars_2d[i].x, stars_2d[i].y);
 		}
 
-		let _ = imshow("Thresholded", &img_thresh.0);
+		// let _ = imshow("Thresholded", &img_thresh.0);
 		println!("Found: {} stars in image.\n", stars_2d.len());
 
 
@@ -303,18 +341,27 @@ reset; cargo run --bin demo 16mm_checker_2
 			match success
 			{
 				ConstellationResult::ErrorNoTriangleMatch      { fails } => 
-					println!("FAILED: Could not match any stars; {} failures.", fails),
-
+				{
+					println!("FAILED: Could not match any stars; {} failures.", fails);
+				}	
+				
 				ConstellationResult::ErrorAborted              { fails } =>
-					println!("FAILED: Aborted due to AbandonSearch parameter; {} failures.", fails),
-
+				println!("FAILED: Aborted due to AbandonSearch parameter; {} failures.", fails),
+				
 				ConstellationResult::ErrorInsufficientPyramids { fails } =>
-					println!("FAILED: Not enough matched stars; {} failures.", fails),
-
+				println!("FAILED: Not enough matched stars; {} failures.", fails),
+				
 				ConstellationResult::Success                   { fails } =>
-					println!("SUCCESS; with {} fails.", fails),
-			}
+				{	
+				fails_bands[fails].push(sample.file_img[image_index].clone());
+					println!("SUCCESS; with {} fails.", fails);
+			}}
 			
+			if found_all.size() < 3
+			{
+				num_fails += 1;
+			}
+
 			if 0 < found_all.size()
 			{
 			
@@ -357,6 +404,20 @@ reset; cargo run --bin demo 16mm_checker_2
 			println!("Found Center: {}", world_center.to_equatorial());
 			
 			
+			if 3 < found_all.size()
+			{
+				num_success += 1;
+				draw_pt(world_center.to_equatorial(), Color::Red, 2, &mut sky_map);
+				star_tracker_nix::image_processing::NixImage::save(&sky_map, "sky.png");
+			}
+			
+			if found_all.size() == 3
+			{
+				num_fails += 1;
+				// draw_pt(world_center.to_equatorial(), Color::Blue, 4, &mut sky_map);
+			}
+
+			
 			if sample.file_log != "" && sample.file_img.size() == 1
 			{
 				if let Some(center) = sample.get_center()
@@ -367,6 +428,17 @@ reset; cargo run --bin demo 16mm_checker_2
 				} 
 			}
 
+
+			for i in 0..fails_bands.len()
+			{
+				if fails_bands[i].len() > 0
+				{
+					println!("\n\n\n\n{}", i);
+					println!("{:?}", fails_bands[i]);
+				}
+			}
+
+
 			println!("");
 			println!("Time thresholding:   {} ms", time_thresh);
 			println!("Time blob detection: {} ms", time_blob);
@@ -374,11 +446,92 @@ reset; cargo run --bin demo 16mm_checker_2
 			println!("Time tracking:       {} ms", time_tracking);
 			println!("Time quest:          {} ms", time_attitude);
 
-			
-			let _ = imshow("Image", &img.0);
-			let _ = wait_key(0).unwrap();
+
+			println!("num fails:    {}", num_fails);
+			println!("num success:  {}", num_success);
+			println!("time success: {}", time_success);
+
+			// let _ = imshow("Actual", &img_actual.0);
+			// let _ = imshow("Sky", &sky_map.0);
+			// let _ = imshow("Image", &img.0);
+			let _ = wait_key(10).unwrap();
 		}
 	}
-	}
+}
 
+star_tracker_nix::image_processing::NixImage::save(&sky_map, "sky.png");
+let _ = wait_key(0);
+
+}
+
+
+
+
+
+
+
+
+
+
+fn draw ( mag_min: Decimal, mag_max: Decimal, stars: Vec<Star>, img: &mut CVImage )
+{
+	let px_p_equ = img.width()  as Decimal / Degrees(360.0).to_radians().0;
+	let px_p_dec = img.height() as Decimal / Degrees(180.0).to_radians().0;
+	for i in 0..stars.len()
+	{
+		let pos = Pixel{
+			x: (px_p_equ * offset_ra(stars[i].pos.ra, Degrees(90.0).to_radians()).0)  as usize, 
+			y: (px_p_dec * (stars[i].pos.dec + Degrees(90.0).to_radians()).0) as usize};
+			
+		let intensity_ratio = 1.0 - (stars[i].mag - mag_min) / (mag_max - mag_min);
+		let intensity = (intensity_ratio * 5.0).powf(2.0);
+		// println!("{} \t {}", stars[i].mag, intensity_ratio)
+		let size_star    = 1.0 + intensity;
+		let size_overlay = ((1.0 + intensity) * 7.0).powf(2.0);
+		// let color = Color::Custom((intensity * 255.0) as Byte, 0, (255.0 - intensity * 255.0) as Byte);
+		let color = Color::White;
+		// println!("{:.2}\t{:.2}\t{:.2}\t{:.2}\t{:?}", stars[i].mag, intensity_ratio, intensity, size, color.get_color());
+		let pos = SpaceImage(Vector2{x: pos.x as Decimal, y: pos.y as Decimal});
+		// let prev_val = img.get(pos);
+		// let new_val = prev_val.saturating_add(intensity);
+		
+		// img.set(pos, new_val);
+		// img.overlay_circle(size_overlay, Color::Custom(1, 1, 2), pos);
+		star_tracker_nix::image_processing::NixImage::draw_star(img, size_overlay, Color::Custom(2, 2, 2), pos);
+		star_tracker_nix::image_processing::NixImage::draw_star(img, size_star, color, pos);
+	}
+}
+
+
+#[inline]
+fn draw_pt ( location: Equatorial, color: Color, size: usize, img: &mut CVImage )
+{
+	let px_p_equ = img.width()  as Decimal / Degrees(360.0).to_radians().0;
+	let px_p_dec = img.height() as Decimal / Degrees(180.0).to_radians().0;
+
+	let pos = Pixel{
+		x: (px_p_equ * offset_ra(location.ra, Degrees(90.0).to_radians()).0)  as usize,  	
+		y: (px_p_dec * (location.dec + Degrees(90.0).to_radians()).0) as usize};
+	for xx in pos.x.saturating_sub(size)..pos.x+size
+	{
+		for yy in pos.y.saturating_sub(size)..pos.y+size
+		{
+			let pos = Pixel{x: xx, y: yy};
+			if img.valid_pixel(pos)
+			{
+				star_tracker_nix::image_processing::NixImage::set(img, pos, color);
+			}
+		}	
+	}
+}
+
+#[inline]
+fn offset_ra ( val: Radians, offset: Radians ) -> Radians
+{
+	let mut val = val + offset;
+	if Degrees(360.0).to_radians() < val
+	{
+		val = val - Degrees(360.0).to_radians();
+	}
+	return val;
 }

@@ -1,8 +1,6 @@
 //! Nix contains any functionality which should only function on a computer.
 //! This may be due to using the heap, unnecessary code, interfacing with external crates, etc.
-use star_tracker_lib::util::aliases::UInt;
 use star_tracker_lib::util::units::Equatorial;
-use star_tracker_lib::util::units::BitField;
 use star_tracker_lib::util::units::Radians;
 use star_tracker_lib::util::err::Error;
 
@@ -76,9 +74,5 @@ pub struct DatabaseGenerator
 	/// This is the widest a star pair can be.
 	fov : Radians,
 	k_lookup: KVector,
-	/// Used for regional database.
-	catalogue_field: Vec<BitField>,
-	/// Used for regional database.
-	num_fields : UInt,
 }
 

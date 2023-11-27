@@ -26,6 +26,8 @@ It will use the corr.fits file to figure out the magnitudes.
 	  
 	"#);
 	
+	let exclusive_folders: Vec<String> = std::env::args().collect();
+
 	// To reduce size of database.
 	const MAGNITUDE_MIN: Decimal = -20.0;
 	const MAGNITUDE_MAX: Decimal = 7.0;
@@ -49,40 +51,46 @@ It will use the corr.fits file to figure out the magnitudes.
 	println!("{:90} | Magnitude Dullest | Magnitude Second Dullest", "File");
 	for sample in samples
 	{
-		for img in &sample.file_img
+		// Allows you to choose the folder images.
+		let mut is_exclusive = false;
+		for i in 1..exclusive_folders.len()
 		{
-			if let Some(cor_values) = sample.get_corr()
+			is_exclusive |= sample.dir.contains(&exclusive_folders[i]);
+		}
+		if !is_exclusive { continue; }
+
+
+		if let Some(cor_values) = sample.get_corr()
+		{
+			let mut set = false;
+			let mut dullest = 0;
+			let mut dullest_second = 0;
+			for i_c in 0..cor_values.len()
 			{
-				let mut set = false;
-				let mut dullest = 0;
-				let mut dullest_second = 0;
-				for i_c in 0..cor_values.len()
+				let point = cor_values[i_c].real_eq;
+				
+				for i_d in 0..stars_limit_double.len()
 				{
-					let point = cor_values[i_c].real_eq;
-					
-					for i_d in 0..stars_limit_double.len()
+					if point.angle_distance(stars_limit_double[i_d].pos) < DOUBLE_STAR_TOLERANCE
 					{
-						if point.angle_distance(stars_limit_double[i_d].pos) < DOUBLE_STAR_TOLERANCE
+						if !set || stars_limit_double[dullest].mag < stars_limit_double[i_d].mag
 						{
-							if !set || stars_limit_double[dullest].mag < stars_limit_double[i_d].mag
-							{
-								set = true;
-								dullest_second = dullest;
-								dullest = i_d;
-							}
+							set = true;
+							dullest_second = dullest;
+							dullest = i_d;
 						}
 					}
 				}
+			}
 
-				if set
-				{
-					println!("{:90}   {}\t\t {}", 
-						img, stars_limit_mag[dullest].mag, stars_limit_mag[dullest_second].mag);
-				}
-				else
-				{
-					println!("ERROR on {}", img);
-				}
+			if set
+			{
+				println!("{:90}   {}\t\t {}", 
+					sample.dir, stars_limit_mag[dullest].mag, stars_limit_mag[dullest_second].mag);
+			}
+			else
+			{
+				println!("ERROR on {}", sample.dir);
 			}
 		}
 		println!("");

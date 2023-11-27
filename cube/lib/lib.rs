@@ -34,6 +34,7 @@ use star_tracker_lib::util::list::ArrayList;
 use star_tracker_lib::util::list::List;
 use star_tracker_lib::image_processing::ImageWord;
 use star_tracker_lib::image_processing::ThresholdGrid;
+use star_tracker_lib::image_processing::ThresholdPercent;
 use star_tracker_lib::image_processing::Image;
 use star_tracker_lib::image_processing::Blob;
 use star_tracker_lib::image_processing::Threshold;
@@ -46,7 +47,9 @@ use star_tracker_lib::tracking_mode::Constellation;
 use star_tracker_lib::tracking_mode::StarTriangleIterator;
 use star_tracker_lib::tracking_mode::Specularity;
 use star_tracker_lib::tracking_mode::AbandonSearchFailures;
+use star_tracker_lib::tracking_mode::AbandonSearchNone;
 use star_tracker_lib::tracking_mode::database::ChunkIteratorDeclination;
+use star_tracker_lib::tracking_mode::database::ChunkAreaSearch;
 
 use star_tracker_lib::attitude_determination::Quest;
 use star_tracker_lib::attitude_determination::AttitudeDetermination;
@@ -104,8 +107,8 @@ fn panic ( panic_info: &PanicInfo ) -> !
 
 
 
-static mut thresh: ThresholdGrid::<50, 50> 
-	= ThresholdGrid::<50, 50>{size: Pixel{x: 0, y: 0}, cells: [[0; 50]; 50]}; // not initialized
+// static mut thresh: ThresholdPercent = ThresholdPercent{threshold: 0};
+static mut thresh: ThresholdGrid<50,50> = ThresholdGrid::<50, 50>{size: Pixel{x: 0, y: 0}, cells: [[0; 50]; 50]}; // not initialized
 
 static mut stars_2d: ArrayList<Vector2,    100> = ArrayList{array: [Vector2{x: 0.0, y: 0.0}; 100], end: 0};
 static mut stars_3d: ArrayList<Equatorial, 100> = ArrayList{array: [Equatorial::north(); 100], end: 0};
@@ -128,7 +131,9 @@ pub extern "C" fn threshold ( address: usize, size_x: usize, size_y: usize )
 		let word_size = WordSize{word_size: 32, nibbles_num: 4, nibbles_size: 8};
 		let mut word  = WordList{array: &mut array, size: word_size};
 		let mut image = ImageWord{img: &mut word, size: Pixel{x: size_x as usize, y: size_y as usize}};
-		thresh = ThresholdGrid::<50, 50>::new(&image, 50, 1);
+		thresh = ThresholdGrid::<50, 50>::new(&image, 20, 2);
+		
+		// thresh = ThresholdPercent::new(&image, 0.99999);
 		// 
 		// thresh.apply_bin(&mut image);
 
@@ -202,7 +207,37 @@ pub extern "C" fn track ( allowed_failures: usize ) -> usize
 {
 	unsafe
 	{
-		let mut database_iterator = ChunkIteratorDeclination::new(&database::DATABASE, database::FOV, 1.25, ChunkIteratorDeclination::randomise_parity);
+		let mut database_iterator = ChunkIteratorDeclination::new(&database::DATABASE, Degrees(10.0).as_radians(), 1.0, ChunkIteratorDeclination::randomise_parity);
+		let angle_tolerance = database::angle_tolerance;
+		let success = Constellation::find (
+			&stars_3d, &mut database_iterator,
+			&mut StarTriangleIterator::<1000>::new(),
+			&mut Specularity::default(),
+			&mut AbandonSearchNone(),
+			angle_tolerance,
+			4..=4,
+			&mut stars_match
+		);
+		if let star_tracker_lib::tracking_mode::ConstellationResult::Success{fails: _} = success
+		{
+			for i in 0..stars_match.size()
+			{
+				let point = database::CATALOGUE[stars_match.get(i).output];
+				print(format!("Track {} {}\n", point.ra.to_degrees().0, point.dec.to_degrees().0).as_str());
+			}
+			return 1;
+		}
+		print(format!("Track\n").as_str());
+		return 0;
+	}
+}
+
+#[no_mangle]
+pub extern "C" fn track_chunk ( allowed_failures: usize, ra: f32, dec: f32 ) -> usize
+{
+	unsafe
+	{
+		let mut database_iterator = ChunkAreaSearch::from_point(&database::DATABASE, Equatorial{ra: Degrees(ra).to_radians(), dec: Degrees(dec).to_radians()}, database::FOV);
 		let angle_tolerance = database::angle_tolerance;
 		let success = Constellation::find (
 			&stars_3d, &mut database_iterator,
@@ -222,7 +257,6 @@ pub extern "C" fn track ( allowed_failures: usize ) -> usize
 			}
 			return 1;
 		}
-		print(format!("Track\n").as_str());
 		return 0;
 	}
 }

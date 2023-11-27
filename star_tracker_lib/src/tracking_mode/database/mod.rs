@@ -100,7 +100,6 @@ pub use crate::tracking_mode::database::database::MockDatabase as MockDatabase;
 
 mod k_vector;
 pub mod pyramid_database;
-pub mod regional_database;
 pub mod database;
 pub mod chunk_iterator;
 pub mod search_result;
@@ -177,44 +176,6 @@ pub struct PyramidDatabase <'a>
 	/// Use the `k_lookup`, `k_vector`, `pairs` to find the pairs of stars.
 	pub catalogue: &'a dyn LinearLookup<Equatorial>,
 }
-
-
-/// This database is required for the ChunkIteratorRegional.  
-/// A list specifying the chunk the star is located in is required as the iterator uses a bitfield.
-#[derive(Clone, Copy)]
-pub struct RegionalDatabase<'a>
-{
-	/// The field of view used when the database was constructed.
-	pub fov:       Radians,
-	
-	/// The number of bits in the `catalogue_field` bit field.
-	pub num_fields: UInt,
-	
-	
-	/// The equation of the k_vector which points to the k_vector table `k_vector`.
-	pub k_lookup:  KVector,
-
-	/// The k_vector table pointed to from `k_lookup`.
-	pub k_vector:  &'a dyn LinearLookup<usize>,
-
-	/// Pairs of stars in order of separation.  
-	/// The separation is not provided, use the `k_lookup`, `k_vector` to find stars with a specific separation.  
-	/// This points to the `catalog`, where each element in the star pair is an index of the catalogue.
-	pub pairs:     &'a dyn LinearLookup<StarPair<usize>>,
-
-	/// The stars location in the sky.
-	/// Use the `k_lookup`, `k_vector`, `pairs` to find the pairs of stars.
-	pub catalogue: &'a dyn LinearLookup<Equatorial>,
-
-	/// Reflects the index of the `catalogue`.  
-	/// This represents what *region/chunk* of the sky the field is located in.
-	/// Use this to identify if a star is relevant.
-	pub catalogue_field: &'a dyn LinearLookup<BitField>
-}
-
-
-
-
 
 
 
@@ -336,42 +297,6 @@ pub struct ChunkIteratorDeclination <'a>
 	/// The wider this value, the more coverage but less performance.  
 	/// `chunk_size_multiplier` must be greater than 1.
 	chunk_size_multiplier: Decimal
-}
-
-
-
-
-/// A chunk iterator is a way of optimizing the database search process.  
-/// When searching the database for star matches, the database will return matches from around the entire celestial sphere.  
-/// To ensure that all the pairs are within the same camera frame, a chunk iterator is used to move between each chunk/region.  
-/// This ensures that only stars within the field of view will be used.  
-/// 
-/// Consider that checking for triangle matches is a triple loop O(n^3) while a chunk search is O(m).
-/// By reducing the number of incorrect matches (n) by increasing the regions (m), there is a large performance uplift.  
-/// This also creates a higher reliability where the difference in time between a match and a false positive are greater.  
-///   
-/// For `ChunkIteratorRegional`, a special database (`RegionalDatabase`) must be used.  
-/// This database has a list containing a bitfield specifying a region where each star is located.  
-/// When this iterator is used, it will check if either star in the star pair are within the search region.  
-/// If the stars are outside of the region, they will be excluded.  
-///  
-/// These regions are a set of equal spaced circles with some overlap.  
-///  
-/// Due to the additional size of the database, it is recommended to use a different iterator if you are lacking space...
-pub struct ChunkIteratorRegional <'a>
-{
-	/// The database to search.
-	database: &'a RegionalDatabase<'a>,
-
-	/// This incriments from 0 representing what bit to investigate.
-	index: UInt,
-	
-	/// Has the iterator started iterating.  
-	/// Due to the design of the other iterators, next must be called before the iterator can begin.  
-	/// Therefore index should start from -1.  
-	/// Since the bitfield uses a uint, this variable must specify if it is the first iteration.
-	started: bool,
-	
 }
 
 

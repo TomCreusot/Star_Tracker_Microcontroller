@@ -15,18 +15,23 @@ byte SEND_GET = 'G';
 byte SEND_ACK = 'A';
 byte SEND_ERR = 'E';
 byte SEND_RUN = 'R';
+byte SEND_RUN_CHUNK = 'C';
 byte SEND_HANDSHAKE = 'H';
 
 int num_blobs = 0;
 int blobCur  = 0;
 int pixelCur = 0;
 
+// in degrees
+int ra  = 248;
+int dec = -26;
+
 void setup()
 {
   size(808*2, 608 + 50);  // Stage size
   noStroke();      // No border on the next thing drawn
   colorMode(RGB, 255);
-  img_real = loadImage("image.png");
+  img_real = loadImage("fail_10.png");
   img_mcu  = createImage(808, 608, ARGB);
   for ( int i = 0; i < img_mcu.pixels.length; i++ )  img_mcu.pixels[i] = color(255, 255, 255, 255);
 
@@ -84,17 +89,33 @@ void draw()
     stateSending = true;
     pixelCur = 0;
     sendAddress(0);
-  } else if ( button(404, 608, 808, 50, "RECEIVE") && idle() )
+  } else if ( button(404, 608, 404, 50, "RECEIVE") && idle() )
   {
     stateReceiving = true;
     pixelCur = 0;
     port.write(SEND_GET);
     requestAddress(pixelCur);
-  } else if ( button(808, 608, 1212, 50, "RUN") && idle() )
+  } else if ( button(808, 608, 404, 50, "RUN") && idle() )
   {
     stateRunning = true;
     port.write(SEND_RUN);
-    task_time = 0;
+    task_time = millis();
+  } else if ( button(1212, 608, 404, 50, "RUN") && idle() )
+  {
+    stateRunning = true;
+    port.write(SEND_RUN_CHUNK);
+    
+    byte [] sendBuffer = new byte[8];
+    sendBuffer[0] = (byte)((ra >> (8*0)) & 255);
+    sendBuffer[1] = (byte)((ra >> (8*1)) & 255);
+    sendBuffer[2] = (byte)((ra >> (8*2)) & 255);
+    sendBuffer[3] = (byte)((ra >> (8*3)) & 255);
+    sendBuffer[4] = (byte)((dec >> (8*0)) & 255);
+    sendBuffer[5] = (byte)((dec >> (8*1)) & 255);
+    sendBuffer[6] = (byte)((dec >> (8*2)) & 255);
+    sendBuffer[7] = (byte)((dec >> (8*3)) & 255);
+    port.write(sendBuffer);
+    task_time = millis();
   }
 }
 

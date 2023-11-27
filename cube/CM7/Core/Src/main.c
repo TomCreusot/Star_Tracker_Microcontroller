@@ -79,12 +79,13 @@ typedef struct Vector2 {
 } Vector2;
 
 
-void threshold ( size_t imageAddress, uint32_t size_x, uint32_t size_y);
-size_t blob    ( size_t imageAddress, size_t size_x, size_t size_y );
-void project   ( size_t size_x, size_t size_y);
-size_t track     ( size_t allowed_failures );
-void vote      ( );
-void get_vote  ( uint8_t* vote );
+void threshold     ( size_t imageAddress, uint32_t size_x, uint32_t size_y);
+size_t blob        ( size_t imageAddress, size_t size_x, size_t size_y );
+void project       ( size_t size_x, size_t size_y);
+size_t track       ( size_t allowed_failures );
+size_t track_chunk ( size_t allowed_failures, float ra, float dec );
+void vote          ( );
+void get_vote      ( uint8_t* vote );
 
 void set_pixel ( size_t address, size_t size_x, size_t size_y, size_t pos_x, size_t pos_y, uint8_t value );
 
@@ -105,11 +106,12 @@ const uint8_t SEND_ACK = 'A';
 const uint8_t SEND_ERR = 'E';
 const uint8_t SEND_HANDSHAKE = 'H';
 const uint8_t SEND_RUN = 'R';
+const uint8_t SEND_RUN_CHUNK = 'C';
 
 const uint8_t SEND_THRESH          = 'a';
 
-const uint8_t SEND_BLOB            = 'e';
-const uint8_t SEND_GET_STAR        = 'f';
+const uint8_t SEND_BLOB     = 'e';
+const uint8_t SEND_GET_STAR = 'f';
 const uint8_t SEND_GET_VOTE = 'g';
 
 
@@ -227,9 +229,6 @@ void perform_threshold ( )
 	HAL_GPIO_WritePin(GPIOE, GPIO_PIN_1, GPIO_PIN_RESET);  // Yellow
 	HAL_GPIO_WritePin(GPIOB, GPIO_PIN_14, GPIO_PIN_RESET); // Red
 	threshold(AXIS_RAM_START, 808, 608); 
-
-	// uint8_t send_buffer[3] = {'T', '\n', '\r'};
-	// HAL_UART_Transmit(&huart3, send_buffer, sizeof(send_buffer), 100);
 }
 
 void perform_blob ( )
@@ -238,9 +237,6 @@ void perform_blob ( )
 	HAL_GPIO_WritePin(GPIOE, GPIO_PIN_1, GPIO_PIN_SET);     // Yellow
 	HAL_GPIO_WritePin(GPIOB, GPIO_PIN_14, GPIO_PIN_RESET);  // Red
 	size_t found = blob(AXIS_RAM_START, 808, 608); 
-
-	// uint8_t send_buffer[3] = {'B', '\n', '\r'};
-	// HAL_UART_Transmit(&huart3, send_buffer, sizeof(send_buffer), 100);
 }   
 
 void perform_project ( )
@@ -249,9 +245,6 @@ void perform_project ( )
 	HAL_GPIO_WritePin(GPIOE, GPIO_PIN_1, GPIO_PIN_RESET); // Yellow
 	HAL_GPIO_WritePin(GPIOB, GPIO_PIN_14, GPIO_PIN_SET);  // Red
 	project(808, 608);
-	
-	// uint8_t send_buffer[3] = {'P', '\n', '\r'};
-	// HAL_UART_Transmit(&huart3, send_buffer, sizeof(send_buffer), 100);
 }
 
 void perform_track ( )
@@ -259,10 +252,15 @@ void perform_track ( )
 	HAL_GPIO_WritePin(GPIOB, GPIO_PIN_0, GPIO_PIN_SET);   // Green
 	HAL_GPIO_WritePin(GPIOE, GPIO_PIN_1, GPIO_PIN_RESET); // Yellow
 	HAL_GPIO_WritePin(GPIOB, GPIO_PIN_14, GPIO_PIN_SET);  // Red
-	size_t found = track(5);
-	
-	// uint8_t send_buffer[4] = {'T', '\n', '\r'};
-	// HAL_UART_Transmit(&huart3, send_buffer, sizeof(send_buffer), 100);
+	size_t found = track(10);
+}
+
+void perform_track_chunk ( float ra, float dec )
+{
+	HAL_GPIO_WritePin(GPIOB, GPIO_PIN_0, GPIO_PIN_SET);   // Green
+	HAL_GPIO_WritePin(GPIOE, GPIO_PIN_1, GPIO_PIN_RESET); // Yellow
+	HAL_GPIO_WritePin(GPIOB, GPIO_PIN_14, GPIO_PIN_SET);  // Red
+	size_t found = track_chunk(10, ra, dec);
 }
 
 void perform_vote ( )
@@ -271,9 +269,6 @@ void perform_vote ( )
 	HAL_GPIO_WritePin(GPIOE, GPIO_PIN_1, GPIO_PIN_SET);   // Yellow
 	HAL_GPIO_WritePin(GPIOB, GPIO_PIN_14, GPIO_PIN_SET);  // Red
 	vote();
-	
-	// uint8_t send_buffer[2] = {'V', '\n', '\r'};
-	// HAL_UART_Transmit(&huart3, send_buffer, sizeof(send_buffer), 100);
 }
 
 void perform_get_vote ( )
@@ -390,6 +385,31 @@ Error_Handler();
 				// case SEND_GET_STAR:
 				// 	perform_get_blob();
 				// 	break;
+
+				case SEND_RUN_CHUNK:
+				{
+					uint8_t position[8]; 
+					status = HAL_UART_Receive (&huart3, position, sizeof(position), 500);
+
+					int32_t ra =		
+							position[3] << (3*8) | 
+							position[2] << (2*8) | 
+							position[1] << (1*8) |
+							position[0] << (0*8); 
+
+					int32_t dec =		
+							position[7] << (3*8) | 
+							position[6] << (2*8) | 
+							position[5] << (1*8) |
+							position[4] << (0*8); 
+
+					perform_threshold(); 
+					perform_blob();
+					perform_project(); 
+					perform_track_chunk((float)ra, (float)dec);
+					perform_vote();
+					break;
+				}
 
 				case SEND_RUN:
 					perform_threshold(); 

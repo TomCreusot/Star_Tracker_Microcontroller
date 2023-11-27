@@ -1,8 +1,8 @@
 void receiveThreshold ( String [] values )
 {
-  task_time = millis();
   println("\nDONE Threshing: " + (millis() - task_time) + "ms.");
   println();
+  task_time = millis();
 }
 
 

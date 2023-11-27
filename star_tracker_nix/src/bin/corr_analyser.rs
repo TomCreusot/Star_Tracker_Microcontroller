@@ -89,6 +89,7 @@ This will show a set of 3 images;
 	"#);
 
 	let samples = Sample::load_samples();
+	let exclusive_folders: Vec<String> = std::env::args().collect();
 
 	for sample in samples
 	{
@@ -100,6 +101,17 @@ This will show a set of 3 images;
 		if let Some(cor) = cor
 		{
 			println!("{}", dir);
+
+			// Allows you to choose the folder images.
+			let mut is_exclusive = false;
+			for i in 1..exclusive_folders.len()
+			{
+				is_exclusive |= dir.contains(&exclusive_folders[i]);
+			}
+			if !is_exclusive { continue; }
+
+
+
 			// Draws error onto image
 			let img_org      = imread( &img_file, ImreadModes::IMREAD_COLOR as i32 ).unwrap();
 			let mut img_err  = imread( &img_file, ImreadModes::IMREAD_COLOR as i32 ).unwrap();
@@ -116,10 +128,10 @@ This will show a set of 3 images;
 			let mut min_err_eq = Radians(0.0);
 			let mut max_err_eq = Radians(0.0);
 
-			let circle_thickness = 1;
-			let circle_radius    = 1;
-			let color_real = Scalar::new(0.0,   0.0, 100.0, 0.0); // Red color (BGR format)
-			let color_obs  = Scalar::new(0.0, 100.0,   0.0, 0.0); // Red color (BGR format)
+			let circle_thickness = 3;
+			let circle_radius    = 3;
+			let color_real = Scalar::new(0.0,   0.0, 255.0, 0.0); // Red color (BGR format)
+			let color_obs  = Scalar::new(255.0, 0.0,   0.0, 0.0); // Red color (BGR format)
 			let color_line = Scalar::new(0.0, 100.0, 100.0, 0.0); // Red color (BGR format)
 
 			// Calculate center of mass and averages.
@@ -144,7 +156,7 @@ This will show a set of 3 images;
 			avg_err_eq.0  /= cor.len() as Decimal;
 			center_mass = center_mass / total_error;
 
-			let _=circle(&mut img_err, Point::new(center_mass.x as i32, center_mass.y as i32), 50, color_real, 10,1,0);
+			// let _=circle(&mut img_err, Point::new(center_mass.x as i32, center_mass.y as i32), 50, color_real, 10,1,0);
 
 
 			// Calculate standard deviation.
