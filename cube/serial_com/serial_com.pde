@@ -1,3 +1,19 @@
+// This is simple code to interface with the microcontroller.
+// It can send/receive an image and run the algorithm.
+// 
+// SETUP:
+// Ensure the image is 808 by 608, thats not a constraint for the star tracker, just how this is setup.
+// If you want to test the Area search instead of lost ins space, set the variables ra and dec to the degree position of the star.
+// To try different images, change the image variable.
+//
+// TO RUN:
+// Plug in the MCU.
+// Press the Play Button to run the app.
+// Press "SEND" in the app to send the image, wait until the image is fully visible.
+// Press "RECEIVE" if you want to varify the image is there, you dont need to, its just a way to test everything works.
+// Press "RUN Declination" to run the software with the declination iterator (lost in space).
+// Press "RUN Search Area" to run the software within a target search area.
+
 import processing.serial.*;
 
 Serial  port;
@@ -12,7 +28,7 @@ boolean stateRunning    = false;
 
 byte SEND_SET = 'S';
 byte SEND_GET = 'G';
-byte SEND_ACK = 'A';
+byte SEND_ACK = 'A';    // For handshaking in setup.
 byte SEND_ERR = 'E';
 byte SEND_RUN = 'R';
 byte SEND_RUN_CHUNK = 'C';
@@ -22,24 +38,29 @@ int num_blobs = 0;
 int blobCur  = 0;
 int pixelCur = 0;
 
+// MODIFY
 // in degrees
 int ra  = 248;
 int dec = -26;
+String image = "fail_0.png";
+
 
 void setup()
 {
-  size(808*2, 608 + 50);  // Stage size
-  noStroke();      // No border on the next thing drawn
-  colorMode(RGB, 255);
-  img_real = loadImage("fail_10.png");
-  img_mcu  = createImage(808, 608, ARGB);
-  for ( int i = 0; i < img_mcu.pixels.length; i++ )  img_mcu.pixels[i] = color(255, 255, 255, 255);
+  size(808*2, 608 + 50);                  // Enough room for 2 images.
+  noStroke();                             // No border on the next thing drawn
+  colorMode(RGB, 255);                    // Normal RGB image (byte, no alpha) 
+  img_real = loadImage("fail_0.png");
+  
+  // 
+  img_mcu  = createImage(808, 608, ARGB); 
+  for ( int i = 0; i < img_mcu.pixels.length; i++ )  
+    img_mcu.pixels[i] = color(255, 255, 255, 255);
 
 
-  // Print a list of the serial ports, for debugging purposes:
+  // HANDSHAKE
+  // On connection, ACK must be sent to the computer.
   printArray(Serial.list());
-
-
   var serialPorts = Serial.list();
   for ( int i = 0; i < serialPorts.length && !portSetup; i++ )
   {
@@ -73,34 +94,42 @@ void setup()
 
 
 
+// Draws every frame.
 void draw()
 {
   textAlign(CENTER, CENTER);
   textSize(30);
-  image(img_real, 0, 0);
+  image(img_real, 0, 0); // The image to be sent.
 
   float progress = round(pixelCur / (608.0 * 808.0) * 608.0);
   if ( stateSending ) rect(0, progress, 808, 608 - progress);
 
   image(img_mcu, 808, 0);
 
+  // Left most button: SEND, sends the image to the MCU
   if ( button(0, 608, 404, 50, "SEND") && idle() )
   {
     stateSending = true;
     pixelCur = 0;
     sendAddress(0);
+   
+  // Mid Left button: RECEIVE, receives what the MCU sees.
   } else if ( button(404, 608, 404, 50, "RECEIVE") && idle() )
   {
     stateReceiving = true;
     pixelCur = 0;
     port.write(SEND_GET);
     requestAddress(pixelCur);
-  } else if ( button(808, 608, 404, 50, "RUN") && idle() )
+  
+  // Mid Right Runs the star tracker software (uses declination iterator).
+  } else if ( button(808, 608, 404, 50, "RUN Declination") && idle() )
   {
     stateRunning = true;
     port.write(SEND_RUN);
     task_time = millis();
-  } else if ( button(1212, 608, 404, 50, "RUN") && idle() )
+    
+  // Right, Runs search area, this requires ra and dec to be set correctly.
+  } else if ( button(1212, 608, 404, 50, "RUN Search Area") && idle() )
   {
     stateRunning = true;
     port.write(SEND_RUN_CHUNK);
@@ -120,6 +149,7 @@ void draw()
 }
 
 
+// Graphically handles a button.
 boolean button ( int x, int y, int w, int h, String title )
 {
   fill(100);
@@ -129,12 +159,14 @@ boolean button ( int x, int y, int w, int h, String title )
   return mousePressed && x < mouseX && mouseX < x + w && y < mouseY && mouseY < y + h;
 }
 
+// True if safe to send a message.
 boolean idle ( )
 {
   return stateSending == false && stateReceiving == false && stateRunning == false;
 }
 
 
+// EVENT, called when serial input.
 void serialEvent( Serial myPort )
 {
   states();
@@ -145,17 +177,17 @@ int task_time = 0;
 boolean reached_end = false;
 void states ( )
 {
-  if ( stateSending ) runStateSend();
-  else if ( stateReceiving ) runStateReceive();
-  else if ( stateRunning )
+  if ( stateSending ) runStateSend();           // Loading Image
+  else if ( stateReceiving ) runStateReceive(); // Receiving Image
+  else if ( stateRunning )                      // Running Star tracker
   {
-    //delay(100);
     if (0 < port.available()) {
       String inBuffer = port.readStringUntil('\n');
       if ( inBuffer != null )
       {
         String[] command = inBuffer.split("[ \n]");
 
+        // Sent by the microcontroller about what step it is up to in the tracking algorithm.
         switch ( command[0] )
         {
         case "Threshold":
@@ -185,13 +217,4 @@ void states ( )
       }
     }
   }
-}
-
-
-
-
-void delayNano ( long time )
-{
-  long start = System.nanoTime();
-  while ( System.nanoTime() - start < time );
 }

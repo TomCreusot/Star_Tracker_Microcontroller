@@ -1,3 +1,8 @@
+// serial_com handles the graphical elements and events.
+// This handles the direct communication.
+//
+//
+
 void receiveThreshold ( String [] values )
 {
   println("\nDONE Threshing: " + (millis() - task_time) + "ms.");
@@ -61,8 +66,15 @@ void receiveTrack ( String [] values )
   if ( !foundTrack ) println("\nDONE Tracking: " + (millis() - task_time) + "ms.");
   foundTrack = true;
 
-  float ra = Float.parseFloat(values[1]);
-  float dec = Float.parseFloat(values[2]);
+  float ra = 0;
+  float dec = 0;
+  if ( 2 < values.length )
+  {
+    ra = Float.parseFloat(values[1]);
+    dec = Float.parseFloat(values[2]);
+  }
+  else
+    println("FAILED to find constellation.");
 
   task_time = millis();
   println("Track      | ra:" + ra + ", dec: " + dec);

@@ -1,1 +1,0 @@
-window.SIDEBAR_ITEMS = {"mod":["extrinsic_parameters","intrinsic_parameters"],"struct":["ExtrinsicParameters","IntrinsicParameters","SpaceCamera","SpaceImage","SpacePixel","SpaceWorld"]};

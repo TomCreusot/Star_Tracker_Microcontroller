@@ -1,1 +1,0 @@
-window.SIDEBAR_ITEMS = {"constant":["DECIMAL_PRECISION_TEST"],"trait":["TestEqual"]};

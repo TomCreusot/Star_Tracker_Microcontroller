@@ -8,6 +8,7 @@
 #[macro_use]
 extern crate star_tracker_lib;
 extern crate star_tracker_nix;
+extern crate star_tracker_database;
 extern crate image;
 extern crate rand;
 extern crate opencv;
@@ -25,10 +26,8 @@ use star_tracker_lib::util::units::Match;
 use star_tracker_lib::util::units::Vector3;
 use star_tracker_lib::util::units::Equatorial;
 use star_tracker_lib::util::units::Quaternion;
-use star_tracker_lib::util::distribution::Distribute;
 use star_tracker_lib::util::linear_lookup::LinearLookup;
 use star_tracker_lib::image_processing::Image;
-
 
 use star_tracker_lib::projection::ExtrinsicParameters;
 use star_tracker_lib::projection::SpaceWorld;
@@ -36,9 +35,11 @@ use star_tracker_lib::projection::SpaceWorld;
 use star_tracker_lib::attitude_determination::Quest;
 use star_tracker_lib::attitude_determination::AttitudeDetermination;
 
-use star_tracker_nix::io::Star;
-use star_tracker_nix::io::Io;
-use star_tracker_nix::tracking_mode::DatabaseGenerator;
+use star_tracker_database::distribution::Distribute;
+use star_tracker_database::io::Star;
+use star_tracker_database::io::Io;
+use star_tracker_database::tracking_mode::DatabaseGenerator;
+
 use star_tracker_nix::tracking_mode::AbandonSearchTimeoutFailure;
 use star_tracker_nix::image_processing::CVImage;
 
@@ -52,7 +53,7 @@ pub fn main ( )
 	let exclusive_folders: Vec<String> = std::env::args().collect();
 	let samples = star_tracker_nix::io::Sample::load_samples();
 	let mut names = Vec::new();
-	let mut histogram = Vec::new();
+	let mut average = Vec::new();
 	for sample in samples
 	{
 		for image_index in 0..sample.file_img.len()
@@ -71,22 +72,23 @@ pub fn main ( )
 			let _ = img.histogram(&mut hist);
 
 			names.push(sample.file_img[image_index].clone());
-			histogram.push(hist);
+
+			let mut mean = 0;
+			let mut num_elements = 0;
+			for i in 0..hist.len()
+			{
+				num_elements += hist[i];
+				mean += hist[i] * i as u64;
+			}
+			average.push(mean as f64 / num_elements as f64);
 
 		}
 	}
 
-	print!("index", );
-	for i in 0..names.len() { print!("{}, ", names[i]); }
-	println!("");
-	for i in 0..histogram[0].len()
+	for i in 0..average.len()
 	{
-		print!("{}, ", i);
-		for j in 0..histogram.len()
-		{	
-			print!("{}, ", histogram[j][i]);
-		}
-		println!("");
+		let mut mean = 0;
+		println!("{}, {}", names[i], average[i]);
 	}
 
 }

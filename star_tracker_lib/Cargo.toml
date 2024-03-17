@@ -10,7 +10,7 @@ repository = "https://github.com/TomCreusot/Star_Tracker_Microcontroller"
 
 [lib]
 name = "star_tracker_lib"
-path = "src/lib.rs"
+path = "lib/lib.rs"
 required-features=[""]
 
 

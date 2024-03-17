@@ -16,6 +16,8 @@ star_tracker_nix/target/*
 star_tracker_embed/target/*
 star_tracker_nix/results/*
 star_tracker_nix/database/*
+star_tracker_database/database/*
+star_tracker_database/target/*
 cube/target/*
 .vscode/*
 

@@ -1,6 +1,6 @@
 {
-	"fov_deg": 18.128,
-	"angle_tol_deg": 0.04,
+	"fov_deg": 17.912,
+	"angle_tol_deg": 0.05,
     
     "region_size_deg": 10.0,
 	"region_num_stars": 8

@@ -1,0 +1,36 @@
+[package]
+name = "star_tracker_database"
+version = "0.1.0"
+authors = ["Tom Creusot <tom.creusot@student.curtin.edu.au>"]
+publish = false
+description = "The code for a star tracker which could be used on a microcontroller for satellites. This library handles generating the database using a OS platform."
+repository = "https://github.com/TomCreusot/Star_Tracker_Microcontroller"
+
+#licence = "GNU General Public License v3.0"
+[lib]
+name = "star_tracker_database"
+path = "lib/lib.rs"
+
+[[bin]]
+name = "database_rust"
+path = "src/database_rust.rs"
+
+[[bin]]
+name = "database_json"
+path = "src/database_json.rs"
+
+
+
+[dependencies.star_tracker_lib]
+path = "../star_tracker_lib"
+default_features = false
+features = ["nix", "bit_64"]
+
+
+[dependencies]
+csv   = "1.1.5"             # For Reading Database
+curl     = "0.4.38"         # Downloading HYG database.
+
+serde = { version = "1.0",  features = ["derive"] }
+rand = "0.8.0"
+serde_json = "1"

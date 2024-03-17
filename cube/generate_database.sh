@@ -1,1 +1,1 @@
-(cd ../star_tracker_nix; cargo run --bin gen_database ../cube/lib/database.rs ../cube/database.json)
+(cd ../star_tracker_database; cargo run --bin database_rust ../cube/lib/database.rs ../cube/database.json -q)

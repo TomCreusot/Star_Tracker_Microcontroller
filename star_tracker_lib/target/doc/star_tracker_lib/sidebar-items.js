@@ -1,1 +1,0 @@
-window.SIDEBAR_ITEMS = {"macro":["pilot_finder_array","pilot_finder_vec"],"mod":["attitude_determination","core_include","image_processing","projection","tracking_mode","util"]};

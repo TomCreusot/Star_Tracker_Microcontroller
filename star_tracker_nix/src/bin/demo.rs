@@ -5,6 +5,7 @@
 
 extern crate star_tracker_lib;
 extern crate star_tracker_nix;
+extern crate star_tracker_database;
 extern crate opencv;
 extern crate open;
 
@@ -58,7 +59,6 @@ use star_tracker_lib::tracking_mode::StarTriangleIterator;
 // use star_tracker_lib::tracking_mode::AbandonSearch;
 use star_tracker_lib::tracking_mode::database::ChunkIterator;
 use star_tracker_lib::tracking_mode::database::ChunkIteratorNone;
-use star_tracker_lib::tracking_mode::database::ChunkIteratorRegional;
 use star_tracker_lib::tracking_mode::database::ChunkAreaSearch;
 use star_tracker_lib::tracking_mode::database::ChunkIteratorEquatorial;
 use star_tracker_lib::tracking_mode::database::ChunkIteratorDeclination;
@@ -66,13 +66,14 @@ use star_tracker_lib::tracking_mode::database::ChunkIteratorDeclination;
 use star_tracker_lib::attitude_determination::AttitudeDetermination;
 use star_tracker_lib::attitude_determination::Quest;
 
-use star_tracker_nix::io::Star;
 use star_tracker_nix::io::Io;
-use star_tracker_nix::tracking_mode::DatabaseGenerator;
 use star_tracker_nix::tracking_mode::AbandonSearchTimeoutFailure;
 use star_tracker_nix::image_processing::CVImage;
 use star_tracker_nix::image_processing::Color;
 use star_tracker_nix::util::units::Formatted;
+
+use star_tracker_database::tracking_mode::DatabaseGenerator;
+use star_tracker_database::io::Star;
 
 use star_tracker_lib::image_processing::ImageWord;
 use star_tracker_lib::util::word::WordList;
@@ -110,14 +111,14 @@ reset; cargo run --bin demo 16mm_checker_2
 
 
 	// Loose conditions
-	let time_good: u128 = 5000; // ms until auto fail.
+	let time_good: u128 = 10000; // ms until auto fail.
 	let fails_good: usize = 500;  // How many triangles can be failed matches until auto fail.
 
 
 	println!("Performing Database Construction");
 	println!("\tReading database.");
 	print!("\t");
-	let mut stars : Vec<Star> = Io::get_csv_database();
+	let mut stars : Vec<Star> = star_tracker_database::io::Io::get_csv_database();
 
 
 
@@ -135,6 +136,7 @@ reset; cargo run --bin demo 16mm_checker_2
 	
 	let mut fails_bands : Vec<Vec<String>> = Vec::new();
 	for i in 0..1000 { fails_bands.push(Vec::new()); fails_bands[i] = Vec::new();}
+	let mut complete_failures: Vec<String> = Vec::new();
 
 	let mut num_fails = 0;
 	let mut num_success = 0;
@@ -207,11 +209,11 @@ reset; cargo run --bin demo 16mm_checker_2
 
 		println!("Image Processing");
 		// Removing Dark Frame from Image.
-		for x in 0..img.width() {
-			for y in 0..img.height() {
-				let px = Pixel{x: x, y: y};
-				if 10 < dark_frame.get(px) { img.set(px, 0); } } 
-		}
+		// for x in 0..img.width() {
+		// 	for y in 0..img.height() {
+		// 		let px = Pixel{x: x, y: y};
+		// 		if 10 < dark_frame.get(px) { img.set(px, 0); } } 
+		// }
 		
 		let mut img_actual = CVImage::new(Pixel{x: 808, y: 608});
 		for x in 0..img_actual.width() {
@@ -414,7 +416,12 @@ reset; cargo run --bin demo 16mm_checker_2
 			if found_all.size() == 3
 			{
 				num_fails += 1;
-				// draw_pt(world_center.to_equatorial(), Color::Blue, 4, &mut sky_map);
+				draw_pt(world_center.to_equatorial(), Color::Blue, 4, &mut sky_map);
+			}
+			
+			if found_all.size() < 4
+			{
+				complete_failures.push(sample.file_img[image_index].clone());
 			}
 
 			
@@ -433,9 +440,15 @@ reset; cargo run --bin demo 16mm_checker_2
 			{
 				if fails_bands[i].len() > 0
 				{
-					println!("\n\n\n\n{}", i);
+					println!("\n\n{}", i);
 					println!("{:?}", fails_bands[i]);
 				}
+			}
+
+			println!("\n\nFAILS:");
+			for i in 0..complete_failures.len()
+			{
+				println!("{:?}", complete_failures[i]);
 			}
 
 
@@ -452,7 +465,7 @@ reset; cargo run --bin demo 16mm_checker_2
 			println!("time success: {}", time_success);
 
 			// let _ = imshow("Actual", &img_actual.0);
-			// let _ = imshow("Sky", &sky_map.0);
+			let _ = imshow("Sky", &sky_map.0);
 			// let _ = imshow("Image", &img.0);
 			let _ = wait_key(10).unwrap();
 		}

@@ -1,1 +1,0 @@
-window.SIDEBAR_ITEMS = {"attr":["derive"],"derive":["Clone","Copy","Debug","Eq","PartialEq","PartialOrd"],"enum":["Option","Result"],"struct":["Range","RangeInclusive"],"trait":["Clone","Copy","Debug","Eq","PartialEq","PartialOrd","Sized"]};

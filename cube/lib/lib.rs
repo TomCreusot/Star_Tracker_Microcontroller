@@ -47,7 +47,6 @@ use star_tracker_lib::tracking_mode::Constellation;
 use star_tracker_lib::tracking_mode::StarTriangleIterator;
 use star_tracker_lib::tracking_mode::Specularity;
 use star_tracker_lib::tracking_mode::AbandonSearchFailures;
-use star_tracker_lib::tracking_mode::AbandonSearchNone;
 use star_tracker_lib::tracking_mode::database::ChunkIteratorDeclination;
 use star_tracker_lib::tracking_mode::database::ChunkAreaSearch;
 
@@ -213,12 +212,12 @@ pub extern "C" fn track ( allowed_failures: usize ) -> usize
 			&stars_3d, &mut database_iterator,
 			&mut StarTriangleIterator::<1000>::new(),
 			&mut Specularity::default(),
-			&mut AbandonSearchNone(),
+			&mut AbandonSearchFailures::new(allowed_failures),
 			angle_tolerance,
 			4..=4,
 			&mut stars_match
 		);
-		if let star_tracker_lib::tracking_mode::ConstellationResult::Success{fails: _} = success
+		if let star_tracker_lib::tracking_mode::ConstellationResult::Success{fails: fails} = success
 		{
 			for i in 0..stars_match.size()
 			{

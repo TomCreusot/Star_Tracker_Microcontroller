@@ -43,10 +43,8 @@ use star_tracker_lib::util::units::Radians;
 use star_tracker_lib::util::aliases::Decimal;
 
 
-pub mod io;
-pub mod star;
 pub mod sample;
-pub mod template;
+// pub mod template;
 
 
 /// File management (Excluding Images).

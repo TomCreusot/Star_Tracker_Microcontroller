@@ -1,5 +1,5 @@
 [package]
-name = "nix"
+name = "star_tracker_nix"
 version = "0.1.0"
 authors = ["Tom Creusot <tom.creusot@student.curtin.edu.au>"]
 publish = false
@@ -26,6 +26,10 @@ path = "lib/lib.rs"
 path = "../star_tracker_lib"
 default_features = false
 features = ["nix", "bit_64"]
+
+[dependencies.star_tracker_database]
+path = "../star_tracker_database"
+
 
 
 [dependencies]
