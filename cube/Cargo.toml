@@ -1,7 +1,7 @@
 [package]
 name = "cube"
 version = "0.1.0"
-authors = ["Tom Creusot <tom.creusot@student.curtin.edu.au>"]
+authors = ["Tom Creusot <tomcreusot2000@gmail.com>"]
 publish = false
 description = "The code for a star tracker which could be used on a microcontroller for satellites."
 repository = "https://github.com/TomCreusot/Star_Tracker_Microcontroller"

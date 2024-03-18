@@ -2,7 +2,12 @@
 This project contains all the code to implement a star tracker for a satellite.  
 
 The software is designed to run on high-powered microcontrollers for low-earth orbit cube satellites.  
-It can also be used on a standard computer using a Ubuntu distribution (or windows through wsl).
+It can also be used on a standard computer using a Ubuntu distribution (or windows through wsl).  
+
+
+I have recorded a set of videos available on [youtube here](https://www.youtube.com/playlist?list=PLzWAMhj2ND0TXXEOIabAPgrrbsrhF2XHW) that you should look at before getting started.  
+It explains star trackers, the code and any considerations you should make.  
+
 
 ## Implementation
 This is a modular library and binary where tracking algorithms can quickly be swapped out.  
@@ -107,4 +112,4 @@ cargo doc --no-deps --open
 ```
 
 ## Author
-* Tom Creusot
+* Tom Creusot (tomcreusot2000@gmail.com)
